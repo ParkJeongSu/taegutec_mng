@@ -1,0 +1,36 @@
+eziframe:
+  middleware:
+    rabbitmq:
+      clusters:
+        - name: mainCluster
+          connection:
+            hosts:
+              - "localhost:5672"
+            userName: admin
+            password: admin
+#          infra:
+#            queues:
+#              - queue-name: "PEX.request.queue"
+#            exchanges:
+#              - exchange-name: "rpc.exchange"
+#                type: DIRECT
+#            binding:
+#              - queue: "PEX.request.queue"
+#                exchanges:
+#                  - exchange: "rpc.exchange"
+#                    routing-keys:
+#                      - "PEX.key"
+          senders:
+            - name: rabbitMQDefaultSender
+              exchange: "rpc.exchange"
+              type: SEND_ONLY
+
+            - name: rabbitMQReplyingSender
+              exchange: "rpc.exchange"
+              type: SEND_AND_RECEIVE
+          listeners:
+            - name: rabbitDefaultListener
+              queue: "PEX.request.queue"
+            - name: rabbitTEXListener
+              queue: "TEX.request.queue"
+

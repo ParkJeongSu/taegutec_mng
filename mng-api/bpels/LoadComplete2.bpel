@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process xmlns:bean="http://bean.aim.co.kr/" xmlns:bpel="http://bpel.aim.co.kr/" name="LoadComplete2.bpel" type="process" bounds="0,0,-1,-1" targetNamespace="http://bpel.aim.co.kr/bpelj/" lastSequenceNumber="3">
+    <partnerLinks>
+        <partnerLink name="bpelj" partnerLinkType="bpel:bpelj" />
+        <partnerLink name="loadCompleteHandler" partnerLinkType="bean:loadCompleteHandler" />
+    </partnerLinks>
+    <variables>
+        <variable name="loadComplet" messageType="org.jdom2.Document" />
+        <variable name="message" messageType="java.lang.String" />
+        <variable name="output" messageType="java.lang.Object" />
+    </variables>
+    <sequence name="LoadComplete2.bpel" type="sequence" bounds="0,0,-1,-1">
+        <receive name="receive" type="receive" bounds="199,41,146,111">
+            <input variable="message" type="java.lang.String" />
+        </receive>
+        <invoke name="[LoadComplete22e]-[API Call]-[003]" type="invokebean" bounds="139,224,266,172" description="public Object handle(String message)" partnerLink="loadCompleteHandler" partnerLinkType="loadCompleteHandler" operation="handle" operationDesc="public Object handle(String message)" ignoreThrow="false" fork="false">
+            <source terminal="5,A" />
+            <input variable="message" type="java.lang.String" />
+            <output variable="output" />
+        </invoke>
+    </sequence>
+</process>

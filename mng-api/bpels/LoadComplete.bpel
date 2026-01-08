@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<process xmlns:bean="http://bean.aim.co.kr/" xmlns:bpel="http://bpel.aim.co.kr/" name="LoadComplete.bpel" type="process" bounds="0,0,-1,-1" targetNamespace="http://bpel.aim.co.kr/bpelj/" lastSequenceNumber="4">
+    <partnerLinks>
+        <partnerLink name="bpelj" partnerLinkType="bpel:bpelj" />
+        <partnerLink name="pEXMessageListener" partnerLinkType="bean:pEXMessageListener" />
+    </partnerLinks>
+    <variables>
+        <variable name="message" messageType="org.springframework.amqp.core.Message" />
+        <variable name="output" messageType="java.lang.Object" />
+    </variables>
+    <sequence name="LoadComplete.bpel" type="sequence" bounds="0,0,-1,-1">
+        <receive name="receive" type="receive" bounds="199,41,146,111">
+            <input variable="message" type="org.springframework.amqp.core.Message" />
+        </receive>
+        <invoke name="[LoadComplete]-[API Call]-[004]" type="invokebean" bounds="192,207,146,111" description="public Object process(org.springframework.amqp.core.Message message)" partnerLink="pEXMessageListener" partnerLinkType="pEXMessageListener" operation="process" operationDesc="public Object process(org.springframework.amqp.core.Message message)" ignoreThrow="false" fork="false">
+            <source terminal="5,A" />
+            <input variable="message" type="org.springframework.amqp.core.Message" />
+            <output variable="output" />
+        </invoke>
+    </sequence>
+</process>
