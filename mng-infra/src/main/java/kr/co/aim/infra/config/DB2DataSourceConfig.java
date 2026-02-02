@@ -23,18 +23,18 @@ import javax.sql.DataSource;
         entityManagerFactoryRef = "db2EntityManagerFactory", // 2. 사용할 EntityManagerFactory 지정
         transactionManagerRef = "db2TransactionManager"      // 3. 사용할 TransactionManager 지정
 )
-@Profile({"scheduler"})
+@Profile({"scheduler","simulator"})
 public class DB2DataSourceConfig {
 
     @Bean(name = "db2DataSource")
     @ConfigurationProperties(prefix = "spring.datasource.db2")
-    @Profile({"scheduler"})
+    @Profile({"scheduler","simulator"})
     public DataSource db2DataSource() {
         return DataSourceBuilder.create().build();
     }
 
     @Bean(name = "db2EntityManagerFactory")
-    @Profile({"scheduler"})
+    @Profile({"scheduler","simulator"})
     public LocalContainerEntityManagerFactoryBean db2EntityManagerFactory(
             EntityManagerFactoryBuilder builder,
             @Qualifier("db2DataSource") DataSource dataSource) {
@@ -45,14 +45,14 @@ public class DB2DataSourceConfig {
     }
 
     @Bean(name = "db2TransactionManager")
-    @Profile({"scheduler"})
+    @Profile({"scheduler","simulator"})
     public PlatformTransactionManager db2TransactionManager(
             @Qualifier("db2EntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory.getObject());
     }
 
     @Bean(name = "db2JdbcTemplate")
-    @Profile({"scheduler"})
+    @Profile({"scheduler","simulator"})
     public JdbcTemplate db2JdbcTemplate(@Qualifier("db2DataSource")DataSource db2DataSource) {
         return new JdbcTemplate(db2DataSource);
     }

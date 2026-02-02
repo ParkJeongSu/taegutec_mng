@@ -7,6 +7,7 @@ import ezieco.eziframe.middleware.event.MessageType;
 import ezieco.eziframe.middleware.event.utils.MessagePoolManager;
 import ezieco.eziframe.middleware.exception.MessageConvertException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.Map;
  */
 @Component
 @Slf4j
+@Profile({"pex","tex","scheduler"})
 public class DefaultMessageConverter implements MessageConverter {
 
     private final static String EVENT_PACKAGE = "kr.co.aim.common.format";

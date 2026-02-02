@@ -1,0 +1,8 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Mon Nov 24 12:40:11 KST 2025
+http\://192.168.100.200\:8081/repository/maven-central/.error=
+http\://192.168.100.200\:8081/repository/maven-central/.lastUpdated=1763955611535
+http\://192.168.100.200\:8081/repository/maven-releases/.error=
+http\://192.168.100.200\:8081/repository/maven-releases/.lastUpdated=1763955611546
+http\://192.168.100.200\:8081/repository/maven-snapshots/.error=
+http\://192.168.100.200\:8081/repository/maven-snapshots/.lastUpdated=1763955611559

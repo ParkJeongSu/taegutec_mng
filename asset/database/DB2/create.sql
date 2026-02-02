@@ -1,12 +1,26 @@
 -- 1. IDOC 테이블 생성
-CREATE TABLE IDOC (
-    LINEID      DECIMAL(15, 0) NOT NULL,
-    IDOCTYPE    DECIMAL(10, 0),
-    STATE       DECIMAL(5, 0),
-    ERRORCODE   DECIMAL(10, 0),
-    SOURCE      DECIMAL(10, 0),
-    DESTINATION DECIMAL(10, 0),
-    PRIMARY KEY (LINEID)
+-- 1. 테이블 생성
+CREATE TABLE "TESTDB"."IDOC" (
+                                 "LINEID"      DECIMAL(10, 0) NOT NULL,
+                                 "IDOCTYPID"   DECIMAL(10, 0),
+                                 "STATE"       DECIMAL(10, 0) DEFAULT -1,
+                                 "ERRORCODE"   DECIMAL(10, 0) DEFAULT 0,
+                                 "SOURCE"      DECIMAL(10, 0),
+                                 "DESTINATION" DECIMAL(10, 0),
+                                 "TIDID"       DECIMAL(10, 0) DEFAULT 0,
+                                 "DOCNUM"      VARCHAR(16),
+                                 "QUEUENAME"   VARCHAR(24),
+                                 "PARTNERTYPE" VARCHAR(2),
+                                 "PARTNERNAME" VARCHAR(10),
+                                 "PARTNERPORT" VARCHAR(10),
+                                 "MSGVARIANT"  VARCHAR(3),
+                                 "ARCKEY"      VARCHAR(70),
+                                 "DTIMECRE"    TIMESTAMP,
+                                 "DTIMEMOD"    TIMESTAMP DEFAULT CURRENT TIMESTAMP,
+                                 "USRMOD"      VARCHAR(30),
+                                 "PGMMOD"      VARCHAR(30),
+                                 "MODCNT"      DECIMAL(10, 0) DEFAULT 0,
+                                 PRIMARY KEY ("LINEID")
 );
 
 -- 2. H2ORDERD 테이블 생성

@@ -18,6 +18,7 @@ import java.util.Map;
 
 @Configuration
 @Getter
+@Profile({"pex","tex","dispatcher","scheduler"})
 public class RabbitConfig {
 
     // 1. application.yml 에서 값을 가져와 변수에 할당합니다.
@@ -35,8 +36,8 @@ public class RabbitConfig {
     @Value("${custom.rabbitmq.queue.tex}")
     private String texRequestQueueName;
 
-    @Value("${custom.rabbitmq.queue.dispatcher}")
-    private String dispatcherRequestQueueName;
+    //@Value("${custom.rabbitmq.queue.dispatcher}")
+    //private String dispatcherRequestQueueName;
 
     @Value("${custom.rabbitmq.queue.dead}")
     private String deadLetterQueueName;
@@ -56,7 +57,9 @@ public class RabbitConfig {
     // 1. DLQ와 DLX 빈 등록
     @Bean
     public Queue deadLetterQueue() {
-        return new Queue(getDeadLetterQueueName(), true);
+        Queue queue = new Queue(getDeadLetterQueueName(), true);
+        queue.setShouldDeclare(false);
+        return queue;
     }
 
     @Bean
@@ -73,30 +76,34 @@ public class RabbitConfig {
     @Bean
     @Profile({"pex","tex","dispatcher"})
     public Queue pexQueue(){
-        return new Queue( getPexRequestQueueName(),true,false,false,
+        Queue queue = new Queue( getPexRequestQueueName(),true,false,false,
                 Map.of( DEAD_LETTER_EXCHANGE_KEY, getDeadLetterExchangeName(),
                         DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
         );
+        queue.setShouldDeclare(false);
+        return queue;
     }
 
 
     @Bean
     @Profile({"pex","tex","dispatcher"})
     public Queue texQueue(){
-        return new Queue(getTexRequestQueueName(),true,false,false,
+        Queue queue = new Queue(getTexRequestQueueName(),true,false,false,
                 Map.of(DEAD_LETTER_EXCHANGE_KEY,getDeadLetterExchangeName(),
                         DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
         );
+        queue.setShouldDeclare(false);
+        return queue;
     }
 
-    @Bean
-    @Profile({"pex","tex","dispatcher"})
-    public Queue dispatcherQueue(){
-        return new Queue(getDispatcherRequestQueueName(),true,false,false,
-                Map.of(DEAD_LETTER_EXCHANGE_KEY, getDeadLetterExchangeName(),
-                        DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
-        );
-    }
+//    @Bean
+//    @Profile({"pex","tex","dispatcher"})
+//    public Queue dispatcherQueue(){
+//        return new Queue(getDispatcherRequestQueueName(),true,false,false,
+//                Map.of(DEAD_LETTER_EXCHANGE_KEY, getDeadLetterExchangeName(),
+//                        DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
+//        );
+//    }
 
     // Exchange 빈 등록
     @Bean

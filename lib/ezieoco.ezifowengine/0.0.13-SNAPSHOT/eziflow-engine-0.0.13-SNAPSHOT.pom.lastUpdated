@@ -1,0 +1,4 @@
+#NOTE: This is a Maven Resolver internal implementation file, its format can be changed without prior notice.
+#Thu Nov 20 17:36:39 KST 2025
+http\://0.0.0.0/.error=Could not transfer artifact ezieco.eziflow\:eziflow-engine\:pom\:0.0.13-SNAPSHOT from/to maven-default-http-blocker (http\://0.0.0.0/)\: Blocked mirror for repositories\: [maven-central (http\://192.168.100.200\:8081/repository/maven-central/, default, releases+snapshots), releases (http\://192.168.100.200\:8081/repository/maven-releases/, default, releases+snapshots), maven-releases (http\://192.168.100.200\:8081/repository/maven-releases/, default, releases+snapshots), snapshots (http\://192.168.100.200\:8081/repository/maven-snapshots/, default, releases+snapshots), maven-snapshots (http\://192.168.100.200\:8081/repository/maven-snapshots/, default, releases+snapshots)]
+@default-maven-default-http-blocker-http\://0.0.0.0/.lastUpdated=1763627799085

@@ -9,8 +9,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.amqp.SimpleRabbitListenerContainerFactoryConfigurer;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
+@Profile({"pex","tex","dispatcher","scheduler"})
 public class RabbitMQRetryConfig {
     @Autowired
     private ConnectionFactory connectionFactory;

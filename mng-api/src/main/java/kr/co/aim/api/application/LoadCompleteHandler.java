@@ -11,11 +11,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Profile({"pex","tex","scheduler"})
 public class LoadCompleteHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;

@@ -20,6 +20,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.stereotype.Component;
 
@@ -39,6 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
+@Profile({"pex","tex","scheduler"})
 public class DefaultMessageDispatcher implements MessageDispatcher {
 
     private final ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(20, 40, 60L, TimeUnit.SECONDS,

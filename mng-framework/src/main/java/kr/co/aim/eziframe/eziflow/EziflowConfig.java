@@ -14,9 +14,11 @@ import ezieco.eziflow.engine.management.EziFlowMeterRegistryProvider;
 import ezieco.eziflow.engine.management.impl.EziFlowMeterRegistryProviderImpl;
 import ezieco.eziflow.engine.spring.boot.property.EziFlowYmlConfigBinder;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.context.annotation.Profile;
 
 @Configuration
 @ConditionalOnClass(EziFlowService.class)
+@Profile({"pex","tex","scheduler"})
 public class EziflowConfig {
 
     @Bean
