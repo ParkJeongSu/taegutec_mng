@@ -1,7 +1,18 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.common.dto.TransportOrderResponseDto;
 import kr.co.aim.domain.model.User;
 import kr.co.aim.domain.repository.UserRepository;
+import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
+import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
+import kr.co.aim.infra.persistence.entitydb2.H2OrderMEntity;
+import kr.co.aim.infra.persistence.entitydb2.IdocEntity;
+import kr.co.aim.infra.persistence.mapper.H2Mapper;
+import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
+import kr.co.aim.infra.persistence.springdatajpadb2.H2OrderDJpaRepository;
+import kr.co.aim.infra.persistence.springdatajpadb2.H2OrderMJpaRepository;
+import kr.co.aim.infra.persistence.springdatajpadb2.H2TransJpaRepository;
+import kr.co.aim.infra.persistence.springdatajpadb2.IdocJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,56 +22,61 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
-@Profile({"scheduler"})
+@Profile({"scheduler","simulator"})
+@RequiredArgsConstructor
 public class DataTransferService {
+    private final IdocJpaRepository idocJpaRepository;
+    private final H2OrderMJpaRepository h2OrderMJpaRepository;
+    private final H2OrderDJpaRepository h2OrderDJpaRepository;
+    private final H2TransJpaRepository h2TransJpaRepository;
+    private final TransportOrderJpaRepository transportOrderJpaRepository;
+    private final DB2TransportOrderService db2TransportOrderService;
 
-    private final UserRepository userRepository; // MSSQL 데이터 접근
-    private final JdbcTemplate db2JdbcTemplate; // DB2 데이터 접근
+    public TransportOrderEntity transferOutboundOrder(Long idocId) {
+        log.info("인터페이스 프로세스 시작 : idocId = {}", idocId);
 
-    // Lombok 대신 직접 생성자를 작성하고, 파라미터에 @Qualifier를 붙여줍니다.
-    public DataTransferService(UserRepository userRepository,
-                               @Qualifier("db2JdbcTemplate") JdbcTemplate db2JdbcTemplate) {
-        this.userRepository = userRepository;
-        this.db2JdbcTemplate = db2JdbcTemplate;
-    }
+        // 1. DB2 조회 (Read Only 트랜잭션)
+        // Pageable.ofSize(1) 등을 이용해 단건 혹은 리스트 조회
+        IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
+                .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
 
-    @Transactional
-    public void transferUsersToDb2() {
-        log.info("Starting data transfer from MSSQL to DB2");
+        // 리스트 조회 (필요 시 서비스 내 selectH2OrderMByIdocId 등 활용)
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByIdocId(idocId);
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByIdocId(idocId);
 
-        // 1. MSSQL에서 모든 사용자 데이터 읽기
-        List<User> users = userRepository.findAll().stream().toList();
-
-        log.info("Found {} users in MSSQL to transfer.", users.size());
-
-        // 2. DB2에 데이터 삽입
-        // DB2 테이블 이름과 컬럼명은 예시입니다. 실제 테이블 구조에 맞게 수정해야 합니다.
-        String insertSql = "INSERT INTO USERS (ID, NAME, EMAIL) VALUES (?, ?, ?)";
-
-        try {
-            int[][] batchInsertResult = db2JdbcTemplate.batchUpdate(insertSql, users, users.size(),
-                    (ps, user) -> {
-                        ps.setLong(1, user.getId());
-                        ps.setString(2, user.getUserName());
-                        ps.setString(3, user.getEmail());
-                    });
-            log.info("Successfully transferred {} users to DB2.", batchInsertResult.length);
-        } catch (Exception e) {
-            log.info("exception logic start");
-            Throwable t = e;
-            while (t != null) {
-                if (t instanceof java.sql.SQLException se) {
-                    System.err.printf("DB2 ERROR: code=%d state=%s msg=%s%n",
-                            se.getErrorCode(), se.getSQLState(), se.getMessage());
-                    if (se instanceof java.sql.BatchUpdateException be) {
-                        System.err.println("BATCH COUNTS=" + java.util.Arrays.toString(be.getUpdateCounts()));
-                    }
-                    t = se.getNextException(); // ★ 다음 원인
-                } else t = t.getCause();
-            }
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
         }
+
+        // 2. 비즈니스 로직 처리 및 MSSQL 저장 호출
+        return db2TransportOrderService.outboundTransportOrderToMSSQL(idoc, mList.get(0), dList.get(0));
     }
+
+    public void acceptOutboundOrder(Long id) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", id);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("TransportOrderEntity를 찾을 수 없습니다."));
+
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.acceptOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+
+    }
+
 }

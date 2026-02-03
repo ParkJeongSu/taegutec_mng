@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
+@Builder
 @Table(name = "IDOC", schema = "TESTDB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class IdocEntity {
@@ -20,7 +21,7 @@ public class IdocEntity {
     private Long idocTypId; // numeric(10, 0)
 
     @Column(name = "STATE")
-    private Integer state; // numeric(10, 0), Default -1
+    private Integer state; // numeric(10, 0)
 
     @Column(name = "ERRORCODE")
     private Integer errorCode; // numeric(10, 0), Default 0

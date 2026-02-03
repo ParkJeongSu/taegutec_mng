@@ -1103,3 +1103,30 @@ CREATE TABLE AUTHORITY_MENU_HISTORY
  EVENT_USER varchar(40),
  EVENT_COMMENT varchar(100)
  );
+
+
+CREATE TABLE TRANSPORT_ORDER (
+                                 ID                             bigint               NOT NULL,
+                                 TRANSPORT_ORDER_NAME           varchar(40)          NOT NULL,
+                                 DESCRIPTION                    varchar(40)          NULL,
+                                 TRANSPORT_TYPE                 varchar(40)          NULL,
+                                 TRANSPORT_ORDER_ID             varchar(40)          NULL,
+                                 PRIORITY                       int                  NULL,
+                                 GAL_ID                         varchar(40)          NULL,
+                                 GAL_WAREHOUSE                  varchar(40)          NULL,
+                                 FROM_WAREHOUSE                 varchar(40)          NULL,
+                                 FROM_ZONE_NAME                 varchar(40)          NULL,
+                                 FROM_LOCATION_ID               varchar(40)          NULL,
+                                 TO_WAREHOUSE                   varchar(40)          NULL,
+                                 TO_ZONE_NAME                   varchar(40)          NULL,
+                                 TO_LOCATION_ID                 varchar(40)          NULL,
+                                 CARRIER_NAME                   varchar(40)          NULL,
+                                 CARRIER_TYPE                   varchar(40)          NULL,
+                                 DRIVING_PROFILE                varchar(40)          NULL,
+                                 CREATE_TIME                    datetime2            NULL,
+                                 RELEASE_TIME                   datetime2            NULL,
+                                 COMPLETE_TIME                  datetime2            NULL,
+                                 CREATE_USER                    varchar(40)          NULL,
+                                 RELEASE_USER                   varchar(40)          NULL,
+                                 COMPLETE_USER                  varchar(40)          NULL
+);

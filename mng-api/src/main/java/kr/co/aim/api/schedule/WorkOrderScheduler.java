@@ -1,11 +1,8 @@
 package kr.co.aim.api.schedule;
 
-import kr.co.aim.api.service.DB2WorkOrderService;
+import kr.co.aim.api.service.DB2TransportOrderService;
 import kr.co.aim.api.service.WorkOrderService;
-import kr.co.aim.common.dto.WorkOrderCreateRequestDto;
-import kr.co.aim.common.enums.HoldState;
-import kr.co.aim.common.enums.WorkOrderState;
-import kr.co.aim.infra.persistence.entitydb2.H2OrderdEntity;
+import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2TransEntity;
 import kr.co.aim.infra.persistence.entitydb2.IdocEntity;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +12,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
@@ -24,8 +20,8 @@ import java.util.List;
 @Profile("scheduler")
 public class WorkOrderScheduler {
 
-    private final DB2WorkOrderService db2WorkOrderService;
-    private final WorkOrderService workOrderService;
+    //private final DB2TransportOrderService db2TransportOrderService;
+    //private final WorkOrderService workOrderService;
 
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "WorkOrderFromDB2ToMSSQL",
@@ -33,16 +29,18 @@ public class WorkOrderScheduler {
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
     public void WorkOrderFromDB2ToMSSQL() {
         // 1단계: DB2에서 처리할 데이터를 선점하고 가져온다. (DB2 트랜잭션)
-        List<IdocEntity> idocEntityList = db2WorkOrderService.selectIdocList();
-
+        //List<IdocEntity> idocEntityList = db2TransportOrderService.selectIdocList();
+        /*
         if (idocEntityList.isEmpty()) {
             return;
         }
-
+        */
+        /*
         for(IdocEntity idocEntity : idocEntityList) {
             try {
-                H2OrderdEntity h2OrderdEntity = db2WorkOrderService.selectH2OrderdByLineId(idocEntity.getLineId());
-                H2TransEntity h2TransEntity = db2WorkOrderService.selectH2TransByLineId(idocEntity.getLineId());
+                H2OrderDEntity h2OrderdEntity = db2TransportOrderService.selectH2OrderdByLineId(idocEntity.getLineId());
+                H2TransEntity h2TransEntity = db2TransportOrderService.selectH2TransByLineId(idocEntity.getLineId());
+
                 WorkOrderCreateRequestDto workOrderCreateRequestDto =
                         WorkOrderCreateRequestDto.builder()
                                 .workOrderName(h2OrderdEntity.getOrder())
@@ -73,14 +71,17 @@ public class WorkOrderScheduler {
                                 .eventUser("MNG")
                                 .eventComment("DB2 -> MSSQL DB Transfer")
                                 .build();
+
                 workOrderService.createWorkOrder(workOrderCreateRequestDto);
                 db2WorkOrderService.updateDb2StatusToDoneInNewTransaction(idocEntity.getLineId());
+
                 log.info("LineId : {} transfer completed",idocEntity.getLineId());
             } catch (Exception e) {
                 log.error(idocEntity.getLineId() + "Error");
-                // TODO: 만일 가져오는데 실패하면 어떤 tranactionCode 로 작성할건지 고민
+                // TODO: 만일 가져오는데 실패하면 어떤 transactionCode 로 작성할건지 고민
             }
         }
+        */
     }
 
 }

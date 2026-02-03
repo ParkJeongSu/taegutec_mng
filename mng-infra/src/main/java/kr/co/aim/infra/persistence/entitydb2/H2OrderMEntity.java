@@ -7,11 +7,10 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Builder
 @AllArgsConstructor
-@Table(name = "H2TRANS", schema = "TESTDB")
+@Table(name = "H2ORDERM", schema = "TESTDB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class H2TransEntity {
+public class H2OrderMEntity {
     @Id
     @Column(name = "LINEID", nullable = false)
     private Long lineId;
@@ -37,8 +36,8 @@ public class H2TransEntity {
     @Column(name = "DATACODE")
     private Long dataCode;
 
-    @Column(name = "CTRANSTY")
-    private Long cTransTy;
+    @Column(name = "BOOKCTRL")
+    private Long bookCtrl;
 
     @Column(name = "CCLIENT", length = 30)
     private String cClient;
@@ -49,42 +48,30 @@ public class H2TransEntity {
     @Column(name = "CORDERTY", length = 30)
     private String cOrderTy;
 
-    @Column(name = "CERRID")
-    private Long cErrId;
+    @Column(name = "CDTPICK", length = 30)
+    private String cDtPick;
 
-    @Column(name = "CTEXT1", length = 30)
-    private String cText1;
+    @Column(name = "CORDERPRIO")
+    private Integer cOrderPrio;
 
     @Column(name = "CTCODE", length = 30)
     private String cTCode;
 
-    @Column(name = "CORDERLN")
-    private Long cOrderLn;
+    @Column(name = "CLOCID", length = 30)
+    private String cLocId;
 
-    @Column(name = "CGAID")
-    private Long cGaId;
+    @Column(name = "CWCID", length = 30)
+    private String cWcId;
+
+    @Column(name = "CGALID")
+    private Long cGalId;
 
     @Column(name = "CGALWHS", length = 30)
     private String cGalWhs;
 
-    @Column(name = "CCOID", length = 30)
-    private String cCoId;
+    @Column(name = "CHOSTUSR", length = 30)
+    private String cHostUsr;
 
-    @Column(name = "CGRWGACT")
-    private Long cGrWgAct;
-
-    @Column(name = "CREQZONE", length = 30)
-    private String cReqZone;
-
-    @Column(name = "CZONE", length = 30)
-    private String cZone;
-
-    @Column(name = "CLOCID", length = 30)
-    private String cLocId;
-
-    @Column(name = "CERRDSC", length = 80)
-    private String cErrDsc;
-
-    @Column(name = "CWCID", length = 10)
-    private String cWcId;
+    @Column(name = "CUSRNO", length = 30)
+    private String cUsrNo;
 }
