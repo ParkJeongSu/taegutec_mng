@@ -28,6 +28,9 @@ public class TransportOrderEntity {
     @Column(name = "TRANSPORT_ORDER_ID", length = 40)
     private String transportOrderId;
 
+    @Column(name = "TRANSPORT_STATUS", length = 40)
+    private String transportStatus;
+
     @Column(name = "PRIORITY")
     private Integer priority;
 

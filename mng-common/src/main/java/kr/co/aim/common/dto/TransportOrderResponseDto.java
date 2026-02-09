@@ -4,10 +4,12 @@ package kr.co.aim.common.dto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 public class TransportOrderResponseDto {
@@ -21,6 +23,8 @@ public class TransportOrderResponseDto {
     private String transportType;
 
     private String transportOrderId;
+
+    private String transportStatus;
 
     private Integer priority;
 

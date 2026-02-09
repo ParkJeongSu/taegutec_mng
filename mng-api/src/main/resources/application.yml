@@ -92,7 +92,7 @@ jwt:
   access-token-validity-in-seconds: 86400 # 액세스 토큰 만료 시간 (예: 24시간) 86400
   refresh-token-validity-in-seconds: 604800 # 리프레시 토큰 만료 시간 (예: 7일)
 ---
-# 'pex,tex,dispatcher' 프로필이 활성화될 때만 이 설정이 적용됩니다.
+# 'pex,tex,dispatcher,scheduler' 프로필이 활성화될 때만 이 설정이 적용됩니다.
 spring:
   config:
     activate:

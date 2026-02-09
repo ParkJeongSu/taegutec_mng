@@ -11,4 +11,6 @@ import java.util.Optional;
 
 public interface TransportOrderJpaRepository extends JpaRepository<TransportOrderEntity, Long> {
     Page<TransportOrderEntity> findAll(Pageable pageable);
+
+    TransportOrderEntity findByTransportOrderId(String transportOrderId);
 }
