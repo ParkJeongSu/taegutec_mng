@@ -4,7 +4,6 @@ import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.dto.*;
 import kr.co.aim.common.enums.IdocErrorCode;
 import kr.co.aim.common.enums.TransportStatus;
-import kr.co.aim.infra.persistence.entity.IF_WorkOrderEntity;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderMEntity;
@@ -82,6 +81,39 @@ public class DB2TransportOrderService {
     }
 
     @Transactional("mssqlTransactionManager")
+    public TransportOrderEntity inboundTransportOrderToMSSQL(IdocEntity idocEntity,H2OrderMEntity h2OrderMEntity,H2OrderDEntity h2OrderDEntity) {
+        log.info("outboundTransportOrderToMSSQL");
+        TransportOrderEntity transportOrderEntity = TransportOrderEntity
+                .builder()
+                .id(TsidUtils.nextId())
+                .transportOrderName(h2OrderMEntity.getCOrderId())
+                .description("inbound")
+                .transportType(h2OrderMEntity.getCOrderTy())
+                .transportOrderId(h2OrderMEntity.getCOrderId())
+                .transportStatus(TransportStatus.Create.name())
+                .priority(h2OrderMEntity.getCOrderPrio())
+                .galId(h2OrderMEntity.getCGalId().toString())
+                .galWarehouse(h2OrderMEntity.getCGalWhs())
+                //.fromWarehouse()
+                //.fromZoneName()
+                .fromLocationId(h2OrderMEntity.getCWcId())
+                //.toWarehouse()
+                //.toZoneName()
+                .toLocationId(h2OrderDEntity.getCZone())
+                .carrierName(h2OrderDEntity.getCCoId())
+                .carrierType(h2OrderDEntity.getCCoTy())
+                .drivingProfile(h2OrderDEntity.getCDrivingProfile())
+                .createTime(idocEntity.getDtimeCre())
+                //.releaseTime()
+                //.completeTime()
+                //.createUser()
+                //.releaseUser()
+                //.completeUser()
+                .build();
+        return transportOrderJpaRepository.save(transportOrderEntity);
+    }
+
+    @Transactional("mssqlTransactionManager")
     public TransportOrderEntity updateStatusTransportOrder(String orderId,TransportStatus status) {
         log.info("updateStatusTransportOrder");
         TransportOrderEntity transportOrderEntity = transportOrderJpaRepository.findByTransportOrderId(orderId);
@@ -106,9 +138,9 @@ public class DB2TransportOrderService {
     }
 
     @Transactional(readOnly = true, value = "db2TransactionManager")
-    public Page<IdocResponseDto> selectOutboundIdocs(Pageable pageable) {
+    public Page<IdocResponseDto> selectIdocsByOrderType(Pageable pageable, String orderType) {
         log.info("selectIdocs");
-        Page<IdocEntity> idocPage = idocJpaRepository.findIdocsByOrderType("O",pageable);
+        Page<IdocEntity> idocPage = idocJpaRepository.findIdocsByOrderType(orderType,pageable);
         return idocPage.map(idocMapper::toDto);
     }
 
@@ -190,6 +222,71 @@ public class DB2TransportOrderService {
                 .cCoId(selectedH2OrderDEntity.getCCoId())
                 .cGrWgAct(30L)
                 .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void acceptInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("acceptOutbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.Accept.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
                 .cZone("B")
                 //.cLocId()
                 //.cErrDsc()
@@ -199,7 +296,138 @@ public class DB2TransportOrderService {
     }
 
     @Transactional(value = "db2TransactionManager")
+    public void workStationEmptyInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("workStationEmptyInbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.WorkstationEmpty.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("B")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void arrivedWorkstationErrorInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("workStationEmptyInbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.ArrivedAtWorkstationWithError.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
     public void releaseOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+
         LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
         log.info("releaseOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
@@ -393,6 +621,201 @@ public class DB2TransportOrderService {
     }
 
     @Transactional(value = "db2TransactionManager")
+    public void arrivedAtWorkStationOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("arrivedAtWorkStationOutbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.ArrivedAtWorkStation.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("B")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void completedOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("completedOutbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.OrderDone_Outbound.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("B")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void takeOffOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("takeOffOutbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.TakeOff.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("B")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
     public void binEmptyOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
         LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
         log.info("outOfRackOutbound");
@@ -437,6 +860,71 @@ public class DB2TransportOrderService {
                 //.modCnt()
                 .dataCode(10L)
                 .cTransTy( Long.parseLong(TransportStatus.BinEmpty.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("B")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void shortageOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("outOfRackOutbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.Shortage.getValue()))
                 .cClient("999")
                 .cOrderId(selectedH2OrderMEntity.getCOrderId())
                 .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
@@ -518,6 +1006,136 @@ public class DB2TransportOrderService {
                 //.cLocId()
                 //.cErrDsc()
                 .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void arrivedAtRackOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("outOfRackOutbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.ArrivedAtRack.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone("B")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void stationOccupied(StationOccupiedDto request) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        log.info("stationOccupied");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(11L)
+                        //.state()
+                        //.errorCode()
+                        .source(20L)
+                        .destination(1L)
+                        //.tidId()
+                        //.docNum()
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        .dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                .dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.StationOccupied.getValue()))
+                .cClient("999")
+                //.cOrderId()
+                //.cOrderTy()
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                //.cGaId()
+                //.cGalWhs()
+                .cCoId(request.getContainerId())
+                //.cGrWgAct()
+                //.cReqZone()
+                //.cZone()
+                .cLocId(request.getLocationId())
+                //.cErrDsc()
+                .cWcId(request.getWorkcenterId())
                 .build();
         h2TransJpaRepository.save(h2TransEntity);
     }

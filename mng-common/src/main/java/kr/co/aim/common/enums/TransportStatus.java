@@ -12,11 +12,18 @@ public enum TransportStatus implements MetaDataEnum {
     Released("6"),
     InternalRelocation("114"),
     OutOfRack("109"),
+    StationOccupied("106"),
     BinEmpty("103"),
     Shortage("82"),
     NotAllowedPickUp("115"),
     ArrivedAtWorkStation("108"),
-    OrderDone("90"),
+    WorkstationEmpty("105"),
+    ArrivedAtRack("107"),
+    OrderDone_Outbound("90"),
+    OrderDone_Inbound("92"),
+    CarrierScanned("126"),
+    ArrivedAtWorkstationWithError("110"),
+    ErrorText("111"),
     TakeOff("112");
     private final String value;
 
