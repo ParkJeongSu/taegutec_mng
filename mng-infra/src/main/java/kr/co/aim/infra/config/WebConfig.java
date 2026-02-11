@@ -2,6 +2,8 @@ package kr.co.aim.infra.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -9,10 +11,35 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**") // 모든 경로에 대해
-                .allowedOrigins("http://localhost:5173") // 이 출처의 요청을 허용
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:5173")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
                 .allowedHeaders("*")
                 .allowCredentials(true);
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        // 실제 파일(js, css, 이미지)이 들어있는 assets 폴더를 최우선으로 찾게 합니다.
+        registry.addResourceHandler("/assets/**")
+                .addResourceLocations("classpath:/static/assets/");
+
+        registry.addResourceHandler("/**")
+                .addResourceLocations("classpath:/static/");
+    }
+
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        // 1단계 경로 대응 (예: /login, /dashboard)
+        registry.addViewController("/{p1:[^\\.]*}")
+                .setViewName("forward:/index.html");
+
+        // 2단계 경로 대응 (예: /order/list) - 변수명을 p1, p2로 다르게 설정
+        registry.addViewController("/{p1:[^\\.]*}/{p2:[^\\.]*}")
+                .setViewName("forward:/index.html");
+
+        // 3단계 경로 대응 (예: /order/detail/1)
+        registry.addViewController("/{p1:[^\\.]*}/{p2:[^\\.]*}/{p3:[^\\.]*}")
+                .setViewName("forward:/index.html");
     }
 }

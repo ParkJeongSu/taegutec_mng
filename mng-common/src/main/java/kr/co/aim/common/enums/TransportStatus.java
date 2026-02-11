@@ -21,9 +21,11 @@ public enum TransportStatus implements MetaDataEnum {
     ArrivedAtRack("107"),
     OrderDone_Outbound("90"),
     OrderDone_Inbound("92"),
+    OrderDone_Relocation("94"),
     CarrierScanned("126"),
     ArrivedAtWorkstationWithError("110"),
     ErrorText("111"),
+    DroppedOnTunnelConveyor("109"),
     TakeOff("112");
     private final String value;
 

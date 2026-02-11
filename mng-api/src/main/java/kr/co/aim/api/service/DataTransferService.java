@@ -75,6 +75,41 @@ public class DataTransferService {
         return result;
     }
 
+    public TransportOrderEntity transferRelocationOrder(Long idocId) {
+        log.info("인터페이스 프로세스 시작 : idocId = {}", idocId);
+
+        // 1. DB2 조회 (Read Only 트랜잭션)
+        // Pageable.ofSize(1) 등을 이용해 단건 혹은 리스트 조회
+        IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
+                .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
+
+        // 리스트 조회 (필요 시 서비스 내 selectH2OrderMByIdocId 등 활용)
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByIdocId(idocId);
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByIdocId(idocId);
+
+        if(mList.size()!= 1 ){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+
+        if(dList.size() != 2){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        H2OrderDEntity h2OrderDSourceEntity = null;
+        H2OrderDEntity h2OrderDTargetEntity = null;
+        if(dList.get(0).getLineId() < dList.get(1).getLineId() ){
+            h2OrderDSourceEntity = dList.get(0);
+            h2OrderDTargetEntity = dList.get(1);
+        } else {
+            h2OrderDSourceEntity = dList.get(1);
+            h2OrderDTargetEntity = dList.get(0);
+        }
+
+        // 2. 비즈니스 로직 처리 및 MSSQL 저장 호출
+        TransportOrderEntity result = db2TransportOrderService.relocationTransportOrderToMSSQL(idoc, mList.get(0), h2OrderDSourceEntity,h2OrderDTargetEntity);
+        db2TransportOrderService.transferIdocId(idoc.getLineId());
+        return result;
+    }
+
     public void acceptOutboundOrder(Long orderId) {
         log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
 
@@ -114,6 +149,32 @@ public class DataTransferService {
         List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
 
         if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.acceptInbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.Accept);
+
+    }
+
+    public void acceptRelocationOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        if(!transportOrder.getTransportStatus().equals(TransportStatus.Create.name())){
+            throw new RuntimeException("Status is Not Create");
+        }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 2){
             throw new RuntimeException("잘못된 데이터 기입");
         }
         Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
@@ -179,6 +240,56 @@ public class DataTransferService {
 
     }
 
+    public void errorTextInboundOrder(Long orderId,String errorText) {
+        log.info("인터페이스 프로세스 시작 : arrivedWorkstationError Id = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        if(transportOrder.getTransportStatus().equals(TransportStatus.ArrivedAtWorkstationWithError.name()) || transportOrder.getTransportStatus().equals(TransportStatus.ErrorText.name())){
+
+        } else {
+            throw new RuntimeException("Status is Not ArrivedAtWorkstationWithError or ErrorText");
+        }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.errorTextInbound(errorText,transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.ErrorText);
+
+    }
+
+    public void carrierScannedInboundOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : carrierScannedInboundOrder Id = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.carrierScannedInbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.CarrierScanned);
+
+    }
+
     public void releaseOutboundOrder(Long orderId) {
         log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
 
@@ -231,6 +342,64 @@ public class DataTransferService {
 
     }
 
+    public void internalRelocationRelocationOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        if(!transportOrder.getTransportStatus().equals(TransportStatus.Accept.name())){
+            throw new RuntimeException("Status is Not Released");
+        }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 ){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        if(dList.size() != 2){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.internalRelocationOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.InternalRelocation);
+
+    }
+
+    public void dropOnTunnelRelocationOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        if(!transportOrder.getTransportStatus().equals(TransportStatus.Accept.name())){
+            throw new RuntimeException("Status is Not Released");
+        }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 ){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        if(dList.size() != 2){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.dropOnTunnelRelocation(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.DroppedOnTunnelConveyor);
+
+    }
+
     public void outOfRackOutboundOrder(Long orderId) {
         log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
 
@@ -240,6 +409,34 @@ public class DataTransferService {
 
         } else{
             throw new RuntimeException("Status is Not Released");
+        }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.outOfRackOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.OutOfRack);
+
+    }
+
+    public void outOfRackInboundOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        if(transportOrder.getTransportStatus().equals(TransportStatus.CarrierScanned.name()) ){
+
+        } else{
+            throw new RuntimeException("Status is Not CarrierScanned");
         }
 
         List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
@@ -310,6 +507,47 @@ public class DataTransferService {
 
         db2TransportOrderService.completedOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
         db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.OrderDone_Outbound);
+
+    }
+
+    public void completedInboundOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.completedInbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.OrderDone_Inbound);
+
+    }
+
+    public void completedRelocationOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.completedRelocation(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.OrderDone_Relocation);
 
     }
 
@@ -417,6 +655,28 @@ public class DataTransferService {
 
     }
 
+    public void notAllowedPickUpInboundOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.notAllowedPickUpInbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.NotAllowedPickUp);
+
+    }
+
     public void arrivedAtRackOutboundOrder(Long orderId) {
         log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
 
@@ -425,6 +685,57 @@ public class DataTransferService {
         if(!transportOrder.getTransportStatus().equals(TransportStatus.NotAllowedPickUp.name())  ){
             throw new RuntimeException("Status is Not NotAllowedPickUp");
         }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if(mList.size()!= 1 && dList.size() != 1){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.arrivedAtRackOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.ArrivedAtRack);
+
+    }
+
+    public void arrivedAtRackRelocationOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
+
+        if(!transportOrder.getTransportStatus().equals(TransportStatus.DroppedOnTunnelConveyor.name())  ){
+            throw new RuntimeException("Status is Not DroppedOnTunnelConveyor");
+        }
+
+        List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+        List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
+
+        if( mList.size()!= 1 ){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        if(dList.size() != 2){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findById(mList.get(0).getIdocId());
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("잘못된 데이터 기입");
+        }
+        IdocEntity idocEntity = optionalIdocEntity.get();
+
+        db2TransportOrderService.arrivedAtRackOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        db2TransportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.ArrivedAtRack);
+
+    }
+
+    public void arrivedAtRackOInboundOrder(Long orderId) {
+        log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
+
+        TransportOrderEntity transportOrder = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
 
         List<H2OrderMEntity> mList = h2OrderMJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());
         List<H2OrderDEntity> dList = h2OrderDJpaRepository.findByCOrderId(transportOrder.getTransportOrderId());

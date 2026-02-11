@@ -37,6 +37,14 @@ public class SimulatorController {
         return ResponseEntity.ok(idocPage);
     }
 
+    @GetMapping("relocation/idocs")
+    public ResponseEntity<Page<IdocResponseDto>> getIdocListByRelocation(Pageable pageable) {
+        // 3. 서비스 계층에 작업 위임
+        Page<IdocResponseDto> idocPage = db2TransportOrderService.selectIdocsByOrderType(pageable,"R");
+
+        return ResponseEntity.ok(idocPage);
+    }
+
     @GetMapping("/h2orderm")
     public ResponseEntity<Page<H2OrderMResponseDto>> getH2OrderMList(@RequestParam Long idocId,Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
@@ -49,6 +57,14 @@ public class SimulatorController {
     public ResponseEntity<H2OrderDetailResponseDto> getH2OrderDetailList(@PathVariable("idocId") Long idocId) {
         // 3. 서비스 계층에 작업 위임
         H2OrderDetailResponseDto h2orderMPage = db2TransportOrderService.selectH2OrderDetailByIdocId(idocId);
+
+        return ResponseEntity.ok(h2orderMPage);
+    }
+
+    @GetMapping("/relocation/order-detail/{idocId}")
+    public ResponseEntity<H2OrderDetailResponseDto> getH2OrderDetailListForRelocation(@PathVariable("idocId") Long idocId) {
+        // 3. 서비스 계층에 작업 위임
+        H2OrderDetailResponseDto h2orderMPage = db2TransportOrderService.selectH2OrderDetailByIdocIdForRelocation(idocId);
 
         return ResponseEntity.ok(h2orderMPage);
     }
@@ -162,6 +178,46 @@ public class SimulatorController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/relocation/transfer/{idocId}")
+    public ResponseEntity<TransportOrderResponseDto> processRelocationTransfer(@PathVariable Long idocId) {
+        log.info("인터페이스 수동 실행 요청 - idocId: {}", idocId);
+
+        // 1. 통합 서비스 호출 (DB2 조회 -> MSSQL 저장 -> DB2 상태 변경)
+        // 반환값은 MSSQL에 저장된 최종 객체의 DTO입니다.
+        TransportOrderEntity entity = dataTransferService.transferRelocationOrder(idocId);
+        TransportStatus status = TransportStatus.valueOf(entity.getTransportStatus());
+        String transportStatus = status.getFullStatus();
+
+        TransportOrderResponseDto result =
+                TransportOrderResponseDto.builder()
+                        .id(entity.getId())
+                        .transportOrderName(entity.getTransportOrderName())
+                        .description(entity.getDescription())
+                        .transportType(entity.getTransportType())
+                        .transportOrderId(entity.getTransportOrderId())
+                        .transportStatus(transportStatus)
+                        .priority(entity.getPriority())
+                        .galId(entity.getGalId())
+                        .galWarehouse(entity.getGalWarehouse())
+                        .fromWarehouse(entity.getFromWarehouse())
+                        .fromZoneName(entity.getFromZoneName())
+                        .fromLocationId(entity.getFromLocationId())
+                        .toWarehouse(entity.getToWarehouse())
+                        .toZoneName(entity.getToZoneName())
+                        .toLocationId(entity.getToLocationId())
+                        .carrierName(entity.getCarrierName())
+                        .carrierType(entity.getCarrierType())
+                        .drivingProfile(entity.getDrivingProfile())
+                        .createTime(entity.getCreateTime())
+                        .releaseTime(entity.getReleaseTime())
+                        .completeTime(entity.getCompleteTime())
+                        .createUser(entity.getCreateUser())
+                        .releaseUser(entity.getReleaseUser())
+                        .completeUser(entity.getCompleteUser())
+                        .build();
+        return ResponseEntity.ok(result);
+    }
+
     // SimulatorController.java 에 추가
     @PostMapping("/outbound/accept")
     public ResponseEntity<Void> acceptOutbound(@RequestBody SimulatorIdsDto request) {
@@ -175,6 +231,14 @@ public class SimulatorController {
     public ResponseEntity<Void> acceptInbound(@RequestBody SimulatorIdsDto request) {
         log.info("Accept 요청 수신: {} 건", request.getIds().size());
         dataTransferService.acceptInboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/relocation/accept")
+    public ResponseEntity<Void> acceptRelocation(@RequestBody SimulatorIdsDto request) {
+        log.info("Accept 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.acceptRelocationOrder(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -198,7 +262,39 @@ public class SimulatorController {
     @PostMapping("/inbound/error-text")
     public ResponseEntity<Void> errorTextInbound(@RequestBody SimulatorIdsDto request) {
         log.info("errorTextInbound 요청 수신: {} 건", request.getIds().size());
-        dataTransferService.arrivedWorkstationErrorInboundOrder(request.getIds().get(0));
+        dataTransferService.errorTextInboundOrder(request.getIds().get(0), request.getErrorText());
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/inbound/scanned-carrier")
+    public ResponseEntity<Void> carrierScannedInbound(@RequestBody SimulatorIdsDto request) {
+        log.info("carrierScannedInbound 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.carrierScannedInboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/inbound/out-of-rack")
+    public ResponseEntity<Void> outOfRackInbound(@RequestBody SimulatorIdsDto request) {
+        log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.outOfRackInboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/inbound/not-allowed-pick-up")
+    public ResponseEntity<Void> notAllowedPickUpInbound(@RequestBody SimulatorIdsDto request) {
+        log.info("not-allowed-pick-up 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.notAllowedPickUpInboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/inbound/arrived-at-rack")
+    public ResponseEntity<Void> arrivedAtRackInbound(@RequestBody SimulatorIdsDto request) {
+        log.info("arrived-at-rack 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.arrivedAtRackOInboundOrder(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -215,6 +311,22 @@ public class SimulatorController {
     public ResponseEntity<Void> internalRelocationTransportOrder(@RequestBody SimulatorIdsDto request) {
         log.info("internal-relocation 요청 수신: {} 건", request.getIds().size());
         dataTransferService.internalRelocationOutboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/relocation/internal-relocation")
+    public ResponseEntity<Void> internalRelocationByRelocation(@RequestBody SimulatorIdsDto request) {
+        log.info("internal-relocation 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.internalRelocationRelocationOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/relocation/drop-on-tunnel")
+    public ResponseEntity<Void> dropOnTunnelRelocation(@RequestBody SimulatorIdsDto request) {
+        log.info("internal-dropOnTunnelRelocation 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.dropOnTunnelRelocationOrder(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -239,6 +351,30 @@ public class SimulatorController {
     public ResponseEntity<Void> completedTransportOrder(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
         dataTransferService.completedOutboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/inbound/completed")
+    public ResponseEntity<Void> completedInbound(@RequestBody SimulatorIdsDto request) {
+        log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.completedInboundOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/relocation/completed")
+    public ResponseEntity<Void> completedRelocation(@RequestBody SimulatorIdsDto request) {
+        log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.completedRelocationOrder(request.getIds().get(0));
+        return ResponseEntity.noContent().build();
+    }
+
+    // SimulatorController.java 에 추가
+    @PostMapping("/relocation/arrived-at-rack")
+    public ResponseEntity<Void> arrivedAtRackRelocation(@RequestBody SimulatorIdsDto request) {
+        log.info("arrived-at-rack 요청 수신: {} 건", request.getIds().size());
+        dataTransferService.arrivedAtRackRelocationOrder(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 

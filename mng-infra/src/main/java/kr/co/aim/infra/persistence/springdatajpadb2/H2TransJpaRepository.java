@@ -20,7 +20,7 @@ public interface H2TransJpaRepository extends JpaRepository<H2TransEntity, Long>
     Page<H2TransEntity> findByIdocId(Long idocId,Pageable pageable);
 
     @Query(
-            value = "select h from H2TransEntity h where h.cOrderId = :cOrderId",
+            value = "select h from H2TransEntity h where h.cOrderId = :cOrderId order by h.dtimeCre desc",
             countQuery = "select count(h) from H2TransEntity h where h.cOrderId = :cOrderId"
     )
     Page<H2TransEntity> selectByCOrderId(@Param("cOrderId") String cOrderId, Pageable pageable);
