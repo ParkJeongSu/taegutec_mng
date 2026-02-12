@@ -1,9 +1,9 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.LotsCreateRequestDto;
-import kr.co.aim.common.dto.LotsResponseDto;
-import kr.co.aim.common.dto.LotsSearchConditionDto;
-import kr.co.aim.common.dto.LotsUpdateRequestDto;
+import kr.co.aim.api.dto.LotsCreateRequestDto;
+import kr.co.aim.api.dto.LotsResponseDto;
+import kr.co.aim.api.dto.LotsSearchConditionDto;
+import kr.co.aim.api.dto.LotsUpdateRequestDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -61,7 +61,7 @@ public class LotService {
     public Page<LotsResponseDto> findLots(LotsSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<LotsResponseDto> page = lotsRepository.findLotsWithConditions(condition,pageable);
+        Page<LotsResponseDto> page = null;//lotsRepository.findLotsWithConditions(condition,pageable);
 
         return page;
     }

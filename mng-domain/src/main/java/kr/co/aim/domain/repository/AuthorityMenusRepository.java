@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.AuthMenuResponseDto;
-import kr.co.aim.common.dto.AuthMenuSearchConditionDto;
 import kr.co.aim.domain.model.AuthorityMenus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,7 +46,7 @@ public interface AuthorityMenusRepository {
      */
     AuthorityMenus save(AuthorityMenus authorityMenus);
 
-    Page<AuthMenuResponseDto> findAuthMenuWithConditions(AuthMenuSearchConditionDto condition, Pageable pageable);
+//    Page<AuthMenuResponseDto> findAuthMenuWithConditions(AuthMenuSearchConditionDto condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

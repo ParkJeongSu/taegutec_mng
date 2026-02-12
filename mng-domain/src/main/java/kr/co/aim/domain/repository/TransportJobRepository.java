@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.TransportJobResponseDto;
-import kr.co.aim.common.dto.TransportJobSearchConditionDto;
 import kr.co.aim.domain.model.TransportJob;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,5 +40,5 @@ public interface TransportJobRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
-    Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable);
+//    Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable);
 }

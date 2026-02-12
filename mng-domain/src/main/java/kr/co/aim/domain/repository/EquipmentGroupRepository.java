@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.EquipmentGroupResponseDto;
-import kr.co.aim.common.dto.EquipmentGroupSearchCondtionDto;
 import kr.co.aim.domain.model.EquipmentGroup;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +38,7 @@ public interface EquipmentGroupRepository {
      */
     EquipmentGroup save(EquipmentGroup equipmentGroup);
 
-    Page<EquipmentGroupResponseDto> findEquipmentGroupWithConditions(EquipmentGroupSearchCondtionDto condition, Pageable pageable);
+//    Page<EquipmentGroupResponseDto> findEquipmentGroupWithConditions(EquipmentGroupSearchCondtionDto condition, Pageable pageable);
 
 
     void deleteAllByIdInBatch(List<Long>ids);

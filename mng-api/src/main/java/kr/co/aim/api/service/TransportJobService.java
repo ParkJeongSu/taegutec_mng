@@ -1,6 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.*;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.common.error.EntityExistException;
@@ -315,7 +315,7 @@ public class TransportJobService {
     public Page<TransportJobResponseDto> findTransportJob(TransportJobSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<TransportJobResponseDto> page = transportJobRepository.findTransportJobWithConditions(condition,pageable);
+        Page<TransportJobResponseDto> page = null;//transportJobRepository.findTransportJobWithConditions(condition,pageable);
 
         return page;
     }
@@ -399,7 +399,7 @@ public class TransportJobService {
     @Transactional(readOnly = true)
     public Page<TransportJobDetailResponseDto> findTransportJobDetail(TransportJobDetailSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<TransportJobDetailResponseDto> page = transportJobDetailRepository.findTransportJobDetailWithConditions(condition,pageable);
+        Page<TransportJobDetailResponseDto> page = null;//transportJobDetailRepository.findTransportJobDetailWithConditions(condition,pageable);
 
         return page;
     }

@@ -1,8 +1,8 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.Utils.TsidUtils;
-import kr.co.aim.common.dto.*;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -405,7 +405,7 @@ public class CarrierService {
     @Transactional(readOnly = true)
     public Page<CarrierDefResponseDto> findCarrierDefs(CarrierDefSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<CarrierDefResponseDto> page = carrierDefRepository.findCarrierDefWithConditions(condition,pageable);
+        Page<CarrierDefResponseDto> page = null;//carrierDefRepository.findCarrierDefWithConditions(condition,pageable);
 
         return page;
     }
@@ -514,7 +514,7 @@ public class CarrierService {
     @Transactional(readOnly = true)
     public Page<CarriersResponseDto> findCarriers(CarriersSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<CarriersResponseDto> page = carriersRepository.findCarriersWithConditions(condition,pageable);
+        Page<CarriersResponseDto> page = null;//carriersRepository.findCarriersWithConditions(condition,pageable);
 
         return page;
     }

@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.dto.*;
 import kr.co.aim.api.jwt.JwtTokenProvider;
-import kr.co.aim.common.dto.*;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.ExcelValidationException;
 import kr.co.aim.common.record.TransactionInfo;
@@ -43,16 +43,7 @@ public class UserService {
 
         // 2. Page<Entity>를 Page<DTO>로 변환하여 반환합니다.
         // Page 객체의 map 기능을 사용하면 메타데이터는 유지되고 내용물만 DTO로 바뀝니다.
-        return page.map(userMapper::toResponseDto);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<UserResponseDto> findUsers(UserSearchConditionDto condition,Pageable pageable) {
-        //1. Repository에서 Page<Entity>를 조회합니다.
-
-        Page<UserResponseDto> page = userRepository.findUsersWithConditions(condition,pageable);
-
-        return page;
+        return page.map(UserResponseDto::from);
     }
 
     @Transactional

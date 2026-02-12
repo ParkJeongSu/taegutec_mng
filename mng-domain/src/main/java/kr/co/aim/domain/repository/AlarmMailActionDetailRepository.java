@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.AlarmActionDetailResponseDto;
-import kr.co.aim.common.dto.AlarmActionDetailSearchConditionDto;
 import kr.co.aim.domain.model.AlarmMailActionDetail;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +38,7 @@ public interface AlarmMailActionDetailRepository {
      */
     AlarmMailActionDetail save(AlarmMailActionDetail alarmMailActionDetail);
 
-    Page<AlarmActionDetailResponseDto> findAlarmMailActionDetailWithConditions(AlarmActionDetailSearchConditionDto condition, Pageable pageable);
+//    Page<AlarmActionDetailResponseDto> findAlarmMailActionDetailWithConditions(AlarmActionDetailSearchConditionDto condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

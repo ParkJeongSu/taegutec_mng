@@ -1,6 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.*;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.enums.CommunicationState;
 import kr.co.aim.common.enums.EquipmentOperationMode;
 import kr.co.aim.common.enums.EquipmentState;
@@ -280,7 +280,7 @@ public class EquipmentService {
 
     @Transactional(readOnly = true)
     public Page<EquipmentGroupResponseDto> findEquipmentGroups(EquipmentGroupSearchCondtionDto condition, Pageable pageable) {
-        Page<EquipmentGroupResponseDto> page = equipmentGroupRepository.findEquipmentGroupWithConditions(condition,pageable);
+        Page<EquipmentGroupResponseDto> page = null;//equipmentGroupRepository.findEquipmentGroupWithConditions(condition,pageable);
         return page;
     }
 
@@ -372,7 +372,7 @@ public class EquipmentService {
     @Transactional(readOnly = true)
     public Page<EquipmentDefResponseDto> findEquipmentDefs(EquipmentDefSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<EquipmentDefResponseDto> page = equipmentDefRepository.findEquipmentDefWithConditions(condition,pageable);
+        Page<EquipmentDefResponseDto> page = null;//equipmentDefRepository.findEquipmentDefWithConditions(condition,pageable);
 
         return page;
     }
@@ -469,7 +469,7 @@ public class EquipmentService {
     @Transactional(readOnly = true)
     public Page<EquipmentsResponseDto> findEquipments(EquipmentsSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<EquipmentsResponseDto> page = equipmentsRepository.findEquipmentsWithConditions(condition,pageable);
+        Page<EquipmentsResponseDto> page = null;//equipmentsRepository.findEquipmentsWithConditions(condition,pageable);
 
         return page;
     }

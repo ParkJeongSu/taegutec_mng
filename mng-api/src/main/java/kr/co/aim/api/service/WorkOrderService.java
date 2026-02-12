@@ -1,9 +1,9 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.WorkOrderCreateRequestDto;
-import kr.co.aim.common.dto.WorkOrderResponseDto;
-import kr.co.aim.common.dto.WorkOrderSearchConditionDto;
-import kr.co.aim.common.dto.WorkOrderUpdateRequestDto;
+import kr.co.aim.api.dto.WorkOrderCreateRequestDto;
+import kr.co.aim.api.dto.WorkOrderResponseDto;
+import kr.co.aim.api.dto.WorkOrderSearchConditionDto;
+import kr.co.aim.api.dto.WorkOrderUpdateRequestDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.record.TransactionInfo;
@@ -82,7 +82,7 @@ public class WorkOrderService {
     public Page<WorkOrderResponseDto> findWorkOrder(WorkOrderSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<WorkOrderResponseDto> page = workOrderRepository.findWorkOrderWithConditions(condition,pageable);
+        Page<WorkOrderResponseDto> page = null;//workOrderRepository.findWorkOrderWithConditions(condition,pageable);
 
         return page;
     }

@@ -1,9 +1,9 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.AuthorityCreateRequestDto;
-import kr.co.aim.common.dto.AuthorityResponseDto;
-import kr.co.aim.common.dto.AuthoritySearchConditionDto;
-import kr.co.aim.common.dto.AuthorityUpdateRequestDto;
+import kr.co.aim.api.dto.AuthorityCreateRequestDto;
+import kr.co.aim.api.dto.AuthorityResponseDto;
+import kr.co.aim.api.dto.AuthoritySearchConditionDto;
+import kr.co.aim.api.dto.AuthorityUpdateRequestDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -31,7 +31,7 @@ public class AuthorityService {
     @Transactional(readOnly = true)
     public Page<AuthorityResponseDto> findAuthority(AuthoritySearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<AuthorityResponseDto> pages = authorityRepository.findAuthsWithConditions(condition,pageable);
+        Page<AuthorityResponseDto> pages = null;//authorityRepository.findAuthsWithConditions(condition,pageable);
 
         return pages;
     }

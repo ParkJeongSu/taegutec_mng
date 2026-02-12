@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.TaskJobResponseDto;
-import kr.co.aim.common.dto.TaskJobSearchConditionDto;
 import kr.co.aim.domain.model.TaskJob;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,5 +24,5 @@ public interface TaskJobRepository {
 
     Optional<TaskJob> findByTaskState(String taskState);
 
-    Page<TaskJobResponseDto> findTaskJobWithConditions(TaskJobSearchConditionDto condition, Pageable pageable);
+//    Page<TaskJobResponseDto> findTaskJobWithConditions(TaskJobSearchConditionDto condition, Pageable pageable);
 }

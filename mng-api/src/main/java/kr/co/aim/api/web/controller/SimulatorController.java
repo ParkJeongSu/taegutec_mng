@@ -1,8 +1,8 @@
 package kr.co.aim.api.web.controller;
 
+import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.DB2TransportOrderService;
 import kr.co.aim.api.service.DataTransferService;
-import kr.co.aim.common.dto.*;
 import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +48,7 @@ public class SimulatorController {
     }
 
     @GetMapping("/h2orderm")
-    public ResponseEntity<Page<H2OrderMResponseDto>> getH2OrderMList(@RequestParam Long idocId,Pageable pageable) {
+    public ResponseEntity<Page<H2OrderMResponseDto>> getH2OrderMList(@RequestParam Long idocId, Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
         Page<H2OrderMResponseDto> h2orderMPage = db2TransportOrderService.selectH2OrderMByIdocId(idocId,pageable);
 
@@ -72,7 +72,7 @@ public class SimulatorController {
     }
 
     @GetMapping("/h2orderd")
-    public ResponseEntity<Page<H2OrderDResponseDto>> getH2OrderDList(@RequestParam Long idocId,Pageable pageable) {
+    public ResponseEntity<Page<H2OrderDResponseDto>> getH2OrderDList(@RequestParam Long idocId, Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
         Page<H2OrderDResponseDto> h2orderDPage = db2TransportOrderService.selectH2OrderDByIdocId(idocId,pageable);
 
@@ -80,7 +80,7 @@ public class SimulatorController {
     }
 
     @GetMapping("/h2trans")
-    public ResponseEntity<Page<H2TransResponseDto>> getH2TransList(@RequestParam Long orderId,Pageable pageable) {
+    public ResponseEntity<Page<H2TransResponseDto>> getH2TransList(@RequestParam Long orderId, Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
         Page<H2TransResponseDto> h2TransPage = db2TransportOrderService.selectH2TransByOrderId(orderId,pageable);
 

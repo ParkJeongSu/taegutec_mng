@@ -1,7 +1,5 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.UserResponseDto;
-import kr.co.aim.common.dto.UserSearchConditionDto;
 import kr.co.aim.domain.model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -52,8 +50,6 @@ public interface UserRepository {
     Page<User> findAll(Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
-
-    Page<UserResponseDto> findUsersWithConditions(UserSearchConditionDto condition, Pageable pageable);
 
     List<User> saveAll(List<User> user);
 }

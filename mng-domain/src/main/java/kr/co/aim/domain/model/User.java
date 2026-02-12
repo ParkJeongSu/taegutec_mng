@@ -27,7 +27,6 @@ public class User implements HasTransactionInfo {
     private String checkOutUser;
     private String dataState;
     private String eventName;
-
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;

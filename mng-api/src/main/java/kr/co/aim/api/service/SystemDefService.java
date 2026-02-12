@@ -1,9 +1,9 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.SystemDefCreateRequestDto;
-import kr.co.aim.common.dto.SystemDefResponseDto;
-import kr.co.aim.common.dto.SystemDefSearchConditionDto;
-import kr.co.aim.common.dto.SystemDefUpdateRequestDto;
+import kr.co.aim.api.dto.SystemDefCreateRequestDto;
+import kr.co.aim.api.dto.SystemDefResponseDto;
+import kr.co.aim.api.dto.SystemDefSearchConditionDto;
+import kr.co.aim.api.dto.SystemDefUpdateRequestDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -60,7 +60,7 @@ public class SystemDefService {
     public Page<SystemDefResponseDto> findSystemDefs(SystemDefSearchConditionDto condition,Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<SystemDefResponseDto> page = systemDefRepository.findSystemDefWithConditions(condition,pageable);
+        Page<SystemDefResponseDto> page = null;//systemDefRepository.findSystemDefWithConditions(condition,pageable);
 
         return page;
     }

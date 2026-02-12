@@ -2,11 +2,7 @@ package kr.co.aim.domain.repository;
 
 //import kr.co.aim.domain.model.AlarmAction;
 
-import kr.co.aim.common.dto.AlarmActionUserGroupResponseDto;
-import kr.co.aim.common.dto.AlarmActionUserGroupSearchConditionDto;
 import kr.co.aim.domain.model.AlarmActionUserGroup;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +41,7 @@ public interface AlarmActionUserGroupRepository {
      */
     Optional<AlarmActionUserGroup> findByUserGroupName(String userGroupName);
 
-    Page<AlarmActionUserGroupResponseDto> findAlarmUserGroupWithConditions(AlarmActionUserGroupSearchConditionDto condition, Pageable pageable);
+//    Page<AlarmActionUserGroupResponseDto> findAlarmUserGroupWithConditions(AlarmActionUserGroupSearchConditionDto condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

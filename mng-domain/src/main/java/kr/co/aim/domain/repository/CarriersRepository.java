@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.CarriersResponseDto;
-import kr.co.aim.common.dto.CarriersSearchConditionDto;
 import kr.co.aim.domain.model.Carriers;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +38,7 @@ public interface CarriersRepository {
      */
     List<Carriers> findAll();
 
-    Page<CarriersResponseDto> findCarriersWithConditions(CarriersSearchConditionDto condition, Pageable pageable);
+//    Page<CarriersResponseDto> findCarriersWithConditions(CarriersSearchConditionDto condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

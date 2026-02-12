@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.MenusResponseDto;
-import kr.co.aim.common.dto.MenusSearchConditionDto;
 import kr.co.aim.domain.model.Menus;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,5 +33,5 @@ public interface MenusRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
-    Page<MenusResponseDto> findMenusWithConditions(MenusSearchConditionDto condition, Pageable pageable);
+//    Page<MenusResponseDto> findMenusWithConditions(MenusSearchConditionDto condition, Pageable pageable);
 }

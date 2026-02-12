@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.PortDefResponseDto;
-import kr.co.aim.common.dto.PortDefSearchConditionDto;
 import kr.co.aim.domain.model.PortDef;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,5 +36,5 @@ public interface PortDefRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
-    Page<PortDefResponseDto> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable);
+//    Page<PortDefResponseDto> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable);
 }

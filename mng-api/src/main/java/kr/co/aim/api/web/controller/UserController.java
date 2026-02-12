@@ -8,9 +8,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.ExcelService;
 import kr.co.aim.api.service.UserService;
-import kr.co.aim.common.dto.*;
 import kr.co.aim.common.error.ExcelValidationException;
 import kr.co.aim.common.format.response.UserResponse;
 import kr.co.aim.domain.model.User;
@@ -93,25 +93,6 @@ public class UserController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @Operation(summary = "사용자 정보 조회", description = "사용자의 정보를 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
-    })
-    // 1. 요청 접수: GET /api/users/
-    @GetMapping
-    public ResponseEntity<Page<UserResponseDto>> getUsers(
-            UserSearchConditionDto condition,
-            Pageable pageable) {
-        // 3. 서비스 계층에 작업 위임
-        //Page<UserResponseDto> userPage = userService.findUsers(pageable);
-        Page<UserResponseDto> userPage = userService.findUsers(condition, pageable);
-
-        // 4. 결과 변환 및 HTTP 응답
-        return ResponseEntity.ok(userPage);
-    }
-
     @Operation(summary = "사용자 정보 삭제", description = "사용자의 정보를 삭제합니다.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -123,28 +104,6 @@ public class UserController {
         userService.deleteUsersByIds(request.getIds());
         // 성공적으로 삭제되었으며, 별도의 본문 내용 없이 응답한다는 의미
         return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "사용자 정보 조회", description = "사용자의 정보를 조회합니다.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
-    })
-    // 1. 요청 접수: GET /api/users/
-    @GetMapping("/export")
-    public void getAllUsers(
-            HttpServletResponse response, // 엑셀 파일을 스트리밍하기 위해 필요
-            UserSearchConditionDto condition,
-            Pageable pageable) {
-        // 3. 서비스 계층에 작업 위임
-        Page<UserResponseDto> page = userService.findUsers(condition, Pageable.unpaged());
-
-        // 3. Page에서 실제 데이터 리스트(List)를 가져옴
-        List<UserResponseDto> dataList = page.getContent();
-
-        // 4. ExcelService에 쓰기 작업 위임 (헤더 설정 및 파일 생성)
-        excelService.writeToExcel(response ,dataList);
     }
 
     @Operation(summary = "특정 사용자 정보 생성", description = "사용자 ID를 이용하여 특정 사용자의 정보를 생성합니다.")

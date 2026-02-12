@@ -1,6 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.*;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -453,7 +453,7 @@ public class PortService {
     @Transactional(readOnly = true)
     public Page<PortDefResponseDto> findPortDefs(PortDefSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<PortDefResponseDto> page = portDefRepository.findPortDefWithConditions(condition,pageable);
+        Page<PortDefResponseDto> page = null;//portDefRepository.findPortDefWithConditions(condition,pageable);
 
         return page;
     }
@@ -545,7 +545,7 @@ public class PortService {
     @Transactional(readOnly = true)
     public Page<PortsResponseDto> findPorts(PortsSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<PortsResponseDto> page = portsRepository.findPortsWithConditions(condition,pageable);
+        Page<PortsResponseDto> page = null;//portsRepository.findPortsWithConditions(condition,pageable);
 
         return page;
     }

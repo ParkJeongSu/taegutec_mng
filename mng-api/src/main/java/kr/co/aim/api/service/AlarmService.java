@@ -1,6 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.*;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.enums.AlarmState;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.EntityExistException;
@@ -167,7 +167,7 @@ public class AlarmService {
     public Page<AlarmDefResponseDto> findAlarmDefs(AlarmDefSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<AlarmDefResponseDto> page = alarmDefRepository.findAlarmDefWithConditions(condition,pageable);
+        Page<AlarmDefResponseDto> page = null;//alarmDefRepository.findAlarmDefWithConditions(condition,pageable);
 
         return page;
     }
@@ -261,7 +261,7 @@ public class AlarmService {
     public Page<AlarmResponseDto> findAlarms(AlarmSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<AlarmResponseDto> page = alarmRepository.findAlarmWithConditions(condition,pageable);
+        Page<AlarmResponseDto> page = null;//alarmRepository.findAlarmWithConditions(condition,pageable);
 
         return page;
     }
@@ -343,7 +343,7 @@ public class AlarmService {
     public Page<AlarmActionUserGroupResponseDto> findAlarmActionUserGroups(AlarmActionUserGroupSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<AlarmActionUserGroupResponseDto> page = alarmActionUserGroupRepository.findAlarmUserGroupWithConditions(condition,pageable);
+        Page<AlarmActionUserGroupResponseDto> page = null;//alarmActionUserGroupRepository.findAlarmUserGroupWithConditions(condition,pageable);
 
         return page;
     }
@@ -423,7 +423,7 @@ public class AlarmService {
     public Page<AlarmActionUserGroupUsersResponseDto> findAlarmActionUserGroupsUsers(AlarmActionUserGroupUsersSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<AlarmActionUserGroupUsersResponseDto> page = alarmActionUserGroupUsersRepository.findAlarmActionUserGroupUsersWithConditions(condition,pageable);
+        Page<AlarmActionUserGroupUsersResponseDto> page = null;//alarmActionUserGroupUsersRepository.findAlarmActionUserGroupUsersWithConditions(condition,pageable);
 
         return page;
     }
@@ -481,7 +481,7 @@ public class AlarmService {
     public Page<AlarmActionResponseDto> findAlarmActions(AlarmActionSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<AlarmActionResponseDto> page = alarmActionRepository.findAlarmActionWithConditions(condition,pageable);
+        Page<AlarmActionResponseDto> page = null;//alarmActionRepository.findAlarmActionWithConditions(condition,pageable);
 
         return page;
     }
@@ -567,7 +567,7 @@ public class AlarmService {
     public Page<AlarmActionDetailResponseDto> findAlarmMailActionDetails(AlarmActionDetailSearchConditionDto condition, Pageable pageable) {
         //1. Repository에서 Page<Entity>를 조회합니다.
 
-        Page<AlarmActionDetailResponseDto> page = alarmMailActionDetailRepository.findAlarmMailActionDetailWithConditions(condition,pageable);
+        Page<AlarmActionDetailResponseDto> page = null;//alarmMailActionDetailRepository.findAlarmMailActionDetailWithConditions(condition,pageable);
 
         return page;
     }

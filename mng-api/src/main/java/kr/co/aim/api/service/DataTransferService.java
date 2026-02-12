@@ -1,6 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.StationOccupiedDto;
+import kr.co.aim.api.dto.StationOccupiedDto;
 import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;

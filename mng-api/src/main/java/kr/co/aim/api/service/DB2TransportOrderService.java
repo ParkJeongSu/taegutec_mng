@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.Utils.TsidUtils;
-import kr.co.aim.common.dto.*;
 import kr.co.aim.common.enums.IdocErrorCode;
 import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
@@ -9,9 +9,6 @@ import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderMEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2TransEntity;
 import kr.co.aim.infra.persistence.entitydb2.IdocEntity;
-import kr.co.aim.infra.persistence.mapper.H2Mapper;
-import kr.co.aim.infra.persistence.mapper.IdocMapper;
-import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpadb2.H2OrderDJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpadb2.H2OrderMJpaRepository;
@@ -40,9 +37,6 @@ public class DB2TransportOrderService {
     private final H2OrderDJpaRepository h2OrderDJpaRepository;
     private final H2TransJpaRepository h2TransJpaRepository;
     private final TransportOrderJpaRepository transportOrderJpaRepository;
-    private final IdocMapper idocMapper;
-    private final H2Mapper h2Mapper;
-    private final TransportOrderMapper transportOrderMapper;
 
 
 
@@ -158,7 +152,7 @@ public class DB2TransportOrderService {
     public TransportOrderResponseDto selectTransportOrder(Long orderId) {
         log.info("selectTransportOrder");
         TransportOrderEntity entity = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
-        return transportOrderMapper.toDto(entity);
+        return TransportOrderResponseDto.from(entity);
     }
 
     @Transactional( value = "db2TransactionManager")
@@ -174,28 +168,31 @@ public class DB2TransportOrderService {
     public Page<IdocResponseDto> selectIdocsByOrderType(Pageable pageable, String orderType) {
         log.info("selectIdocs");
         Page<IdocEntity> idocPage = idocJpaRepository.findIdocsByOrderType(orderType,pageable);
-        return idocPage.map(idocMapper::toDto);
+        return idocPage.map(IdocResponseDto::from);
     }
 
     @Transactional(readOnly = true, value = "db2TransactionManager")
     public Page<H2OrderMResponseDto> selectH2OrderMByIdocId(Long IdocId, Pageable pageable) {
         log.info("selectH2OrderMByIdocId");
+        // 1. DB에서 엔티티 페이지를 조회합니다.
         Page<H2OrderMEntity> h2OrderMPage = h2OrderMJpaRepository.findByIdocId(IdocId,pageable);
-        return h2OrderMPage.map(h2Mapper::toDto);
+        // 2. 메서드 참조(Method Reference)를 사용하여 변환합니다.
+        // 람다(entity -> H2OrderMResponseDto.from(entity))보다 훨씬 깔끔합니다.
+        return h2OrderMPage.map(H2OrderMResponseDto::from);
     }
 
     @Transactional(readOnly = true, value = "db2TransactionManager")
     public Page<H2OrderDResponseDto> selectH2OrderDByIdocId(Long IdocId, Pageable pageable) {
         log.info("selectH2OrderDByIdocId");
         Page<H2OrderDEntity> h2OrderDPage = h2OrderDJpaRepository.findByIdocId(IdocId,pageable);
-        return h2OrderDPage.map(h2Mapper::toDto);
+        return h2OrderDPage.map(H2OrderDResponseDto::from);
     }
 
     @Transactional(value = "db2TransactionManager")
     public Page<H2TransResponseDto> selectH2TransByOrderId(Long orderId, Pageable pageable) {
         log.info("selectH2TransByIdocId");
         Page<H2TransEntity> h2TransPage = h2TransJpaRepository.selectByCOrderId(orderId.toString(),pageable);
-        return h2TransPage.map(h2Mapper::toDto);
+        return h2TransPage.map(H2TransResponseDto::from);
     }
 
     @Transactional(value = "db2TransactionManager")

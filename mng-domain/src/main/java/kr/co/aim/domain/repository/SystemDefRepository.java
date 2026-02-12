@@ -1,10 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.SystemDefResponseDto;
-import kr.co.aim.common.dto.SystemDefSearchConditionDto;
 import kr.co.aim.domain.model.SystemDef;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -44,5 +40,5 @@ public interface SystemDefRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
-    Page<SystemDefResponseDto> findSystemDefWithConditions(SystemDefSearchConditionDto condition, Pageable pageable);
+//    Page<SystemDefResponseDto> findSystemDefWithConditions(SystemDefSearchConditionDto condition, Pageable pageable);
 }
