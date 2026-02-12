@@ -1,14 +1,17 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.format.*;
+import kr.co.aim.common.format.ProcessJobAbortedBody;
+import kr.co.aim.common.format.ProcessJobDataReportBody;
+import kr.co.aim.common.format.ProcessJobEndedBody;
+import kr.co.aim.common.format.ProcessJobStartedBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.CleanJobStartedCommand;
 import kr.co.aim.domain.command.ProcessJobEndedCommand;
 import kr.co.aim.domain.command.ProcessJobStartedCommand;
-import kr.co.aim.domain.model.Carriers;
 import kr.co.aim.domain.model.Lots;
-import kr.co.aim.domain.repository.*;
+import kr.co.aim.domain.repository.CarrierDefRepository;
+import kr.co.aim.domain.repository.CarriersRepository;
+import kr.co.aim.domain.repository.LotsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

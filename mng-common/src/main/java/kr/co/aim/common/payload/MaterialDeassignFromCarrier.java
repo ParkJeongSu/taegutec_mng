@@ -2,8 +2,6 @@ package kr.co.aim.common.payload;
 
 import lombok.*;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Setter
 @NoArgsConstructor

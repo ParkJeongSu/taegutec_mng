@@ -1,10 +1,12 @@
 package kr.co.aim.common.dto;
 
 import com.querydsl.core.annotations.QueryProjection;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter

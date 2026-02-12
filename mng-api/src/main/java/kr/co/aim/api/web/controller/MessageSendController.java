@@ -1,12 +1,12 @@
 package kr.co.aim.api.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.format.request.Sample;
-import kr.co.aim.common.format.response.ReplySample;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.AreYouThereBody;
 import kr.co.aim.common.format.Header;
+import kr.co.aim.common.format.request.BaseMessage;
+import kr.co.aim.common.format.request.Sample;
+import kr.co.aim.common.format.response.ReplySample;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,5 @@
 package kr.co.aim.infra.persistence.entity;
 
-import jakarta.persistence.Entity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

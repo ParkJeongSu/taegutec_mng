@@ -2,8 +2,6 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.TransportJobResponseDto;
 import kr.co.aim.common.dto.TransportJobSearchConditionDto;
-import kr.co.aim.common.dto.WorkOrderResponseDto;
-import kr.co.aim.common.dto.WorkOrderSearchConditionDto;
 import kr.co.aim.domain.model.TransportJob;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

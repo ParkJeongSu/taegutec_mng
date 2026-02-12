@@ -2,10 +2,7 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.CarriersResponseDto;
 import kr.co.aim.common.dto.CarriersSearchConditionDto;
-import kr.co.aim.common.dto.EquipmentDefResponseDto;
-import kr.co.aim.common.dto.EquipmentDefSearchConditionDto;
 import kr.co.aim.domain.model.Carriers;
-import kr.co.aim.domain.model.EquipmentDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

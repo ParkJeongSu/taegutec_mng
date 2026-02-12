@@ -3,8 +3,6 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.AlarmActionUserGroupUsersResponseDto;
 import kr.co.aim.common.dto.AlarmActionUserGroupUsersSearchConditionDto;
-import kr.co.aim.common.dto.AlarmDefResponseDto;
-import kr.co.aim.common.dto.AlarmDefSearchConditionDto;
 import kr.co.aim.domain.model.AlarmActionUserGroupUsers;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -5,7 +5,9 @@ import org.springframework.amqp.core.Binding;
 import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
+import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.amqp.support.converter.MessageConverter;
@@ -54,11 +56,30 @@ public class RabbitConfig {
     public static final String DEAD_LETTER_EXCHANGE_KEY = "x-dead-letter-exchange";
     public static final String DEAD_LETTER_ROUTING_KEY_KEY = "x-dead-letter-routing-key";
 
+    @Bean
+    @Profile({"pex","tex","dispatcher","scheduler"})
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory
+    ,Queue pexQueue, Queue texQueue, Queue deadLetterQueue) {
+        RabbitAdmin admin = new RabbitAdmin(connectionFactory);
+        admin.setAutoStartup(true);
+
+        // [중요] eziframe이 날뛰기 전에 여기서 강제로 인프라를 생성합니다.
+        // 이 코드는 @Bean으로 등록된 Queue, Exchange, Binding들을 즉시 브로커에 선언합니다.
+        try {
+            admin.initialize();
+            System.out.println(">>> [RabbitAdmin] Infra initialized successfully.");
+        } catch (Exception e) {
+            System.err.println(">>> [RabbitAdmin] Failed to initialize infra: " + e.getMessage());
+        }
+
+        return admin;
+    }
+
     // 1. DLQ와 DLX 빈 등록
     @Bean
     public Queue deadLetterQueue() {
         Queue queue = new Queue(getDeadLetterQueueName(), true);
-        queue.setShouldDeclare(false);
+        queue.setShouldDeclare(true);
         return queue;
     }
 
@@ -80,7 +101,7 @@ public class RabbitConfig {
                 Map.of( DEAD_LETTER_EXCHANGE_KEY, getDeadLetterExchangeName(),
                         DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
         );
-        queue.setShouldDeclare(false);
+        queue.setShouldDeclare(true);
         return queue;
     }
 
@@ -92,8 +113,18 @@ public class RabbitConfig {
                 Map.of(DEAD_LETTER_EXCHANGE_KEY,getDeadLetterExchangeName(),
                         DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
         );
-        queue.setShouldDeclare(false);
+        queue.setShouldDeclare(true);
         return queue;
+    }
+
+    @Bean
+    Binding pexBinding(Queue pexQueue, DirectExchange exchange) {
+        return BindingBuilder.bind(pexQueue).to(exchange).with(getPexRoutingKey());
+    }
+
+    @Bean
+    Binding texBinding(Queue texQueue, DirectExchange exchange) {
+        return BindingBuilder.bind(texQueue).to(exchange).with(getTexRoutingKey());
     }
 
 //    @Bean

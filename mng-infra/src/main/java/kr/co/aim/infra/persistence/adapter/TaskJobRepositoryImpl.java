@@ -5,7 +5,9 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.QTaskJobResponseDto;
+import kr.co.aim.common.dto.TaskJobResponseDto;
+import kr.co.aim.common.dto.TaskJobSearchConditionDto;
 import kr.co.aim.domain.model.TaskJob;
 import kr.co.aim.domain.repository.TaskJobRepository;
 import kr.co.aim.infra.persistence.entity.TaskJobEntity;
@@ -18,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

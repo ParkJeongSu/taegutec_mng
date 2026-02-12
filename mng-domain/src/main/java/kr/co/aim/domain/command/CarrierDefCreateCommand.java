@@ -1,14 +1,11 @@
 package kr.co.aim.domain.command;
 
-import jakarta.persistence.Temporal;
-import jakarta.persistence.TemporalType;
 import kr.co.aim.common.record.TransactionInfo;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @RequiredArgsConstructor

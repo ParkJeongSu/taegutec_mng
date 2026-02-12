@@ -1,11 +1,12 @@
 package kr.co.aim.infra.persistence.entity;
 
 import jakarta.persistence.*;
-import kr.co.aim.common.Utils.TsidUtils;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Entity
 @Getter

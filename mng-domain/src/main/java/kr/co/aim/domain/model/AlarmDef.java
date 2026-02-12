@@ -1,13 +1,11 @@
 package kr.co.aim.domain.model;
 
 import kr.co.aim.common.handler.HasTransactionInfo;
-import kr.co.aim.domain.command.AlarmCreateCommand;
 import kr.co.aim.domain.command.AlarmDefCreateCommand;
 import kr.co.aim.domain.command.AlarmDefUpdateCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter

@@ -1,6 +1,5 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.common.dto.EquipmentGroupResponseDto;
 import kr.co.aim.domain.model.EquipmentGroup;
 import kr.co.aim.infra.persistence.entity.EquipmentGroupEntity;
 import org.mapstruct.Mapper;
@@ -17,5 +16,4 @@ public interface EquipmentGroupMapper {
 
     EquipmentGroupEntity toEntity(EquipmentGroup domain);
 
-    EquipmentGroupResponseDto toResponseDto(EquipmentGroup domain);
 }

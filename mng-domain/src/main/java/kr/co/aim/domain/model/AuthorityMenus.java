@@ -1,14 +1,11 @@
 package kr.co.aim.domain.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.AuthMenuCreateCommand;
 import kr.co.aim.domain.command.AuthMenuUpdateCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter

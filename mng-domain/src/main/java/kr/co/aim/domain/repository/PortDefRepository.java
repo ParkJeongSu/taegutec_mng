@@ -1,11 +1,8 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.MenusResponseDto;
-import kr.co.aim.common.dto.MenusSearchConditionDto;
 import kr.co.aim.common.dto.PortDefResponseDto;
 import kr.co.aim.common.dto.PortDefSearchConditionDto;
 import kr.co.aim.domain.model.PortDef;
-import kr.co.aim.domain.model.Ports;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

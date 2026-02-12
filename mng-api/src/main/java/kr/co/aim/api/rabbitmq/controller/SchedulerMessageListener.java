@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ezieco.eziframe.middleware.event.data.Header;
 import kr.co.aim.api.rabbitmq.controller.dispatcher.MessageDispatcher;
-import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.common.handler.MessageWorker;
 import lombok.RequiredArgsConstructor;

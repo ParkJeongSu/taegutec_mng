@@ -1,7 +1,5 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.AlarmActionResponseDto;
-import kr.co.aim.common.dto.AlarmActionSearchConditionDto;
 import kr.co.aim.common.dto.EquipmentsResponseDto;
 import kr.co.aim.common.dto.EquipmentsSearchConditionDto;
 import kr.co.aim.domain.model.Equipments;

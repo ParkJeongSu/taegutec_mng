@@ -6,7 +6,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.QSystemDefResponseDto;
+import kr.co.aim.common.dto.SystemDefResponseDto;
+import kr.co.aim.common.dto.SystemDefSearchConditionDto;
 import kr.co.aim.domain.model.SystemDef;
 import kr.co.aim.domain.repository.SystemDefRepository;
 import kr.co.aim.infra.persistence.entity.SystemDefEntity;
@@ -24,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import kr.co.aim.common.dto.QSystemDefResponseDto;
 
 import static kr.co.aim.infra.persistence.entity.QSystemDefEntity.systemDefEntity;
 

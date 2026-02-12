@@ -1,10 +1,9 @@
 package kr.co.aim.common.Utils;
 
-import com.github.f4b6a3.tsid.TsidCreator;
 import com.github.f4b6a3.tsid.TsidFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.concurrent.ThreadLocalRandom; // [1] 이거 import
+import java.util.concurrent.ThreadLocalRandom;
 
 @Slf4j
 public class TsidUtils{

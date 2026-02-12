@@ -2,8 +2,6 @@ package kr.co.aim.domain.repository;
 
 //import kr.co.aim.domain.model.AlarmAction;
 
-import kr.co.aim.common.dto.AlarmActionResponseDto;
-import kr.co.aim.common.dto.AlarmActionSearchConditionDto;
 import kr.co.aim.common.dto.AlarmActionUserGroupResponseDto;
 import kr.co.aim.common.dto.AlarmActionUserGroupSearchConditionDto;
 import kr.co.aim.domain.model.AlarmActionUserGroup;

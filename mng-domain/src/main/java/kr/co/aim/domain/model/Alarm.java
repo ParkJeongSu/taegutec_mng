@@ -9,7 +9,6 @@ import kr.co.aim.domain.command.AlarmUpdateCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Setter

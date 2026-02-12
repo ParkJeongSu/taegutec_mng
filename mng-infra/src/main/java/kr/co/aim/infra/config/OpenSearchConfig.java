@@ -4,10 +4,10 @@ import org.apache.http.HttpHost;
 import org.opensearch.client.RestClient;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
 import org.opensearch.client.opensearch.OpenSearchClient;
+import org.opensearch.client.transport.OpenSearchTransport;
+import org.opensearch.client.transport.rest_client.RestClientTransport;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.opensearch.client.transport.OpenSearchTransport; // 👈 여기 있습니다!
-import org.opensearch.client.transport.rest_client.RestClientTransport; // 👈 구현체는 이거!
 
 
 // 추후 openSearch 사용시 bean 생성

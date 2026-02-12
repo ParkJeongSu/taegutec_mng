@@ -7,14 +7,12 @@ import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.handler.NotificationHandler;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
-import kr.co.aim.domain.model.Carriers;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportJobDetail;
-import kr.co.aim.domain.model.WorkOrder;
-import kr.co.aim.domain.repository.*;
+import kr.co.aim.domain.repository.TransportJobDetailRepository;
+import kr.co.aim.domain.repository.TransportJobRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service

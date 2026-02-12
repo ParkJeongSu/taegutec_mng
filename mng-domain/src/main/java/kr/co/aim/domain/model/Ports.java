@@ -6,7 +6,6 @@ import kr.co.aim.domain.command.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Setter
 @Getter

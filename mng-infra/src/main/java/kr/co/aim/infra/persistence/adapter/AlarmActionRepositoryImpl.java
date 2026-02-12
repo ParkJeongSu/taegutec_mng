@@ -6,7 +6,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.AlarmActionResponseDto;
+import kr.co.aim.common.dto.AlarmActionSearchConditionDto;
+import kr.co.aim.common.dto.QAlarmActionResponseDto;
 import kr.co.aim.domain.model.AlarmAction;
 import kr.co.aim.domain.repository.AlarmActionRepository;
 import kr.co.aim.infra.persistence.entity.AlarmActionEntity;
@@ -21,13 +23,11 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QAlarmActionEntity.alarmActionEntity;
-import static kr.co.aim.infra.persistence.entity.QAlarmActionUserGroupEntity.alarmActionUserGroupEntity;
 import static kr.co.aim.infra.persistence.entity.QAlarmDefEntity.alarmDefEntity;
 
 /**

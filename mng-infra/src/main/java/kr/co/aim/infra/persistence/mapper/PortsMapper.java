@@ -1,8 +1,6 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.domain.model.Equipments;
 import kr.co.aim.domain.model.Ports;
-import kr.co.aim.infra.persistence.entity.EquipmentsEntity;
 import kr.co.aim.infra.persistence.entity.PortsEntity;
 import org.mapstruct.Mapper;
 

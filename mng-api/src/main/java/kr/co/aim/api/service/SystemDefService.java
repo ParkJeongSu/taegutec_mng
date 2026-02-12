@@ -1,28 +1,21 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.jwt.JwtTokenProvider;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.SystemDefCreateRequestDto;
+import kr.co.aim.common.dto.SystemDefResponseDto;
+import kr.co.aim.common.dto.SystemDefSearchConditionDto;
+import kr.co.aim.common.dto.SystemDefUpdateRequestDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.SystemDefCreateCommand;
 import kr.co.aim.domain.command.SystemDefUpdateCommand;
-import kr.co.aim.domain.command.UserCreateCommand;
-import kr.co.aim.domain.command.UserUpdateCommand;
 import kr.co.aim.domain.model.SystemDef;
-import kr.co.aim.domain.model.User;
 import kr.co.aim.domain.repository.SystemDefRepository;
-import kr.co.aim.domain.repository.UserRepository;
 import kr.co.aim.infra.persistence.mapper.SystemDefMapper;
-import kr.co.aim.infra.persistence.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

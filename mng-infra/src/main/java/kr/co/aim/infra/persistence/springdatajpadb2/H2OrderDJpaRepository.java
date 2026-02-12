@@ -1,7 +1,6 @@
 package kr.co.aim.infra.persistence.springdatajpadb2;
 
 import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
-import kr.co.aim.infra.persistence.entitydb2.H2OrderMEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

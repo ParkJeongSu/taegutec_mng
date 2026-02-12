@@ -1,11 +1,11 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.H2OrderDResponseDto;
+import kr.co.aim.common.dto.H2OrderMResponseDto;
+import kr.co.aim.common.dto.H2TransResponseDto;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderMEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2TransEntity;
-import kr.co.aim.infra.persistence.entitydb2.IdocEntity;
-import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

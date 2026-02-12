@@ -1,6 +1,5 @@
 package kr.co.aim.infra.persistence.repository;
 
-import org.springframework.stereotype.Repository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -8,10 +7,11 @@ import kr.co.aim.common.handler.IBaseHistoryEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
 import java.lang.reflect.Field;
+import java.util.*;
 
 @Repository
 public class GenericHistoryRepository {

@@ -3,7 +3,6 @@ package kr.co.aim.infra.persistence.mapper;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.infra.persistence.entity.TransportJobEntity;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(

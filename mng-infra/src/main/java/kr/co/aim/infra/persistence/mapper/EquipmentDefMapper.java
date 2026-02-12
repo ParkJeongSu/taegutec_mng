@@ -1,8 +1,6 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.domain.model.CarrierDef;
 import kr.co.aim.domain.model.EquipmentDef;
-import kr.co.aim.infra.persistence.entity.CarrierDefEntity;
 import kr.co.aim.infra.persistence.entity.EquipmentDefEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

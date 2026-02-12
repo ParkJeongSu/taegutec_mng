@@ -2,10 +2,8 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.service.AlarmService;
 import kr.co.aim.api.service.CarrierService;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.AlarmReportBody;
 import kr.co.aim.common.format.CarrierCleanJobStartedBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;

@@ -3,21 +3,17 @@ package kr.co.aim.api.rabbitmq.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ezieco.eziframe.middleware.event.data.Header;
-import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.api.rabbitmq.controller.dispatcher.MessageDispatcher;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.common.handler.MessageWorker;
-import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-
-import java.nio.charset.StandardCharsets;
-
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Component

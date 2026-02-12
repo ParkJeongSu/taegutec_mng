@@ -6,7 +6,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.AlarmActionDetailResponseDto;
+import kr.co.aim.common.dto.AlarmActionDetailSearchConditionDto;
+import kr.co.aim.common.dto.QAlarmActionDetailResponseDto;
 import kr.co.aim.domain.model.AlarmMailActionDetail;
 import kr.co.aim.domain.repository.AlarmMailActionDetailRepository;
 import kr.co.aim.infra.persistence.entity.AlarmMailActionDetailEntity;
@@ -24,10 +26,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static kr.co.aim.infra.persistence.entity.QAlarmMailActionDetailEntity.alarmMailActionDetailEntity;
 import static kr.co.aim.infra.persistence.entity.QAlarmActionEntity.alarmActionEntity;
 import static kr.co.aim.infra.persistence.entity.QAlarmActionUserGroupEntity.alarmActionUserGroupEntity;
-import static kr.co.aim.infra.persistence.entity.QUserEntity.userEntity;
+import static kr.co.aim.infra.persistence.entity.QAlarmMailActionDetailEntity.alarmMailActionDetailEntity;
 
 /**
  * UserRepository의 JPA 기반 구현체.

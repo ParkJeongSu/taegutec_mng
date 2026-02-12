@@ -1,12 +1,12 @@
 package kr.co.aim.infra.persistence.adapter;
 
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.jpa.impl.JPAQuery;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
-import kr.co.aim.common.dto.QUserResponseDto; // DTO도 Q-Type으로 생성하여 사용
+import com.querydsl.jpa.impl.JPAQuery;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import kr.co.aim.common.dto.QUserResponseDto;
 import kr.co.aim.common.dto.UserResponseDto;
 import kr.co.aim.common.dto.UserSearchConditionDto;
 import kr.co.aim.domain.model.User;
@@ -27,13 +27,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * UserRepository의 JPA 기반 구현체.
- * 실제 DB 작업은 Spring Data JPA가 제공하는 JpaRepository에 위임합니다.
- */
-// --- Q-Type 클래스 static import 추가 ---
-import static kr.co.aim.infra.persistence.entity.QUserEntity.userEntity;
 import static kr.co.aim.infra.persistence.entity.QAuthorityEntity.authorityEntity;
+import static kr.co.aim.infra.persistence.entity.QUserEntity.userEntity;
 
 @Repository
 @RequiredArgsConstructor

@@ -1,12 +1,10 @@
 package kr.co.aim.domain.model;
 
-import jakarta.persistence.*;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.AlarmActionUserGroupUsersCreateCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Setter
 @Getter

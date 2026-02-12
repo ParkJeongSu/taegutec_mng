@@ -6,7 +6,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.EquipmentGroupResponseDto;
+import kr.co.aim.common.dto.EquipmentGroupSearchCondtionDto;
+import kr.co.aim.common.dto.QEquipmentGroupResponseDto;
 import kr.co.aim.domain.model.EquipmentGroup;
 import kr.co.aim.domain.repository.EquipmentGroupRepository;
 import kr.co.aim.infra.persistence.entity.EquipmentGroupEntity;
@@ -22,7 +24,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

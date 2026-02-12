@@ -2,8 +2,6 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.MenusResponseDto;
 import kr.co.aim.common.dto.MenusSearchConditionDto;
-import kr.co.aim.common.dto.SystemDefResponseDto;
-import kr.co.aim.common.dto.SystemDefSearchConditionDto;
 import kr.co.aim.domain.model.Menus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

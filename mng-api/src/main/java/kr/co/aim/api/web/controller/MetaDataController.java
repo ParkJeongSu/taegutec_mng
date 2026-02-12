@@ -1,10 +1,9 @@
 package kr.co.aim.api.web.controller;
 
 import kr.co.aim.api.service.MetaDataService;
-import kr.co.aim.common.enums.CarrierType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page; // ✨ [추가] Page 임포트
-import org.springframework.data.domain.PageImpl; // ✨ [추가] PageImpl 임포트
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

@@ -6,7 +6,6 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.LotsSearchConditionDto;
 import kr.co.aim.common.dto.QWorkOrderResponseDto;
 import kr.co.aim.common.dto.WorkOrderResponseDto;
 import kr.co.aim.common.dto.WorkOrderSearchConditionDto;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;

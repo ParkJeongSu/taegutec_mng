@@ -23,13 +23,12 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static kr.co.aim.infra.persistence.entity.QAlarmActionUserGroupUsersEntity.alarmActionUserGroupUsersEntity;
 import static kr.co.aim.infra.persistence.entity.QAlarmActionUserGroupEntity.alarmActionUserGroupEntity;
+import static kr.co.aim.infra.persistence.entity.QAlarmActionUserGroupUsersEntity.alarmActionUserGroupUsersEntity;
 
 /**
  * UserRepository의 JPA 기반 구현체.

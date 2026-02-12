@@ -1,14 +1,12 @@
 package kr.co.aim.api.rabbitmq.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.api.service.RouterService;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.infra.config.RabbitConfig;
+import kr.co.aim.common.format.request.MessageHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 

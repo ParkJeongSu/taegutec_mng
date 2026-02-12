@@ -2,9 +2,6 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.TaskJobDetailResponseDto;
 import kr.co.aim.common.dto.TaskJobDetailSearchConditionDto;
-import kr.co.aim.common.dto.TaskJobResponseDto;
-import kr.co.aim.common.dto.TaskJobSearchConditionDto;
-import kr.co.aim.domain.model.TaskJob;
 import kr.co.aim.domain.model.TaskJobDetail;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -8,6 +8,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.dto.AlarmDefResponseDto;
 import kr.co.aim.common.dto.AlarmDefSearchConditionDto;
+import kr.co.aim.common.dto.QAlarmDefResponseDto;
 import kr.co.aim.domain.model.AlarmDef;
 import kr.co.aim.domain.repository.AlarmDefRepository;
 import kr.co.aim.infra.persistence.entity.AlarmDefEntity;
@@ -19,13 +20,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import kr.co.aim.common.dto.*;
-import org.springframework.util.StringUtils;
 
 import static kr.co.aim.infra.persistence.entity.QAlarmDefEntity.alarmDefEntity;
 

@@ -7,6 +7,7 @@ import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/simulator")
 @RequiredArgsConstructor
 @Slf4j
+@Profile({"scheduler","simulator"})
 public class SimulatorController {
 
     private final DB2TransportOrderService db2TransportOrderService;

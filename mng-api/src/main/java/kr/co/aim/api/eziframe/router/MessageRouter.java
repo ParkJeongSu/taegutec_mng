@@ -1,9 +1,9 @@
 package kr.co.aim.api.eziframe.router;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Arrays;
 import java.util.List;
-
-import org.springframework.stereotype.Component;
 
 @Component
 public class MessageRouter implements kr.co.aim.eziframe.handler.MessageRouter {

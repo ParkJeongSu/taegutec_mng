@@ -2,9 +2,6 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.LotsResponseDto;
 import kr.co.aim.common.dto.LotsSearchConditionDto;
-import kr.co.aim.common.dto.MenusResponseDto;
-import kr.co.aim.common.dto.MenusSearchConditionDto;
-import kr.co.aim.domain.model.Carriers;
 import kr.co.aim.domain.model.Lots;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

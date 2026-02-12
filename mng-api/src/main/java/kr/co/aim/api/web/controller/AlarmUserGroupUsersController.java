@@ -1,16 +1,17 @@
 package kr.co.aim.api.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.AlarmService;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.AlarmActionUserGroupUsersCreateRequestDto;
+import kr.co.aim.common.dto.AlarmActionUserGroupUsersResponseDto;
+import kr.co.aim.common.dto.AlarmActionUserGroupUsersSearchConditionDto;
+import kr.co.aim.common.dto.DeleteItemListDto;
 import kr.co.aim.common.format.response.UserResponse;
-import kr.co.aim.domain.model.AlarmActionUserGroup;
 import kr.co.aim.domain.model.AlarmActionUserGroupUsers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

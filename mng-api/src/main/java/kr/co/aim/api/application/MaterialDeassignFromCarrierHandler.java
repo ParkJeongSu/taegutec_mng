@@ -2,7 +2,6 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.CarrierService;
 import kr.co.aim.common.enums.MessageList;
@@ -10,7 +9,6 @@ import kr.co.aim.common.format.MaterialDeassignedFromCarrierBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;

@@ -6,11 +6,12 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.LotsResponseDto;
+import kr.co.aim.common.dto.LotsSearchConditionDto;
+import kr.co.aim.common.dto.QLotsResponseDto;
 import kr.co.aim.domain.model.Lots;
 import kr.co.aim.domain.repository.LotsRepository;
 import kr.co.aim.infra.persistence.entity.LotsEntity;
-import kr.co.aim.infra.persistence.entity.QEquipmentsEntity;
 import kr.co.aim.infra.persistence.mapper.LotsMapper;
 import kr.co.aim.infra.persistence.springdatajpa.LotsJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,12 +23,10 @@ import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static kr.co.aim.infra.persistence.entity.QCarriersEntity.carriersEntity;
 import static kr.co.aim.infra.persistence.entity.QLotsEntity.lotsEntity;
 
 /**

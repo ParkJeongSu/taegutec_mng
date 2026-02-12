@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.AlarmService;
 import kr.co.aim.common.dto.*;
 import kr.co.aim.common.format.response.UserResponse;
-import kr.co.aim.domain.model.AlarmAction;
 import kr.co.aim.domain.model.AlarmMailActionDetail;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -104,7 +104,7 @@ spring:
     port: 5672
     username: admin
     password: admin
-    dynamic: false
+    dynamic: true
     listener:
       simple:
         concurrency: 10 # 시작 시 생성되는 소비자(consumer) 스레드 수

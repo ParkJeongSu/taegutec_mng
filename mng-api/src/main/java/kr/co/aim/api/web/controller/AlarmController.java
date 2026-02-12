@@ -13,7 +13,6 @@ import kr.co.aim.common.dto.*;
 import kr.co.aim.common.format.response.UserResponse;
 import kr.co.aim.common.handler.IBaseHistoryEntity;
 import kr.co.aim.domain.model.Alarm;
-import kr.co.aim.domain.model.AlarmDef;
 import kr.co.aim.infra.persistence.entity.AlarmHistoryEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

@@ -1,13 +1,12 @@
 package kr.co.aim.infra.persistence.mapper;
 
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.domain.model.Alarm;
 import kr.co.aim.infra.persistence.entity.AlarmEntity;
 import kr.co.aim.infra.persistence.entity.AlarmHistoryEntity;
-import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
-import kr.co.aim.common.Utils.TsidUtils; // [1] 사용할 유틸 클래스 import
 
 @Mapper(
         componentModel = "spring",

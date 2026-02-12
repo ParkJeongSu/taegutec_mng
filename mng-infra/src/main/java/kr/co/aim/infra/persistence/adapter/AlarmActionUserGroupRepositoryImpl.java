@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QAlarmActionUserGroupEntity.alarmActionUserGroupEntity;
-import static kr.co.aim.infra.persistence.entity.QAlarmDefEntity.alarmDefEntity;
 
 /**
  * UserRepository의 JPA 기반 구현체.

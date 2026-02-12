@@ -6,7 +6,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.*;
+import kr.co.aim.common.dto.EquipmentsResponseDto;
+import kr.co.aim.common.dto.EquipmentsSearchConditionDto;
+import kr.co.aim.common.dto.QEquipmentsResponseDto;
 import kr.co.aim.domain.model.Equipments;
 import kr.co.aim.domain.repository.EquipmentsRepository;
 import kr.co.aim.infra.persistence.entity.EquipmentsEntity;
@@ -21,14 +23,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static kr.co.aim.infra.persistence.entity.QEquipmentsEntity.equipmentsEntity;
 import static kr.co.aim.infra.persistence.entity.QEquipmentDefEntity.equipmentDefEntity;
+import static kr.co.aim.infra.persistence.entity.QEquipmentsEntity.equipmentsEntity;
 
 /**
  * UserRepository의 JPA 기반 구현체.

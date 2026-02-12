@@ -12,7 +12,6 @@ import kr.co.aim.common.dto.QAlarmResponseDto;
 import kr.co.aim.domain.model.Alarm;
 import kr.co.aim.domain.repository.AlarmRepository;
 import kr.co.aim.infra.persistence.entity.AlarmEntity;
-import kr.co.aim.infra.persistence.entity.AlarmHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.AlarmMapper;
 import kr.co.aim.infra.persistence.springdatajpa.AlarmHistoryJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpa.AlarmJpaRepository;
@@ -29,8 +28,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static kr.co.aim.infra.persistence.entity.QAlarmEntity.alarmEntity;
 import static kr.co.aim.infra.persistence.entity.QAlarmDefEntity.alarmDefEntity;
+import static kr.co.aim.infra.persistence.entity.QAlarmEntity.alarmEntity;
 
 /**
  * UserRepository의 JPA 기반 구현체.

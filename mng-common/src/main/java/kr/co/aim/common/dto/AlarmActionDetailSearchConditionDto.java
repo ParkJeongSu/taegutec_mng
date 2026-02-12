@@ -1,9 +1,8 @@
 package kr.co.aim.common.dto;
 
-import com.querydsl.core.annotations.QueryProjection;
-import lombok.*;
-
-import java.util.Date;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

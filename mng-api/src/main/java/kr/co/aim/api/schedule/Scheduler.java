@@ -1,6 +1,8 @@
 package kr.co.aim.api.schedule;
 
-import kr.co.aim.api.service.*;
+import kr.co.aim.api.service.DataTransferService;
+import kr.co.aim.api.service.IF_DB2WorkOrderService;
+import kr.co.aim.api.service.IF_MSSQLWorkOrderService;
 import kr.co.aim.infra.persistence.entitydb2.IF_WorkOrderEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

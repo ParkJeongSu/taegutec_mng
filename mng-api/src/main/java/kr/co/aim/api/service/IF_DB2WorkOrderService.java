@@ -1,7 +1,6 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.infra.persistence.entitydb2.IF_WorkOrderEntity;
-import kr.co.aim.infra.persistence.springdatajpa.IF_WorkOrderJpaMSSQLRepository;
 import kr.co.aim.infra.persistence.springdatajpadb2.IF_WorkOrderJpaDB2Repository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

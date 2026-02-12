@@ -1,10 +1,7 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.AlarmActionResponseDto;
-import kr.co.aim.common.dto.AlarmActionSearchConditionDto;
 import kr.co.aim.common.dto.EquipmentDefResponseDto;
 import kr.co.aim.common.dto.EquipmentDefSearchConditionDto;
-import kr.co.aim.domain.model.Alarm;
 import kr.co.aim.domain.model.EquipmentDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

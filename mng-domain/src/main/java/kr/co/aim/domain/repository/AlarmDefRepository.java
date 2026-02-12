@@ -2,8 +2,6 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.dto.AlarmDefResponseDto;
 import kr.co.aim.common.dto.AlarmDefSearchConditionDto;
-import kr.co.aim.common.dto.AuthMenuResponseDto;
-import kr.co.aim.common.dto.AuthMenuSearchConditionDto;
 import kr.co.aim.domain.model.AlarmDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

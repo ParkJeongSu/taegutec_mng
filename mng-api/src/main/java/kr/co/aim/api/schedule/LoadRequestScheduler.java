@@ -1,10 +1,8 @@
 package kr.co.aim.api.schedule;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.PortService;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.LoadRequestBody;
 import kr.co.aim.common.format.LoadRequestTEXBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.Ports;
