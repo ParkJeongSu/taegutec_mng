@@ -1,7 +1,8 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.*;
-import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.api.vo.H2OrderDetailRelocationVo;
+import kr.co.aim.api.vo.H2OrderDetailVo;
 import kr.co.aim.common.enums.IdocErrorCode;
 import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
@@ -9,7 +10,6 @@ import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderMEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2TransEntity;
 import kr.co.aim.infra.persistence.entitydb2.IdocEntity;
-import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpadb2.H2OrderDJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpadb2.H2OrderMJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpadb2.H2TransJpaRepository;
@@ -25,138 +25,21 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Profile({"scheduler","simulator"})
-public class DB2TransportOrderService {
+public class ExternalInterfaceService {
 
     private final IdocJpaRepository idocJpaRepository;
     private final H2OrderMJpaRepository h2OrderMJpaRepository;
     private final H2OrderDJpaRepository h2OrderDJpaRepository;
     private final H2TransJpaRepository h2TransJpaRepository;
-    private final TransportOrderJpaRepository transportOrderJpaRepository;
-
-
-
-
-    @Transactional("mssqlTransactionManager")
-    public TransportOrderEntity outboundTransportOrderToMSSQL(IdocEntity idocEntity,H2OrderMEntity h2OrderMEntity,H2OrderDEntity h2OrderDEntity) {
-        log.info("outboundTransportOrderToMSSQL");
-        TransportOrderEntity transportOrderEntity = TransportOrderEntity
-                .builder()
-                .id(TsidUtils.nextId())
-                .transportOrderName(h2OrderMEntity.getCOrderId())
-                .description("outbound")
-                .transportType(h2OrderMEntity.getCOrderTy())
-                .transportOrderId(h2OrderMEntity.getCOrderId())
-                .transportStatus(TransportStatus.Create.name())
-                .priority(h2OrderMEntity.getCOrderPrio())
-                .galId(h2OrderMEntity.getCGalId().toString())
-                .galWarehouse(h2OrderMEntity.getCGalWhs())
-                //.fromWarehouse()
-                //.fromZoneName()
-                //.fromLocationId()
-                //.toWarehouse()
-                //.toZoneName()
-                .toLocationId(h2OrderMEntity.getCWcId())
-                .carrierName(h2OrderDEntity.getCCoId())
-                .carrierType(h2OrderDEntity.getCCoTy())
-                //.drivingProfile()
-                .createTime(idocEntity.getDtimeCre())
-                //.releaseTime()
-                //.completeTime()
-                //.createUser()
-                //.releaseUser()
-                //.completeUser()
-                .build();
-        return transportOrderJpaRepository.save(transportOrderEntity);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public TransportOrderEntity inboundTransportOrderToMSSQL(IdocEntity idocEntity,H2OrderMEntity h2OrderMEntity,H2OrderDEntity h2OrderDEntity) {
-        log.info("outboundTransportOrderToMSSQL");
-        TransportOrderEntity transportOrderEntity = TransportOrderEntity
-                .builder()
-                .id(TsidUtils.nextId())
-                .transportOrderName(h2OrderMEntity.getCOrderId())
-                .description("inbound")
-                .transportType(h2OrderMEntity.getCOrderTy())
-                .transportOrderId(h2OrderMEntity.getCOrderId())
-                .transportStatus(TransportStatus.Create.name())
-                .priority(h2OrderMEntity.getCOrderPrio())
-                .galId(h2OrderMEntity.getCGalId().toString())
-                .galWarehouse(h2OrderMEntity.getCGalWhs())
-                //.fromWarehouse()
-                //.fromZoneName()
-                .fromLocationId(h2OrderMEntity.getCWcId())
-                //.toWarehouse()
-                //.toZoneName()
-                .toLocationId(h2OrderDEntity.getCZone())
-                .carrierName(h2OrderDEntity.getCCoId())
-                .carrierType(h2OrderDEntity.getCCoTy())
-                .drivingProfile(h2OrderDEntity.getCDrivingProfile())
-                .createTime(idocEntity.getDtimeCre())
-                //.releaseTime()
-                //.completeTime()
-                //.createUser()
-                //.releaseUser()
-                //.completeUser()
-                .build();
-        return transportOrderJpaRepository.save(transportOrderEntity);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public TransportOrderEntity relocationTransportOrderToMSSQL(IdocEntity idocEntity,H2OrderMEntity h2OrderMEntity,H2OrderDEntity h2OrderDSourceEntity,H2OrderDEntity h2OrderDTargetEntity) {
-        log.info("relocationTransportOrderToMSSQL");
-        TransportOrderEntity transportOrderEntity = TransportOrderEntity
-                .builder()
-                .id(TsidUtils.nextId())
-                .transportOrderName(h2OrderMEntity.getCOrderId())
-                .description("relocation")
-                .transportType(h2OrderMEntity.getCOrderTy())
-                .transportOrderId(h2OrderMEntity.getCOrderId())
-                .transportStatus(TransportStatus.Create.name())
-                .priority(h2OrderMEntity.getCOrderPrio())
-                .galId(h2OrderMEntity.getCGalId().toString())
-                .galWarehouse(h2OrderMEntity.getCGalWhs())
-                //.fromWarehouse()
-                //.fromZoneName()
-                .fromLocationId(h2OrderDSourceEntity.getCZone())
-                //.toWarehouse()
-                //.toZoneName()
-                .toLocationId(h2OrderDTargetEntity.getCZone())
-                .carrierName(h2OrderDSourceEntity.getCCoId())
-                .carrierType(h2OrderDSourceEntity.getCCoTy())
-                .drivingProfile(h2OrderDSourceEntity.getCDrivingProfile())
-                .createTime(idocEntity.getDtimeCre())
-                //.releaseTime()
-                //.completeTime()
-                //.createUser()
-                //.releaseUser()
-                //.completeUser()
-                .build();
-        return transportOrderJpaRepository.save(transportOrderEntity);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public TransportOrderEntity updateStatusTransportOrder(String orderId,TransportStatus status) {
-        log.info("updateStatusTransportOrder");
-        TransportOrderEntity transportOrderEntity = transportOrderJpaRepository.findByTransportOrderId(orderId);
-        transportOrderEntity.setTransportStatus(status.name());
-        return transportOrderJpaRepository.save(transportOrderEntity);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public TransportOrderResponseDto selectTransportOrder(Long orderId) {
-        log.info("selectTransportOrder");
-        TransportOrderEntity entity = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
-        return TransportOrderResponseDto.from(entity);
-    }
 
     @Transactional( value = "db2TransactionManager")
-    public IdocEntity transferIdocId(Long idocId) {
+    public IdocEntity transferedIdocId(Long idocId) {
         log.info("transferIdocId");
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
@@ -164,40 +47,9 @@ public class DB2TransportOrderService {
         return idocJpaRepository.save(idoc);
     }
 
-    @Transactional(readOnly = true, value = "db2TransactionManager")
-    public Page<IdocResponseDto> selectIdocsByOrderType(Pageable pageable, String orderType) {
-        log.info("selectIdocs");
-        Page<IdocEntity> idocPage = idocJpaRepository.findIdocsByOrderType(orderType,pageable);
-        return idocPage.map(IdocResponseDto::from);
-    }
-
-    @Transactional(readOnly = true, value = "db2TransactionManager")
-    public Page<H2OrderMResponseDto> selectH2OrderMByIdocId(Long IdocId, Pageable pageable) {
-        log.info("selectH2OrderMByIdocId");
-        // 1. DB에서 엔티티 페이지를 조회합니다.
-        Page<H2OrderMEntity> h2OrderMPage = h2OrderMJpaRepository.findByIdocId(IdocId,pageable);
-        // 2. 메서드 참조(Method Reference)를 사용하여 변환합니다.
-        // 람다(entity -> H2OrderMResponseDto.from(entity))보다 훨씬 깔끔합니다.
-        return h2OrderMPage.map(H2OrderMResponseDto::from);
-    }
-
-    @Transactional(readOnly = true, value = "db2TransactionManager")
-    public Page<H2OrderDResponseDto> selectH2OrderDByIdocId(Long IdocId, Pageable pageable) {
-        log.info("selectH2OrderDByIdocId");
-        Page<H2OrderDEntity> h2OrderDPage = h2OrderDJpaRepository.findByIdocId(IdocId,pageable);
-        return h2OrderDPage.map(H2OrderDResponseDto::from);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    public Page<H2TransResponseDto> selectH2TransByOrderId(Long orderId, Pageable pageable) {
-        log.info("selectH2TransByIdocId");
-        Page<H2TransEntity> h2TransPage = h2TransJpaRepository.selectByCOrderId(orderId.toString(),pageable);
-        return h2TransPage.map(H2TransResponseDto::from);
-    }
-
     @Transactional(value = "db2TransactionManager")
     public void acceptOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("acceptOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -262,8 +114,8 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void acceptInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
-        log.info("acceptOutbound");
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
+        log.info("acceptInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
 
@@ -327,7 +179,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void workStationEmptyInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("workStationEmptyInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -392,7 +244,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void arrivedWorkstationErrorInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("workStationEmptyInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -457,7 +309,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void errorTextInbound(String errorText,TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("workStationEmptyInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -522,7 +374,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void carrierScannedInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("workStationEmptyInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -588,7 +440,7 @@ public class DB2TransportOrderService {
     @Transactional(value = "db2TransactionManager")
     public void releaseOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
 
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("releaseOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -652,7 +504,7 @@ public class DB2TransportOrderService {
     }
     @Transactional(value = "db2TransactionManager")
     public void internalRelocationOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("internalRelocationOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -717,7 +569,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void dropOnTunnelRelocation(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("dropOnTunnelRelocation");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -782,7 +634,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void outOfRackOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("outOfRackOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -847,7 +699,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void arrivedAtWorkStationOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("arrivedAtWorkStationOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -912,7 +764,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void completedInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("completedOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -977,7 +829,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void completedRelocation(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("completedOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1042,7 +894,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void completedOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("completedOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1107,7 +959,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void takeOffOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("takeOffOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1172,7 +1024,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void binEmptyOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("outOfRackOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1237,7 +1089,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void shortageOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("outOfRackOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1302,7 +1154,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void notAllowedPickUpOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("outOfRackOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1367,7 +1219,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void notAllowedPickUpInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("notAllowedPickUpInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1432,7 +1284,7 @@ public class DB2TransportOrderService {
 
     @Transactional(value = "db2TransactionManager")
     public void arrivedAtRackOutbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("outOfRackOutbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1496,8 +1348,8 @@ public class DB2TransportOrderService {
     }
 
     @Transactional(value = "db2TransactionManager")
-    public void stationOccupied(StationOccupiedDto request) {
-        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);;
+    public void stationOccupiedInbound(StationOccupiedDto request) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("stationOccupied");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
         Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
@@ -1568,7 +1420,7 @@ public class DB2TransportOrderService {
     }
 
     @Transactional("db2TransactionManager")
-    public H2OrderDetailResponseDto selectH2OrderDetailByIdocId(Long IdocId) {
+    public H2OrderDetailVo selectH2OrderDetailByIdocId(Long IdocId) {
         log.info("selectH2OrderDetailByIdocId");
         List<H2OrderMEntity> h2OrderMEntities = h2OrderMJpaRepository.findByIdocId(IdocId);
         List<H2OrderDEntity> h2OrderDEntities = h2OrderDJpaRepository.findByIdocId(IdocId);
@@ -1577,40 +1429,11 @@ public class DB2TransportOrderService {
         }
         H2OrderMEntity h2OrderM = h2OrderMEntities.get(0);
         H2OrderDEntity h2OrderD = h2OrderDEntities.get(0);
-        H2OrderDetailResponseDto responseDto =
-                H2OrderDetailResponseDto.builder()
-                        .lineId(h2OrderM.getIdocId())
-                        .idocId(h2OrderM.getIdocId())
-                        .dtimeCre(h2OrderM.getDtimeCre())
-                        .dtimeMod(h2OrderM.getDtimeMod())
-                        .usrMod(h2OrderM.getUsrMod())
-                        .pgmMod(h2OrderM.getPgmMod())
-                        .modCnt(h2OrderM.getModCnt())
-                        .dataCode(h2OrderM.getDataCode())
-                        .bookCtrl(h2OrderM.getBookCtrl())
-                        .cClient(h2OrderM.getCClient())
-                        .cOrderId(h2OrderM.getCOrderId())
-                        .cOrderTy(h2OrderM.getCOrderTy())
-                        .cDtPick(h2OrderM.getCDtPick())
-                        .cOrderPrio(h2OrderM.getCOrderPrio())
-                        .cTCode(h2OrderM.getCTCode())
-                        .cLocId(h2OrderM.getCLocId())
-                        .cWcId(h2OrderM.getCWcId())
-                        .cGalId(h2OrderM.getCGalId())
-                        .cGalWhs(h2OrderM.getCGalWhs())
-                        .cHostUsr(h2OrderM.getCHostUsr())
-                        .cUsrNo(h2OrderM.getCUsrNo())
-                        .cOrderLn(h2OrderD.getCOrderLn())
-                        .cCoId(h2OrderD.getCCoId())
-                        .cCoTy(h2OrderD.getCOrderTy())
-                        .cZone(h2OrderD.getCZone())
-                        .cDrivingProfile(h2OrderD.getCDrivingProfile())
-                        .build();
-        return responseDto;
+        return H2OrderDetailVo.builder().master(h2OrderM).detail(h2OrderD).build();
     }
 
     @Transactional("db2TransactionManager")
-    public H2OrderDetailResponseDto selectH2OrderDetailByIdocIdForRelocation(Long IdocId) {
+    public H2OrderDetailRelocationVo selectH2OrderDetailByIdocIdForRelocation(Long IdocId) {
         log.info("selectH2OrderDetailByIdocId");
         List<H2OrderMEntity> h2OrderMEntities = h2OrderMJpaRepository.findByIdocId(IdocId);
         List<H2OrderDEntity> h2OrderDEntities = h2OrderDJpaRepository.findByIdocId(IdocId);
@@ -1623,42 +1446,39 @@ public class DB2TransportOrderService {
         H2OrderMEntity h2OrderM = h2OrderMEntities.get(0);
         H2OrderDEntity h2OrderDSource = h2OrderDEntities.get(0);
         H2OrderDEntity h2OrderDTarget = h2OrderDEntities.get(1);
-        H2OrderDetailResponseDto responseDto =
-                H2OrderDetailResponseDto.builder()
-                        .lineId(h2OrderM.getIdocId())
-                        .idocId(h2OrderM.getIdocId())
-                        .dtimeCre(h2OrderM.getDtimeCre())
-                        .dtimeMod(h2OrderM.getDtimeMod())
-                        .usrMod(h2OrderM.getUsrMod())
-                        .pgmMod(h2OrderM.getPgmMod())
-                        .modCnt(h2OrderM.getModCnt())
-                        .dataCode(h2OrderM.getDataCode())
-                        .bookCtrl(h2OrderM.getBookCtrl())
-                        .cClient(h2OrderM.getCClient())
-                        .cOrderId(h2OrderM.getCOrderId())
-                        .cOrderTy(h2OrderM.getCOrderTy())
-                        .cDtPick(h2OrderM.getCDtPick())
-                        .cOrderPrio(h2OrderM.getCOrderPrio())
-                        .cTCode(h2OrderM.getCTCode())
-                        .cLocId(h2OrderDTarget.getCZone())
-                        .cWcId(h2OrderM.getCWcId())
-                        .cGalId(h2OrderM.getCGalId())
-                        .cGalWhs(h2OrderDSource.getCZone())
-                        .cHostUsr(h2OrderM.getCHostUsr())
-                        .cUsrNo(h2OrderM.getCUsrNo())
-                        .cOrderLn(h2OrderDSource.getCOrderLn())
-                        .cCoId(h2OrderDSource.getCCoId())
-                        .cCoTy(h2OrderDSource.getCOrderTy())
-                        .cZone(h2OrderDSource.getCZone())
-                        .cDrivingProfile(h2OrderDSource.getCDrivingProfile())
-                        .build();
-        return responseDto;
+        return H2OrderDetailRelocationVo.builder()
+                .master(h2OrderM)
+                .source(h2OrderDSource)
+                .target(h2OrderDTarget)
+                .build();
+    }
+
+    @Transactional("db2TransactionManager")
+    public IdocEntity selectIdocByIdocId(Long idocId) {
+        log.info("selectIdocByIdocId");
+        Optional<IdocEntity> optionalIdocEntity = idocJpaRepository.findByLineId(idocId);
+        if(optionalIdocEntity.isEmpty()){
+            throw new RuntimeException("IDOC을 찾을 수 없습니다.");
+        }
+        return optionalIdocEntity.get();
     }
 
     @Transactional("db2TransactionManager")
     public List<H2OrderMEntity> selectH2OrderMByIdocId(Long IdocId) {
         log.info("selectH2OrderMByIdocId");
         return h2OrderMJpaRepository.findByIdocId(IdocId);
+    }
+
+    @Transactional("db2TransactionManager")
+    public List<H2OrderMEntity> selectH2OrderMByOrderId(String orderId) {
+        log.info("selectH2OrderMByIdocId");
+        return h2OrderMJpaRepository.findByCOrderId(orderId);
+    }
+
+    @Transactional("db2TransactionManager")
+    public List<H2OrderDEntity> selectH2OrderDByOrderId(String orderId) {
+        log.info("selectH2OrderDByOrderId");
+        return h2OrderDJpaRepository.findByCOrderId(orderId);
     }
 
     @Transactional("db2TransactionManager")
@@ -1673,12 +1493,29 @@ public class DB2TransportOrderService {
         return h2TransJpaRepository.findByIdocId(IdocId);
     }
 
-    // Propagation.REQUIRES_NEW: 항상 새로운 트랜잭션을 시작하도록 강제
-    @Transactional(value = "db2TransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public void updateDb2StatusToDoneInNewTransaction(Long lineId) {
-        IdocEntity idocEntity = idocJpaRepository.findByLineId(lineId).orElseThrow();
-        idocEntity.setState(2);
-        idocJpaRepository.save(idocEntity);
+    @Transactional(readOnly = true, value = "db2TransactionManager")
+    public Page<IdocEntity> selectIdocListByOrderType(Pageable pageable, String orderType) {
+        log.info("selectIdocListByOrderType");
+        return idocJpaRepository.findIdocsByOrderType(orderType,pageable);
+    }
+
+    @Transactional(readOnly = true, value = "db2TransactionManager")
+    public Page<H2OrderMEntity> selectH2OrderMByIdocId(Long IdocId, Pageable pageable) {
+        log.info("selectH2OrderMByIdocId");
+        // 1. DB에서 엔티티 페이지를 조회합니다.
+        return h2OrderMJpaRepository.findByIdocId(IdocId,pageable);
+    }
+
+    @Transactional(readOnly = true, value = "db2TransactionManager")
+    public Page<H2OrderDEntity> selectH2OrderDByIdocId(Long IdocId, Pageable pageable) {
+        log.info("selectH2OrderDByIdocId");
+        return  h2OrderDJpaRepository.findByIdocId(IdocId,pageable);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public Page<H2TransEntity> selectH2TransByOrderId(Long orderId, Pageable pageable) {
+        log.info("selectH2TransByOrderId");
+        return h2TransJpaRepository.selectByCOrderId(orderId.toString(),pageable);
     }
 
 }

@@ -8,10 +8,10 @@ import org.springframework.test.context.ActiveProfiles;
 @Disabled
 @SpringBootTest
 @ActiveProfiles({"scheduler"})
-class DataTransferServiceTest {
+class TransportOrderFacadeTest {
 
     @Autowired
-    private DataTransferService dataTransferService;
+    private TransportOrderFacade transportOrderFacade;
 
     @Test
     void test1(){

@@ -1,6 +1,6 @@
 package kr.co.aim.api.schedule;
 
-import kr.co.aim.api.service.DataTransferService;
+import kr.co.aim.api.service.TransportOrderFacade;
 import kr.co.aim.api.service.IF_DB2WorkOrderService;
 import kr.co.aim.api.service.IF_MSSQLWorkOrderService;
 import kr.co.aim.infra.persistence.entitydb2.IF_WorkOrderEntity;
@@ -21,7 +21,7 @@ public class Scheduler {
 
     private final IF_DB2WorkOrderService if_db2WorkOrderService;
     private final IF_MSSQLWorkOrderService if_mssqlWorkOrderService;
-    private final DataTransferService dataTransferService;
+    private final TransportOrderFacade transportOrderFacade;
 
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "DB2ToMSSQL",
