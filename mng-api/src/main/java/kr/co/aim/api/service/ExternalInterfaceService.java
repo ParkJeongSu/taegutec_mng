@@ -4,6 +4,7 @@ import kr.co.aim.api.dto.*;
 import kr.co.aim.api.vo.H2OrderDetailRelocationVo;
 import kr.co.aim.api.vo.H2OrderDetailVo;
 import kr.co.aim.common.enums.IdocErrorCode;
+import kr.co.aim.common.enums.IdocTypeId;
 import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import kr.co.aim.infra.persistence.entitydb2.H2OrderDEntity;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -43,7 +45,9 @@ public class ExternalInterfaceService {
         log.info("transferIdocId");
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         idoc.setErrorCode( Integer.parseInt( IdocErrorCode.Processed.getValue() ) );
+        idoc.setDtimeMod(localDateTime);
         return idocJpaRepository.save(idoc);
     }
 
@@ -57,7 +61,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId( Long.parseLong(IdocTypeId.Confirmation.getValue()) )
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -71,7 +75,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -86,7 +90,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -122,7 +126,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -136,7 +140,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -151,7 +155,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -187,7 +191,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -201,7 +205,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -216,7 +220,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -252,7 +256,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -266,7 +270,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -281,7 +285,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -317,7 +321,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -331,7 +335,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -346,7 +350,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -373,7 +377,7 @@ public class ExternalInterfaceService {
     }
 
     @Transactional(value = "db2TransactionManager")
-    public void carrierScannedInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity) {
+    public void carrierScannedInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity,SimulatorIdsDto dto) {
         LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
         log.info("workStationEmptyInbound");
         // 1. 새로운 IDOC Line ID 생성 (Max + 1)
@@ -382,7 +386,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -396,7 +400,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -407,11 +411,19 @@ public class ExternalInterfaceService {
         // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
         Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
 
+        String containerId;
+        if(StringUtils.hasText(dto.getCarrierId())){
+            containerId = dto.getCarrierId();
+        }
+        else{
+            containerId = selectedH2OrderDEntity.getCCoId();
+        }
+
         H2TransEntity h2TransEntity = H2TransEntity.builder()
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -426,11 +438,11 @@ public class ExternalInterfaceService {
                 //.cOrderLn()
                 .cGaId(selectedH2OrderMEntity.getCGalId())
                 .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
-                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cCoId(containerId)
                 .cGrWgAct(30L)
                 .cReqZone(selectedH2OrderDEntity.getCZone())
                 .cZone("")
-                //.cLocId()
+                .cLocId(dto.getLocationCode())
                 //.cErrDsc()
                 .cWcId(selectedH2OrderMEntity.getCWcId())
                 .build();
@@ -448,7 +460,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -462,7 +474,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -477,7 +489,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -512,7 +524,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -526,7 +538,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -541,7 +553,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -577,7 +589,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -591,7 +603,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -606,7 +618,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -642,7 +654,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -656,7 +668,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -671,7 +683,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -689,7 +701,72 @@ public class ExternalInterfaceService {
                 .cCoId(selectedH2OrderDEntity.getCCoId())
                 .cGrWgAct(30L)
                 .cReqZone(selectedH2OrderDEntity.getCZone())
-                .cZone("B")
+                //.cZone("")
+                //.cLocId()
+                //.cErrDsc()
+                .cWcId(selectedH2OrderMEntity.getCWcId())
+                .build();
+        h2TransJpaRepository.save(h2TransEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void outOfRackInbound(TransportOrderEntity transportOrder, IdocEntity selectedIdocEntity, H2OrderMEntity selectedH2OrderMEntity, H2OrderDEntity selectedH2OrderDEntity,SimulatorIdsDto dto) {
+        LocalDateTime localDateTime = LocalDateTime.now().withNano(0);
+        log.info("outOfRackInbound");
+        // 1. 새로운 IDOC Line ID 생성 (Max + 1)
+        Long nextIdocLineId = idocJpaRepository.findMaxLineId() + 1;
+
+        IdocEntity idocEntity =
+                IdocEntity.builder()
+                        .lineId(nextIdocLineId)
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
+                        //.state()
+                        //.errorCode()
+                        .source(selectedIdocEntity.getDestination())
+                        .destination(selectedIdocEntity.getSource())
+                        //.tidId()
+                        .docNum(selectedIdocEntity.getDocNum())
+                        //.queueName()
+                        //.partnerType()
+                        //.partnerName()
+                        //.partnerPort()
+                        //.msgVariant()
+                        //.arcKey()
+                        .dtimeCre(localDateTime)
+                        //.dtimeMod(localDateTime)
+                        //.usrMod()
+                        //.pgmMod()
+                        //.modCnt()
+                        .build();
+
+        idocJpaRepository.save(idocEntity);
+
+        // 2. 새로운 H2TRANS Line ID 생성 (Max + 1)
+        Long nextTransLineId = h2TransJpaRepository.findMaxLineId() + 1;
+
+        H2TransEntity h2TransEntity = H2TransEntity.builder()
+                .lineId(nextTransLineId)
+                .idocId(idocEntity.getLineId())
+                .dtimeCre(localDateTime)
+                //.dtimeMod(localDateTime)
+                //.usrMod()
+                //.pgmMod()
+                //.modCnt()
+                .dataCode(10L)
+                .cTransTy( Long.parseLong(TransportStatus.OutOfRack.getValue()))
+                .cClient("999")
+                .cOrderId(selectedH2OrderMEntity.getCOrderId())
+                .cOrderTy(selectedH2OrderMEntity.getCOrderTy())
+                //.cErrId()
+                //.cText1()
+                //.cTCode()
+                //.cOrderLn()
+                .cGaId(selectedH2OrderMEntity.getCGalId())
+                .cGalWhs(selectedH2OrderMEntity.getCGalWhs())
+                .cCoId(selectedH2OrderDEntity.getCCoId())
+                .cGrWgAct(30L)
+                .cReqZone(selectedH2OrderDEntity.getCZone())
+                .cZone(dto.getRackActualPosition())
                 //.cLocId()
                 //.cErrDsc()
                 .cWcId(selectedH2OrderMEntity.getCWcId())
@@ -707,7 +784,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -721,7 +798,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -736,7 +813,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -772,7 +849,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -786,7 +863,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -801,7 +878,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -837,7 +914,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -851,7 +928,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -866,7 +943,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -902,7 +979,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -916,7 +993,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -931,7 +1008,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -967,7 +1044,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -981,7 +1058,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -996,7 +1073,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -1032,7 +1109,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -1046,7 +1123,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -1061,7 +1138,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -1097,7 +1174,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -1111,7 +1188,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -1126,7 +1203,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -1162,7 +1239,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -1176,7 +1253,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -1191,7 +1268,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -1227,7 +1304,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -1241,7 +1318,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -1256,7 +1333,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -1292,7 +1369,7 @@ public class ExternalInterfaceService {
         IdocEntity idocEntity =
                 IdocEntity.builder()
                         .lineId(nextIdocLineId)
-                        .idocTypId(selectedIdocEntity.getIdocTypId())
+                        .idocTypId(Long.parseLong(IdocTypeId.Confirmation.getValue()))
                         //.state()
                         //.errorCode()
                         .source(selectedIdocEntity.getDestination())
@@ -1306,7 +1383,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -1321,7 +1398,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()
@@ -1371,7 +1448,7 @@ public class ExternalInterfaceService {
                         //.msgVariant()
                         //.arcKey()
                         .dtimeCre(localDateTime)
-                        .dtimeMod(localDateTime)
+                        //.dtimeMod(localDateTime)
                         //.usrMod()
                         //.pgmMod()
                         //.modCnt()
@@ -1386,7 +1463,7 @@ public class ExternalInterfaceService {
                 .lineId(nextTransLineId)
                 .idocId(idocEntity.getLineId())
                 .dtimeCre(localDateTime)
-                .dtimeMod(localDateTime)
+                //.dtimeMod(localDateTime)
                 //.usrMod()
                 //.pgmMod()
                 //.modCnt()

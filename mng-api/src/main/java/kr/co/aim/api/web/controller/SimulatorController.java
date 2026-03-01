@@ -249,7 +249,7 @@ public class SimulatorController {
     @PostMapping("/inbound/scanned-carrier")
     public ResponseEntity<Void> carrierScannedInbound(@RequestBody SimulatorIdsDto request) {
         log.info("carrierScannedInbound 요청 수신: {} 건", request.getIds().size());
-        transportOrderFacade.carrierScannedInbound(request.getIds().get(0));
+        transportOrderFacade.carrierScannedInbound(request);
         return ResponseEntity.noContent().build();
     }
 
@@ -257,7 +257,7 @@ public class SimulatorController {
     @PostMapping("/inbound/out-of-rack")
     public ResponseEntity<Void> outOfRackInbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        transportOrderFacade.outOfRackInbound(request.getIds().get(0));
+        transportOrderFacade.outOfRackInbound(request);
         return ResponseEntity.noContent().build();
     }
 

@@ -1,5 +1,6 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.dto.SimulatorIdsDto;
 import kr.co.aim.api.dto.StationOccupiedDto;
 import kr.co.aim.common.enums.TransportStatus;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
@@ -242,7 +243,8 @@ public class TransportOrderFacade {
 
     }
 
-    public void carrierScannedInbound(Long orderId) {
+    public void carrierScannedInbound(SimulatorIdsDto dto) {
+        Long orderId = dto.getIds().get(0);
         log.info("인터페이스 프로세스 시작 : carrierScannedInboundOrder Id = {}", orderId);
 
         TransportOrderEntity transportOrder = transportOrderService.selectTransportOrder(orderId);
@@ -256,7 +258,7 @@ public class TransportOrderFacade {
 
         IdocEntity idocEntity = externalInterfaceService.selectIdocByIdocId(mList.get(0).getIdocId());
 
-        externalInterfaceService.carrierScannedInbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        externalInterfaceService.carrierScannedInbound(transportOrder,idocEntity,mList.get(0),dList.get(0),dto);
         transportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.CarrierScanned);
 
     }
@@ -384,7 +386,9 @@ public class TransportOrderFacade {
 
     }
 
-    public void outOfRackInbound(Long orderId) {
+    public void outOfRackInbound(SimulatorIdsDto dto) {
+
+        Long orderId = dto.getIds().get(0);
         log.info("인터페이스 프로세스 시작 : acceptId = {}", orderId);
 
         TransportOrderEntity transportOrder = transportOrderService.selectTransportOrder(orderId);
@@ -404,7 +408,7 @@ public class TransportOrderFacade {
 
         IdocEntity idocEntity = externalInterfaceService.selectIdocByIdocId(mList.get(0).getIdocId());
 
-        externalInterfaceService.outOfRackOutbound(transportOrder,idocEntity,mList.get(0),dList.get(0));
+        externalInterfaceService.outOfRackInbound(transportOrder,idocEntity,mList.get(0),dList.get(0),dto);
         transportOrderService.updateStatusTransportOrder(transportOrder.getTransportOrderId(),TransportStatus.OutOfRack);
 
     }

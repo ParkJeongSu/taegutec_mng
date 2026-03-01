@@ -12,4 +12,8 @@ import java.util.List;
 public class SimulatorIdsDto {
     private List<Long> ids;
     private String errorText;
+    private String carrierId;
+    private String locationCode;
+    private String rackActualPosition;
+
 }
