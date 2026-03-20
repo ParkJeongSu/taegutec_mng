@@ -2,7 +2,7 @@ package kr.co.aim.api.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.AreYouThereBody;
+import kr.co.aim.common.format.AreYouThereRequestBody;
 import kr.co.aim.common.format.Header;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.format.request.Sample;
@@ -56,7 +56,7 @@ public class MessageSendController {
         // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
         String jsonPayload = objectMapper.writeValueAsString(request);
 
-        System.out.println("Sending JSON Payload: " + jsonPayload);
+        log.info("Sending JSON Payload: {}", jsonPayload);
         Object response = rabbitTemplate.convertSendAndReceive(
                 "demo-queue",
                 jsonPayload
@@ -88,7 +88,7 @@ public class MessageSendController {
     @PostMapping("/send4")
     public void sendMessage4(@RequestParam String message){
 
-        BaseMessage<AreYouThereBody> request = new BaseMessage<>();
+        BaseMessage<AreYouThereRequestBody> request = new BaseMessage<>();
         Header header = Header.builder().messageName("AreYouThereRequest")
                 .eventComment("test")
                 .eventUser("pjs")
@@ -97,7 +97,7 @@ public class MessageSendController {
                 .timestamp("test")
                 .transactionId("123")
                 .build();
-        AreYouThereBody body = AreYouThereBody.
+        AreYouThereRequestBody body = AreYouThereRequestBody.
                 builder()
                         .equipmentName("equipment1")
                 .build();
@@ -113,8 +113,7 @@ public class MessageSendController {
 
         // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
         String jsonPayload = objectMapper.writeValueAsString(request);
-
-        System.out.println("Sending JSON Payload: " + jsonPayload);
+        log.info("Sending JSON Payload: {}" , jsonPayload);
         rabbitTemplate.convertAndSend(
                 "demo-queue",
                 jsonPayload

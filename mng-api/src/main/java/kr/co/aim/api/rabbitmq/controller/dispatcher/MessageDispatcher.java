@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
-@Profile({"pex","tex","dispatcher","scheduler"})
+@Profile({"pex","tex","scheduler"})
 public class MessageDispatcher {
 
     // Spring이 MessageHandler 인터페이스를 구현한 모든 빈을 여기에 주입해 줍니다.

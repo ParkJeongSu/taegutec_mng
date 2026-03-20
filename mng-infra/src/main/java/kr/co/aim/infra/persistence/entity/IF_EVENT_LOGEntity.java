@@ -29,6 +29,12 @@ public class IF_EVENT_LOGEntity {
     @Column(name = "IF_STATUS")
     private String ifStatus;
 
+    @Column(name = "CARRIER_NAME")
+    private String carrierName;
+
+    @Column(name = "IDOC_ID")
+    private Long idocId;
+
     @Column(name = "RETRY_CNT")
     private Integer retryCNT;
 

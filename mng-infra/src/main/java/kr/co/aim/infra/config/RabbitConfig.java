@@ -1,11 +1,7 @@
 package kr.co.aim.infra.config;
 
 import lombok.Getter;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,147 +12,128 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
 @Getter
-@Profile({"pex","tex","dispatcher","scheduler"})
+@Profile({"pex","tex","scheduler"})
 public class RabbitConfig {
 
-    // 1. application.yml 에서 값을 가져와 변수에 할당합니다.
-    // static final 이 아니라 인스턴스 변수가 됩니다.
+    // --- Public Static 상수 (외부 참조용) ---
+    public static String EXCHANGE_PEX;    // rpc.exchange
+    public static String EXCHANGE_TEX;    // rpc.exchange
+    public static String EXCHANGE_EAS;
+    public static String EXCHANGE_WMS;
+    public static String EXCHANGE_WCS;
+    public static String EXCHANGE_MANTI;
+    public static String EXCHANGE_DEAD;
 
-    @Value("${custom.rabbitmq.exchange.rpc}")
-    private String rpcExchangeName;
+    public static String QUEUE_PEX;
+    public static String QUEUE_TEX;
+    public static String QUEUE_EAS;
+    public static String QUEUE_WMS;
+    public static String QUEUE_WCS;
+    public static String QUEUE_MANTI;
+    public static String QUEUE_DEAD;
 
-    @Value("${custom.rabbitmq.exchange.dead}")
-    private String deadLetterExchangeName;
+    public static String ROUTING_PEX;
+    public static String ROUTING_TEX;
+    public static String ROUTING_EAS;
+    public static String ROUTING_WMS;
+    public static String ROUTING_WCS;
+    public static String ROUTING_MANTI;
+    public static String ROUTING_DEAD;
 
-    @Value("${custom.rabbitmq.queue.pex}")
-    private String pexRequestQueueName;
+    public static final String DLX_KEY = "x-dead-letter-exchange";
+    public static final String DLK_KEY = "x-dead-letter-routing-key";
 
-    @Value("${custom.rabbitmq.queue.tex}")
-    private String texRequestQueueName;
+    // --- Setter 주입 (Static 필드 할당) ---
+    @Value("${custom.rabbitmq.exchange.pex}") public void setExPex(String v) { EXCHANGE_PEX = v; }
+    @Value("${custom.rabbitmq.exchange.tex}") public void setExTex(String v) { EXCHANGE_TEX = v; }
+    @Value("${custom.rabbitmq.exchange.eas}") public void setExEas(String v) { EXCHANGE_EAS = v; }
+    @Value("${custom.rabbitmq.exchange.wms}") public void setExWms(String v) { EXCHANGE_WMS = v; }
+    @Value("${custom.rabbitmq.exchange.wcs}") public void setExWcs(String v) { EXCHANGE_WCS = v; }
+    @Value("${custom.rabbitmq.exchange.manti}") public void setExManti(String v) { EXCHANGE_MANTI = v; }
+    @Value("${custom.rabbitmq.exchange.dead}") public void setExDead(String v) { EXCHANGE_DEAD = v; }
 
-    //@Value("${custom.rabbitmq.queue.dispatcher}")
-    //private String dispatcherRequestQueueName;
+    @Value("${custom.rabbitmq.queue.pex}") public void setQp(String v) { QUEUE_PEX = v; }
+    @Value("${custom.rabbitmq.queue.tex}") public void setQt(String v) { QUEUE_TEX = v; }
+    @Value("${custom.rabbitmq.queue.eas}") public void setQe(String v) { QUEUE_EAS = v; }
+    @Value("${custom.rabbitmq.queue.wms}") public void setQw(String v) { QUEUE_WMS = v; }
+    @Value("${custom.rabbitmq.queue.wcs}") public void setQc(String v) { QUEUE_WCS = v; }
+    @Value("${custom.rabbitmq.queue.manti}") public void setQm(String v) { QUEUE_MANTI = v; }
+    @Value("${custom.rabbitmq.queue.dead}") public void setQd(String v) { QUEUE_DEAD = v; }
 
-    @Value("${custom.rabbitmq.queue.dead}")
-    private String deadLetterQueueName;
+    @Value("${custom.rabbitmq.routing.pex}") public void setRp(String v) { ROUTING_PEX = v; }
+    @Value("${custom.rabbitmq.routing.tex}") public void setRt(String v) { ROUTING_TEX = v; }
+    @Value("${custom.rabbitmq.routing.eas}") public void setRe(String v) { ROUTING_EAS = v; }
+    @Value("${custom.rabbitmq.routing.wms}") public void setRw(String v) { ROUTING_WMS = v; }
+    @Value("${custom.rabbitmq.routing.wcs}") public void setRc(String v) { ROUTING_WCS = v; }
+    @Value("${custom.rabbitmq.routing.manti}") public void setRm(String v) { ROUTING_MANTI = v; }
+    @Value("${custom.rabbitmq.routing.dead}") public void setRd(String v) { ROUTING_DEAD = v; }
 
-    @Value("${custom.rabbitmq.routing.pex}")
-    private String pexRoutingKey;
-
-    @Value("${custom.rabbitmq.routing.tex}")
-    private String texRoutingKey;
-
-    @Value("${custom.rabbitmq.routing.dispatcher}")
-    private String dispatcherRoutingKey;
-
-    public static final String DEAD_LETTER_EXCHANGE_KEY = "x-dead-letter-exchange";
-    public static final String DEAD_LETTER_ROUTING_KEY_KEY = "x-dead-letter-routing-key";
-
+    // --- RabbitAdmin 인프라 초기화 ---
     @Bean
-    @Profile({"pex","tex","dispatcher","scheduler"})
-    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory
-    ,Queue pexQueue, Queue texQueue, Queue deadLetterQueue) {
+    public RabbitAdmin rabbitAdmin(ConnectionFactory connectionFactory) {
         RabbitAdmin admin = new RabbitAdmin(connectionFactory);
         admin.setAutoStartup(true);
-
-        // [중요] eziframe이 날뛰기 전에 여기서 강제로 인프라를 생성합니다.
-        // 이 코드는 @Bean으로 등록된 Queue, Exchange, Binding들을 즉시 브로커에 선언합니다.
         try {
             admin.initialize();
-            System.out.println(">>> [RabbitAdmin] Infra initialized successfully.");
+            System.out.println(">>> [RabbitAdmin] All Infra (PEX, TEX, EAS, WMS, WCS, MANTI) initialized.");
         } catch (Exception e) {
-            System.err.println(">>> [RabbitAdmin] Failed to initialize infra: " + e.getMessage());
+            System.err.println(">>> [RabbitAdmin] Initialization failed: " + e.getMessage());
         }
-
         return admin;
     }
 
-    // 1. DLQ와 DLX 빈 등록
-    @Bean
-    public Queue deadLetterQueue() {
-        Queue queue = new Queue(getDeadLetterQueueName(), true);
-        queue.setShouldDeclare(true);
-        return queue;
+    // --- Queue & Exchange Beans ---
+    @Bean public Queue deadLetterQueue() { return new Queue(QUEUE_DEAD, true); }
+    @Bean public DirectExchange deadLetterExchange() { return new DirectExchange(EXCHANGE_DEAD); }
+    @Bean Binding deadLetterBinding() { return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(ROUTING_DEAD); }
+
+    // 공통 Argument 생성 메서드 (람다 대신 사용)
+    private Map<String, Object> dlqArgs() {
+        Map<String, Object> args = new HashMap<>();
+        args.put(DLX_KEY, EXCHANGE_DEAD);
+        args.put(DLK_KEY, ROUTING_DEAD);
+        return args;
     }
 
+    @Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false, dlqArgs()); }
+    @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false, dlqArgs()); }
+    //@Bean public Queue easQueue() { return new Queue(QUEUE_EAS, true, false, false, dlqArgs()); }
+    //@Bean public Queue wmsQueue() { return new Queue(QUEUE_WMS, true, false, false, dlqArgs()); }
+    //@Bean public Queue wcsQueue() { return new Queue(QUEUE_WCS, true, false, false, dlqArgs()); }
+    //@Bean public Queue mantiQueue() { return new Queue(QUEUE_MANTI, true, false, false, dlqArgs()); }
+
+    // Exchanges
+    @Bean public DirectExchange pexExchange() { return new DirectExchange(EXCHANGE_PEX); } // rpc.exchange
+    @Bean public DirectExchange texExchange() { return new DirectExchange(EXCHANGE_TEX); } // rpc.exchange
+    //@Bean public DirectExchange easExchange() { return new DirectExchange(EXCHANGE_EAS); }
+    //@Bean public DirectExchange wmsExchange() { return new DirectExchange(EXCHANGE_WMS); }
+    //@Bean public DirectExchange wcsExchange() { return new DirectExchange(EXCHANGE_WCS); }
+    //@Bean public DirectExchange mantiExchange() { return new DirectExchange(EXCHANGE_MANTI); }
+
+    // Bindings
+    @Bean Binding pexBinding() { return BindingBuilder.bind(pexQueue()).to(pexExchange()).with(ROUTING_PEX); }
+    @Bean Binding texBinding() { return BindingBuilder.bind(texQueue()).to(texExchange()).with(ROUTING_TEX); }
+    //@Bean Binding easBinding() { return BindingBuilder.bind(easQueue()).to(easExchange()).with(ROUTING_EAS); }
+    //@Bean Binding wmsBinding() { return BindingBuilder.bind(wmsQueue()).to(wmsExchange()).with(ROUTING_WMS); }
+    //@Bean Binding wcsBinding() { return BindingBuilder.bind(wcsQueue()).to(wcsExchange()).with(ROUTING_WCS); }
+    //@Bean Binding mantiBinding() { return BindingBuilder.bind(mantiQueue()).to(mantiExchange()).with(ROUTING_MANTI); }
+
+    // --- Template & Converter ---
     @Bean
-    public DirectExchange deadLetterExchange() {
-        return new DirectExchange(getDeadLetterExchangeName());
-    }
-
-    // 2. DLQ 바인딩
-    @Bean
-    Binding deadLetterBinding(Queue deadLetterQueue, DirectExchange deadLetterExchange) {
-        return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with(getDeadLetterQueueName());
-    }
-
-    @Bean
-    @Profile({"pex","tex","dispatcher"})
-    public Queue pexQueue(){
-        Queue queue = new Queue( getPexRequestQueueName(),true,false,false,
-                Map.of( DEAD_LETTER_EXCHANGE_KEY, getDeadLetterExchangeName(),
-                        DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
-        );
-        queue.setShouldDeclare(true);
-        return queue;
-    }
-
-
-    @Bean
-    @Profile({"pex","tex","dispatcher"})
-    public Queue texQueue(){
-        Queue queue = new Queue(getTexRequestQueueName(),true,false,false,
-                Map.of(DEAD_LETTER_EXCHANGE_KEY,getDeadLetterExchangeName(),
-                        DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
-        );
-        queue.setShouldDeclare(true);
-        return queue;
-    }
-
-    @Bean
-    Binding pexBinding(Queue pexQueue, DirectExchange exchange) {
-        return BindingBuilder.bind(pexQueue).to(exchange).with(getPexRoutingKey());
-    }
-
-    @Bean
-    Binding texBinding(Queue texQueue, DirectExchange exchange) {
-        return BindingBuilder.bind(texQueue).to(exchange).with(getTexRoutingKey());
-    }
-
-//    @Bean
-//    @Profile({"pex","tex","dispatcher"})
-//    public Queue dispatcherQueue(){
-//        return new Queue(getDispatcherRequestQueueName(),true,false,false,
-//                Map.of(DEAD_LETTER_EXCHANGE_KEY, getDeadLetterExchangeName(),
-//                        DEAD_LETTER_ROUTING_KEY_KEY,getDeadLetterQueueName())
-//        );
-//    }
-
-    // Exchange 빈 등록
-    @Bean
-    @Profile({"pex","tex","dispatcher"})
-    DirectExchange exchange() {
-        return new DirectExchange(getRpcExchangeName());
-    }
-
-    // RabbitTemplate 설정
-    @Bean
-    @Profile({"pex","tex","dispatcher"})
-    RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter) {
+    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(messageConverter);
         rabbitTemplate.setReplyTimeout(60000);
         return rabbitTemplate;
     }
 
-    // Spring Boot가 Jackson 라이브러리를 사용해 메시지를 JSON으로 자동 변환하도록 설정
     @Bean
-    @Profile({"pex","tex","dispatcher"})
-    MessageConverter messageConverter() {
+    public MessageConverter messageConverter() {
         return new Jackson2JsonMessageConverter();
     }
 }

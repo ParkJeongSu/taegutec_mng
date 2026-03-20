@@ -1,7 +1,7 @@
 package kr.co.aim.infra;
 
 import kr.co.aim.domain.model.CarrierDef;
-import kr.co.aim.infra.persistence.adapter.CarriersDefRepositoryImpl;
+import kr.co.aim.infra.persistence.adapter.CarrierDefRepositoryImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -18,11 +18,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class CarrierDefRepositoryImplTest {
 
     @Autowired
-    private CarriersDefRepositoryImpl carriersDefRepository;
+    private CarrierDefRepositoryImpl carrierDefRepository;
 
     @Test
     void getCarrierDefTest(){
-        List<CarrierDef> result =  carriersDefRepository.findAll();
+        List<CarrierDef> result =  carrierDefRepository.findAll();
         assertNotNull(result);
         System.out.println("조회된 건수:" +result.size());
         for(CarrierDef c : result)

@@ -10,7 +10,6 @@ import lombok.ToString;
 public class DestinationRequestBody {
     private String transportJobName; // 이 부분 좀 고민해보자
     private String carrierName;
-    
     private String currentEquipmentName;
     private String currentPositionType;
     private String currentPositionName;

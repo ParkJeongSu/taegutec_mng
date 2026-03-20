@@ -46,7 +46,7 @@ public class OperationModeReportHandler implements MessageHandler<String> {
 
         // 4. DTO 객체를 JSON 문자열로 직접 변환합니다.
         // String jsonPayload = objectMapper.writeValueAsString(reply);
-        // System.out.println("Sending JSON Payload: " + jsonPayload);
+        // log.info("Sending JSON Payload: {}", jsonPayload);
 
         // 5. String 으로 변환된 메시지 reply
         // rabbitTemplate.convertAndSend( "demo-queue", jsonPayload );

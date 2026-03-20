@@ -17,7 +17,7 @@ public class IF_MSSQLWorkOrderService {
     private final IF_WorkOrderJpaMSSQLRepository mssqlIFWorkOrderJpaRepository;
 
     @Transactional("mssqlTransactionManager")
-    public void transferWorkOrderToMSSQL(kr.co.aim.infra.persistence.entitydb2.IF_WorkOrderEntity DB2WorkOrder) {
+    public void transferWorkOrderToMSSQL(kr.co.aim.infra.persistence.db2entity.IF_WorkOrderEntity DB2WorkOrder) {
         log.info("Starting data transfer from DB2 to MSSQL");
         IF_WorkOrderEntity MSSQLWorkOrder = new IF_WorkOrderEntity();
         MSSQLWorkOrder.setWorkOrderName(DB2WorkOrder.getWorkOrderName());

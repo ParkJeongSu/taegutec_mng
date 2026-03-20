@@ -45,6 +45,9 @@ public class EquipmentDefEntity {
     @Column(name = "PROCESS_CAPACITY")
     private Integer processCapacity;
 
+    @Column(name = "CONTAINER_TYPE")
+    private String containerType;
+
     @Column(name = "CHECK_OUT_STATE")
     private String checkOutState;
 
@@ -69,6 +72,5 @@ public class EquipmentDefEntity {
     @Column(name = "EVENT_COMMENT")
     private String eventComment;
 
-    @Column(name = "CONTAINER_TYPE")
-    private String containerType;
+
 }

@@ -33,11 +33,17 @@ public class PortDefEntity {
     @Column(name = "PORT_TYPE")
     private String portType;
 
+    @Column(name = "DETAIL_PORT_TYPE")
+    private String detailPortType;
+
     @Column(name = "PORT_USE_TYPE")
     private String portUseType;
 
-    @Column(name = "CONTAINER_TYPE")
-    private String containerType;
+    @Column(name = "WORK_CENTER_NAME")
+    private String workCenterName;
+
+    @Column(name = "LOCATION_ID")
+    private String locationId;
 
     @Column(name = "CHECK_OUT_STATE")
     private String checkOutState;

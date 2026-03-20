@@ -10,9 +10,9 @@ import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.TransportJob;
-import kr.co.aim.domain.model.TransportJobDetail;
-import kr.co.aim.domain.repository.TransportJobDetailRepository;
 import kr.co.aim.domain.repository.TransportJobRepository;
+import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,7 +31,8 @@ public class TransportJobService {
 
     // 구현체(Infra)가 아닌 인터페이스(Domain)에 의존
     private final TransportJobRepository transportJobRepository;
-    private final TransportJobDetailRepository transportJobDetailRepository;
+    private final HistoryService historyService;
+    private final TransportJobMapper transportJobMapper;
 
     /**
      * SCS 시스템이 켜질때 보고
@@ -60,7 +61,6 @@ public class TransportJobService {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-        
 
         String transportJobDetailName = message.getBody().getTransportJobName(); // DetailName
         String carrierName = message.getBody().getCarrierName();
@@ -74,25 +74,6 @@ public class TransportJobService {
         String newDestinationPositionName = message.getBody().getNewDestinationPositionName();
         String newDestinationZoneName = message.getBody().getNewDestinationZoneName();
 
-        Optional<TransportJobDetail> optionalTransportJobDetail = transportJobDetailRepository.findByTransportJobDetailName(transportJobDetailName);
-
-        if(optionalTransportJobDetail.isEmpty()){
-            return;
-        }
-        TransportJobDetail transportJobDetail = optionalTransportJobDetail.get();
-
-
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        DestinationChangedCommand command = DestinationChangedCommand.builder()
-                .transactionInfo(tx)
-                .newDestinationEquipmentName(newDestinationEquipmentName)
-                .newDestinationPositionType(newDestinationPositionType)
-                .newDestinationPositionName(newDestinationPositionName)
-                .newDestinationZoneName(newDestinationZoneName)
-                .build();
-
-        transportJobDetail.destinationChanged(command);
-        transportJobDetailRepository.save(transportJobDetail);
     }
 
     /**
@@ -108,33 +89,9 @@ public class TransportJobService {
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
-        String transportJobDetailName = message.getBody().getTransportJobName(); // DetailName
+        String transportJobDetailName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
-
-        try {
-            Optional<TransportJobDetail> optionalTransportJobDetail = transportJobDetailRepository.findByTransportJobDetailName(transportJobDetailName);
-
-            if(optionalTransportJobDetail.isEmpty()){
-                throw new EntityNotFoundException(TransportJobDetail.class,transportJobDetailName);
-            }
-
-            TransportJobDetail transportJobDetail = optionalTransportJobDetail.get();
-            Optional<TransportJob> optionalTransportJob = transportJobRepository.findById(transportJobDetail.getTransportJobId());
-
-            if(optionalTransportJob.isEmpty()){
-                throw new EntityNotFoundException(TransportJob.class,transportJobDetailName);
-            }
-
-            TransportJob transportJob = optionalTransportJob.get();
-
-            // TODO: reply message 생성후 반환
-            String destinationEquipmentName = transportJob.getDestinationEquipmentName();
-
-            return null;
-        } catch (Exception e) {
-            // TODO: reply message 생성 후 반환
-            return null;
-        }
+        return null;
     }
 
     /**
@@ -307,7 +264,9 @@ public class TransportJobService {
 
         TransportJob transportJob = TransportJob.create(command);
         transportJob = transportJobRepository.save(transportJob);
-        // TODO : TransPortJobHistory 추가 로직 넣기
+        TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+        historyService.saveHistory(transportJobHistoryEntity);
+        // 반환된 transportJob 정보를 토대로 controller 계층에서 WCS로 반송 요청
         return transportJob;
     }
 
@@ -363,93 +322,5 @@ public class TransportJobService {
 
 
     // ============== [TransportJob] ==============
-
-
-
-    // ============== [TransportJobDetail] ==============
-
-
-    /**
-     * 사용자의 데이터를 생성합니다.
-     * @param requestDto 사용자의 생성 데이터
-     * @return 생성된 사용자 도메인 객체
-     */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public TransportJobDetail createTransportJobDetail(TransportJobDetailCreateRequestDto requestDto) {
-        // 1. Repository를 통해 Domain 객체를 가져온다.
-        Optional<TransportJobDetail> optionalTransportJobDetail = transportJobDetailRepository.findByTransportJobDetailName(requestDto.getTransportJobDetailName());
-        if(optionalTransportJobDetail.isPresent()){
-            throw new EntityExistException("이미 생성된 Job 이름입니다. ID: " + requestDto.getTransportJobDetailName());
-        }
-
-        String eventName = EventName.CREATED.getValue();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,requestDto.getEventUser(),requestDto.getEventComment());
-        TransportJobDetailCreateCommand command =
-                TransportJobDetailCreateCommand.builder()
-                        .transportJobDetailName(requestDto.getTransportJobDetailName())
-                        .transactionInfo(tx)
-                        .build();
-
-        TransportJobDetail transportJobDetail = TransportJobDetail.create(command);
-
-        return transportJobDetailRepository.save(transportJobDetail);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<TransportJobDetailResponseDto> findTransportJobDetail(TransportJobDetailSearchConditionDto condition, Pageable pageable) {
-        //1. Repository에서 Page<Entity>를 조회합니다.
-        Page<TransportJobDetailResponseDto> page = null;//transportJobDetailRepository.findTransportJobDetailWithConditions(condition,pageable);
-
-        return page;
-    }
-
-    /**
-     * 사용자의 데이터를 변경합니다.
-     * @param requestDto 사용자의 변경 데이터
-     * @return 변경된 사용자 도메인 객체
-     */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public TransportJobDetail changeTransportJobDetail(Long id, TransportJobDetailUpdateRequestDto requestDto) {
-        // 1. Repository를 통해 Domain 객체를 가져온다.
-        TransportJobDetail transportJobDetail;
-        Optional<TransportJobDetail> optionalTransportJobDetail = transportJobDetailRepository.findById(id);
-        if(optionalTransportJobDetail.isPresent()){
-            transportJobDetail = optionalTransportJobDetail.get();
-        }
-        else {
-            throw new EntityNotFoundException("존재하지 않는 설정입니다. ID: " + requestDto.getId());
-        }
-        String eventName = EventName.UPDATED.getValue();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,requestDto.getEventUser(),requestDto.getEventComment());
-        TransportJobDetailUpdateCommand command =
-                TransportJobDetailUpdateCommand.builder()
-                        .transactionInfo(tx)
-                        .build();
-
-        transportJobDetail.changeTransportJobDetail(command);
-
-        return transportJobDetailRepository.save(transportJobDetail);
-    }
-
-
-    @Transactional
-    public void deleteAllTransportJobDetailByIdInBatch(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return; // 삭제할 ID가 없으면 아무 작업도 하지 않음
-        }
-        // 여러 건을 삭제할 때는 이 메서드가 성능상 가장 효율적입니다.
-        // DELETE ... WHERE id IN (...) 쿼리를 한 번에 실행합니다.
-        transportJobDetailRepository.deleteAllByIdInBatch(ids);
-    }
-
-    // ============== [TransportJobDetail] ==============
-
-
-
-
-
-
 
 }

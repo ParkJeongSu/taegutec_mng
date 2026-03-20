@@ -14,6 +14,7 @@ public class TransportJobCreateCommand {
     private final TransactionInfo transactionInfo;
     private final Long id;
     private final String transportJobName;
+    private final String carrierName;
     private final String transportJobState;
     private final String sourceEquipmentName;
     private final String sourcePortName;
@@ -28,5 +29,8 @@ public class TransportJobCreateCommand {
     private final String errorText;
     private final String requestType;
     private final LocalDateTime createTime;
+    private final LocalDateTime departedTime;
+    private final LocalDateTime arrivedTime;
     private final String reasonCode;
+    private final Long orderId;
 }

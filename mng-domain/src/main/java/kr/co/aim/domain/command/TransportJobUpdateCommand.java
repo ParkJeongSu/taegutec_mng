@@ -32,9 +32,5 @@ public class TransportJobUpdateCommand {
     private final LocalDateTime departedTime;
     private final LocalDateTime arrivedTime;
     private final String reasonCode;
-    private final String eventName;
-    private final LocalDateTime eventTime;
-    private final String eventUser;
-    private final String eventComment;
-    private final Long taskJobId;
+    private final Long orderId;
 }

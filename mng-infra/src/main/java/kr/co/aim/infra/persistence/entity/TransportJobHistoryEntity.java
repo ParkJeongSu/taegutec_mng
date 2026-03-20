@@ -91,6 +91,6 @@ public class TransportJobHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "EVENT_COMMENT")
     private String eventComment;
 
-    @Column(name = "TASK_JOB_ID")
-    private Long taskJobId;
+    @Column(name = "ORDER_ID")
+    private Long orderId;
 }

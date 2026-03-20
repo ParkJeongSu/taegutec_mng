@@ -1,5 +1,7 @@
 server:
   port: 8081
+factory:
+  type: powder # [ powder | insert ]
 spring:
   application:
     name: mng
@@ -13,7 +15,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: simulator # 또는 rabbitmq | scheduler,rabbitmq | dispatcher | pex | tex | simulator 등으로 설정 가능
+    active: pex # 또는 rabbitmq | scheduler,rabbitmq | dispatcher | pex | tex | simulator 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=myprojecttest;encrypt=false;
@@ -113,16 +115,29 @@ spring:
 custom:
   rabbitmq:
     exchange:
-      rpc: "rpc.exchange"
-      dead: "dead.exchange"
+      pex: "rpc.exchange"
+      tex: "rpc.exchange"
+      dead: "dead.exchange"      # <- 그대로 유지 (알기 쉬운 이름)
+      eas: "eas.exchange"
+      wms: "wms.exchange"
+      wcs: "wcs.exchange"
+      manti: "manti.exchange"
     queue:
       pex: "PEX.request.queue"
       tex: "TEX.request.queue"
       dead: "DEAD.request.queue"
+      eas: "EAS.request.queue"
+      wms: "WMS.request.queue"
+      wcs: "WCS.request.queue"
+      manti: "MANTI.request.queue"
     routing:
       pex: "PEX.key"
       tex: "TEX.key"
-      dispatcher: "DISPATCHER.key"
+      dead: "DEAD.request.queue"           # <- 이 값이 문제의 원인이었지만, 이 이름이 더 좋음!
+      eas: "EAS.key"
+      wms: "WMS.key"
+      wcs: "WCS.key"
+      manti: "MANTI.key"
 ezieco:
   eziflow:
     thread-properties:

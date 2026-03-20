@@ -40,5 +40,16 @@ public interface TransportJobRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
+    List<TransportJob> findByCarrierNameAndTransportJobStateIn(
+            String carrierName,
+            List<String> transportJobStates
+    );
+
+    List<TransportJob> findByDestinationEquipmentNameAndDestinationPortNameAndTransportJobStateIn(
+            String destinationEquipmentName,
+            String destinationPortName,
+            List<String> transportJobStates
+    );
+
 //    Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable);
 }

@@ -8,10 +8,8 @@ import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProcessJobEndedCommand;
 import kr.co.aim.domain.command.ProcessJobStartedCommand;
-import kr.co.aim.domain.model.Lots;
 import kr.co.aim.domain.repository.CarrierDefRepository;
-import kr.co.aim.domain.repository.CarriersRepository;
-import kr.co.aim.domain.repository.LotsRepository;
+import kr.co.aim.domain.repository.CarrierRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,8 +23,7 @@ import java.util.Optional;
 public class ProcessJobService {
 
     private final CarrierDefRepository carrierDefRepository;
-    private final CarriersRepository carriersRepository;
-    private final LotsRepository lotsRepository;
+    private final CarrierRepository carrierRepository;
 
     /**
      * 설비에 투입 후 생산 중단 보고
@@ -60,24 +57,6 @@ public class ProcessJobService {
         String lotName = message.getBody().getLotName();
         String carrierName = message.getBody().getCarrierName();
         String recipeName = message.getBody().getRecipeName();
-
-        Optional<Lots> optionalLots = lotsRepository.findByLotName(lotName);
-        if(optionalLots.isEmpty()){
-            // TODO: try catch 구조로 해서 wms에 뭔가를 보고해야하는지 확인..
-            return;
-        }
-        Lots lot = optionalLots.get();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        ProcessJobStartedCommand command = ProcessJobStartedCommand.builder()
-                .transactionInfo(tx)
-                .equipmentName(equipmentName)
-                .recipeName(recipeName)
-                .build();
-
-        lot.processJobStarted(command);
-        lotsRepository.save(lot);
-        
         // TODO: ProcessJobStarted 보고 후 wms에 보고 해야한다면 어떤식으로 할지 논의
     }
 
@@ -98,22 +77,6 @@ public class ProcessJobService {
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
         String lotName = message.getBody().getLotName();
-
-        Optional<Lots> optionalLots = lotsRepository.findByLotName(lotName);
-        if(optionalLots.isEmpty()){
-            // TODO: try catch 구조로 해서 wms에 뭔가를 보고해야하는지 확인..
-            return;
-        }
-        Lots lot = optionalLots.get();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        ProcessJobEndedCommand command = ProcessJobEndedCommand.builder()
-                .transactionInfo(tx)
-                .equipmentName(equipmentName)
-                .recipeName("")
-                .build();
-        lot.processJobEnded(command);
-        lotsRepository.save(lot);
 
         // TODO: ProcessJobStarted 보고 후 wms에 보고 해야한다면 어떤식으로 할지 논의
     }

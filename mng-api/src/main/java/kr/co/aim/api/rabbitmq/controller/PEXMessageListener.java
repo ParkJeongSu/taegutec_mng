@@ -5,9 +5,11 @@ import kr.co.aim.api.rabbitmq.controller.dispatcher.MessageDispatcher;
 import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.common.handler.MessageWorker;
+import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -24,12 +26,12 @@ public class PEXMessageListener implements MessageWorker{
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
 
-//    @RabbitListener(
-//            id = "pex-Listener",
-//            queues= RabbitConfig.PEX_REQUEST_QUEUE_NAME,
-//            concurrency = "10",
-//            containerFactory = "rabbitListenerContainerFactory"
-//    )
+    @RabbitListener(
+            id = "pex-Listener",
+            queues= "${custom.rabbitmq.queue.pex}",
+            concurrency = "10",
+            containerFactory = "rabbitListenerContainerFactory"
+    )
     @SneakyThrows
     public Object process(org.springframework.amqp.core.Message message) {
     	// 1. 바디를 꺼내서 직접 String으로 변환

@@ -20,15 +20,15 @@ public class RouterService {
 
     public void routePEXMessage(String message){
         rabbitTemplate.convertAndSend(
-                rabbitConfig.getRpcExchangeName(),
-                rabbitConfig.getPexRoutingKey(),
+                RabbitConfig.EXCHANGE_PEX,
+                RabbitConfig.ROUTING_PEX,
                 message
         );
     }
     public void routeTEXMessage(String message){
         rabbitTemplate.convertAndSend(
-                rabbitConfig.getRpcExchangeName(),
-                rabbitConfig.getTexRoutingKey(),
+                RabbitConfig.EXCHANGE_TEX,
+                RabbitConfig.ROUTING_PEX,
                 message
         );
     }

@@ -65,6 +65,19 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
         transportJobJpaRepository.deleteAllByIdInBatch(ids);
     }
 
+    @Override
+    public List<TransportJob> findByCarrierNameAndTransportJobStateIn(String carrierName, List<String> transportJobStates) {
+        return transportJobJpaRepository.findByCarrierNameAndTransportJobStateIn(carrierName,transportJobStates).stream().map(transportJobMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TransportJob> findByDestinationEquipmentNameAndDestinationPortNameAndTransportJobStateIn(
+            String destinationEquipmentName,
+            String destinationPortName,
+            List<String> transportJobStates) {
+        return transportJobJpaRepository.findByDestinationEquipmentNameAndDestinationPortNameAndTransportJobStateIn(destinationEquipmentName,destinationPortName,transportJobStates).stream().map(transportJobMapper::toDomain).collect(Collectors.toList());
+    }
+
 //    @Override
 //    public Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable) {
 //        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)

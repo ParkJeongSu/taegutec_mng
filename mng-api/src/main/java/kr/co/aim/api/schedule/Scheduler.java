@@ -1,9 +1,9 @@
 package kr.co.aim.api.schedule;
 
-import kr.co.aim.api.service.TransportOrderFacade;
+import kr.co.aim.api.service.InsertTransportOrderFacade;
 import kr.co.aim.api.service.IF_DB2WorkOrderService;
 import kr.co.aim.api.service.IF_MSSQLWorkOrderService;
-import kr.co.aim.infra.persistence.entitydb2.IF_WorkOrderEntity;
+import kr.co.aim.infra.persistence.db2entity.IF_WorkOrderEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -21,7 +21,7 @@ public class Scheduler {
 
     private final IF_DB2WorkOrderService if_db2WorkOrderService;
     private final IF_MSSQLWorkOrderService if_mssqlWorkOrderService;
-    private final TransportOrderFacade transportOrderFacade;
+    private final InsertTransportOrderFacade insertTransportOrderFacade;
 
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "DB2ToMSSQL",

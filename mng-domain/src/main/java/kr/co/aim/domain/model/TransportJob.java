@@ -1,5 +1,5 @@
 package kr.co.aim.domain.model;
-
+import jakarta.persistence.Id;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.command.TransportJobUpdateCommand;
@@ -38,7 +38,7 @@ public class TransportJob implements HasTransactionInfo {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
-    private Long taskJobId;
+    private Long orderId;
 
     public static TransportJob create(TransportJobCreateCommand command){
         return TransportJob.builder()
