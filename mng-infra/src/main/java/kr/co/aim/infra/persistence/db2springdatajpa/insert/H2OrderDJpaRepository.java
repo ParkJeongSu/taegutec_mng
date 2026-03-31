@@ -16,6 +16,7 @@ import java.util.Optional;
 public interface H2OrderDJpaRepository extends JpaRepository<H2OrderDEntity, Long> {
     Optional<H2OrderDEntity> findByLineId(Long lineId);
     List<H2OrderDEntity> findByIdocId(Long idocId);
+    List<H2OrderDEntity> findByIdocIdOrderByLineIdAsc(Long idocId);
     Page<H2OrderDEntity> findByIdocId(Long idocId,Pageable pageable);
     @Query("SELECT h FROM H2OrderDEntity h WHERE h.cOrderId = :cOrderId")
     List<H2OrderDEntity> findByCOrderId(String cOrderId);

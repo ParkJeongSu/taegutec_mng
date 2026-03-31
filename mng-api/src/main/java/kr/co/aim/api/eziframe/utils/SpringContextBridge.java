@@ -5,7 +5,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
-@Component
+//@Component
 public class SpringContextBridge implements ApplicationContextAware {
 
     // 1. 스프링 컨텍스트를 담을 정적(static) 변수

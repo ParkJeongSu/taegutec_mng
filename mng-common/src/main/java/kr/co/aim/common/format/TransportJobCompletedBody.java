@@ -8,7 +8,19 @@ import lombok.ToString;
 @ToString
 @Builder
 public class TransportJobCompletedBody {
-    private String sourceEquipmentName;
-    private String destinationEquipmentName;
+    private String transportJobName;
     private String carrierName;
+    private String sourceEquipmentName;
+    private String sourcePortName;
+    private String sourceZoneName;
+    private String sourcePositionType;
+    private String sourcePositionName;
+    private String destinationEquipmentName;
+    private String destinationPortName;
+    private String destinationZoneName;
+    private String destinationPositionType;
+    private String destinationPositionName;
+    private String priority;
+    private String orderId;
+    private String carrierType;
 }

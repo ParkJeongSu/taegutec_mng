@@ -19,7 +19,7 @@ import java.util.Map;
  * <p>RabbitMQ 는 byte[] serialize, deserialize 한다.</p>
  *
  */
-@Component
+//@Component
 @Slf4j
 @Profile({"pex","tex","scheduler"})
 public class DefaultMessageConverter implements MessageConverter {

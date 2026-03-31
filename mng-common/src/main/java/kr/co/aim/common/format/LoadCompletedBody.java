@@ -1,6 +1,6 @@
 package kr.co.aim.common.format;
 
-import ezieco.eziframe.middleware.event.EziMessage;
+//import ezieco.eziframe.middleware.event.EziMessage;
 import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
@@ -8,7 +8,7 @@ import lombok.ToString;
 @Data
 @ToString
 @Builder
-@EziMessage(name = "loadComplete")
+//@EziMessage(name = "loadComplete")
 public class LoadCompletedBody {
     private String equipmentName;
     private String portName;

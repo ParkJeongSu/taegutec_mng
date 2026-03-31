@@ -1,19 +1,18 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SimulatorIdsDto;
-import kr.co.aim.api.dto.insert.StationOccupiedDto;
 import kr.co.aim.api.vo.insert.StationOccupiedVo;
 import kr.co.aim.api.vo.insert.TransportOrderContext;
-import kr.co.aim.api.vo.insert.TransportStatusReportVo;
+import kr.co.aim.api.vo.insert.H2TransReportVo;
 import kr.co.aim.common.enums.GALTransportStatus;
+import kr.co.aim.domain.model.TransportOrder;
+import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2OrderDJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2OrderMJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
-import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
-import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -26,14 +25,14 @@ import java.util.Optional;
 @Slf4j
 @Profile({"scheduler", "simulator"})
 @RequiredArgsConstructor
-public class InsertTransportOrderFacade {
+public class InsertSimulatorFacade {
 
     private final TransportOrderService transportOrderService;
-    private final InsertExternalInterfaceService insertExternalInterfaceService;
+    private final InsertSimulatorInterfaceService insertSimulatorInterfaceService;
     private final IdocJpaRepository idocJpaRepository;
     private final H2OrderMJpaRepository h2OrderMJpaRepository;
     private final H2OrderDJpaRepository h2OrderDJpaRepository;
-    private final TransportOrderJpaRepository transportOrderJpaRepository;
+    private final TransportOrderRepository transportOrderRepository;
 
     // --- [Private Helper Methods] 조회 및 검증 공통화 ---
 
@@ -56,12 +55,12 @@ public class InsertTransportOrderFacade {
 
     // 2. Order ID 기준으로 전체 컨텍스트 준비 (상태 보고용)
     private TransportOrderContext prepareByOrderId(Long orderId, int expectedDetailSize, GALTransportStatus requiredStatus) {
-        TransportOrderEntity transportOrder = null;
-        Optional<TransportOrderEntity> optionalTransportOrderEntity = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
-        if(optionalTransportOrderEntity.isEmpty()){
+        TransportOrder transportOrder = null;
+        Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(orderId.toString());
+        if(optionalTransportOrder.isEmpty()){
             throw new RuntimeException("TransportOrder를 찾을 수 없습니다. (요청 ID: " + orderId + ")");
         }
-        transportOrder = optionalTransportOrderEntity.get();
+        transportOrder = optionalTransportOrder.get();
 
         // 상태 검증 (필요한 경우)
         if (requiredStatus != null && !transportOrder.getTransportStatus().equals(requiredStatus.name())) {
@@ -93,21 +92,21 @@ public class InsertTransportOrderFacade {
 
     // --- [Public API] 리팩토링된 메서드들 ---
 
-    public TransportOrderEntity transferOutbound(Long idocId) {
+    public TransportOrder transferOutbound(Long idocId) {
         TransportOrderContext ctx = prepareByIdocId(idocId, 1);
-        TransportOrderEntity result = transportOrderService.registerTransportOrder(ctx);
-        insertExternalInterfaceService.transferedIdocId(ctx.getIdoc().getLineId());
+        TransportOrder result = transportOrderService.registerTransportOrder(ctx);
+        insertSimulatorInterfaceService.transferedIdocId(ctx.getIdoc().getLineId());
         return result;
     }
 
-    public TransportOrderEntity transferInbound(Long idocId) {
+    public TransportOrder transferInbound(Long idocId) {
         TransportOrderContext ctx = prepareByIdocId(idocId, 1);
-        TransportOrderEntity result = transportOrderService.registerTransportOrder(ctx);
-        insertExternalInterfaceService.transferedIdocId(ctx.getIdoc().getLineId());
+        TransportOrder result = transportOrderService.registerTransportOrder(ctx);
+        insertSimulatorInterfaceService.transferedIdocId(ctx.getIdoc().getLineId());
         return result;
     }
 
-    public TransportOrderEntity transferRelocation(Long idocId) {
+    public TransportOrder transferRelocation(Long idocId) {
         TransportOrderContext ctx = prepareByIdocId(idocId, 2);
 
         // Relocation 특유의 Source/Target 정렬 로직
@@ -118,16 +117,16 @@ public class InsertTransportOrderFacade {
             target = ctx.getDetails().get(0);
         }
 
-        TransportOrderEntity result = transportOrderService.registerTransportOrder(ctx);
-        insertExternalInterfaceService.transferedIdocId(ctx.getIdoc().getLineId());
+        TransportOrder result = transportOrderService.registerTransportOrder(ctx);
+        insertSimulatorInterfaceService.transferedIdocId(ctx.getIdoc().getLineId());
         return result;
     }
 
     public void acceptOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Create);
         
-        insertExternalInterfaceService.acceptOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.acceptOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.Accept)
@@ -137,8 +136,8 @@ public class InsertTransportOrderFacade {
 
     public void acceptInbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Create);
-        insertExternalInterfaceService.acceptInbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.acceptInbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.Accept)
@@ -148,8 +147,8 @@ public class InsertTransportOrderFacade {
 
     public void acceptRelocation(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.Create);
-        insertExternalInterfaceService.acceptInbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.acceptInbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.Accept)
@@ -159,8 +158,8 @@ public class InsertTransportOrderFacade {
 
     public void workStationEmptyInbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Accept);
-        insertExternalInterfaceService.workStationEmptyInbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.workStationEmptyInbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.WorkstationEmpty)
@@ -170,8 +169,8 @@ public class InsertTransportOrderFacade {
 
     public void arrivedWorkstationErrorInbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.WorkstationEmpty);
-        insertExternalInterfaceService.arrivedWorkstationErrorInbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.arrivedWorkstationErrorInbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.ArrivedAtWorkstationWithError)
@@ -182,8 +181,8 @@ public class InsertTransportOrderFacade {
     public void errorTextInbound(Long orderId, String errorText) {
         // 에러 텍스트는 두 가지 상태에서 올 수 있으므로 null 전달 후 수동 체크
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, null);
-        insertExternalInterfaceService.errorTextInbound(errorText, ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.errorTextInbound(errorText, ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.ErrorText)
@@ -193,8 +192,8 @@ public class InsertTransportOrderFacade {
 
     public void carrierScannedInbound(SimulatorIdsDto dto) {
         TransportOrderContext ctx = prepareByOrderId(dto.getIds().get(0), 1, null);
-        insertExternalInterfaceService.carrierScannedInbound(ctx, dto);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.carrierScannedInbound(ctx, dto);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(dto.getIds().get(0).toString())
                 .status(GALTransportStatus.CarrierScanned)
@@ -204,8 +203,8 @@ public class InsertTransportOrderFacade {
 
     public void releaseOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Accept);
-        insertExternalInterfaceService.releaseOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.releaseOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.Released)
@@ -215,8 +214,8 @@ public class InsertTransportOrderFacade {
 
     public void outOfRackOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, null);
-        insertExternalInterfaceService.outOfRackOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.outOfRackOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.OutOfRack)
@@ -226,8 +225,8 @@ public class InsertTransportOrderFacade {
 
     public void outOfRackInbound(SimulatorIdsDto dto) {
         TransportOrderContext ctx = prepareByOrderId(dto.getIds().get(0), 1, GALTransportStatus.CarrierScanned);
-        insertExternalInterfaceService.outOfRackInbound(ctx, dto);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.outOfRackInbound(ctx, dto);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(dto.getIds().get(0).toString())
                 .status(GALTransportStatus.OutOfRack)
@@ -237,8 +236,8 @@ public class InsertTransportOrderFacade {
 
     public void arrivedAtWorkstationOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.OutOfRack);
-        insertExternalInterfaceService.arrivedAtWorkStationOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.arrivedAtWorkStationOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.ArrivedAtWorkStation)
@@ -248,8 +247,8 @@ public class InsertTransportOrderFacade {
 
     public void completedOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, null);
-        insertExternalInterfaceService.completedOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.completedOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.OrderDone_Outbound)
@@ -259,8 +258,8 @@ public class InsertTransportOrderFacade {
 
     public void completedInbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, null);
-        insertExternalInterfaceService.completedInbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.completedInbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.OrderDone_Inbound)
@@ -270,13 +269,13 @@ public class InsertTransportOrderFacade {
 
     public void stationOccupiedInbound(StationOccupiedVo vo) {
         // 이 메서드는 조회 과정이 없으므로 유지
-        insertExternalInterfaceService.stationOccupiedInbound(vo);
+        insertSimulatorInterfaceService.stationOccupiedInbound(vo);
     }
 
     public void internalRelocationOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Released);
-        insertExternalInterfaceService.internalRelocationOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.internalRelocationOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.InternalRelocation)
@@ -286,8 +285,8 @@ public class InsertTransportOrderFacade {
 
     public void takeOffOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.OrderDone_Outbound);
-        insertExternalInterfaceService.takeOffOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.takeOffOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.TakeOff)
@@ -297,8 +296,8 @@ public class InsertTransportOrderFacade {
 
     public void binEmptyOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Released);
-        insertExternalInterfaceService.binEmptyOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.binEmptyOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.BinEmpty)
@@ -308,8 +307,8 @@ public class InsertTransportOrderFacade {
 
     public void shortageOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.BinEmpty);
-        insertExternalInterfaceService.shortageOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.shortageOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.Shortage)
@@ -319,8 +318,8 @@ public class InsertTransportOrderFacade {
 
     public void notAllowedPickUpOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Released);
-        insertExternalInterfaceService.notAllowedPickUpOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.notAllowedPickUpOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.NotAllowedPickUp)
@@ -330,8 +329,8 @@ public class InsertTransportOrderFacade {
 
     public void arrivedAtRackOutbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.NotAllowedPickUp);
-        insertExternalInterfaceService.arrivedAtRackOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.arrivedAtRackOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.ArrivedAtRack)
@@ -341,8 +340,8 @@ public class InsertTransportOrderFacade {
 
     public void notAllowedPickUpInbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, null); // Inbound는 흐름에 따라 유동적일 수 있어 null 처리
-        insertExternalInterfaceService.notAllowedPickUpInbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.notAllowedPickUpInbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.NotAllowedPickUp)
@@ -352,8 +351,8 @@ public class InsertTransportOrderFacade {
 
     public void arrivedAtRackOInbound(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 1, null);
-        insertExternalInterfaceService.arrivedAtRackOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.arrivedAtRackOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.ArrivedAtRack)
@@ -365,8 +364,8 @@ public class InsertTransportOrderFacade {
 
     public void internalRelocationRelocation(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.Accept);
-        insertExternalInterfaceService.internalRelocationOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.internalRelocationOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.InternalRelocation)
@@ -376,8 +375,8 @@ public class InsertTransportOrderFacade {
 
     public void dropOnTunnelRelocation(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.Accept);
-        insertExternalInterfaceService.dropOnTunnelRelocation(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.dropOnTunnelRelocation(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.DroppedOnTunnelConveyor)
@@ -387,8 +386,8 @@ public class InsertTransportOrderFacade {
 
     public void arrivedAtRackRelocation(Long orderId) {
         TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.DroppedOnTunnelConveyor);
-        insertExternalInterfaceService.arrivedAtRackOutbound(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.arrivedAtRackOutbound(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.ArrivedAtRack)
@@ -399,8 +398,8 @@ public class InsertTransportOrderFacade {
     public void completedRelocation(Long orderId) {
         // Relocation 완료 시에도 마스터 정보를 기준으로 보고하므로 상세 1개 혹은 2개 상황에 맞춰 조회
         TransportOrderContext ctx = prepareByOrderId(orderId, 2, null);
-        insertExternalInterfaceService.completedRelocation(ctx);
-        TransportStatusReportVo vo = TransportStatusReportVo
+        insertSimulatorInterfaceService.completedRelocation(ctx);
+        H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
                 .status(GALTransportStatus.OrderDone_Relocation)

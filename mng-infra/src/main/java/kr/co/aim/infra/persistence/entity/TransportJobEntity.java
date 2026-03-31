@@ -39,8 +39,11 @@ public class TransportJobEntity {
     @Column(name = "SOURCE_ZONE_NAME")
     private String sourceZoneName;
 
-    @Column(name = "SOURCE_SHELF_NAME")
-    private String sourceShelfName;
+    @Column(name = "SOURCE_POSITION_TYPE_NAME")
+    private String sourcePositionTypeName;
+
+    @Column(name = "SOURCE_POSITION_NAME")
+    private String sourcePositionName;
 
     @Column(name = "DESTINATION_EQUIPMENT_NAME")
     private String destinationEquipmentName;
@@ -51,8 +54,11 @@ public class TransportJobEntity {
     @Column(name = "DESTINATION_ZONE_NAME")
     private String destinationZoneName;
 
-    @Column(name = "DESTINATION_SHELF_NAME")
-    private String destinationShelfName;
+    @Column(name = "DESTINATION_POSITION_TYPE_NAME")
+    private String destinationPositionTypeName;
+
+    @Column(name = "DESTINATION_POSITION_NAME")
+    private String destinationPositionName;
 
     @Column(name = "PRIORITY")
     private Integer priority;
@@ -91,5 +97,5 @@ public class TransportJobEntity {
     private String eventComment;
 
     @Column(name = "ORDER_ID")
-    private Long orderId;
+    private String orderId;
 }

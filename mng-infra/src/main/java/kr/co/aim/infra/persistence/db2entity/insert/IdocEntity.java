@@ -4,6 +4,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import kr.co.aim.common.enums.IdocMachine;
+import kr.co.aim.common.enums.IdocTypeId;
 import lombok.*;
 
 import java.time.LocalDateTime;

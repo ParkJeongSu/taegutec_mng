@@ -1,7 +1,9 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.*;
+import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.EventName;
+import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.common.error.EntityExistException;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -9,6 +11,7 @@ import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
+import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.repository.TransportJobRepository;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
@@ -21,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -143,24 +147,23 @@ public class TransportJobService {
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
-        String sourceEquipmentName = message.getBody().getSourceEquipmentName();
-        String destinationEquipmentName = message.getBody().getDestinationEquipmentName();
-        String carrierName = message.getBody().getCarrierName();
+        String transportJobName = message.getBody().getTransportJobName();
 
-        // TODO: TransportJobRequestBody 에 transportJobName 추가 후 TransportJob 데이터 변경
-        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName("");
-
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
-                    TransportJobUpdateCommand.builder()
+                    TransportJobUpdateCommand
+                            .builder()
                             .transportJobState(TransportJobState.COMPLETED.getValue())
-                            .arrivedTime(LocalDateTime.now())
+                            .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
 
-            transportJobRepository.save(transportJob);
-            // TODO: TransportJob History add
+            transportJob = transportJobRepository.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
         }
     }
 
@@ -173,34 +176,39 @@ public class TransportJobService {
      * 반송잡의 상태를 rejected로 변경
      */
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public void transportJobReply(BaseMessage<TransportJobRequestBody> message) {
+    public void transportJobReply(BaseMessage<TransportJobReplyListBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
-        String sourceEquipmentName = message.getBody().getSourceEquipmentName();
-        String destinationEquipmentName = message.getBody().getDestinationEquipmentName();
-        String carrierName = message.getBody().getCarrierName();
-        
-        // TODO: TransportJobRequestBody 에 transportJobName 추가 후 TransportJob 데이터 변경
-        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName("");
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        List<TransportJobReplyBody> transportJobList = message.getBody().getTransportJobList();
 
-        if(optionalTransportJob.isPresent()){
-            TransportJob transportJob = optionalTransportJob.get();
-            TransportJobUpdateCommand command =
-                    TransportJobUpdateCommand.builder()
-                            .transportJobState(TransportJobState.ACCEPTED.getValue())
-                            .build();
-            transportJob.changeTransportJob(command);
+        for(TransportJobReplyBody transportJobReplyBody : transportJobList){
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobReplyBody.getTransportJobName());
 
-            transportJobRepository.save(transportJob);
-            // TODO: TransportJob History add
+            if(optionalTransportJob.isPresent()){
+                TransportJob transportJob = optionalTransportJob.get();
+                TransportJobUpdateCommand command =
+                        TransportJobUpdateCommand
+                                .builder()
+                                .transportJobState(TransportJobState.ACCEPTED.getValue())
+                                .transactionInfo(tx)
+                                .build();
+                transportJob.changeTransportJob(command);
+
+                transportJob = transportJobRepository.save(transportJob);
+                TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+                historyService.saveHistory(transportJobHistoryEntity);
+            }
         }
+        
+
 
     }
 
     /**
-     * SCS 로 반송 요청
+     * WCS 로 반송 요청
      */
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
     public void transportJobRequest() {
@@ -216,111 +224,93 @@ public class TransportJobService {
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
-        String sourceEquipmentName = message.getBody().getSourceEquipmentName();
-        String destinationEquipmentName = message.getBody().getDestinationEquipmentName();
-        String carrierName = message.getBody().getCarrierName();
+        String transportJobName = message.getBody().getTransportJobName();
 
-        // TODO: TransportJobRequestBody 에 transportJobName 추가 후 TransportJob 데이터 변경
-        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName("");
-
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
-                    TransportJobUpdateCommand.builder()
+                    TransportJobUpdateCommand
+                            .builder()
                             .transportJobState(TransportJobState.STARTED.getValue())
-                            .departedTime(LocalDateTime.now())
+                            .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
 
-            transportJobRepository.save(transportJob);
-            // TODO: TransportJob History add
+            transportJob = transportJobRepository.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
         }
     }
 
-
-    // ============== [TransportJob] ==============
-
-    /**
-     * 사용자의 데이터를 생성합니다.
-     * @param requestDto 사용자의 생성 데이터
-     * @return 생성된 사용자 도메인 객체
-     */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public TransportJob createTransportJob(TransportJobCreateRequestDto requestDto) {
-        // 1. Repository를 통해 Domain 객체를 가져온다.
-        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(requestDto.getTransportJobName());
-        if(optionalTransportJob.isPresent()){
-            throw new EntityExistException("이미 생성된 Job 이름입니다. ID: " + requestDto.getTransportJobName());
-        }
-
-        String eventName = EventName.CREATED.getValue();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,requestDto.getEventUser(),requestDto.getEventComment());
-        TransportJobCreateCommand command =
-                TransportJobCreateCommand.builder()
-                        .transportJobName(requestDto.getTransportJobName())
-                        .transactionInfo(tx)
-                        .build();
-
-        TransportJob transportJob = TransportJob.create(command);
-        transportJob = transportJobRepository.save(transportJob);
-        TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
-        historyService.saveHistory(transportJobHistoryEntity);
-        // 반환된 transportJob 정보를 토대로 controller 계층에서 WCS로 반송 요청
-        return transportJob;
-    }
-
-    @Transactional(readOnly = true)
-    public Page<TransportJobResponseDto> findTransportJob(TransportJobSearchConditionDto condition, Pageable pageable) {
-        //1. Repository에서 Page<Entity>를 조회합니다.
-
-        Page<TransportJobResponseDto> page = null;//transportJobRepository.findTransportJobWithConditions(condition,pageable);
-
-        return page;
+    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public List<TransportJob> findActiveTransportJobs(String equipmentName,String portName) {
+        List<String> transportJobStateList = new ArrayList<>();
+        transportJobStateList.add(TransportJobState.REQUESTED.getValue());
+        transportJobStateList.add(TransportJobState.ACCEPTED.getValue());
+        transportJobStateList.add(TransportJobState.STARTED.getValue());
+        // Validation TransportJob exists and transportJob State
+        List<TransportJob> transportJobList = transportJobRepository.findByDestinationEquipmentNameAndDestinationPortNameAndTransportJobStateIn(
+                equipmentName,
+                portName,
+                transportJobStateList
+        );
+        return transportJobList;
     }
 
     /**
-     * 사용자의 데이터를 변경합니다.
-     * @param requestDto 사용자의 변경 데이터
-     * @return 변경된 사용자 도메인 객체
+     * 요청한 반송잡이 첫시작되는 시점 보고
      */
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public TransportJob changeTransportJob(Long id, TransportJobUpdateRequestDto requestDto) {
-        // 1. Repository를 통해 Domain 객체를 가져온다.
-        TransportJob transportJob;
-        Optional<TransportJob> optionalTransportJob = transportJobRepository.findById(id);
+    public List<TransportJob> createTransportJob(CreateTransportJobVo createTransportJobVo) {
+        List<TransportJob> transportJobList = new ArrayList<>();
+        for(TransportJobCreateCommand command : createTransportJobVo.getTransportJobCreateCommandList()){
+            TransportJob transportJob = TransportJob.create(command);
+            transportJob = transportJobRepository.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+            transportJobList.add(transportJob);
+        }
+
+        return  transportJobList;
+    }
+
+    public TransportJobRequestListBody createTransportJobMessage(List<TransportJob> transportJobList) {
+
+        List<TransportJobRequestBody> transportJobRequestBodies = new ArrayList<>();
+        for(TransportJob transportJob : transportJobList){
+            TransportJobRequestBody body = TransportJobRequestBody.builder()
+                    .transportJobName(transportJob.getTransportJobName())
+                    .carrierName(transportJob.getCarrierName())
+                    .sourceEquipmentName(transportJob.getSourceEquipmentName())
+                    .sourcePortName(transportJob.getSourcePortName())
+                    .sourceZoneName(transportJob.getSourceZoneName())
+                    .sourcePositionType(transportJob.getSourcePositionTypeName())
+                    .sourcePositionName(transportJob.getSourcePositionName())
+                    .destinationEquipmentName(transportJob.getDestinationEquipmentName())
+                    .destinationPortName(transportJob.getDestinationPortName())
+                    .destinationZoneName(transportJob.getDestinationZoneName())
+                    .destinationPositionType(transportJob.getDestinationPositionTypeName())
+                    .destinationPositionName(transportJob.getDestinationPositionName())
+                    .priority(transportJob.getPriority() == null ? "" : transportJob.getPriority().toString())
+                    .orderId(transportJob.getOrderId())
+                    .carrierType("")
+                    .build();
+            transportJobRequestBodies.add(body);
+        }
+
+        return TransportJobRequestListBody.builder()
+                .transportJobList(transportJobRequestBodies)
+                .build();
+    }
+
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public TransportJob findByTransportJobName(String transportJobName) {
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
-            transportJob = optionalTransportJob.get();
+            return optionalTransportJob.get();
         }
-        else {
-            throw new EntityNotFoundException("존재하지 않는 설정입니다. ID: " + requestDto.getId());
-        }
-        String eventName = EventName.UPDATED.getValue();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,requestDto.getEventUser(),requestDto.getEventComment());
-        TransportJobUpdateCommand command =
-                TransportJobUpdateCommand.builder()
-                        .transactionInfo(tx)
-                        .build();
-
-        transportJob.changeTransportJob(command);
-
-        return transportJobRepository.save(transportJob);
+        throw new RuntimeException("TransportJob을 찾을 수 없습니다. (요청 ID: " + transportJobName + ")");
     }
-
-
-    @Transactional
-    public void deleteAllTransportJobByIdInBatch(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) {
-            return; // 삭제할 ID가 없으면 아무 작업도 하지 않음
-        }
-        // 여러 건을 삭제할 때는 이 메서드가 성능상 가장 효율적입니다.
-        // DELETE ... WHERE id IN (...) 쿼리를 한 번에 실행합니다.
-        transportJobRepository.deleteAllByIdInBatch(ids);
-    }
-
-
-
-    // ============== [TransportJob] ==============
-
 }

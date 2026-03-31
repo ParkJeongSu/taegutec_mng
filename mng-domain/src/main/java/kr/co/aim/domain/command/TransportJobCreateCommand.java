@@ -19,11 +19,13 @@ public class TransportJobCreateCommand {
     private final String sourceEquipmentName;
     private final String sourcePortName;
     private final String sourceZoneName;
-    private final String sourceShelfName;
+    private final String sourcePositionTypeName;
+    private final String sourcePositionName;
     private final String destinationEquipmentName;
     private final String destinationPortName;
     private final String destinationZoneName;
-    private final String destinationShelfName;
+    private final String destinationPositionTypeName;
+    private final String destinationPositionName;
     private final Integer priority;
     private final String errorCode;
     private final String errorText;
@@ -32,5 +34,5 @@ public class TransportJobCreateCommand {
     private final LocalDateTime departedTime;
     private final LocalDateTime arrivedTime;
     private final String reasonCode;
-    private final Long orderId;
+    private final String orderId;
 }

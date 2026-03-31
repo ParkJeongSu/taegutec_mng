@@ -22,16 +22,16 @@
 
     <dependencies>
     
-        <dependency>
-            <groupId>ezieco.eziframe</groupId>
-            <artifactId>eziframe-core</artifactId>
-            <version>0.7.1-release</version>
-        </dependency>
-        <dependency>
-            <groupId>ezieco.eziframe</groupId>
-            <artifactId>eziframe-middleware</artifactId>
-            <version>0.7.6-release</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>ezieco.eziframe</groupId>-->
+<!--            <artifactId>eziframe-core</artifactId>-->
+<!--            <version>0.7.1-release</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>ezieco.eziframe</groupId>-->
+<!--            <artifactId>eziframe-middleware</artifactId>-->
+<!--            <version>0.7.6-release</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

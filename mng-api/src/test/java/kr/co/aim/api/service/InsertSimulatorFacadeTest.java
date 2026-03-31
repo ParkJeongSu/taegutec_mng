@@ -8,10 +8,10 @@ import org.springframework.test.context.ActiveProfiles;
 @Disabled
 @SpringBootTest
 @ActiveProfiles({"scheduler"})
-class InsertTransportOrderFacadeTest {
+class InsertSimulatorFacadeTest {
 
     @Autowired
-    private InsertTransportOrderFacade insertTransportOrderFacade;
+    private InsertSimulatorFacade insertSimulatorFacade;
 
     @Test
     void test1(){

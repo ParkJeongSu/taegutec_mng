@@ -1,5 +1,6 @@
 package kr.co.aim.infra.persistence.db2springdatajpa.insert;
 
+import jakarta.persistence.Column;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,14 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
             "JOIN H2OrderMEntity m ON i.lineId = m.idocId " +
             "WHERE m.cOrderTy = :orderTy")
     Page<IdocEntity> findIdocsByOrderType(@Param("orderTy") String orderTy, Pageable pageable);
+
+    @Query("SELECT i FROM IdocEntity i " +
+            "WHERE i.idocTypId IN :idocTypIds " +
+            "AND i.errorCode = :errorCode "
+    )
+    List<IdocEntity> findByIdocTypIdsAndErrorCode(
+            @Param("idocTypIds") List<Long> idocTypIds,
+            @Param("errorCode") Integer errorCode);
 
     @Query("SELECT COALESCE(MAX(i.lineId), 0) FROM IdocEntity i")
     Long findMaxLineId();

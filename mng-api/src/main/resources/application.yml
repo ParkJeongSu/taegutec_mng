@@ -1,7 +1,7 @@
 server:
   port: 8081
 factory:
-  type: powder # [ powder | insert ]
+  type: insert # [ powder | insert ]
 spring:
   application:
     name: mng
@@ -15,7 +15,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: pex # 또는 rabbitmq | scheduler,rabbitmq | dispatcher | pex | tex | simulator 등으로 설정 가능
+    active: tex # 또는 rabbitmq | scheduler,rabbitmq | dispatcher | pex | tex | simulator 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=myprojecttest;encrypt=false;
@@ -93,25 +93,6 @@ jwt:
   secret: bXktc3VwZXItc2VjcmV0LWtleS1mb3ItbW5nLXByb2plY3QtdGhhdC1pcy12ZXJ5LWxvbmctYW5kLXNlY3VyZQo=
   access-token-validity-in-seconds: 86400 # 액세스 토큰 만료 시간 (예: 24시간) 86400
   refresh-token-validity-in-seconds: 604800 # 리프레시 토큰 만료 시간 (예: 7일)
----
-# 'pex,tex,dispatcher,scheduler' 프로필이 활성화될 때만 이 설정이 적용됩니다.
-spring:
-  config:
-    activate:
-      on-profile: pex,tex,dispatcher,scheduler
-    import:
-      - classpath:rabbit.yml
-  rabbitmq:
-    host: localhost
-    port: 5672
-    username: admin
-    password: admin
-    dynamic: true
-    listener:
-      simple:
-        concurrency: 10 # 시작 시 생성되는 소비자(consumer) 스레드 수
-        max-concurrency: 10 # 부하 증가 시 최대 확장 가능한 소비자 스레드 수
-        force-stop-for-concurrency: false # 종료 시 리스너가 진행 중인 작업을 마칠 때까지 기다리게 함
 custom:
   rabbitmq:
     exchange:
@@ -138,27 +119,46 @@ custom:
       wms: "WMS.key"
       wcs: "WCS.key"
       manti: "MANTI.key"
-ezieco:
-  eziflow:
-    thread-properties:
-      core-pool-size: 50
-      keep-alive-time: 30000
-      queue-size: 50
-      max-pool-size: 50
-      correlation-cleanup-interval: 10000
-      correlation-data-retention-period: 50000
-      rejected-handler: EZI_FLOW_DEFAULT_POLICY
-    bpel-properties:
-      bpel-folders: C:/project/taegutec_mng/mng-api/bpels/ # ${BPEL_FOLDERS:bpels}
-      option: INCLUDE_SUB_FOLDER
-middleware.mng:
-  enable:
-    kafka: false
-    tibrv: false
-    rabbit: true
-    solace: false
-  rabbit-mq:
-    routing-key: "PEX.key"
+---
+# 'pex,tex,dispatcher,scheduler' 프로필이 활성화될 때만 이 설정이 적용됩니다.
+spring:
+  config:
+    activate:
+      on-profile: pex,tex,dispatcher,scheduler
+#    import:
+#      - classpath:rabbit.yml
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: admin
+    password: admin
+    dynamic: true
+    listener:
+      simple:
+        concurrency: 10 # 시작 시 생성되는 소비자(consumer) 스레드 수
+        max-concurrency: 10 # 부하 증가 시 최대 확장 가능한 소비자 스레드 수
+        force-stop-for-concurrency: false # 종료 시 리스너가 진행 중인 작업을 마칠 때까지 기다리게 함
+#ezieco:
+#  eziflow:
+#    thread-properties:
+#      core-pool-size: 50
+#      keep-alive-time: 30000
+#      queue-size: 50
+#      max-pool-size: 50
+#      correlation-cleanup-interval: 10000
+#      correlation-data-retention-period: 50000
+#      rejected-handler: EZI_FLOW_DEFAULT_POLICY
+#    bpel-properties:
+#      bpel-folders: C:/project/taegutec_mng/mng-api/bpels/ # ${BPEL_FOLDERS:bpels}
+#      option: INCLUDE_SUB_FOLDER
+#middleware.mng:
+#  enable:
+#    kafka: false
+#    tibrv: false
+#    rabbit: true
+#    solace: false
+#  rabbit-mq:
+#    routing-key: "PEX.key"
 ---
 spring:
   config:

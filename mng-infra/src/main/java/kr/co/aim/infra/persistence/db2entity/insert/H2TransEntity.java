@@ -86,9 +86,9 @@ public class H2TransEntity {
     @Column(name = "CLOCID")
     private String cLocId;
 
-    @Column(name = "CERRDSC", length = 80)
+    @Column(name = "CERRDSC")
     private String cErrDsc;
 
-    @Column(name = "CWCID", length = 10)
+    @Column(name = "CWCID")
     private String cWcId;
 }

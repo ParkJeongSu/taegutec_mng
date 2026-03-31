@@ -70,7 +70,9 @@ public class MetaDataService {
         for (MetaDataEnum constant : enumClass.getEnumConstants()) {
             Map<String, String> entry = new HashMap<>();
             entry.put("label", constant.name()); // 예: "Set" (v-select의 item-title)
-            entry.put("code", constant.getValue()); // 예: "SET" (v-select의 item-value)
+            // 핵심: 어떤 타입이든 안전하게 문자열로 변환하여 Map에 저장
+            Object val = constant.getValue();
+            entry.put("code", val != null ? String.valueOf(val) : "");
             result.add(entry);
         }
         return result;
@@ -99,7 +101,9 @@ public class MetaDataService {
                 for(MetaDataEnum c : metaDataEnumList){
                     Map<String, String> entry = new HashMap<>();
                     entry.put("label", c.name()); // 예: "Set" (v-select의 item-title)
-                    entry.put("code", c.getValue()); // 예: "SET" (v-select의 item-value)
+                    // 핵심: 어떤 타입이든 안전하게 문자열로 변환하여 Map에 저장
+                    Object val = constant.getValue();
+                    entry.put("code", val != null ? String.valueOf(val) : "");
                     result.add(entry);
                 }
             }
@@ -122,7 +126,10 @@ public class MetaDataService {
 
         // Enum 상수들을 순회하며 프론트엔드 형식으로 변환
         for (MetaDataEnum constant : enumClass.getEnumConstants()) {
-            result.add(constant.getValue());
+            // 핵심: 어떤 타입이든 안전하게 문자열로 변환하여 Map에 저장
+            Object val = constant.getValue();
+            String value = String.valueOf(val);
+            result.add(value);
         }
         result.sort(String::compareTo);
 

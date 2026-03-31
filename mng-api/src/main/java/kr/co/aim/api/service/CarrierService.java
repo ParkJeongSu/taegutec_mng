@@ -1,6 +1,8 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.vo.carrier.CarrierDispatchRequestVo;
+import kr.co.aim.api.vo.carrier.CarrierSelectionResult;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -12,12 +14,11 @@ import kr.co.aim.domain.command.CarrierDeassignCommand;
 import kr.co.aim.domain.command.CleanJobEndedCommand;
 import kr.co.aim.domain.command.CleanJobStartedCommand;
 import kr.co.aim.domain.command.LocationChangedCommand;
-import kr.co.aim.domain.model.Carrier;
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.domain.model.PortDef;
-import kr.co.aim.domain.model.TransportJob;
+import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
+import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.IF_EVENT_LOGEntity;
+import kr.co.aim.infra.persistence.mapper.CarrierMapper;
 import kr.co.aim.infra.persistence.springdatajpa.IF_EVENT_LOGJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +37,15 @@ public class CarrierService {
     private final ObjectMapper objectMapper;
     private final CarrierDefRepository carrierDefRepository;
     private final CarrierRepository carrierRepository;
+    private final CarrierMapper carrierMapper;
     private final PortRepository portRepository;
     private final PortDefRepository portDefRepository;
     private final TransportJobRepository transportJobRepository;
+    private final Optional<ProductionOrderService> optionalProductionOrderService;
     private final IF_EVENT_LOGJpaRepository if_event_logJpaRepository;
+    private final HistoryService historyService;
+    private final Optional<InsertSimulatorInterfaceService> insertExternalInterfaceService;
+    private final Optional<PowderExternalInterfaceService> powderExternalInterfaceService;
 
     /**
      * Carrier 의 세정작업이 취소되었음을 보고
@@ -243,16 +249,16 @@ public class CarrierService {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-        
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
         String carrierType = message.getBody().getCarrierType();
-        // TODO : Carrier 의 현재 EquipmentName, PositionName, ZoneName 을 컬럼을 추가할지 고민
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
+        String currentPortName = message.getBody().getCurrentPortName();
+        String currentZoneName = message.getBody().getCurrentZoneName();
         String currentPositionType = message.getBody().getCurrentPositionType();
         String currentPositionName = message.getBody().getCurrentPositionName();
-        String currentZoneName = message.getBody().getCurrentZoneName();
+
 
         Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
@@ -264,11 +270,16 @@ public class CarrierService {
         LocationChangedCommand command = LocationChangedCommand.builder()
                 .transactionInfo(tx)
                 .equipmentName(currentEquipmentName)
+                .portName(currentPortName)
+                .zoneName(currentZoneName)
+                .positionType(currentPositionType)
+                .positionName(currentPositionName)
                 .build();
 
         carrier.locationChanged(command);
-        carrierRepository.save(carrier);
-        // TODO: Carrier History add
+        carrier = carrierRepository.save(carrier);
+        CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
+        historyService.saveHistory(carrierHistoryEntity);
 
     }
 
@@ -361,6 +372,15 @@ public class CarrierService {
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
     public void materialAssignedToCarrier(BaseMessage<MaterialAssignedToCarrierBody> message) {
         // TODO: Carrier가 설비에 투입 후에 보고 Lot과의 관계를 끊고 Carrier 의 상태를 Empty로 변경 확인
+    }
+
+    /**
+     *
+     */
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public void takeOffCarrier(BaseMessage<TakeOffCarrierBody> message) {
+        // TODO: 비지니스 로직은 없음
+        // TO GAL TakeOffCarrier report
     }
 
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
@@ -479,6 +499,95 @@ public class CarrierService {
         // 여러 건을 삭제할 때는 이 메서드가 성능상 가장 효율적입니다.
         // DELETE ... WHERE id IN (...) 쿼리를 한 번에 실행합니다.
         carrierRepository.deleteAllByIdInBatch(ids);
+    }
+
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public List<CarrierSelectionResult> selectCarrierByInputPort(CarrierDispatchRequestVo vo) {
+
+        // TODO : Input Port
+        // Input Port :
+        // (1) 설비에서 Production Order Select
+        // (2) 존재하면, 해당 order Select
+        // (3) 존재하지 않으면, 설비명으로 신규 Production Order Select
+        // (4) Order 에서 가장 우선순위가 높은 Carrier Select
+        List<CarrierSelectionResult> carrierSelectionResultList = new ArrayList<>();
+        if(optionalProductionOrderService.isEmpty()){
+            return  carrierSelectionResultList;
+        }
+        ProductionOrderService productionOrderService = optionalProductionOrderService.get();
+        ProductionOrder productionOrder = null;
+        List<ProductionOrder> activeProductionOrderList = productionOrderService.findActiveProductionOrderList(vo.getEquipment().getEquipmentName());
+        if(activeProductionOrderList.isEmpty()){
+            List<ProductionOrder> newProductionOrderList = productionOrderService.findNewProductionOrderList(vo.getEquipment().getEquipmentName());
+
+            if(newProductionOrderList.isEmpty()){
+                return new ArrayList<>();
+            }
+            else{
+                productionOrder =  newProductionOrderList.get(0);
+            }
+        }else{
+            productionOrder =  activeProductionOrderList.get(0);
+        }
+        List<Carrier> carriers = carrierRepository.findCarriersForFullContainer(
+                CarrierCleanState.CLEAN.getValue(),
+                CarrierTransportState.IN_WAREHOUSE.getValue(),
+                "",
+                CarrierUseState.IN_USE.getValue(),
+                productionOrder.getOrderId(),
+                productionOrder.getOrderLineNumber()
+        );
+
+        // 리스트가 비어있을 수 있으므로 방어 로직 추가
+        if (carriers == null || carriers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        for(Carrier carrier : carriers) {
+            CarrierSelectionResult
+                    .builder()
+                    .carrier(carrier)
+                    .orderId(productionOrder.getOrderId())
+                    .orderLineNumber(productionOrder.getOrderLineNumber())
+                    .build();
+        }
+
+        return carrierSelectionResultList;
+
+    }
+
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public List<CarrierSelectionResult> selectCarrierByOutputPort(CarrierDispatchRequestVo vo) {
+        // TODO : Output Port
+        // (1) EquipmentDef 에서 ContainerType을 Select
+        // (2) ContainerType None 이거나 위에서 찾은 type으로 가장 우선 순위가 높은 Carrier 찾기
+        List<String> containerTypes = new ArrayList<>();
+        containerTypes.add(ContainerType.NONE.getValue());
+        containerTypes.add(vo.getEquipmentDef().getContainerType());
+        List<Carrier> carriers = carrierRepository.findCarriersForEmptyContainer(
+                CarrierCleanState.CLEAN.getValue(),
+                CarrierTransportState.IN_WAREHOUSE.getValue(),
+                "",
+                CarrierUseState.AVAILABLE.getValue(),
+                0,
+                containerTypes
+        );
+
+        // 리스트가 비어있을 수 있으므로 방어 로직 추가
+        if (carriers == null || carriers.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<CarrierSelectionResult> carrierSelectionResultList = new ArrayList<>();
+        for(Carrier carrier : carriers) {
+            CarrierSelectionResult
+                    .builder()
+                    .carrier(carrier)
+                    .build();
+        }
+
+        return carrierSelectionResultList;
+
     }
 
 

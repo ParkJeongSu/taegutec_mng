@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.CarrierDispatchRequestBody;
-import kr.co.aim.common.format.TransportJobRequestBody;
+import kr.co.aim.common.format.TransportJobRequestListBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.DispatchStrategy;
 import kr.co.aim.common.handler.MessageHandler;
@@ -41,7 +41,7 @@ public class CarrierDispatchRequestHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        BaseMessage<TransportJobRequestBody> transportJobRequestBodyBaseMessage = dispatchStrategy.requestDispatch(request);
+        BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = dispatchStrategy.carrierDispatchRequest(request);
         // 3. 만일 서비스 호출 후 메시지 송신해야하면 이 부분에서 reply 메시지 생성
         // reply 객체 정의
 

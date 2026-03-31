@@ -42,16 +42,20 @@ public class LoadRequestHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        BaseMessage<CarrierDispatchRequestBody> loadRequestTEXBodyBaseMessage = portService.loadRequest(request);
+        BaseMessage<CarrierDispatchRequestBody> carrierDispatchRequestMessage = portService.loadRequest(request);
         // 3. 만일 서비스 호출 후 메시지 송신해야하면 이 부분에서 reply 메시지 생성
         // reply 객체 정의
+        if(carrierDispatchRequestMessage == null){
 
-        // 4. DTO 객체를 JSON 문자열로 직접 변환합니다.
-        String jsonPayload = objectMapper.writeValueAsString(loadRequestTEXBodyBaseMessage);
-        log.info("Sending JSON Payload: {}", jsonPayload);
+        }else{
+            // 4. DTO 객체를 JSON 문자열로 직접 변환합니다.
+            String jsonPayload = objectMapper.writeValueAsString(carrierDispatchRequestMessage);
+            log.info("Sending JSON Payload: {}", jsonPayload);
 
-        // 5. String 으로 변환된 메시지 reply
-        rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, jsonPayload );
+            // 5. String 으로 변환된 메시지 reply
+            rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, jsonPayload );
+        }
+
         return null;
     }
 }

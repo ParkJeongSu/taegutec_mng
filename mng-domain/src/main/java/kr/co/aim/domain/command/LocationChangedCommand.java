@@ -11,5 +11,9 @@ import lombok.RequiredArgsConstructor;
 public class LocationChangedCommand {
     private final TransactionInfo transactionInfo;
     private final String equipmentName;
+    private final String portName;
+    private final String zoneName;
+    private final String positionType;
+    private final String positionName;
 
 }

@@ -2,19 +2,19 @@ package kr.co.aim.api.web.controller;
 
 import kr.co.aim.api.dto.*;
 import kr.co.aim.api.dto.insert.*;
-import kr.co.aim.api.service.InsertExternalInterfaceService;
-import kr.co.aim.api.service.InsertTransportOrderFacade;
+import kr.co.aim.api.service.InsertSimulatorInterfaceService;
+import kr.co.aim.api.service.InsertSimulatorFacade;
 import kr.co.aim.api.service.TransportOrderService;
 import kr.co.aim.api.vo.insert.H2OrderDetailRelocationVo;
 import kr.co.aim.api.vo.insert.H2OrderDetailVo;
 import kr.co.aim.api.vo.insert.StationOccupiedVo;
 import kr.co.aim.common.enums.GALTransportStatus;
-import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
+import kr.co.aim.domain.model.TransportOrder;
+import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2TransEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
-import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -33,14 +33,13 @@ import java.util.Optional;
 public class SimulatorController {
 
     private final TransportOrderService transportOrderService;
-    private final InsertTransportOrderFacade insertTransportOrderFacade;
-    private final InsertExternalInterfaceService insertExternalInterfaceService;
-    private final TransportOrderJpaRepository transportOrderJpaRepository;
+    private final InsertSimulatorFacade insertSimulatorFacade;
+    private final InsertSimulatorInterfaceService insertSimulatorInterfaceService;
 
     @GetMapping("/h2orderm")
     public ResponseEntity<Page<H2OrderMResponseDto>> getH2OrderMList(@RequestParam Long idocId, Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
-        Page<H2OrderMEntity> h2orderMPageEntity = insertExternalInterfaceService.selectH2OrderMByIdocId(idocId,pageable);
+        Page<H2OrderMEntity> h2orderMPageEntity = insertSimulatorInterfaceService.selectH2OrderMByIdocId(idocId,pageable);
 
         return ResponseEntity.ok(h2orderMPageEntity.map(H2OrderMResponseDto::from));
     }
@@ -48,7 +47,7 @@ public class SimulatorController {
     @GetMapping("/order-detail/{idocId}")
     public ResponseEntity<H2OrderDetailResponseDto> getH2OrderDetailList(@PathVariable("idocId") Long idocId) {
         // 3. 서비스 계층에 작업 위임
-        H2OrderDetailVo vo = insertExternalInterfaceService.selectH2OrderDetailByIdocId(idocId);
+        H2OrderDetailVo vo = insertSimulatorInterfaceService.selectH2OrderDetailByIdocId(idocId);
 
         return ResponseEntity.ok(H2OrderDetailResponseDto.from(vo));
     }
@@ -56,7 +55,7 @@ public class SimulatorController {
     @GetMapping("/h2orderd")
     public ResponseEntity<Page<H2OrderDResponseDto>> getH2OrderDList(@RequestParam Long idocId, Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
-        Page<H2OrderDEntity> h2OrderDEntities = insertExternalInterfaceService.selectH2OrderDByIdocId(idocId,pageable);
+        Page<H2OrderDEntity> h2OrderDEntities = insertSimulatorInterfaceService.selectH2OrderDByIdocId(idocId,pageable);
 
         return ResponseEntity.ok(h2OrderDEntities.map(H2OrderDResponseDto::from));
     }
@@ -64,23 +63,23 @@ public class SimulatorController {
     @GetMapping("/h2trans")
     public ResponseEntity<Page<H2TransResponseDto>> getH2TransList(@RequestParam Long orderId, Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
-        Page<H2TransEntity> h2TransPage = insertExternalInterfaceService.selectH2TransByOrderId(orderId,pageable);
+        Page<H2TransEntity> h2TransPage = insertSimulatorInterfaceService.selectH2TransByOrderId(orderId,pageable);
 
         return ResponseEntity.ok(h2TransPage.map(H2TransResponseDto::from));
     }
 
     @GetMapping("/transport-order/{orderId}")
     public ResponseEntity<TransportOrderResponseDto> getTransportOrderList(@PathVariable("orderId") Long orderId) {
-        Optional<TransportOrderEntity> optionalTransportOrderEntity = transportOrderJpaRepository.findByTransportOrderId(orderId.toString());
-        if(optionalTransportOrderEntity.isEmpty()){
+        Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(orderId.toString());
+        if(optionalTransportOrder.isEmpty()){
             throw new RuntimeException("TransportOrder를 찾을 수 없습니다. (요청 ID: " + orderId + ")");
         }
-        TransportOrderEntity entity = optionalTransportOrderEntity.get();
+        TransportOrder transportOrder = optionalTransportOrder.get();
 
-        GALTransportStatus status = GALTransportStatus.valueOf(entity.getTransportStatus());
+        GALTransportStatus status = GALTransportStatus.valueOf(transportOrder.getTransportStatus());
         String transportStatus = status.getFullStatus();
 
-        TransportOrderResponseDto result = TransportOrderResponseDto.from(entity);
+        TransportOrderResponseDto result = TransportOrderResponseDto.from(transportOrder);
         result.setTransportStatus(transportStatus);
 
         return ResponseEntity.ok(result);
@@ -89,7 +88,7 @@ public class SimulatorController {
     @GetMapping("/outbound/idocs")
     public ResponseEntity<Page<IdocResponseDto>> getOutboundIdocList(Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
-        Page<IdocEntity> idocEntities = insertExternalInterfaceService.selectIdocListByOrderType(pageable,"O");
+        Page<IdocEntity> idocEntities = insertSimulatorInterfaceService.selectIdocListByOrderType(pageable,"O");
 
         return ResponseEntity.ok(idocEntities.map(IdocResponseDto::from));
     }
@@ -100,11 +99,11 @@ public class SimulatorController {
 
         // 1. 통합 서비스 호출 (DB2 조회 -> MSSQL 저장 -> DB2 상태 변경)
         // 반환값은 MSSQL에 저장된 최종 객체의 DTO입니다.
-        TransportOrderEntity entity = insertTransportOrderFacade.transferOutbound(idocId);
-        GALTransportStatus status = GALTransportStatus.valueOf(entity.getTransportStatus());
+        TransportOrder transportOrder = insertSimulatorFacade.transferOutbound(idocId);
+        GALTransportStatus status = GALTransportStatus.valueOf(transportOrder.getTransportStatus());
         String transportStatus = status.getFullStatus();
 
-        TransportOrderResponseDto result = TransportOrderResponseDto.from(entity);
+        TransportOrderResponseDto result = TransportOrderResponseDto.from(transportOrder);
         result.setTransportStatus(transportStatus);
 
         return ResponseEntity.ok(result);
@@ -114,7 +113,7 @@ public class SimulatorController {
     @PostMapping("/outbound/accept")
     public ResponseEntity<Void> acceptOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("Accept 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.acceptOutbound(request.getIds().get(0));
+        insertSimulatorFacade.acceptOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -122,7 +121,7 @@ public class SimulatorController {
     @PostMapping("/outbound/release")
     public ResponseEntity<Void> releaseOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("Release 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.releaseOutbound(request.getIds().get(0));
+        insertSimulatorFacade.releaseOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -130,7 +129,7 @@ public class SimulatorController {
     @PostMapping("/outbound/internal-relocation")
     public ResponseEntity<Void> internalRelocationOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("internal-relocation 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.internalRelocationOutbound(request.getIds().get(0));
+        insertSimulatorFacade.internalRelocationOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -138,7 +137,7 @@ public class SimulatorController {
     @PostMapping("/outbound/out-of-rack")
     public ResponseEntity<Void> outOfRackOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.outOfRackOutbound(request.getIds().get(0));
+        insertSimulatorFacade.outOfRackOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -146,7 +145,7 @@ public class SimulatorController {
     @PostMapping("/outbound/arrived-at-workstation")
     public ResponseEntity<Void> arrivedAtWorkstationOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.arrivedAtWorkstationOutbound(request.getIds().get(0));
+        insertSimulatorFacade.arrivedAtWorkstationOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -154,7 +153,7 @@ public class SimulatorController {
     @PostMapping("/outbound/completed")
     public ResponseEntity<Void> completedOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.completedOutbound(request.getIds().get(0));
+        insertSimulatorFacade.completedOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -162,7 +161,7 @@ public class SimulatorController {
     @PostMapping("/outbound/take-off")
     public ResponseEntity<Void> takeOffOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.takeOffOutbound(request.getIds().get(0));
+        insertSimulatorFacade.takeOffOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -170,7 +169,7 @@ public class SimulatorController {
     @PostMapping("/outbound/bin-empty")
     public ResponseEntity<Void> binEmptyOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("bin-empty 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.binEmptyOutbound(request.getIds().get(0));
+        insertSimulatorFacade.binEmptyOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -178,7 +177,7 @@ public class SimulatorController {
     @PostMapping("/outbound/shortage")
     public ResponseEntity<Void> shortageOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("bin-empty 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.shortageOutbound(request.getIds().get(0));
+        insertSimulatorFacade.shortageOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -186,7 +185,7 @@ public class SimulatorController {
     @PostMapping("/outbound/not-allowed-pick-up")
     public ResponseEntity<Void> notAllowedPickUpOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("not-allowed-pick-up 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.notAllowedPickUpOutbound(request.getIds().get(0));
+        insertSimulatorFacade.notAllowedPickUpOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -194,14 +193,14 @@ public class SimulatorController {
     @PostMapping("/outbound/arrived-at-rack")
     public ResponseEntity<Void> arrivedAtRackOutbound(@RequestBody SimulatorIdsDto request) {
         log.info("arrived-at-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.arrivedAtRackOutbound(request.getIds().get(0));
+        insertSimulatorFacade.arrivedAtRackOutbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/inbound/idocs")
     public ResponseEntity<Page<IdocResponseDto>> getInboundIdocList(Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
-        Page<IdocEntity> idocEntities = insertExternalInterfaceService.selectIdocListByOrderType(pageable,"I");
+        Page<IdocEntity> idocEntities = insertSimulatorInterfaceService.selectIdocListByOrderType(pageable,"I");
 
         return ResponseEntity.ok(idocEntities.map(IdocResponseDto::from));
     }
@@ -212,11 +211,11 @@ public class SimulatorController {
 
         // 1. 통합 서비스 호출 (DB2 조회 -> MSSQL 저장 -> DB2 상태 변경)
         // 반환값은 MSSQL에 저장된 최종 객체의 DTO입니다.
-        TransportOrderEntity entity = insertTransportOrderFacade.transferInbound(idocId);
-        GALTransportStatus status = GALTransportStatus.valueOf(entity.getTransportStatus());
+        TransportOrder transportOrder = insertSimulatorFacade.transferInbound(idocId);
+        GALTransportStatus status = GALTransportStatus.valueOf(transportOrder.getTransportStatus());
         String transportStatus = status.getFullStatus();
 
-        TransportOrderResponseDto result = TransportOrderResponseDto.from(entity);
+        TransportOrderResponseDto result = TransportOrderResponseDto.from(transportOrder);
         result.setTransportStatus(transportStatus);
 
         return ResponseEntity.ok(result);
@@ -226,7 +225,7 @@ public class SimulatorController {
     @PostMapping("/inbound/accept")
     public ResponseEntity<Void> acceptInbound(@RequestBody SimulatorIdsDto request) {
         log.info("Accept 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.acceptInbound(request.getIds().get(0));
+        insertSimulatorFacade.acceptInbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -234,7 +233,7 @@ public class SimulatorController {
     @PostMapping("/inbound/workstation-empty")
     public ResponseEntity<Void> workstationEmptyInbound(@RequestBody SimulatorIdsDto request) {
         log.info("workstationEmpty 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.workStationEmptyInbound(request.getIds().get(0));
+        insertSimulatorFacade.workStationEmptyInbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -242,7 +241,7 @@ public class SimulatorController {
     @PostMapping("/inbound/arrived-workstation-error")
     public ResponseEntity<Void> arrivalWorkstationErrorInbound(@RequestBody SimulatorIdsDto request) {
         log.info("arrivalWorkstationErrorInbound 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.arrivedWorkstationErrorInbound(request.getIds().get(0));
+        insertSimulatorFacade.arrivedWorkstationErrorInbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -250,7 +249,7 @@ public class SimulatorController {
     @PostMapping("/inbound/error-text")
     public ResponseEntity<Void> errorTextInbound(@RequestBody SimulatorIdsDto request) {
         log.info("errorTextInbound 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.errorTextInbound(request.getIds().get(0), request.getErrorText());
+        insertSimulatorFacade.errorTextInbound(request.getIds().get(0), request.getErrorText());
         return ResponseEntity.noContent().build();
     }
 
@@ -258,7 +257,7 @@ public class SimulatorController {
     @PostMapping("/inbound/scanned-carrier")
     public ResponseEntity<Void> carrierScannedInbound(@RequestBody SimulatorIdsDto request) {
         log.info("carrierScannedInbound 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.carrierScannedInbound(request);
+        insertSimulatorFacade.carrierScannedInbound(request);
         return ResponseEntity.noContent().build();
     }
 
@@ -266,7 +265,7 @@ public class SimulatorController {
     @PostMapping("/inbound/out-of-rack")
     public ResponseEntity<Void> outOfRackInbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.outOfRackInbound(request);
+        insertSimulatorFacade.outOfRackInbound(request);
         return ResponseEntity.noContent().build();
     }
 
@@ -274,7 +273,7 @@ public class SimulatorController {
     @PostMapping("/inbound/not-allowed-pick-up")
     public ResponseEntity<Void> notAllowedPickUpInbound(@RequestBody SimulatorIdsDto request) {
         log.info("not-allowed-pick-up 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.notAllowedPickUpInbound(request.getIds().get(0));
+        insertSimulatorFacade.notAllowedPickUpInbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -282,7 +281,7 @@ public class SimulatorController {
     @PostMapping("/inbound/arrived-at-rack")
     public ResponseEntity<Void> arrivedAtRackInbound(@RequestBody SimulatorIdsDto request) {
         log.info("arrived-at-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.arrivedAtRackOInbound(request.getIds().get(0));
+        insertSimulatorFacade.arrivedAtRackOInbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -294,10 +293,10 @@ public class SimulatorController {
                 StationOccupiedVo
                         .builder()
                         .workCenterId(request.getWorkCenterId())
-                        .containerId(request.getContainerId())
+                        .carrierName(request.getContainerId())
                         .locationId(request.getLocationId())
                         .build();
-        insertTransportOrderFacade.stationOccupiedInbound(vo);
+        insertSimulatorFacade.stationOccupiedInbound(vo);
         return ResponseEntity.noContent().build();
     }
 
@@ -305,14 +304,14 @@ public class SimulatorController {
     @PostMapping("/inbound/completed")
     public ResponseEntity<Void> completedInbound(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.completedInbound(request.getIds().get(0));
+        insertSimulatorFacade.completedInbound(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/relocation/idocs")
     public ResponseEntity<Page<IdocResponseDto>> getRelocationIdocList(Pageable pageable) {
         // 3. 서비스 계층에 작업 위임
-        Page<IdocEntity> idocEntities = insertExternalInterfaceService.selectIdocListByOrderType(pageable,"R");
+        Page<IdocEntity> idocEntities = insertSimulatorInterfaceService.selectIdocListByOrderType(pageable,"R");
 
         return ResponseEntity.ok(idocEntities.map(IdocResponseDto::from));
     }
@@ -323,11 +322,11 @@ public class SimulatorController {
 
         // 1. 통합 서비스 호출 (DB2 조회 -> MSSQL 저장 -> DB2 상태 변경)
         // 반환값은 MSSQL에 저장된 최종 객체의 DTO입니다.
-        TransportOrderEntity entity = insertTransportOrderFacade.transferRelocation(idocId);
-        GALTransportStatus status = GALTransportStatus.valueOf(entity.getTransportStatus());
+        TransportOrder transportOrder = insertSimulatorFacade.transferRelocation(idocId);
+        GALTransportStatus status = GALTransportStatus.valueOf(transportOrder.getTransportStatus());
         String transportStatus = status.getFullStatus();
 
-        TransportOrderResponseDto result = TransportOrderResponseDto.from(entity);
+        TransportOrderResponseDto result = TransportOrderResponseDto.from(transportOrder);
         result.setTransportStatus(transportStatus);
         return ResponseEntity.ok(result);
     }
@@ -335,7 +334,7 @@ public class SimulatorController {
     @GetMapping("/relocation/order-detail/{idocId}")
     public ResponseEntity<H2OrderDetailResponseDto> getH2OrderDetailListForRelocation(@PathVariable("idocId") Long idocId) {
         // 3. 서비스 계층에 작업 위임
-        H2OrderDetailRelocationVo vo = insertExternalInterfaceService.selectH2OrderDetailByIdocIdForRelocation(idocId);
+        H2OrderDetailRelocationVo vo = insertSimulatorInterfaceService.selectH2OrderDetailByIdocIdForRelocation(idocId);
 
         return ResponseEntity.ok(H2OrderDetailResponseDto.form(vo));
     }
@@ -344,7 +343,7 @@ public class SimulatorController {
     @PostMapping("/relocation/accept")
     public ResponseEntity<Void> acceptRelocation(@RequestBody SimulatorIdsDto request) {
         log.info("Accept 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.acceptRelocation(request.getIds().get(0));
+        insertSimulatorFacade.acceptRelocation(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -352,7 +351,7 @@ public class SimulatorController {
     @PostMapping("/relocation/internal-relocation")
     public ResponseEntity<Void> internalRelocationRelocation(@RequestBody SimulatorIdsDto request) {
         log.info("internal-relocation 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.internalRelocationRelocation(request.getIds().get(0));
+        insertSimulatorFacade.internalRelocationRelocation(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -360,7 +359,7 @@ public class SimulatorController {
     @PostMapping("/relocation/drop-on-tunnel")
     public ResponseEntity<Void> dropOnTunnelRelocation(@RequestBody SimulatorIdsDto request) {
         log.info("internal-dropOnTunnelRelocation 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.dropOnTunnelRelocation(request.getIds().get(0));
+        insertSimulatorFacade.dropOnTunnelRelocation(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -368,7 +367,7 @@ public class SimulatorController {
     @PostMapping("/relocation/completed")
     public ResponseEntity<Void> completedRelocation(@RequestBody SimulatorIdsDto request) {
         log.info("out-of-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.completedRelocation(request.getIds().get(0));
+        insertSimulatorFacade.completedRelocation(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 
@@ -376,7 +375,7 @@ public class SimulatorController {
     @PostMapping("/relocation/arrived-at-rack")
     public ResponseEntity<Void> arrivedAtRackRelocation(@RequestBody SimulatorIdsDto request) {
         log.info("arrived-at-rack 요청 수신: {} 건", request.getIds().size());
-        insertTransportOrderFacade.arrivedAtRackRelocation(request.getIds().get(0));
+        insertSimulatorFacade.arrivedAtRackRelocation(request.getIds().get(0));
         return ResponseEntity.noContent().build();
     }
 

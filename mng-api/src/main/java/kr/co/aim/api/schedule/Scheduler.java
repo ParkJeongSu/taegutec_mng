@@ -1,6 +1,6 @@
 package kr.co.aim.api.schedule;
 
-import kr.co.aim.api.service.InsertTransportOrderFacade;
+import kr.co.aim.api.service.InsertSimulatorFacade;
 import kr.co.aim.api.service.IF_DB2WorkOrderService;
 import kr.co.aim.api.service.IF_MSSQLWorkOrderService;
 import kr.co.aim.infra.persistence.db2entity.IF_WorkOrderEntity;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
+//@Component
 @Slf4j
 @RequiredArgsConstructor
 @Profile("scheduler")
@@ -21,7 +21,7 @@ public class Scheduler {
 
     private final IF_DB2WorkOrderService if_db2WorkOrderService;
     private final IF_MSSQLWorkOrderService if_mssqlWorkOrderService;
-    private final InsertTransportOrderFacade insertTransportOrderFacade;
+    private final InsertSimulatorFacade insertSimulatorFacade;
 
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "DB2ToMSSQL",

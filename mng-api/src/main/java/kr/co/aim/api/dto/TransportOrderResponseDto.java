@@ -1,6 +1,7 @@
 package kr.co.aim.api.dto;
 
 
+import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -63,16 +64,15 @@ public class TransportOrderResponseDto {
 
     private String completeUser;
 
-    public static TransportOrderResponseDto from (TransportOrderEntity entity){
+    public static TransportOrderResponseDto from (TransportOrder entity){
         return TransportOrderResponseDto.builder()
                 .id(entity.getId())
-                .transportOrderName(entity.getTransportOrderName())
                 .description(entity.getDescription())
                 .transportType(entity.getTransportType())
                 .transportOrderId(entity.getTransportOrderId())
                 .transportStatus(entity.getTransportStatus())
                 .priority(entity.getPriority())
-                .galId(entity.getGalId())
+                .galId( String.valueOf(entity.getGalId()))
                 .galWarehouse(entity.getGalWarehouse())
 //                .fromWarehouse(entity.getFromWarehouse())
 //                .fromZoneName(entity.getFromZoneName())

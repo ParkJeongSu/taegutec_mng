@@ -1,5 +1,6 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -47,6 +48,9 @@ public class PortService {
     private final TransportJobMapper transportJobMapper;
 
     private final ProductionOrderRepository productionOrderRepository;
+
+    private final Optional<InsertSimulatorInterfaceService> insertExternalInterfaceService;
+    private final Optional<PowderExternalInterfaceService> powderExternalInterfaceService;
 
     /**
      * 포트의 새로운 캐리어를 요청합니다.
@@ -154,6 +158,9 @@ public class PortService {
             carrier = carrierRepository.save(carrier);
             CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
             historyService.saveHistory(carrierHistoryEntity);
+
+            if(insertExternalInterfaceService.isPresent()){
+            }
         }
 
     }
@@ -331,5 +338,24 @@ public class PortService {
         log.info("Business Logic Nothing");
     }
 
+
+    /**
+     * port 의 사용 타입 변경시 보고
+     * @param vo 받은 메시지
+     */
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public void transportStateChanged(TransportStateChangedVo vo) {
+        PortTransportStateChangedCommand portCommand =
+                PortTransportStateChangedCommand
+                        .builder()
+                        .transactionInfo(vo.getTx())
+                        .portTransportStateName(PortTransportState.RESERVED_TO_LOAD.getValue())
+                        .build();
+        Port port = vo.getPort();
+        port.transportStateChanged(portCommand);
+        port = portRepository.save(port);
+        PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+        historyService.saveHistory(portHistoryEntity);
+    }
 
 }

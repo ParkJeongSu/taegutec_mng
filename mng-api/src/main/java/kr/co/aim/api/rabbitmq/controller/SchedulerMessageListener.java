@@ -2,13 +2,14 @@ package kr.co.aim.api.rabbitmq.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ezieco.eziframe.middleware.event.data.Header;
+import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.api.rabbitmq.controller.dispatcher.MessageDispatcher;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.common.handler.MessageWorker;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
-@Component
+//@Component
 @RequiredArgsConstructor
 @Profile({"scheduler"})
 public class SchedulerMessageListener implements MessageWorker{
@@ -26,8 +27,8 @@ public class SchedulerMessageListener implements MessageWorker{
     private final RabbitTemplate rabbitTemplate;
 
 //    @RabbitListener(
-//            id = "pex-Listener",
-//            queues= RabbitConfig.PEX_REQUEST_QUEUE_NAME,
+//            id = "scheduler-Listener",
+//            queues= "${custom.rabbitmq.queue.scheduler}",
 //            concurrency = "10",
 //            containerFactory = "rabbitListenerContainerFactory"
 //    )
@@ -44,6 +45,8 @@ public class SchedulerMessageListener implements MessageWorker{
         log.info("reply: {}",reply);
 
         // 1. JSON 트리를 읽어 헤더 부분만 추출
+        // 아예 header 부분에 있는 메시지로 로직처리
+        /*
         JsonNode rootNode = objectMapper.readTree(jsonString);
         JsonNode headerNode = rootNode.get("header"); // "header" 필드만 접근
 
@@ -51,11 +54,11 @@ public class SchedulerMessageListener implements MessageWorker{
             log.error("❌ Message header is missing!");
             return null;
         }
-
-
         // 1. MessageName 추출
         Header messageHeader = objectMapper.treeToValue(headerNode, Header.class);
-        //MessageHeader messageHeader = objectMapper.readValue(jsonString, MessageHeader.class);
+        */
+
+        MessageHeader messageHeader = objectMapper.readValue(jsonString, MessageHeader.class);
         //String messageName = messageHeader.getHeader().getMessageName();
         String messageName = messageHeader.getMessageName();
         log.info("messageName : {}", messageName);

@@ -8,7 +8,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 public class StationOccupiedVo {
-    private String containerId;
+    private String carrierName;
     private String locationId;
     private String workCenterId;
 }

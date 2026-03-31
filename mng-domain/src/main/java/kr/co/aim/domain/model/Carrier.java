@@ -115,7 +115,10 @@ public class Carrier implements HasTransactionInfo {
     public void locationChanged(LocationChangedCommand command){
         this.apply(command.getTransactionInfo());
         setEquipmentName(command.getEquipmentName());
-        // TODO: zoneName이나.. 위치정보의 값을 어떻게 구상할지 고민
+        setPortName(command.getPortName());
+        setZoneName(command.getZoneName());
+        setPositionTypeName(command.getPositionType());
+        setPositionName(command.getPositionName());
     }
 
 }
