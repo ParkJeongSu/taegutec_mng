@@ -19,6 +19,8 @@ public interface TransportOrderJpaRepository extends JpaRepository<TransportOrde
 
     Optional<TransportOrderEntity> findByTransportOrderId(String transportOrderId);
 
+    List<TransportOrderEntity> findByTransportTypeInAndTransportStatus(List<String> types, String status);
+
     @Query("SELECT t FROM TransportOrderEntity t " +
             "WHERE t.carrierName = :carrierName " +
             "AND t.transportType = :transportType " +
@@ -29,6 +31,18 @@ public interface TransportOrderJpaRepository extends JpaRepository<TransportOrde
             @Param("carrierName") String carrierName,
             @Param("transportType") String transportType,
             @Param("transportStatus") List<String> transportStatus
+    );
+
+    @Query("SELECT t FROM TransportOrderEntity t " +
+            "WHERE t.transportType = :transportType " +
+            "AND t.transportStatus = :transportStatus " +
+            "AND t.workStationId = :workStationId " +
+            "ORDER BY t.createTime ASC"
+    )
+    List<TransportOrderEntity> findOutboundOrderForTransportRequest(
+            @Param("transportType") String transportType,
+            @Param("transportStatus") String transportStatus,
+            @Param("transportStatus") String workStationId
     );
 
     // 2. 비관적 락 조회 (FOR UPDATE)

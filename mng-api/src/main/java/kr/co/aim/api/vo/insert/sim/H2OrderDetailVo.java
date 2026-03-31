@@ -1,4 +1,4 @@
-package kr.co.aim.api.vo.insert;
+package kr.co.aim.api.vo.insert.sim;
 
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;

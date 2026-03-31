@@ -27,8 +27,17 @@ public class TransportJobEntity {
     @Column(name = "CARRIER_NAME")
     private String carrierName;
 
+    @Column(name = "TRANSPORT_TYPE")
+    private String transportType;
+
     @Column(name = "TRANSPORT_JOB_STATE")
     private String transportJobState;
+
+    @Column(name = "CARRIER_TYPE")
+    private String carrierType;
+
+    @Column(name = "DRIVING_PROFILE")
+    private String drivingProfile;
 
     @Column(name = "SOURCE_EQUIPMENT_NAME")
     private String sourceEquipmentName;

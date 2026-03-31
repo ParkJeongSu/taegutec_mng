@@ -1,10 +1,8 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SimulatorIdsDto;
-import kr.co.aim.api.vo.insert.*;
+import kr.co.aim.api.vo.insert.sim.*;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2TransEntity;

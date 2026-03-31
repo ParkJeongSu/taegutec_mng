@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PortJpaRepository extends JpaRepository<PortEntity, Long> {
@@ -23,4 +24,6 @@ public interface PortJpaRepository extends JpaRepository<PortEntity, Long> {
             @Param("equipmentName") String equipmentName,
             @Param("portName") String portName
     );
+
+    List<PortEntity> findByTransportState(String transportState);
 }

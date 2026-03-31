@@ -6,11 +6,9 @@ import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
-import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.domain.repository.*;
-import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortDefHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
@@ -23,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -49,7 +48,7 @@ public class PortService {
 
     private final ProductionOrderRepository productionOrderRepository;
 
-    private final Optional<InsertSimulatorInterfaceService> insertExternalInterfaceService;
+    private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
     private final Optional<PowderExternalInterfaceService> powderExternalInterfaceService;
 
     /**
@@ -77,6 +76,7 @@ public class PortService {
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
 
+        // TODO: 비관적 lock으로 변경
         Optional<Port> optionalPorts =  portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
@@ -105,64 +105,6 @@ public class PortService {
         reply.setBody(body);
 
         return reply;
-    }
-
-    /**
-     * 포트의 캐리어가 도착했음을 보고
-     * 1. 포트 테이블 조회
-     * 포트의 transferState -> ReadyToProcess 변경
-     * 2. Carrier 조회
-     * Carrier 의 위치 정보를 Port 로 변경
-     *
-     * @param message 받은 메시지
-     */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public void loadCompleted(BaseMessage<LoadCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-        String portType = message.getBody().getPortType();
-        String portTransportMode = message.getBody().getPortTransportMode();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        LoadCompletedCommand command = LoadCompletedCommand.builder()
-                .transactionInfo(tx)
-                .carrierTransportState(CarrierTransportState.ON_PORT.getValue())
-                .carrierName(carrierName)
-                .equipmentName(equipmentName)
-                .portName(portName)
-                .build();
-
-        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
-        if(optionalPorts.isEmpty()){
-            return;
-        }
-        Port port = optionalPorts.get();
-        port.loadCompleted(command);
-        port = portRepository.save(port);
-        PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
-        historyService.saveHistory(portHistoryEntity);
-
-        if(StringUtils.isNotBlank(carrierName)){
-            Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
-            if(optionalCarriers.isEmpty()){
-                return;
-            }
-
-            Carrier carrier = optionalCarriers.get();
-            carrier.loadCompleted(command);
-            carrier = carrierRepository.save(carrier);
-            CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
-            historyService.saveHistory(carrierHistoryEntity);
-
-            if(insertExternalInterfaceService.isPresent()){
-            }
-        }
-
     }
 
     /**
@@ -357,5 +299,22 @@ public class PortService {
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
     }
+
+
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public List<Port> findByTransportState(String transportState) {
+        return portRepository.findByTransportState(transportState);
+    }
+
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public Optional<Port> findPortByEquipmentNameAndPortName(String equipmentName,String portName) {
+        return portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+    }
+
+    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public Optional<PortDef> findPortDefByEquipmentNameAndPortName(String equipmentName,String portName) {
+        return portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+    }
+
 
 }

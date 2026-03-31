@@ -6,6 +6,7 @@ import kr.co.aim.api.service.PortService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.LoadCompletedBody;
 import kr.co.aim.common.format.request.BaseMessage;
+import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -23,6 +24,7 @@ public class LoadCompleteHandler implements MessageHandler<String> {
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
     private final PortService portService;
+    private final FactoryProcessStrategy factoryProcessStrategy;
 
     @Override
     public String getSupportedMessageName() {
@@ -39,7 +41,7 @@ public class LoadCompleteHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        portService.loadCompleted(request);
+        factoryProcessStrategy.loadCompleted(request);
         // 3. 만일 서비스 호출 후 메시지 송신해야하면 이 부분에서 reply 메시지 생성
         // reply 객체 정의
 

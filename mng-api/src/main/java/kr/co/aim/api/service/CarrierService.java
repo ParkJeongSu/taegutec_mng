@@ -17,9 +17,9 @@ import kr.co.aim.domain.command.LocationChangedCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
-import kr.co.aim.infra.persistence.entity.IF_EVENT_LOGEntity;
+import kr.co.aim.infra.persistence.entity.InterfaceEventLogEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
-import kr.co.aim.infra.persistence.springdatajpa.IF_EVENT_LOGJpaRepository;
+import kr.co.aim.infra.persistence.springdatajpa.InterfaceEventLogJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -42,9 +42,9 @@ public class CarrierService {
     private final PortDefRepository portDefRepository;
     private final TransportJobRepository transportJobRepository;
     private final Optional<ProductionOrderService> optionalProductionOrderService;
-    private final IF_EVENT_LOGJpaRepository if_event_logJpaRepository;
+    private final InterfaceEventLogJpaRepository interfaceEventLogJpaRepository;
     private final HistoryService historyService;
-    private final Optional<InsertSimulatorInterfaceService> insertExternalInterfaceService;
+    private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
     private final Optional<PowderExternalInterfaceService> powderExternalInterfaceService;
 
     /**
@@ -351,16 +351,16 @@ public class CarrierService {
                         .equipmentName("")
                         .build();
         String jsonPayload = objectMapper.writeValueAsString(materialDeassignFromCarrier);
-        IF_EVENT_LOGEntity ifEventLogEntity = IF_EVENT_LOGEntity.builder()
-                .seq(TsidUtils.nextId())
-                .eventType(IF_EVENT_LOGEventType.MATERIAL_ASSIGN_TO_CARRIER.getValue())
+        InterfaceEventLogEntity ifEventLogEntity = InterfaceEventLogEntity.builder()
+                .id(TsidUtils.nextId())
+                .eventType(InterfaceEventLogEventType.MATERIAL_ASSIGN_TO_CARRIER.getValue())
                 .payload(jsonPayload)
-                .ifStatus(IF_EVENT_LOGState.READY.getValue())
+                .ifStatus(InterfaceEventLogState.READY.getValue())
                 .errMSG("")
                 .createTime(tx.eventTime())
                 .retryCNT(0)
                 .build();
-        if_event_logJpaRepository.save(ifEventLogEntity);
+        interfaceEventLogJpaRepository.save(ifEventLogEntity);
 
     }
 

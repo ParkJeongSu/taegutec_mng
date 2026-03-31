@@ -1,10 +1,7 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.vo.insert.H2TransReportVo;
-import kr.co.aim.api.vo.insert.TransportOrderContext;
+import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2TransEntity;
@@ -15,10 +12,8 @@ import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2TransJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,7 +68,8 @@ public class InsertExternalInterfaceService {
                 .build();
     }
 
-    private void reportH2trans(H2TransReportVo vo){
+    @Transactional(value = "db2TransactionManager")
+    public void reportH2trans(H2TransReportVo vo){
         saveTransportProgress(vo);
     }
 
@@ -86,6 +82,7 @@ public class InsertExternalInterfaceService {
 
         H2TransEntity newTrans = buildBaseH2Trans(report);
         h2TransJpaRepository.save(newTrans);
+        log.info("Report completed Status: {}", report.getStatus());
     }
 
 

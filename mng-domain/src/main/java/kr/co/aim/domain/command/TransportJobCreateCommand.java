@@ -15,7 +15,10 @@ public class TransportJobCreateCommand {
     private final Long id;
     private final String transportJobName;
     private final String carrierName;
+    private final String transportType;
     private final String transportJobState;
+    private final String carrierType;
+    private final String drivingProfile;
     private final String sourceEquipmentName;
     private final String sourcePortName;
     private final String sourceZoneName;

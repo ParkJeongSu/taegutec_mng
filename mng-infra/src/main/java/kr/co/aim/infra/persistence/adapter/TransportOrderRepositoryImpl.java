@@ -47,6 +47,11 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
     }
 
     @Override
+    public List<TransportOrder> findByTransportTypeInAndTransportStatus(List<String> types, String status) {
+        return transportOrderJpaRepository.findByTransportTypeInAndTransportStatus(types,status).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public Optional<TransportOrder> findWithLockById(Long id) {
         return transportOrderJpaRepository.findWithLockById(id).map(transportOrderMapper::toDomain);
     }
@@ -62,6 +67,15 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 carrierName,
                 transportType,
                 transportStatus
+        ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TransportOrder> findOutboundOrderForTransportRequest(String transportType, String transportStatus, String workStationId) {
+        return transportOrderJpaRepository.findOutboundOrderForTransportRequest(
+                transportType,
+                transportStatus,
+                workStationId
         ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
     }
 }

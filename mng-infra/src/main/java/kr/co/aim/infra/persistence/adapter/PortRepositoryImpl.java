@@ -58,6 +58,11 @@ public class PortRepositoryImpl implements PortRepository {
     }
 
     @Override
+    public List<Port> findByTransportState(String transportState) {
+        return portJpaRepository.findByTransportState(transportState).stream().map(portMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public void deleteAllByIdInBatch(List<Long> ids) {
         portJpaRepository.deleteAllByIdInBatch(ids);
     }

@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class IF_EVENT_LOGEntity {
+public class InterfaceEventLogEntity {
     @Id
-    @Column(name = "SEQ")
-    private Long seq;
+    @Column(name = "ID")
+    private Long id;
 
     @Column(name = "EVENT_TYPE")
     private String eventType;
@@ -34,6 +34,12 @@ public class IF_EVENT_LOGEntity {
 
     @Column(name = "IDOC_ID")
     private Long idocId;
+
+    @Column(name = "ORDER_ID")
+    private String orderId;
+
+    @Column(name = "ORDER_LINE_NUMBER")
+    private String orderLineNumber;
 
     @Column(name = "RETRY_CNT")
     private Integer retryCNT;

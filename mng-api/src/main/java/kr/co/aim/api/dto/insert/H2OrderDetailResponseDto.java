@@ -1,8 +1,8 @@
 package kr.co.aim.api.dto.insert;
 
 
-import kr.co.aim.api.vo.insert.H2OrderDetailRelocationVo;
-import kr.co.aim.api.vo.insert.H2OrderDetailVo;
+import kr.co.aim.api.vo.insert.sim.H2OrderDetailRelocationVo;
+import kr.co.aim.api.vo.insert.sim.H2OrderDetailVo;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import lombok.AllArgsConstructor;
@@ -101,7 +101,7 @@ public class H2OrderDetailResponseDto {
                 .build();
     }
 
-    public static H2OrderDetailResponseDto form (H2OrderDetailRelocationVo vo){
+    public static H2OrderDetailResponseDto form(H2OrderDetailRelocationVo vo){
         H2OrderMEntity h2OrderM = vo.getMaster();
         H2OrderDEntity h2OrderDSource = vo.getSource();
         H2OrderDEntity h2OrderDTarget = vo.getTarget();

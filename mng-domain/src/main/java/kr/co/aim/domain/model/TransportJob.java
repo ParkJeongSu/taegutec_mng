@@ -1,4 +1,5 @@
 package kr.co.aim.domain.model;
+import jakarta.persistence.Column;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
@@ -18,7 +19,10 @@ public class TransportJob implements HasTransactionInfo {
     private Long id;
     private String transportJobName;
     private String carrierName;
+    private String transportType;
     private String transportJobState;
+    private String carrierType;
+    private String drivingProfile;
     private String sourceEquipmentName;
     private String sourcePortName;
     private String sourceZoneName;
@@ -48,7 +52,10 @@ public class TransportJob implements HasTransactionInfo {
                 .id(TsidUtils.nextId())
                 .transportJobName(command.getTransportJobName())
                 .carrierName(command.getCarrierName())
+                .transportType(command.getTransportType())
                 .transportJobState(command.getTransportJobState())
+                .carrierType(command.getCarrierType())
+                .drivingProfile(command.getDrivingProfile())
                 .sourceEquipmentName(command.getSourceEquipmentName())
                 .sourcePortName(command.getSourcePortName())
                 .sourceZoneName(command.getSourceZoneName())

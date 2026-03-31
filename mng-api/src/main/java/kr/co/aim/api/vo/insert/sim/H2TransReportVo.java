@@ -1,4 +1,4 @@
-package kr.co.aim.api.vo.insert;
+package kr.co.aim.api.vo.insert.sim;
 
 import kr.co.aim.common.enums.GALTransportStatus;
 import kr.co.aim.common.enums.IdocDataCode;
@@ -9,7 +9,6 @@ import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.With;
@@ -30,6 +29,7 @@ public class H2TransReportVo {
     // 1. 상태 및 식별 정보 (핵심)
     private final GALTransportStatus status;  // 보고할 상태 (Enum)
     private final String orderId;
+    private final String orderLineNumber;
     private final String carrierName;         // 캐리어/용기 ID
 
     // 2. 위치 및 경로 정보
@@ -65,6 +65,7 @@ public class H2TransReportVo {
                            PortDef portDef,
                            GALTransportStatus status,
                            String orderId,
+                           String orderLineNumber,
                            String carrierName,
                            String requestZone,
                            String actualZone,
@@ -82,6 +83,7 @@ public class H2TransReportVo {
         this.port = port;
         this.portDef = portDef;
         this.orderId = orderId;
+        this.orderLineNumber = orderLineNumber;
         this.carrierName = carrierName;
         this.requestZone = requestZone;
         this.actualZone = actualZone;

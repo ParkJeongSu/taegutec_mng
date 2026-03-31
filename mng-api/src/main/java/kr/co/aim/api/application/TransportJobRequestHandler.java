@@ -6,7 +6,7 @@ import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.TransportJobRequestListBody;
 import kr.co.aim.common.format.TransportOrderRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.handler.DispatchStrategy;
+import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +19,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex","scheduler"})
+@Profile({"tex",})
 public class TransportJobRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final DispatchStrategy dispatchStrategy;
+    private final FactoryProcessStrategy factoryProcessStrategy;
 
     @Override
     public String getSupportedMessageName() {
@@ -41,10 +41,10 @@ public class TransportJobRequestHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출 & reply 메시지 생성
         // 서비스 호출
-        BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = dispatchStrategy.transportOrderRequest(requestMessage);
+        BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = factoryProcessStrategy.transportOrderRequest(requestMessage);
 
         if(transportJobRequestBodyBaseMessage == null){
-
+            log.info("transportJobRequestBodyBaseMessage is null");
         }else{
             // 4. DTO 객체를 JSON 문자열로 직접 변환합니다.
             String jsonPayload = objectMapper.writeValueAsString(transportJobRequestBodyBaseMessage);

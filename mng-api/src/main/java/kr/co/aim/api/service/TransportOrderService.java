@@ -1,15 +1,10 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.vo.insert.H2TransReportVo2;
-import kr.co.aim.api.vo.insert.TransportOrderContext;
-import kr.co.aim.api.vo.insert.H2TransReportVo;
-import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
+import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.TransportOrderCreateCommand;
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.domain.model.PortDef;
-import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
@@ -19,14 +14,11 @@ import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -121,83 +113,6 @@ public class TransportOrderService {
     }
 
     @Transactional("mssqlTransactionManager")
-    public Optional<TransportOrder> activeTransportOrder(H2TransReportVo2 vo) {
-        log.info("activeTransportOrder");
-        String transportJobName = vo.getTransportJobName();
-        TransportOrder transportOrder;
-        if(StringUtils.isNotBlank(transportJobName)){
-            TransportJob transportJob = transportJobService.findByTransportJobName(transportJobName);
-            return transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
-        }else{
-            PortDef portDef = vo.getPortDef();
-            Port port = vo.getPort();
-            String carrierName = vo.getCarrierName();
-
-            if(StringUtils.equals(PortDetailType.OUT_OF_RACK.getValue(),portDef.getDetailPortType())){
-                List<String> transportStatus = new ArrayList<>();
-                transportStatus.add(TransportJobState.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
-                        carrierName,
-                        TransportOrderType.OUTBOUND.getValue(),
-                        transportStatus
-                );
-                if(CollectionUtils.isNotEmpty(transportOrders)){
-                    return Optional.of(transportOrders.get(0));
-                }
-                else{
-                    return Optional.empty();
-                }
-            }
-            else if(StringUtils.equals(PortDetailType.WORKSTATION.getValue(),portDef.getDetailPortType())){
-                List<String> transportStatus = new ArrayList<>();
-                transportStatus.add(TransportJobState.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
-                        carrierName,
-                        TransportOrderType.OUTBOUND.getValue(),
-                        transportStatus
-                );
-                if(CollectionUtils.isNotEmpty(transportOrders)){
-                    return Optional.of(transportOrders.get(0));
-                }
-                else{
-                    return Optional.empty();
-                }
-            }
-            else if(StringUtils.equals(PortDetailType.INBOUND.getValue(),portDef.getDetailPortType())){
-                List<String> transportStatus = new ArrayList<>();
-                transportStatus.add(TransportJobState.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
-                        carrierName,
-                        TransportOrderType.INBOUND.getValue(),
-                        transportStatus
-                );
-                if(CollectionUtils.isNotEmpty(transportOrders)){
-                    return Optional.of(transportOrders.get(0));
-                }
-                else{
-                    return Optional.empty();
-                }
-            }
-            else if(StringUtils.equals(PortDetailType.IN_OF_RACK.getValue(),portDef.getDetailPortType())){
-                List<String> transportStatus = new ArrayList<>();
-                transportStatus.add(TransportJobState.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
-                        carrierName,
-                        TransportOrderType.INBOUND.getValue(),
-                        transportStatus
-                );
-                if(CollectionUtils.isNotEmpty(transportOrders)){
-                    return Optional.of(transportOrders.get(0));
-                }
-                else{
-                    return Optional.empty();
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    @Transactional("mssqlTransactionManager")
     public Optional<TransportOrder> findByTransportOrderId(String orderId) {
         return transportOrderRepository.findByTransportOrderId(orderId);
     }
@@ -207,5 +122,18 @@ public class TransportOrderService {
         return transportOrderRepository.findWithLockById(id);
     }
 
+    @Transactional("mssqlTransactionManager")
+    public List<TransportOrder> findByTransportTypeInAndTransportStatus(List<String> types, String status) {
+        return transportOrderRepository.findByTransportTypeInAndTransportStatus(types,status);
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public List<TransportOrder> findOutboundOrderForTransportRequest(
+            String transportType,
+            String transportStatus,
+            String workStationId
+    ){
+        return transportOrderRepository.findOutboundOrderForTransportRequest(transportType,transportStatus,workStationId);
+    }
 
 }

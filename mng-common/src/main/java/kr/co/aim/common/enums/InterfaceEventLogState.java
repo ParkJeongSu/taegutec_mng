@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum IF_EVENT_LOGState implements MetaDataEnum {
+public enum InterfaceEventLogState implements MetaDataEnum {
     READY("Ready"),
     PROCESSING("Processing"),
     SUCCESS("Success"),

@@ -183,29 +183,32 @@ public class InsertTransferScheduler {
                 // 정상적으로 수행했기 때문에, errorCode (60 : processed)와 dtimemode를 수정
                 insertExternalInterfaceService.transferCompleted(idocEntity.getLineId());
 
-                // 메시지 전송
-                BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
-                request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
-                TransportOrderRequestBody body =
-                        TransportOrderRequestBody
-                                .builder()
-                                .id(transportOrder.getId())
-                                .build();
+                if(IdocTypeId.Inbound.getValue().equals( idocEntity.getIdocTypId() )
+                        || IdocTypeId.Relocation.getValue().equals( idocEntity.getIdocTypId() )) {
+                    // 메시지 전송
+                    BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
+                    request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                    TransportOrderRequestBody body =
+                            TransportOrderRequestBody
+                                    .builder()
+                                    .id(transportOrder.getId())
+                                    .build();
 
-                request.setBody(body);
-                // 1. 현재 시간 가져오기 (2026년 기준)
-                LocalDateTime now = LocalDateTime.now();
-                // 2. 18자리 포맷 정의 (연4, 월2, 일2, 시2, 분2, 초2, 소수점4)
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSS");
-                // 3. 포맷 적용 및 출력
-                String timestamp = now.format(formatter);
-                request.setTransactionId(timestamp);
-                String jsonPayload = objectMapper.writeValueAsString(request);
-                log.info("Sending JSON Payload: {}", jsonPayload);
+                    request.setBody(body);
+                    // 1. 현재 시간 가져오기 (2026년 기준)
+                    LocalDateTime now = LocalDateTime.now();
+                    // 2. 18자리 포맷 정의 (연4, 월2, 일2, 시2, 분2, 초2, 소수점4)
+                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSS");
+                    // 3. 포맷 적용 및 출력
+                    String timestamp = now.format(formatter);
+                    request.setTransactionId(timestamp);
+                    String jsonPayload = objectMapper.writeValueAsString(request);
+                    log.info("Sending JSON Payload: {}", jsonPayload);
 
-                // 5. String 으로 변환된 메시지 reply
-                rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
-                log.info("Send Completed");
+                    // 5. String 으로 변환된 메시지 reply
+                    rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
+                    log.info("Send Completed");
+                }
             } catch (Exception e) {
                 // 만일 transfer 도중 문제가 생겼다면
                 // errorcode 99 dtimemode를 수정

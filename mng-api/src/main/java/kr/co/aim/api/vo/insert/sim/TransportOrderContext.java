@@ -1,10 +1,9 @@
-package kr.co.aim.api.vo.insert;
+package kr.co.aim.api.vo.insert.sim;
 
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
-import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

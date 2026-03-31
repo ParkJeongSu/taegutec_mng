@@ -1,4 +1,4 @@
-package kr.co.aim.api.vo.insert;
+package kr.co.aim.api.vo.insert.sim;
 
 import lombok.*;
 

@@ -23,6 +23,8 @@ public interface TransportOrderRepository {
 
     Optional<TransportOrder> findById(Long id);
 
+    List<TransportOrder> findByTransportTypeInAndTransportStatus(List<String> types, String status);
+
     Optional<TransportOrder> findWithLockById(Long id);
 
     Optional<TransportOrder> findByTransportOrderId(String transportOrderId);
@@ -32,4 +34,12 @@ public interface TransportOrderRepository {
             String transportType,
             List<String> transportStatus
     );
+
+    List<TransportOrder> findOutboundOrderForTransportRequest(
+            String transportType,
+            String transportStatus,
+            String workStationId
+    );
+
+
 }

@@ -1,8 +1,8 @@
 package kr.co.aim.api.dto.powder;
 
 
-import kr.co.aim.api.vo.powder.H2OrderDetailRelocationVo;
-import kr.co.aim.api.vo.powder.H2OrderDetailVo;
+import kr.co.aim.api.vo.powder.sim.H2OrderDetailRelocationVo;
+import kr.co.aim.api.vo.powder.sim.H2OrderDetailVo;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderMEntity;
 import lombok.AllArgsConstructor;

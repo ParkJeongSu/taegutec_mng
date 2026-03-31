@@ -42,6 +42,8 @@ public interface PortRepository {
 
     Optional<Port> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName);
 
+    List<Port> findByTransportState(String transportState);
+
     void deleteAllByIdInBatch(List<Long>ids);
 
 //    Page<PortsResponseDto> findPortsWithConditions(PortsSearchConditionDto condition, Pageable pageable);

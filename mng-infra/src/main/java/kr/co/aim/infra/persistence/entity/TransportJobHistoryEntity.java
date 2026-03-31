@@ -28,6 +28,15 @@ public class TransportJobHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "CARRIER_NAME")
     private String carrierName;
 
+    @Column(name = "TRANSPORT_TYPE")
+    private String transportType;
+
+    @Column(name = "CARRIER_TYPE")
+    private String carrierType;
+
+    @Column(name = "DRIVING_PROFILE")
+    private String drivingProfile;
+
     @Column(name = "TRANSPORT_JOB_STATE")
     private String transportJobState;
 

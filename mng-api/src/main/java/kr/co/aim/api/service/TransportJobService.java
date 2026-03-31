@@ -1,29 +1,21 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.dto.*;
+import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
-import kr.co.aim.common.enums.EventName;
-import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.TransportJobState;
-import kr.co.aim.common.error.EntityExistException;
-import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
-import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.repository.TransportJobRepository;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +29,7 @@ public class TransportJobService {
     private final TransportJobRepository transportJobRepository;
     private final HistoryService historyService;
     private final TransportJobMapper transportJobMapper;
+    private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
 
     /**
      * SCS 시스템이 켜질때 보고
@@ -65,10 +58,8 @@ public class TransportJobService {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-
         String transportJobDetailName = message.getBody().getTransportJobName(); // DetailName
         String carrierName = message.getBody().getCarrierName();
-
         String oldDestinationEquipmentName = message.getBody().getOldDestinationEquipmentName();
         String oldDestinationPositionType = message.getBody().getOldDestinationPositionType();
         String oldDestinationPositionName = message.getBody().getOldDestinationPositionName();
@@ -92,7 +83,6 @@ public class TransportJobService {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-
         String transportJobDetailName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
         return null;
@@ -200,18 +190,23 @@ public class TransportJobService {
                 transportJob = transportJobRepository.save(transportJob);
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
+
+                if(insertExternalInterfaceService.isPresent()){
+                    H2TransReportVo h2TransReportVo =
+                            H2TransReportVo
+                                    .builder()
+                                    .transportJobName(transportJob.getTransportJobName())
+                                    .messageName(message.getMessageName())
+                                    .carrierName(transportJob.getCarrierName())
+                                    .orderId(transportJob.getOrderId())
+                                    .build();
+                    InsertExternalInterfaceService insertService = insertExternalInterfaceService.get();
+                    insertService.reportH2trans(h2TransReportVo);
+                }
             }
         }
         
 
-
-    }
-
-    /**
-     * WCS 로 반송 요청
-     */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public void transportJobRequest() {
 
     }
 
@@ -241,6 +236,19 @@ public class TransportJobService {
             transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
+
+            if(insertExternalInterfaceService.isPresent()){
+                H2TransReportVo h2TransReportVo =
+                        H2TransReportVo
+                                .builder()
+                                .transportJobName(transportJobName)
+                                .messageName(message.getMessageName())
+                                .carrierName(transportJob.getCarrierName())
+                                .orderId(transportJob.getOrderId())
+                                .build();
+                InsertExternalInterfaceService insertService = insertExternalInterfaceService.get();
+                insertService.reportH2trans(h2TransReportVo);
+            }
         }
     }
 
@@ -283,19 +291,21 @@ public class TransportJobService {
             TransportJobRequestBody body = TransportJobRequestBody.builder()
                     .transportJobName(transportJob.getTransportJobName())
                     .carrierName(transportJob.getCarrierName())
+                    .transportType(transportJob.getTransportType())
+                    .carrierType(transportJob.getCarrierType())
+                    .drivingProfile(transportJob.getDrivingProfile())
                     .sourceEquipmentName(transportJob.getSourceEquipmentName())
                     .sourcePortName(transportJob.getSourcePortName())
                     .sourceZoneName(transportJob.getSourceZoneName())
-                    .sourcePositionType(transportJob.getSourcePositionTypeName())
+                    .sourcePositionTypeName(transportJob.getSourcePositionTypeName())
                     .sourcePositionName(transportJob.getSourcePositionName())
                     .destinationEquipmentName(transportJob.getDestinationEquipmentName())
                     .destinationPortName(transportJob.getDestinationPortName())
                     .destinationZoneName(transportJob.getDestinationZoneName())
-                    .destinationPositionType(transportJob.getDestinationPositionTypeName())
+                    .destinationPositionTypeName(transportJob.getDestinationPositionTypeName())
                     .destinationPositionName(transportJob.getDestinationPositionName())
                     .priority(transportJob.getPriority() == null ? "" : transportJob.getPriority().toString())
                     .orderId(transportJob.getOrderId())
-                    .carrierType("")
                     .build();
             transportJobRequestBodies.add(body);
         }

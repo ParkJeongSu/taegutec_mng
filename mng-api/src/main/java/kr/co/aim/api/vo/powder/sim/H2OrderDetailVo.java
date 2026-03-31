@@ -1,4 +1,4 @@
-package kr.co.aim.api.vo.powder;
+package kr.co.aim.api.vo.powder.sim;
 
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderMEntity;

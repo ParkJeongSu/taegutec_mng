@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex"})
 public class LoadRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
@@ -46,14 +46,14 @@ public class LoadRequestHandler implements MessageHandler<String> {
         // 3. 만일 서비스 호출 후 메시지 송신해야하면 이 부분에서 reply 메시지 생성
         // reply 객체 정의
         if(carrierDispatchRequestMessage == null){
-
+            log.info("carrierDispatchRequestMessage is null");
         }else{
             // 4. DTO 객체를 JSON 문자열로 직접 변환합니다.
             String jsonPayload = objectMapper.writeValueAsString(carrierDispatchRequestMessage);
             log.info("Sending JSON Payload: {}", jsonPayload);
 
             // 5. String 으로 변환된 메시지 reply
-            rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, jsonPayload );
+            rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, carrierDispatchRequestMessage );
         }
 
         return null;

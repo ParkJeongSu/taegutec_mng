@@ -1,9 +1,9 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SimulatorIdsDto;
-import kr.co.aim.api.vo.insert.StationOccupiedVo;
-import kr.co.aim.api.vo.insert.TransportOrderContext;
-import kr.co.aim.api.vo.insert.H2TransReportVo;
+import kr.co.aim.api.vo.insert.sim.StationOccupiedVo;
+import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
+import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.common.enums.GALTransportStatus;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.domain.repository.TransportOrderRepository;

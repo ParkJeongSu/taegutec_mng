@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum IF_EVENT_LOGEventType implements MetaDataEnum {
+public enum InterfaceEventLogEventType implements MetaDataEnum {
     MATERIAL_DEASSIGN_FROM_CARRIER("MaterialDeassignFromCarrier"),
     JOB_START("JobStart"),
     JOB_END("JobEnd"),
