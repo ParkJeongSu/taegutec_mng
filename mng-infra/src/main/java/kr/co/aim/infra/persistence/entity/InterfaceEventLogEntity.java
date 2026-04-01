@@ -33,7 +33,7 @@ public class InterfaceEventLogEntity {
     private String carrierName;
 
     @Column(name = "IDOC_ID")
-    private Long idocId;
+    private String idocId;
 
     @Column(name = "ORDER_ID")
     private String orderId;

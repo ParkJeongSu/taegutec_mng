@@ -316,11 +316,7 @@ public class TransportJobService {
     }
 
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public TransportJob findByTransportJobName(String transportJobName) {
-        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
-        if(optionalTransportJob.isPresent()){
-            return optionalTransportJob.get();
-        }
-        throw new RuntimeException("TransportJob을 찾을 수 없습니다. (요청 ID: " + transportJobName + ")");
+    public Optional<TransportJob> findByTransportJobName(String transportJobName) {
+        return transportJobRepository.findByTransportJobName(transportJobName);
     }
 }

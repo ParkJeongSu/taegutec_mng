@@ -279,7 +279,6 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
-    public InterfaceEventLogCreateCommand createEventLogCommand(InsertEventLogReportVo vo) {
-        return null;
+    public void saveInterfaceEventLog(InsertEventLogReportVo vo) {
     }
 }

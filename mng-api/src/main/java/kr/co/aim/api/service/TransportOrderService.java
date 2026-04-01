@@ -5,6 +5,7 @@ import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.TransportOrderCreateCommand;
+import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
@@ -14,6 +15,7 @@ import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.sl.draw.geom.GuideIf;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -134,6 +137,28 @@ public class TransportOrderService {
             String workStationId
     ){
         return transportOrderRepository.findOutboundOrderForTransportRequest(transportType,transportStatus,workStationId);
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public Optional<TransportOrder> findByTransportJobName(String transportJobName) {
+        // 반송잡 이름으로 TransportOrder를 찾음
+        // wcs 자체적으로 시작된 반송잡은 TransportOrder가 존재하지 않음
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            return transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
+        }else{
+            return Optional.empty();
+        }
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public List<TransportOrder> findTransportOrderByCondition(String carrierName, String transportType, List<String> transportStatus) {
+        return transportOrderRepository.findTransportOrderByCondition(
+                carrierName,
+                transportType,
+                transportStatus
+        );
     }
 
 }

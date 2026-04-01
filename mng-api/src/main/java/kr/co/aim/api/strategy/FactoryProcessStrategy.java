@@ -10,6 +10,6 @@ public interface FactoryProcessStrategy {
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message);
     public BaseMessage<TransportJobRequestListBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message);
     public void loadCompleted(BaseMessage<LoadCompletedBody> message);
-    public InterfaceEventLogCreateCommand createEventLogCommand(InsertEventLogReportVo vo);
+    public void saveInterfaceEventLog(InsertEventLogReportVo vo);
 
 }

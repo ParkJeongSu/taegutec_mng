@@ -1,5 +1,8 @@
 package kr.co.aim.api.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.dto.InterfaceEventLogDto;
 import kr.co.aim.api.vo.insert.ops.InsertEventLogReportVo;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
@@ -40,6 +43,7 @@ import java.util.Optional;
 public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
     private final HistoryService historyService;
+    private final ObjectMapper objectMapper;
 
     private final PortService portService;
     private final PortDefRepository portDefRepository;
@@ -53,6 +57,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     private final TransportOrderService transportOrderService;
     private final TransportOrderRepository transportOrderRepository;
     private final TransportOrderMapper transportOrderMapper;
+
+    private final InterfaceEventLogRepository interfaceEventLogRepository;
 
     private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
 
@@ -347,7 +353,161 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
-    public InterfaceEventLogCreateCommand createEventLogCommand(InsertEventLogReportVo vo) {
-        return null;
+    @Transactional(value = "mssqlTransactionManager") // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    public void saveInterfaceEventLog(InsertEventLogReportVo vo) {
+        // save EventLog로 변경
+        InterfaceEventLogDto dto = createEventLogDto(vo);
+        TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "",vo.getTx().eventTime());
+
+        // DTO 객체를 JSON 문자열로 직접 변환합니다.
+        String jsonPayload = "";
+        try {
+            jsonPayload = objectMapper.writeValueAsString(dto);
+        } catch (JsonProcessingException e) {
+            log.error("dto -> String error");
+            // 로깅 및 예외 처리
+            throw new RuntimeException("InterfaceEventLogDto를 JSON으로 변환하는 중 오류가 발생했습니다.", e);
+        }
+        log.info("Sending JSON Payload: {}", jsonPayload);
+        InterfaceEventLogCreateCommand command =
+                InterfaceEventLogCreateCommand
+                        .builder()
+                        .transactionInfo(tx)
+                        .eventType(dto.getEventType())
+                        .payload(jsonPayload)
+                        .ifStatus(InterfaceEventLogState.READY.getValue())
+                        .carrierName(dto.getCarrierName())
+                        .idocId(dto.getIdocId())
+                        .orderId(dto.getOrderId())
+                        .orderLineNumber(dto.getOrderLineNumber())
+                        .retryCNT(0)
+                        .errMSG("")
+                        .createTime(tx.eventTime())
+                        .build();
+        InterfaceEventLog interfaceEventLog = InterfaceEventLog.create(command);
+        interfaceEventLogRepository.save(interfaceEventLog);
+    }
+
+    private InterfaceEventLogDto createEventLogDto(InsertEventLogReportVo vo) {
+        String messageName = vo.getMessageName();
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
+        String transportJobName =  vo.getTransportJobName();
+        String eventType = "";
+        String transactionCode ="";
+        String carrierName = vo.getCarrierName(); // 어떠한 경우에도 공백이 없네
+        String idocId = "";
+        String orderId = "";
+        String orderLineNumber = "";
+        String orderType = "";
+        if (StringUtils.equals(MessageList.LOAD_COMPLETE.getMessageName(), messageName)) {
+            if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+                // Inbound Station Occupied case
+                // 106 report
+                eventType = GALTransportStatus.StationOccupied.name();
+                transactionCode = GALTransportStatus.StationOccupied.getValue();
+                idocId = "";
+                orderId = "";
+                orderLineNumber = "";
+                orderType = TransportOrderType.INBOUND.getValue();
+            } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
+                // 반송잡이 있으면 해당 반송잡으로 아래보고
+                // outbound case
+                // 108 Outbound Arrival At workStation report
+                // 90 outbound order Done report
+                // 반송잡이 없다면,
+                // 가장 최신 변경된 transportOrder 으로 108,90 보고
+                TransportOrder transportOrder = null;
+                if(StringUtils.isNotBlank(transportJobName)){
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportJobName(transportJobName);
+                    if(optionalTransportOrder.isPresent()){
+                        transportOrder = optionalTransportOrder.get();
+                    }
+                }
+                if(transportOrder==null){
+                    List<String> transportStauts = new ArrayList<>();
+                    transportStauts.add(TransportOrderStatus.STARTED.getValue());
+                    List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                            carrierName,
+                            TransportOrderType.OUTBOUND.getValue(),
+                            transportStauts);
+                    if(transportOrders.isEmpty()){
+                        throw new RuntimeException("Not Exists TransportOrder");
+                    }
+                    transportOrder = transportOrders.get(0);
+                }
+                eventType = GALTransportStatus.ArrivedAtWorkStation.name();
+                transactionCode = GALTransportStatus.ArrivedAtWorkStation.getValue();
+                idocId = transportOrder.getIdocId().toString();
+                orderId = transportOrder.getTransportOrderId();
+                orderLineNumber = "";
+                orderType = TransportOrderType.OUTBOUND.getValue();
+            }
+        } else if (StringUtils.equals(MessageList.UNLOAD_COMPLETE.getMessageName(), messageName)) {
+            if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+                // Inbound Workstation empty
+                // 105 repot
+                // transportJobName 은 존재
+            }
+        } else if (StringUtils.equals(MessageList.CARRIER_SCANNED.getMessageName(), messageName)) {
+            // Inbound ContainerId is Scanned
+            // 126 repot
+        } else if (StringUtils.equals(MessageList.CARRIER_LOCATION_CHANGED.getMessageName(), messageName)) {
+            // 이 경우는 TransportOrder가 있을수도 없을수도 있음
+            // orderId가 있을수도 없을 수도 있다는 이야기
+            if (StringUtils.equals(PortDetailType.OUT_OF_RACK.getValue(), portDef.getDetailPortType())) {
+                // Out of Rack
+                // 109 repot
+            } else if (StringUtils.equals(PortDetailType.TUNNEL.getValue(), portDef.getDetailPortType())) {
+                // S/R Machine dropped container on tunnel conveyor
+                // 109 report
+            }
+
+        } else if (StringUtils.equals(MessageList.TRANSPORT_JOB_COMPLETED.getMessageName(), messageName)) {
+            // 무조건 TransportJob 은 존재
+
+            // Type : Inbound Case
+            // 107 Arrival at Rack report
+            // 92 Inbound order Done report
+
+            // Type : Outbound Case
+            // 109 Out of Rack report
+
+            // Type : Relocation Case
+            // #1 orderId 가 존재하면
+            // 107 Arrival at Rack report
+            // 94 Relocation order confirmation report
+
+            // #2 orderId 가 존재하지 않는다면
+            // 114 internal Relocation report
+        } else if (StringUtils.equals(MessageList.TRANSPORT_JOB_REPLY.getMessageName(), messageName)) {
+            // 무조건 TransportJob 은 존재
+            // Type : Inbound Case
+            // Type : Outbound Case
+            // Type : Relocation Case
+            // 2 Accept report
+        } else if (StringUtils.equals(MessageList.TRANSPORT_JOB_STARTED.getMessageName(), messageName)) {
+            // 무조건 TransportJob 은 존재
+            // Type : Inbound Case
+            // Type : Outbound Case
+            // Type : Relocation Case
+            // 2 Accept report
+        }
+
+        return InterfaceEventLogDto
+                        .builder()
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .orderId(orderId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(vo.getErrorText())
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZone())
+                        .actualRackLocationId(vo.getActualRackLocationId())
+                        .build();
     }
 }

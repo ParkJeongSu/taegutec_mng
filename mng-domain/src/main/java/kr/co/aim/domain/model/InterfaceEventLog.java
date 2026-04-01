@@ -17,7 +17,7 @@ public class InterfaceEventLog {
     private String payload;
     private String ifStatus;
     private String carrierName;
-    private Long idocId;
+    private String idocId;
     private String orderId;
     private String orderLineNumber;
     private Integer retryCNT;

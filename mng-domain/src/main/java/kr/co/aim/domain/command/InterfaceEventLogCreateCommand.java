@@ -17,7 +17,7 @@ public class InterfaceEventLogCreateCommand {
     private final String payload;
     private final String ifStatus;
     private final String carrierName;
-    private final Long idocId;
+    private final String idocId;
     private final String orderId;
     private final String orderLineNumber;
     private final Integer retryCNT;
