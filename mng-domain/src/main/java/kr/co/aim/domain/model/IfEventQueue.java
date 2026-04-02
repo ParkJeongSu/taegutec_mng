@@ -1,6 +1,6 @@
 package kr.co.aim.domain.model;
 import kr.co.aim.common.Utils.TsidUtils;
-import kr.co.aim.domain.command.InterfaceEventLogCreateCommand;
+import kr.co.aim.domain.command.IfEventQueueCreateCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @ToString
-public class InterfaceEventLog {
+public class IfEventQueue {
     private Long id;
     private String eventType;
     private String payload;
@@ -25,8 +25,8 @@ public class InterfaceEventLog {
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
 
-    public static InterfaceEventLog create(InterfaceEventLogCreateCommand command) {
-        return InterfaceEventLog
+    public static IfEventQueue create(IfEventQueueCreateCommand command) {
+        return IfEventQueue
                 .builder()
                 .id(TsidUtils.nextId())
                 .eventType(command.getEventType())

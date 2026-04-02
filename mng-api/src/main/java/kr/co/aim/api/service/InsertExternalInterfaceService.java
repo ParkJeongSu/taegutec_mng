@@ -1,7 +1,10 @@
 package kr.co.aim.api.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.common.enums.*;
+import kr.co.aim.domain.model.IfEventQueue;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2TransEntity;
@@ -12,9 +15,11 @@ import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2TransJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -31,6 +36,7 @@ public class InsertExternalInterfaceService {
     private final H2OrderMJpaRepository h2OrderMJpaRepository;
     private final H2OrderDJpaRepository h2OrderDJpaRepository;
     private final H2TransJpaRepository h2TransJpaRepository;
+    private final ObjectMapper objectMapper;
 
     // --- [Helper Methods] ---
 
@@ -101,22 +107,92 @@ public class InsertExternalInterfaceService {
         return h2OrderDJpaRepository.findByIdocIdOrderByLineIdAsc(idocId);
     }
 
-    @Transactional(value = "db2TransactionManager")
-    public IdocEntity transferCompleted(Long idocId) {
+    @Transactional(value = "db2TransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public void transferCompleted(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
         idoc.setErrorCode(Integer.parseInt(IdocErrorCode.Processed.getValue()));
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
-        return idocJpaRepository.save(idoc);
+        idocJpaRepository.save(idoc);
     }
 
-    @Transactional(value = "db2TransactionManager")
-    public IdocEntity transferFail(Long idocId) {
+    @Transactional(value = "db2TransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public void transferFail(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
         idoc.setErrorCode(Integer.parseInt(IdocErrorCode.Error.getValue()));
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
-        return idocJpaRepository.save(idoc);
+        idocJpaRepository.save(idoc);
+    }
+
+    @Transactional(value = "db2TransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public void reportH2trans(IfEventQueue ifEventQueue) {
+        // 1단계 ifEventQueue 를 역직렬화를 통해 dto객체로 변경
+        // idoc, h2orderM, h2orderd 조회 후 로직 처리
+        // 결국 idoc , h2trans 데이터 생성
+        IfEventQueueDto dto = null;
+        try {
+            dto = objectMapper.readValue(ifEventQueue.getPayload(),IfEventQueueDto.class);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        LocalDateTime now = null;
+
+        if(
+                StringUtils.equals(GALTransportStatus.Accept.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.Released.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.InternalRelocation.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.OutOfRack.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.StationOccupied.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.BinEmpty.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.Shortage.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.NotAllowedPickUp.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.ArrivedAtWorkStation.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.WorkstationEmpty.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.ArrivedAtRack.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.OrderDone_Outbound.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.OrderDone_Inbound.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.OrderDone_Relocation.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.CarrierScanned.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.ArrivedAtWorkstationWithError.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.DroppedOnTunnelConveyor.name(),ifEventQueue.getEventType())
+                    || StringUtils.equals(GALTransportStatus.TakeOff.name(),ifEventQueue.getEventType())
+        ){
+            // 단 하나의 report 만 하면 되는 경우
+            // 이 경우는 단순히 ifEventQueue 의 값에서 h2Trans로 report 하면 된다.
+            now = LocalDateTime.now().withNano(0);
+
+            IdocEntity newIdoc = buildBaseIdoc(now);
+            idocJpaRepository.save(newIdoc);
+
+            H2TransEntity h2TransEntity =
+                    H2TransEntity
+                            .builder()
+                            .lineId(h2TransJpaRepository.findMaxLineId() + 1)
+                            .idocId(newIdoc.getLineId())
+                            .dtimeCre(now)
+                            //.dataCode()
+                            .cTransTy( Long.parseLong(dto.getTransactionCode()))
+                            .cClient(IdocClient.MNG.getValue())
+                            .cOrderId(ifEventQueue.getOrderId())
+                            .cOrderTy(dto.getOrderType())
+                            .cGaId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
+                            .cGalWhs(dto.getGalWarehouse())
+                            .cCoId(ifEventQueue.getCarrierName())
+                            // .cGrWgAct(dto.getActualWeight()) // TODO: 실제 어떤 DataType 으로 넣을지 고민, 아마도 소숫점자리까지 계산
+                            .cReqZone(dto.getRequestedZoneName())
+                            .cZone(dto.getActualZoneName())
+                            .cLocId(dto.getActualRackLocationId())
+                            //.cErrDsc() // n개의 보고
+                            .cWcId(dto.getActualWorkStationId())
+                            .build();
+            h2TransJpaRepository.save(h2TransEntity);
+        }
+        else if(StringUtils.equals(GALTransportStatus.ErrorText.name(),ifEventQueue.getEventType())){
+            // 다건의 report 가 필요한 errorText 경우
+            // errorTexts 의 건수만큼 idoc, h2Trans 의 데이터를 보고한다.
+        }
+
     }
 
 

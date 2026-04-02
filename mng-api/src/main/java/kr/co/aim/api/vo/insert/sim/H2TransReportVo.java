@@ -9,16 +9,14 @@ import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.With;
+import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 
 @Getter
+@RequiredArgsConstructor
 @Builder
-@With // 특정 필드만 변경된 복사본 생성을 도와줍니다.
 public class H2TransReportVo {
 
     private final String transportJobName;
@@ -56,60 +54,6 @@ public class H2TransReportVo {
     public H2OrderDEntity getFirstDetail() {
         if (details == null || details.isEmpty()) return null;
         return details.get(0);
-    }
-
-    // 빌더가 내부적으로 사용하는 생성자를 직접 정의
-    public H2TransReportVo(String transportJobName,
-                           String messageName,
-                           Port port,
-                           PortDef portDef,
-                           GALTransportStatus status,
-                           String orderId,
-                           String orderLineNumber,
-                           String carrierName,
-                           String requestZone,
-                           String actualZone,
-                           String locationCode,
-                           IdocDataCode idocDataCode,
-                           Long weight,
-                           String errorText,
-                           IdocEntity sourceIdoc,
-                           H2OrderMEntity master,
-                           List<H2OrderDEntity> details,
-                           IdocEntity newIdoc) {
-
-        this.transportJobName = transportJobName;
-        this.messageName = messageName;
-        this.port = port;
-        this.portDef = portDef;
-        this.orderId = orderId;
-        this.orderLineNumber = orderLineNumber;
-        this.carrierName = carrierName;
-        this.requestZone = requestZone;
-        this.actualZone = actualZone;
-        this.locationCode = locationCode;
-        this.idocDataCode = idocDataCode;
-        this.weight = weight;
-        this.errorText = errorText;
-        this.sourceIdoc = sourceIdoc;
-        this.master = master;
-        this.details = details;
-        this.newIdoc = newIdoc;
-
-        // 핵심: status가 외부에서 주입되지 않았을 때만 로직으로 계산
-        if (status == null) {
-            this.status = deriveStatus(messageName, port, portDef);
-        } else {
-            this.status = status;
-        }
-    }
-
-
-    // 비즈니스 로직에 따라 상태를 판별하는 정적 팩토리 메소드 예시
-    public static H2TransReportVo of(H2TransReportVo original) {
-        GALTransportStatus calculatedStatus = deriveStatus(original.getMessageName(),original.getPort(), original.getPortDef());
-        // 기존 객체 정보는 유지하되 status만 교체된 새 객체 반환
-        return original.withStatus(calculatedStatus);
     }
 
     private static GALTransportStatus deriveStatus(String messageName, Port port, PortDef portDef) {

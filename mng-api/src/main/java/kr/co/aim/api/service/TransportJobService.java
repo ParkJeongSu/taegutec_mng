@@ -1,5 +1,6 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.TransportJobState;
@@ -29,7 +30,7 @@ public class TransportJobService {
     private final TransportJobRepository transportJobRepository;
     private final HistoryService historyService;
     private final TransportJobMapper transportJobMapper;
-    private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
+    private final FactoryProcessStrategy factoryProcessStrategy;
 
     /**
      * SCS 시스템이 켜질때 보고
@@ -104,7 +105,13 @@ public class TransportJobService {
      */
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
     public void transportJobCancelCompleted() {
-        // TODO: 반송이 취소처리가 완료되는 시나리오가 있을까?
+        // TODO: 반송이 취소완료 되는 시나리오
+        try{
+            factoryProcessStrategy.enqueueIfEventQueue(null);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
     }
 
     /**
@@ -113,7 +120,13 @@ public class TransportJobService {
      */
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
     public void transportJobCancelFailed() {
-        // TODO: 반송이 취소처리가 완료되는 시나리오가 있을까?
+        // TODO: 반송 취소가 failed 되는 시나리오 현재는 확인중
+        try{
+            factoryProcessStrategy.enqueueIfEventQueue(null);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
     }
 
     /**
@@ -122,7 +135,13 @@ public class TransportJobService {
      */
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
     public void transportJobCancelStarted() {
-        // TODO: 반송이 취소처리가 완료되는 시나리오가 있을까?
+        // TODO: 반송이 취소처리가 시작 되는 시나리오
+        try{
+            factoryProcessStrategy.enqueueIfEventQueue(null);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
     }
 
     /**
@@ -190,19 +209,7 @@ public class TransportJobService {
                 transportJob = transportJobRepository.save(transportJob);
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
-
-                if(insertExternalInterfaceService.isPresent()){
-                    H2TransReportVo h2TransReportVo =
-                            H2TransReportVo
-                                    .builder()
-                                    .transportJobName(transportJob.getTransportJobName())
-                                    .messageName(message.getMessageName())
-                                    .carrierName(transportJob.getCarrierName())
-                                    .orderId(transportJob.getOrderId())
-                                    .build();
-                    InsertExternalInterfaceService insertService = insertExternalInterfaceService.get();
-                    insertService.reportH2trans(h2TransReportVo);
-                }
+                // TODO : 신규 IfEventQueueService.enqueue 호출
             }
         }
         
@@ -236,19 +243,7 @@ public class TransportJobService {
             transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
-
-            if(insertExternalInterfaceService.isPresent()){
-                H2TransReportVo h2TransReportVo =
-                        H2TransReportVo
-                                .builder()
-                                .transportJobName(transportJobName)
-                                .messageName(message.getMessageName())
-                                .carrierName(transportJob.getCarrierName())
-                                .orderId(transportJob.getOrderId())
-                                .build();
-                InsertExternalInterfaceService insertService = insertExternalInterfaceService.get();
-                insertService.reportH2trans(h2TransReportVo);
-            }
+            // TODO : 신규 IfEventQueueService.enqueue 호출
         }
     }
 

@@ -6,14 +6,15 @@ import kr.co.aim.common.format.request.MessageHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-//@Aspect
+@Aspect
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex","dispatcher"})
+@Profile({"pex","tex"})
 @Slf4j
 public class RabbitMQAspect {
     private final ObjectMapper objectMapper;

@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-@Profile({"scheduler", "simulator"})
+@Profile({"simulator"})
 @RequiredArgsConstructor
 public class InsertSimulatorFacade {
 
@@ -55,12 +55,11 @@ public class InsertSimulatorFacade {
 
     // 2. Order ID 기준으로 전체 컨텍스트 준비 (상태 보고용)
     private TransportOrderContext prepareByOrderId(Long orderId, int expectedDetailSize, GALTransportStatus requiredStatus) {
-        TransportOrder transportOrder = null;
         Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(orderId.toString());
         if(optionalTransportOrder.isEmpty()){
             throw new RuntimeException("TransportOrder를 찾을 수 없습니다. (요청 ID: " + orderId + ")");
         }
-        transportOrder = optionalTransportOrder.get();
+        TransportOrder transportOrder = optionalTransportOrder.get();
 
         // 상태 검증 (필요한 경우)
         if (requiredStatus != null && !transportOrder.getTransportStatus().equals(requiredStatus.name())) {

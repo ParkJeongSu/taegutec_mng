@@ -20,27 +20,4 @@ public class AlarmService {
     //    }
     // ===============================================
 
-    /**
-     * 알람은 log 만 찍음
-     *
-     *
-     * @param message 받은 메시지
-     */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public void alarmReport(BaseMessage<AlarmReportBody> message) {
-        String alarmCode = message.getBody().getAlarmCode();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-        String equipmentName = message.getBody().getEquipmentName();
-        String alarmState = message.getBody().getAlarmState();
-
-        log.info("equipmentName : {}", equipmentName);
-        log.info("alarmCode : {}", alarmCode);
-        log.info("alarmState : {}", alarmState);
-        log.info("alarmSeverity : {}", message.getBody().getAlarmSeverity());
-        log.info("alarmText : {}", message.getBody().getAlarmText());
-
-    }
-
 }

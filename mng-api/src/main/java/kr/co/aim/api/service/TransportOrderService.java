@@ -19,6 +19,7 @@ import org.apache.poi.sl.draw.geom.GuideIf;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -82,7 +83,7 @@ public class TransportOrderService {
         return TransportOrder.create(command);
     }
 
-    @Transactional("mssqlTransactionManager")
+    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
     public TransportOrder createTransportOrder(TransportOrder transportOrder) {
         TransportOrder savedTransportOrder = transportOrderRepository.save(transportOrder);
         TransportOrderHistoryEntity historyEntity = transportOrderMapper.toHistoryEntity(savedTransportOrder);

@@ -11,11 +11,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "IF_EVENT_LOG")
+@Table(name = "IF_EVENT_QUEUE")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InterfaceEventLogEntity {
+public class IfEventQueueEntity {
     @Id
     @Column(name = "ID")
     private Long id;

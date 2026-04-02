@@ -6,9 +6,10 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum InterfaceState implements MetaDataEnum {
-    CREATED("Created"),
-    RECEIVED("Received"),
-    CANCELED("Canceled");
+public enum IfEventQueueState implements MetaDataEnum {
+    READY("Ready"),
+    PROCESSING("Processing"),
+    SUCCESS("Success"),
+    FAIL("Fail");
     private final String value;
 }

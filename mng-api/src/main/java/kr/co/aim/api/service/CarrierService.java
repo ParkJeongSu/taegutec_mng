@@ -17,9 +17,9 @@ import kr.co.aim.domain.command.LocationChangedCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
-import kr.co.aim.infra.persistence.entity.InterfaceEventLogEntity;
+import kr.co.aim.infra.persistence.entity.IfEventQueueEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
-import kr.co.aim.infra.persistence.springdatajpa.InterfaceEventLogJpaRepository;
+import kr.co.aim.infra.persistence.springdatajpa.IfEventQueueJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -42,7 +42,7 @@ public class CarrierService {
     private final PortDefRepository portDefRepository;
     private final TransportJobRepository transportJobRepository;
     private final Optional<ProductionOrderService> optionalProductionOrderService;
-    private final InterfaceEventLogJpaRepository interfaceEventLogJpaRepository;
+    private final IfEventQueueJpaRepository ifEventQueueJpaRepository;
     private final HistoryService historyService;
     private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
     private final Optional<PowderExternalInterfaceService> powderExternalInterfaceService;
@@ -351,16 +351,16 @@ public class CarrierService {
                         .equipmentName("")
                         .build();
         String jsonPayload = objectMapper.writeValueAsString(materialDeassignFromCarrier);
-        InterfaceEventLogEntity ifEventLogEntity = InterfaceEventLogEntity.builder()
+        IfEventQueueEntity ifEventLogEntity = IfEventQueueEntity.builder()
                 .id(TsidUtils.nextId())
-                .eventType(InterfaceEventLogEventType.MATERIAL_ASSIGN_TO_CARRIER.getValue())
+                .eventType(IfEventQueueEventType.MATERIAL_ASSIGN_TO_CARRIER.getValue())
                 .payload(jsonPayload)
-                .ifStatus(InterfaceEventLogState.READY.getValue())
+                .ifStatus(IfEventQueueState.READY.getValue())
                 .errMSG("")
                 .createTime(tx.eventTime())
                 .retryCNT(0)
                 .build();
-        interfaceEventLogJpaRepository.save(ifEventLogEntity);
+        ifEventQueueJpaRepository.save(ifEventLogEntity);
 
     }
 

@@ -6,6 +6,8 @@ import kr.co.aim.domain.model.PortDef;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.List;
+
 @Getter
 @Builder
 public class InsertEventLogReportVo {
@@ -15,11 +17,11 @@ public class InsertEventLogReportVo {
     private final Port port;
     private final PortDef portDef;
     private final String carrierName;
-    private final String actualZone;
+    private final String actualZoneName;
     // 측정 무게
     private final String actualWeight;
     private final String actualRackLocationId;
     // 3. 예외 처리 정보
-    private final String errorText;
+    private final List<String> errorTexts;
     private final TransactionInfo tx;
 }

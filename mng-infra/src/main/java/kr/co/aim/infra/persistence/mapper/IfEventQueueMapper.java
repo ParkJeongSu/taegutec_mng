@@ -1,7 +1,7 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.domain.model.InterfaceEventLog;
-import kr.co.aim.infra.persistence.entity.InterfaceEventLogEntity;
+import kr.co.aim.domain.model.IfEventQueue;
+import kr.co.aim.infra.persistence.entity.IfEventQueueEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -9,9 +9,9 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         imports = { kr.co.aim.common.Utils.TsidUtils.class} // [핵심] 이 부분을 추가하세요!
 )
-public interface InterfaceEventLogMapper {
+public interface IfEventQueueMapper {
 
-    InterfaceEventLog toDomain(InterfaceEventLogEntity entity);
+    IfEventQueue toDomain(IfEventQueueEntity entity);
 
-    InterfaceEventLogEntity toEntity(InterfaceEventLog domain);
+    IfEventQueueEntity toEntity(IfEventQueue domain);
 }

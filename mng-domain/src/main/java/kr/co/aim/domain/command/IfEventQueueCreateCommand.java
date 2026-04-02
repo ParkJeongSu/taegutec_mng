@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Getter
 @RequiredArgsConstructor
 @Builder
-public class InterfaceEventLogCreateCommand {
+public class IfEventQueueCreateCommand {
     private final TransactionInfo transactionInfo;
     private final Long id;
     private final String eventType;

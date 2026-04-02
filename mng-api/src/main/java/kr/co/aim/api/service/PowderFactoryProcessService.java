@@ -10,7 +10,6 @@ import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.InterfaceEventLogCreateCommand;
 import kr.co.aim.domain.command.LoadCompletedCommand;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.command.UnLoadRequestCommand;
@@ -28,6 +27,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -278,7 +278,19 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         }
     }
 
+    /**
+     * 1. 큐에 처음 넣을 때 (신규 생성)
+     * try{
+     * InterfaceEventLogService.enqueue(vo);
+     * }
+     * catch(Exception e){
+     * log.error("로그 저장 실패");
+     * }
+     * 위 방식으로 호출 해야함
+     */
     @Override
-    public void saveInterfaceEventLog(InsertEventLogReportVo vo) {
+    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public void enqueueIfEventQueue(Object vo) {
+
     }
 }

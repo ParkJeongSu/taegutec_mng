@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum MessageList {
     ALARM_REPORT("AlarmReport"),
+    CONNECTION_CHECK("ConnectionCheck"),
+    CONNECTION("Connection"),
     ARE_YOU_THERE_REPLY("AreYouThereReply"),
     ARE_YOU_THERE_REQUEST("AreYouThereRequest"),
     LOAD_COMPLETE("LoadComplete"),

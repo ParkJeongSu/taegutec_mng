@@ -2,9 +2,8 @@ package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.dto.InterfaceEventLogDto;
+import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.vo.insert.ops.InsertEventLogReportVo;
-import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
@@ -12,7 +11,7 @@ import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.InterfaceEventLogCreateCommand;
+import kr.co.aim.domain.command.IfEventQueueCreateCommand;
 import kr.co.aim.domain.command.LoadCompletedCommand;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.model.*;
@@ -28,6 +27,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -58,9 +58,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     private final TransportOrderRepository transportOrderRepository;
     private final TransportOrderMapper transportOrderMapper;
 
-    private final InterfaceEventLogRepository interfaceEventLogRepository;
-
-    private final Optional<InsertExternalInterfaceService> insertExternalInterfaceService;
+    private final IfEventQueueRepository ifEventQueueRepository;
 
 
     @Override
@@ -335,60 +333,66 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
-
-        if(StringUtils.isNotBlank(carrierName)){
-            if(insertExternalInterfaceService.isPresent()){
-                H2TransReportVo h2TransReportVo =
-                        H2TransReportVo
-                                .builder()
-                                .messageName(message.getMessageName())
-                                .carrierName(carrierName)
-                                .port(port)
-                                .portDef(portDef)
-                                .build();
-                InsertExternalInterfaceService insertService = insertExternalInterfaceService.get();
-                insertService.reportH2trans(h2TransReportVo);
-            }
-        }
+        // TODO : 신규로 만든 IfEventQueueService.enqueue 호출로 변경
     }
 
+    /**
+     * 1. 큐에 처음 넣을 때 (신규 생성)
+     * try{
+     * InterfaceEventLogService.enqueue(vo);
+     * }
+     * catch(Exception e){
+     * log.error("로그 저장 실패");
+     * }
+     * 위 방식으로 호출 해야함
+     */
     @Override
-    @Transactional(value = "mssqlTransactionManager") // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public void saveInterfaceEventLog(InsertEventLogReportVo vo) {
-        // save EventLog로 변경
-        InterfaceEventLogDto dto = createEventLogDto(vo);
-        TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "",vo.getTx().eventTime());
+    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public void enqueueIfEventQueue(Object vo) {
+        // Java 17의 Pattern Matching 사용
+        if (vo instanceof InsertEventLogReportVo reportVo) {
+            // save EventLog로 변경
+            Optional<IfEventQueueDto> optionalIfEventQueueDto = createEventLogDto(reportVo);
+            if(optionalIfEventQueueDto.isEmpty()){
+                return;
+            }
+            IfEventQueueDto dto = optionalIfEventQueueDto.get();
+            TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "",reportVo.getTx().eventTime());
 
-        // DTO 객체를 JSON 문자열로 직접 변환합니다.
-        String jsonPayload = "";
-        try {
-            jsonPayload = objectMapper.writeValueAsString(dto);
-        } catch (JsonProcessingException e) {
-            log.error("dto -> String error");
-            // 로깅 및 예외 처리
-            throw new RuntimeException("InterfaceEventLogDto를 JSON으로 변환하는 중 오류가 발생했습니다.", e);
+            // DTO 객체를 JSON 문자열로 직접 변환합니다.
+            String jsonPayload = "";
+            try {
+                jsonPayload = objectMapper.writeValueAsString(dto);
+            } catch (JsonProcessingException e) {
+                log.error("dto -> String error");
+                // 로깅 및 예외 처리
+                throw new RuntimeException("InterfaceEventLogDto를 JSON으로 변환하는 중 오류가 발생했습니다.", e);
+            }
+            log.info("Sending JSON Payload: {}", jsonPayload);
+            IfEventQueueCreateCommand command =
+                    IfEventQueueCreateCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .eventType(dto.getEventType())
+                            .payload(jsonPayload)
+                            .ifStatus(IfEventQueueState.READY.getValue())
+                            .carrierName(dto.getCarrierName())
+                            .idocId(dto.getIdocId())
+                            .orderId(dto.getOrderId())
+                            .orderLineNumber(dto.getOrderLineNumber())
+                            .retryCNT(0)
+                            .errMSG("")
+                            .createTime(tx.eventTime())
+                            .build();
+            IfEventQueue interfaceEventLog = IfEventQueue.create(command);
+            ifEventQueueRepository.save(interfaceEventLog);
+        }else {
+            log.error("잘못된 객체 타입이 전달되었습니다: {}", vo != null ? vo.getClass().getName() : "null");
         }
-        log.info("Sending JSON Payload: {}", jsonPayload);
-        InterfaceEventLogCreateCommand command =
-                InterfaceEventLogCreateCommand
-                        .builder()
-                        .transactionInfo(tx)
-                        .eventType(dto.getEventType())
-                        .payload(jsonPayload)
-                        .ifStatus(InterfaceEventLogState.READY.getValue())
-                        .carrierName(dto.getCarrierName())
-                        .idocId(dto.getIdocId())
-                        .orderId(dto.getOrderId())
-                        .orderLineNumber(dto.getOrderLineNumber())
-                        .retryCNT(0)
-                        .errMSG("")
-                        .createTime(tx.eventTime())
-                        .build();
-        InterfaceEventLog interfaceEventLog = InterfaceEventLog.create(command);
-        interfaceEventLogRepository.save(interfaceEventLog);
+
     }
 
-    private InterfaceEventLogDto createEventLogDto(InsertEventLogReportVo vo) {
+    private Optional<IfEventQueueDto> createEventLogDto(InsertEventLogReportVo vo) {
         String messageName = vo.getMessageName();
         PortDef portDef = vo.getPortDef();
         Port port = vo.getPort();
@@ -425,12 +429,12 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     }
                 }
                 if(transportOrder==null){
-                    List<String> transportStauts = new ArrayList<>();
-                    transportStauts.add(TransportOrderStatus.STARTED.getValue());
+                    List<String> transportStatus = new ArrayList<>();
+                    transportStatus.add(TransportOrderStatus.STARTED.getValue());
                     List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
                             carrierName,
                             TransportOrderType.OUTBOUND.getValue(),
-                            transportStauts);
+                            transportStatus);
                     if(transportOrders.isEmpty()){
                         throw new RuntimeException("Not Exists TransportOrder");
                     }
@@ -493,21 +497,25 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             // Type : Relocation Case
             // 2 Accept report
         }
-
-        return InterfaceEventLogDto
-                        .builder()
-                        .messageName(messageName)
-                        .eventType(eventType)
-                        .transactionCode(transactionCode)
-                        .carrierName(carrierName)
-                        .idocId(idocId)
-                        .orderId(orderId)
-                        .orderLineNumber(orderLineNumber)
-                        .orderType(orderType)
-                        .errorText(vo.getErrorText())
-                        .actualWeight(vo.getActualWeight())
-                        .actualZoneName(vo.getActualZone())
-                        .actualRackLocationId(vo.getActualRackLocationId())
-                        .build();
+        else{
+            return Optional.empty();
+        }
+        // TODO: 추가되는 dto 관련된건 여기다가 추가하기
+        IfEventQueueDto dto = IfEventQueueDto
+                .builder()
+                .messageName(messageName)
+                .eventType(eventType)
+                .transactionCode(transactionCode)
+                .carrierName(carrierName)
+                .idocId(idocId)
+                .orderId(orderId)
+                .orderLineNumber(orderLineNumber)
+                .orderType(orderType)
+                .errorTexts(vo.getErrorTexts())
+                .actualWeight(vo.getActualWeight())
+                .actualZoneName(vo.getActualZoneName())
+                .actualRackLocationId(vo.getActualRackLocationId())
+                .build();
+        return Optional.ofNullable(dto);
     }
 }
