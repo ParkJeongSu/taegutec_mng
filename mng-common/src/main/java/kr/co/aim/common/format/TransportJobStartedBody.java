@@ -23,4 +23,5 @@ public class TransportJobStartedBody {
     private String priority;
     private String orderId;
     private String carrierType;
+    private String jobType;
 }

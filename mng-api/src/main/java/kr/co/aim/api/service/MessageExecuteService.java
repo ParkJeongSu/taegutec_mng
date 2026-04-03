@@ -957,6 +957,7 @@ public class MessageExecuteService {
      */
     @Transactional
     public void transportJobReply(BaseMessage<TransportJobReplyListBody> message) {
+        String messageName = message.getMessageName();
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -965,6 +966,7 @@ public class MessageExecuteService {
         List<TransportJobReplyBody> transportJobList = message.getBody().getTransportJobList();
 
         for(TransportJobReplyBody transportJobReplyBody : transportJobList){
+            // TODO: 비관적 Lock 로 조회
             Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobReplyBody.getTransportJobName());
 
             if(optionalTransportJob.isPresent()){
@@ -976,20 +978,19 @@ public class MessageExecuteService {
                                 .transactionInfo(tx)
                                 .build();
                 transportJob.changeTransportJob(command);
-
                 transportJob = transportJobService.save(transportJob);
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
-                // TODO : 신규 IfEventQueueService.enqueue 호출
+                String carrierName = transportJobReplyBody.getCarrierName();
                 try{
                     InsertEventLogReportVo insertEventLogReportVo
                             = InsertEventLogReportVo
                             .builder()
-//                            .transportJobName()
-//                            .messageName()
+                            .transportJobName(transportJob.getTransportJobName())
+                            .messageName(messageName)
 //                            .port()
 //                            .portDef()
-//                            .carrierName()
+                            .carrierName(carrierName)
 //                            .actualZoneName()
 //                            .actualWeight()
 //                            .actualRackLocationId()
@@ -1013,13 +1014,17 @@ public class MessageExecuteService {
      */
     @Transactional
     public void transportJobStarted(BaseMessage<TransportJobStartedBody> message) {
+        String messageName = message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
         String transportJobName = message.getBody().getTransportJobName();
+        String jobType = message.getBody().getJobType();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        // TODO: 비관적 Lock 로 조회
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
@@ -1034,7 +1039,27 @@ public class MessageExecuteService {
             transportJob = transportJobService.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
-            // TODO : 신규 IfEventQueueService.enqueue 호출
+            try{
+                InsertEventLogReportVo insertEventLogReportVo
+                        = InsertEventLogReportVo
+                        .builder()
+                        .transportJobName(transportJob.getTransportJobName())
+                        .messageName(messageName)
+//                            .port()
+//                            .portDef()
+                        .carrierName(carrierName)
+//                            .actualZoneName()
+//                            .actualWeight()
+//                            .actualRackLocationId()
+//                            .errorTexts()
+                        .jobType(jobType)
+                        .tx(tx)
+                        .build();
+                factoryProcessStrategy.enqueueIfEventQueue(insertEventLogReportVo);
+            }
+            catch(Exception e){
+                log.error("EventQueue enqueue error",e);
+            }
         }
     }
 

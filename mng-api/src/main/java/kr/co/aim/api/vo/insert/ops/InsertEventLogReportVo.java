@@ -24,4 +24,14 @@ public class InsertEventLogReportVo {
     // 3. 예외 처리 정보
     private final List<String> errorTexts;
     private final TransactionInfo tx;
+    // orderType
+    // I : inbound
+    // O : outbound
+    // R : relocation
+    private final String orderType;
+    // jobType : job 의 구분
+    // GAL : Gal 로 부터 시작된 반송
+    // WCS : WCS 내부에서 Relocation 등으로 시작한 반송
+    private final String jobType;
+
 }

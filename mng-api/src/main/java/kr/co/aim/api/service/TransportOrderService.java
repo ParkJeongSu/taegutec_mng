@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class TransportOrderService {
     private final TransportOrderRepository  transportOrderRepository;
-    private final TransportJobService transportJobService;
     private final TransportOrderMapper transportOrderMapper;
     private final HistoryService historyService;
 
@@ -138,19 +137,6 @@ public class TransportOrderService {
             String workStationId
     ){
         return transportOrderRepository.findOutboundOrderForTransportRequest(transportType,transportStatus,workStationId);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public Optional<TransportOrder> findByTransportJobName(String transportJobName) {
-        // 반송잡 이름으로 TransportOrder를 찾음
-        // wcs 자체적으로 시작된 반송잡은 TransportOrder가 존재하지 않음
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-        if(optionalTransportJob.isPresent()){
-            TransportJob transportJob = optionalTransportJob.get();
-            return transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
-        }else{
-            return Optional.empty();
-        }
     }
 
     @Transactional("mssqlTransactionManager")
