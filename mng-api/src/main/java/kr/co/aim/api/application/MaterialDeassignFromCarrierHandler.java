@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.CarrierService;
+import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.MaterialDeassignedFromCarrierBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -22,7 +23,7 @@ public class MaterialDeassignFromCarrierHandler implements MessageHandler<String
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final CarrierService carrierService;
+    private final MessageExecuteService messageExecuteService;
 
     @Override
     public String getSupportedMessageName() {
@@ -40,7 +41,7 @@ public class MaterialDeassignFromCarrierHandler implements MessageHandler<String
 
             // 2. 해당 비즈니스 로직 호출
             // 서비스 호출
-            carrierService.materialDeassignedFromCarrier(requestMessage);
+            messageExecuteService.materialDeassignedFromCarrier(requestMessage);
         }
         catch (JsonProcessingException ex) {
             log.error("❌ JSON 처리 중 오류 발생: {}", ex.getMessage());

@@ -162,4 +162,9 @@ public class TransportOrderService {
         );
     }
 
+    @Transactional("mssqlTransactionManager")
+    public TransportOrder save(TransportOrder transportOrder) {
+        return transportOrderRepository.save(transportOrder);
+    }
+
 }

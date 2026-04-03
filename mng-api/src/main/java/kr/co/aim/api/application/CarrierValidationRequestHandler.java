@@ -3,6 +3,7 @@ package kr.co.aim.api.application;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.CarrierService;
+import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.CarrierValidationReplyBody;
 import kr.co.aim.common.format.CarrierValidationRequestBody;
@@ -24,8 +25,7 @@ public class CarrierValidationRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final CarrierService carrierService;
-    private final RabbitConfig rabbitConfig;
+    private final MessageExecuteService messageExecuteService;
 
     @Override
     public String getSupportedMessageName() {
@@ -42,7 +42,7 @@ public class CarrierValidationRequestHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        BaseMessage<CarrierValidationReplyBody> reply = carrierService.carrierValidationRequest(requestMessage);
+        BaseMessage<CarrierValidationReplyBody> reply = messageExecuteService.carrierValidationRequest(requestMessage);
         
         // 3. 만일 서비스 호출 후 메시지 송신해야하면 이 부분에서 reply 메시지 생성
         // reply 객체 정의

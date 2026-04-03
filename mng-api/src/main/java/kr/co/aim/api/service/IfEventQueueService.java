@@ -75,5 +75,12 @@ public class IfEventQueueService {
         return Optional.empty();
     }
 
+    @Transactional(value = "mssqlTransactionManager")
+    public IfEventQueue save(IfEventQueue ifEventQueue) {
+        return ifEventQueueRepository.save(ifEventQueue);
+    }
+
+
+
 
 }

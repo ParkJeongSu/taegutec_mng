@@ -2,6 +2,7 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.TransportJobRequestListBody;
 import kr.co.aim.common.format.TransportOrderRequestBody;
@@ -24,7 +25,7 @@ public class TransportJobRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final FactoryProcessStrategy factoryProcessStrategy;
+    private final MessageExecuteService messageExecuteService;
 
     @Override
     public String getSupportedMessageName() {
@@ -41,7 +42,7 @@ public class TransportJobRequestHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출 & reply 메시지 생성
         // 서비스 호출
-        BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = factoryProcessStrategy.transportOrderRequest(requestMessage);
+        BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = messageExecuteService.transportOrderRequest(requestMessage);
 
         if(transportJobRequestBodyBaseMessage == null){
             log.info("transportJobRequestBodyBaseMessage is null");

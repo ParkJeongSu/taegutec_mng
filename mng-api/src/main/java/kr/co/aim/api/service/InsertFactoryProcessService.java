@@ -46,19 +46,15 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     private final ObjectMapper objectMapper;
 
     private final PortService portService;
-    private final PortDefRepository portDefRepository;
-    private final PortRepository portRepository;
     private final PortMapper portMapper;
 
     private final TransportJobService transportJobService;
-    private final TransportJobRepository transportJobRepository;
     private final TransportJobMapper transportJobMapper;
 
     private final TransportOrderService transportOrderService;
-    private final TransportOrderRepository transportOrderRepository;
     private final TransportOrderMapper transportOrderMapper;
 
-    private final IfEventQueueRepository ifEventQueueRepository;
+    private final IfEventQueueService ifEventQueueService;
 
 
     @Override
@@ -76,7 +72,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
         // TODO: 비관적 lock 으로 변경
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
-        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
         PortDef portDef = null;
         Port port = null;
 
@@ -160,7 +156,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     request.setBody(body);
 
                     transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
-                    transportOrder = transportOrderRepository.save(transportOrder);
+                    transportOrder = transportOrderService.save(transportOrder);
                     TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                     historyService.saveHistory(transportOrderHistoryEntity);
 
@@ -277,7 +273,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             request.setBody(body);
 
             transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
-            transportOrder = transportOrderRepository.save(transportOrder);
+            transportOrder = transportOrderService.save(transportOrder);
             TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
             historyService.saveHistory(transportOrderHistoryEntity);
 
@@ -323,14 +319,13 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             return;
         }
         PortDef portDef = optionalPortDef.get();
-
-        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
             return;
         }
         Port port = optionalPorts.get();
         port.loadCompleted(command);
-        port = portRepository.save(port);
+        port = portService.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
         // TODO : 신규로 만든 IfEventQueueService.enqueue 호출로 변경
@@ -385,7 +380,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .createTime(tx.eventTime())
                             .build();
             IfEventQueue interfaceEventLog = IfEventQueue.create(command);
-            ifEventQueueRepository.save(interfaceEventLog);
+            ifEventQueueService.save(interfaceEventLog);
         }else {
             log.error("잘못된 객체 타입이 전달되었습니다: {}", vo != null ? vo.getClass().getName() : "null");
         }

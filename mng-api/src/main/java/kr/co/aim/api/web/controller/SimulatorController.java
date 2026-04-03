@@ -28,7 +28,7 @@ import java.util.Optional;
 @RequestMapping("/api/simulator")
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","simulator"})
+@Profile({"simulator"})
 public class SimulatorController {
 
     private final TransportOrderService transportOrderService;
