@@ -1,6 +1,7 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.domain.model.TransportJob;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -50,6 +51,8 @@ public interface TransportJobRepository {
             String destinationPortName,
             List<String> transportJobStates
     );
+
+    Optional<TransportJob> findWithLockByTransportJobName(String transportJobName);
 
 //    Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable);
 }

@@ -11,11 +11,8 @@ import java.time.LocalDateTime;
 @Builder
 public class TransportJobRequestBody {
     private String transportJobName;
-    private String carrierName;
     private String transportType;
-    private String transportJobState;
-    private String carrierType;
-    private String drivingProfile;
+    private String carrierName;
     private String sourceEquipmentName;
     private String sourcePortName;
     private String sourceZoneName;
@@ -28,6 +25,9 @@ public class TransportJobRequestBody {
     private String destinationPositionName;
     private String priority;
     private String orderId;
-
+    private String requestSource;
+    private String travelProfile;
+    private String actualWeight;
+    private String carrierType;
 
 }

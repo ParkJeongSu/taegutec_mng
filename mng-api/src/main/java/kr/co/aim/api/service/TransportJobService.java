@@ -31,7 +31,7 @@ public class TransportJobService {
     private final HistoryService historyService;
     private final TransportJobMapper transportJobMapper;
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional(readOnly = true)
     public List<TransportJob> findActiveTransportJobs(String equipmentName,String portName) {
         List<String> transportJobStateList = new ArrayList<>();
         transportJobStateList.add(TransportJobState.REQUESTED.getValue());
@@ -49,7 +49,7 @@ public class TransportJobService {
     /**
      * 요청한 반송잡이 첫시작되는 시점 보고
      */
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional
     public List<TransportJob> createTransportJob(CreateTransportJobVo createTransportJobVo) {
         List<TransportJob> transportJobList = new ArrayList<>();
         for(TransportJobCreateCommand command : createTransportJobVo.getTransportJobCreateCommandList()){
@@ -69,10 +69,9 @@ public class TransportJobService {
         for(TransportJob transportJob : transportJobList){
             TransportJobRequestBody body = TransportJobRequestBody.builder()
                     .transportJobName(transportJob.getTransportJobName())
-                    .carrierName(transportJob.getCarrierName())
                     .transportType(transportJob.getTransportType())
+                    .carrierName(transportJob.getCarrierName())
                     .carrierType(transportJob.getCarrierType())
-                    .drivingProfile(transportJob.getDrivingProfile())
                     .sourceEquipmentName(transportJob.getSourceEquipmentName())
                     .sourcePortName(transportJob.getSourcePortName())
                     .sourceZoneName(transportJob.getSourceZoneName())
@@ -85,6 +84,8 @@ public class TransportJobService {
                     .destinationPositionName(transportJob.getDestinationPositionName())
                     .priority(transportJob.getPriority() == null ? "" : transportJob.getPriority().toString())
                     .orderId(transportJob.getOrderId())
+                    .requestSource(transportJob.getRequestSource())
+                    .travelProfile(transportJob.getTravelProfile())
                     .build();
             transportJobRequestBodies.add(body);
         }
@@ -94,19 +95,24 @@ public class TransportJobService {
                 .build();
     }
 
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional
     public Optional<TransportJob> findByTransportJobName(String transportJobName) {
         return transportJobRepository.findByTransportJobName(transportJobName);
     }
 
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional
     public List<TransportJob> findByCarrierNameAndTransportJobStateIn(String carrierName, List<String> transportJobStates) {
         return transportJobRepository.findByCarrierNameAndTransportJobStateIn(carrierName, transportJobStates);
     }
 
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional
     public TransportJob save(TransportJob transportJob) {
         return transportJobRepository.save(transportJob);
+    }
+
+    @Transactional
+    Optional<TransportJob> findWithLockByTransportJobName(String transportJobName){
+        return transportJobRepository.findWithLockByTransportJobName(transportJobName);
     }
 
 }

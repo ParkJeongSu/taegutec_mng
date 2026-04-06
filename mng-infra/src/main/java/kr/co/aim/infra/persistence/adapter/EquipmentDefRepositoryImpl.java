@@ -38,7 +38,7 @@ public class EquipmentDefRepositoryImpl implements EquipmentDefRepository {
     }
 
     @Override
-    public Optional<EquipmentDef> findByEquipmentDefName(String equipmentDefName) {
+    public Optional<EquipmentDef> findByEquipmentName(String equipmentDefName) {
         return equipmentDefJpaRepository.findByEquipmentDefName(equipmentDefName).map(equipmentDefMapper::toDomain);
     }
 

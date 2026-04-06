@@ -13,4 +13,6 @@ public class LoadRequestBody {
     private String carrierName;
     private String portType;
     private String portTransportMode;
+    private String transportJobName;
+    private String actualWeight;
 }

@@ -1,5 +1,6 @@
 package kr.co.aim.domain.command;
 
+import jakarta.persistence.Column;
 import kr.co.aim.common.record.TransactionInfo;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +19,7 @@ public class TransportJobCreateCommand {
     private final String transportType;
     private final String transportJobState;
     private final String carrierType;
-    private final String drivingProfile;
+    private final String travelProfile;
     private final String sourceEquipmentName;
     private final String sourcePortName;
     private final String sourceZoneName;
@@ -32,10 +33,12 @@ public class TransportJobCreateCommand {
     private final Integer priority;
     private final String errorCode;
     private final String errorText;
-    private final String requestType;
+    private final String requestSource;
     private final LocalDateTime createTime;
     private final LocalDateTime departedTime;
     private final LocalDateTime arrivedTime;
     private final String reasonCode;
     private final String orderId;
+
+
 }

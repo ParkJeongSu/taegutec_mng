@@ -16,5 +16,9 @@ public class CarrierLocationChangedBody {
     private String currentZoneName;
     private String currentPositionType;
     private String currentPositionName;
+    private String transferState;
+    private String orderId;
+    private String travelProfile;
+    private String actualWeight;
 
 }

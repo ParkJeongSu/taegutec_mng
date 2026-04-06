@@ -38,14 +38,21 @@ public class Equipment implements HasTransactionInfo {
         this.apply(communicationStateChangeCommand.getTransactionInfo());
     }
 
-    public void equipmentStateChange(EquipmentStateChangeCommand equipmentStateChangeCommand){
-        setEquipmentState(equipmentStateChangeCommand.getEquipmentState().name());
-        this.apply(equipmentStateChangeCommand.getTransactionInfo());
+    public void equipmentStateReport(EquipmentStateReportCommand command){
+        this.apply(command.getTransactionInfo());
+        setEquipmentState(command.getEquipmentState().name());
+        setCommunicationState(command.getCommunicationState());
+
     }
 
-    public void operationModeChange(EquipmentOperationModeChangeCommand equipmentOperationModeChangeCommand){
-        setOperationMode(equipmentOperationModeChangeCommand.getEquipmentOperationMode().name());
-        this.apply(equipmentOperationModeChangeCommand.getTransactionInfo());
+    public void equipmentStateChange(EquipmentStateChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        setEquipmentState(command.getEquipmentState().name());
+    }
+
+    public void operationModeChange(EquipmentOperationModeChangeCommand command){
+        setOperationMode(command.getEquipmentOperationMode().name());
+        this.apply(command.getTransactionInfo());
     }
 
 }

@@ -2,9 +2,7 @@ package kr.co.aim.infra.persistence.springdatajpa;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.QueryHint;
-import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.infra.persistence.entity.TransportJobEntity;
-import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -35,7 +33,7 @@ public interface TransportJobJpaRepository extends JpaRepository<TransportJobEnt
             @QueryHint(name = "jakarta.persistence.lock.timeout", value = "3000") // 3초 대기
     })
     @Query("SELECT t FROM TransportJobEntity t WHERE t.transportJobName = :transportJobName ")
-    Optional<TransportJobEntity> findWithLockById(
-            @Param("id") Long id
+    Optional<TransportJobEntity> findWithLockByTransportJobName(
+            @Param("transportJobName") String transportJobName
     );
 }

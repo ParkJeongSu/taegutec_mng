@@ -32,7 +32,7 @@ import java.util.List;
 //@Component
 @Slf4j
 @RequiredArgsConstructor
-@Profile("scheduler")
+@Profile({"scheduler","tex"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertTransportOrderScheduler {
 

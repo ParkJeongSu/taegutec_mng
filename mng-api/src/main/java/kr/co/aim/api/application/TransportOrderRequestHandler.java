@@ -7,7 +7,6 @@ import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.TransportJobRequestListBody;
 import kr.co.aim.common.format.TransportOrderRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile({"tex",})
-public class TransportJobRequestHandler implements MessageHandler<String> {
+public class TransportOrderRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;

@@ -6,6 +6,7 @@ import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.api.service.PortService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.PortStateReportBody;
+import kr.co.aim.common.format.PortStateReportBodyList;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +36,8 @@ public class PortStateReportHandler implements MessageHandler<String> {
     public Object handle(String message) {
         log.info("✅ Handling Message request: {}", message);
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<PortStateReportBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<PortStateReportBody> request = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<PortStateReportBodyList>> typeRef = new TypeReference<>() {};
+        BaseMessage<PortStateReportBodyList> request = objectMapper.readValue(message, typeRef);
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출

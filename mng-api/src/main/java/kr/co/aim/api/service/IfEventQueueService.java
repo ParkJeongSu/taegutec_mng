@@ -1,7 +1,5 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.vo.insert.ops.InsertEventLogReportVo;
-import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.enums.IfEventQueueState;
 import kr.co.aim.domain.model.IfEventQueue;
 import kr.co.aim.domain.repository.IfEventQueueRepository;

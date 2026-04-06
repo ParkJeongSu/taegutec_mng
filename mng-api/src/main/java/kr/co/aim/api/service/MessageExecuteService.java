@@ -1,8 +1,9 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
-import kr.co.aim.api.vo.insert.ops.InsertEventLogReportVo;
+import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -16,6 +17,7 @@ import kr.co.aim.infra.persistence.entity.*;
 import kr.co.aim.infra.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +41,7 @@ public class MessageExecuteService {
     private final IfEventQueueService ifEventQueueService;
 
     private final FactoryProcessStrategy factoryProcessStrategy;
+    private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
 
     private final PortMapper portMapper;
     private final EquipmentMapper equipmentMapper;
@@ -268,41 +271,7 @@ public class MessageExecuteService {
      */
     @Transactional
     public void carrierLocationChanged(BaseMessage<CarrierLocationChangedBody> message) {
-        // TODO: FactoryProcessStrategy 로 변경 이유는 insert만 enqueue를 넣으면 됨
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
-        String transportJobName = message.getBody().getTransportJobName();
-        String carrierName = message.getBody().getCarrierName();
-        String carrierType = message.getBody().getCarrierType();
-        String currentEquipmentName = message.getBody().getCurrentEquipmentName();
-        String currentPortName = message.getBody().getCurrentPortName();
-        String currentZoneName = message.getBody().getCurrentZoneName();
-        String currentPositionType = message.getBody().getCurrentPositionType();
-        String currentPositionName = message.getBody().getCurrentPositionName();
-
-        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
-        if(optionalCarriers.isEmpty()){
-            return;
-        }
-        Carrier carrier = optionalCarriers.get();
-
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        LocationChangedCommand command = LocationChangedCommand.builder()
-                .transactionInfo(tx)
-                .equipmentName(currentEquipmentName)
-                .portName(currentPortName)
-                .zoneName(currentZoneName)
-                .positionType(currentPositionType)
-                .positionName(currentPositionName)
-                .build();
-
-        carrier.locationChanged(command);
-        carrier = carrierService.save(carrier);
-        CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
-        historyService.saveHistory(carrierHistoryEntity);
-
+        factoryProcessStrategy.carrierLocationChanged(message);
     }
 
     /**
@@ -364,7 +333,8 @@ public class MessageExecuteService {
                 .build();
         carrier.deassigned(command);
         carrier = carrierService.save(carrier);
-        // TODO: Add history
+        CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
+        historyService.saveHistory(carrierHistoryEntity);
 
         // TODO: 자재를 Carrier 로부터 빼내고 Gal로 i/f
         MaterialDeassignFromCarrier materialDeassignFromCarrier =
@@ -374,16 +344,27 @@ public class MessageExecuteService {
                         .build();
         String jsonPayload = objectMapper.writeValueAsString(materialDeassignFromCarrier);
         // TODO: 아래의 로직을 factoryProcessStrategy 로 변경
-        IfEventQueue ifEventQueue = IfEventQueue.builder()
-                .id(TsidUtils.nextId())
-                .eventType(IfEventQueueEventType.MATERIAL_ASSIGN_TO_CARRIER.getValue())
-                .payload(jsonPayload)
-                .ifStatus(IfEventQueueState.READY.getValue())
-                .errMSG("")
-                .createTime(tx.eventTime())
-                .retryCNT(0)
-                .build();
-        ifEventQueueService.save(ifEventQueue);
+        // powder EventQueue
+        try{
+            InsertEventQueueReportVo insertEventQueueReportVo
+                    = InsertEventQueueReportVo
+                    .builder()
+//                    .transportJobName(transportJobName)
+//                    .messageName(messageName)
+//                    .port(port)
+//                    .portDef(portDef)
+                    .carrierName(carrierName)
+//                            .actualZoneName()
+//                            .actualWeight()
+//                            .actualRackLocationId()
+//                            .errorTexts()
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
 
     }
 
@@ -402,8 +383,49 @@ public class MessageExecuteService {
      */
     @Transactional
     public void takeOffCarrier(BaseMessage<TakeOffCarrierBody> message) {
-        // TODO: 비지니스 로직은 없음
+        // 비지니스 로직은 없음
         // TO GAL TakeOffCarrier report
+        String messageName =  message.getMessageName();
+        String transportJobName = message.getBody().getTransportJobName();
+        String carrierName = message.getBody().getCarrierName();
+        TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), message.getResultMessage());
+        String equipmentName = message.getBody().getCurrentEquipmentName();
+        String portName = message.getBody().getCurrentPortName();
+
+        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        PortDef portDef;
+        if(optionalPortDef.isEmpty()){
+            return;
+        }
+        portDef = optionalPortDef.get();
+        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName, portName);
+        Port port;
+        if(optionalPort.isEmpty()){
+            return;
+        }
+        port = optionalPort.get();
+
+        // insert EventQueue
+        try{
+            InsertEventQueueReportVo insertEventQueueReportVo
+                    = InsertEventQueueReportVo
+                    .builder()
+                    .transportJobName(transportJobName)
+                    .messageName(messageName)
+                    .optionalPort(optionalPort)
+                    .optionalPortDef(optionalPortDef)
+                    .carrierName(carrierName)
+//                    .actualZoneName()
+//                    .actualWeight()
+//                    .actualRackLocationId()
+//                    .errorTexts()
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
     }
 
     @Transactional
@@ -423,7 +445,7 @@ public class MessageExecuteService {
             Carrier carrier;
             if(optionalCarriers.isEmpty()){
                 reply = new BaseMessage<>();
-                reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
                 reply.setTransactionId(message.getTransactionId());
                 reply.setResultCode(ResultCode.NG.getValue());
                 reply.setResultMessage("No carrier job found");
@@ -440,7 +462,7 @@ public class MessageExecuteService {
                 List<TransportJob> transportJobList = transportJobService.findByCarrierNameAndTransportJobStateIn(carrierName, transportJobStates);
                 if(transportJobList.isEmpty()){
                     reply = new BaseMessage<>();
-                    reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                    reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
                     reply.setTransactionId(message.getTransactionId());
                     reply.setResultCode(ResultCode.NG.getValue());
                     reply.setResultMessage("No transport job found");
@@ -452,7 +474,7 @@ public class MessageExecuteService {
                     TransportJob transportJob = null;
                     transportJob =  transportJobList.get(0);
                     reply = new BaseMessage<>();
-                    reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                    reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
                     reply.setTransactionId(message.getTransactionId());
                     reply.setResultCode(ResultCode.OK.getValue());
                     reply.setResultMessage("");
@@ -466,7 +488,7 @@ public class MessageExecuteService {
                 }
                 else{
                     reply = new BaseMessage<>();
-                    reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                    reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
                     reply.setTransactionId(message.getTransactionId());
                     reply.setResultCode(ResultCode.NG.getValue());
                     reply.setResultMessage("transport job found more 2");
@@ -483,20 +505,19 @@ public class MessageExecuteService {
             TransportJob transportJob = null;
             if(optionalTransportJob.isEmpty()){
                 reply = new BaseMessage<>();
-                reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
                 reply.setTransactionId(message.getTransactionId());
                 reply.setResultCode(ResultCode.NG.getValue());
                 reply.setResultMessage("No transport job found");
                 DestinationReplyBody body = DestinationReplyBody.builder()
                         .transportJobName(transportJobName)
-                        .carrierName(transportJob.getCarrierName())
                         .build();
                 reply.setBody(body);
             }
             else {
                 transportJob =  optionalTransportJob.get();
                 reply = new BaseMessage<>();
-                reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
                 reply.setTransactionId(message.getTransactionId());
                 reply.setResultCode(ResultCode.OK.getValue());
                 reply.setResultMessage("");
@@ -526,7 +547,6 @@ public class MessageExecuteService {
      */
     @Transactional
     public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
-        // TODO: insert 와 powder 가 로직이 다름 초기 로직은 같은데, 뒤쪽에 IfEventQueue 에 insert만 넣음
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -537,8 +557,8 @@ public class MessageExecuteService {
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
 
-        // TODO: 비관적 lock으로 변경
-        Optional<Port> optionalPorts =  portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts =
+                portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return null;
@@ -585,9 +605,7 @@ public class MessageExecuteService {
      */
     @Transactional
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message) {
-        log.info("Business Logic Nothing");
-        log.info("equipmentName : {} ",message.getBody().getEquipmentName());
-        log.info("portName : {} ",message.getBody().getPortName());
+        factoryProcessStrategy.unLoadCompleted(message);
     }
 
     @Transactional
@@ -669,37 +687,40 @@ public class MessageExecuteService {
      * @param message 받은 메시지
      */
     @Transactional
-    public void portStateReport(BaseMessage<PortStateReportBody> message) {
+    public void portStateReport(BaseMessage<PortStateReportBodyList> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        List<PortStateReportEquipment> equipmentList = message.getBody().getEquipmentList();
+        for(PortStateReportEquipment equipment : equipmentList){
+            String equipmentName = equipment.getEquipmentName();
+            List<PortList>portList = equipment.getPortList();
+            for(PortList portData : portList){
+                String portName = portData.getPortName();
+                String portStateName = portData.getPortStateName();
+                String portType = portData.getPortType();
+                String portTransportMode = portData.getPortTransportMode();
+                String carrierName = portData.getCarrierName();
+                Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
 
-        for(PortList portData : message.getBody().getPortList()){
-            String equipmentName = portData.getEquipmentName();
-            String portName = portData.getPortName();
-            String portStateName = portData.getPortStateName();
-            String portType = portData.getPortType();
-            String portTransportMode = portData.getPortTransportMode();
-            String carrierName = portData.getCarrierName();
-            Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+                if(optionalPorts.isEmpty()){
+                    throw new RuntimeException("port not found");
+                }
+                if(!PortState.isExist(portStateName)){
+                    throw new RuntimeException("portState not found");
+                }
 
-            if(optionalPorts.isEmpty()){
-                continue;
+                Port port = optionalPorts.get();
+
+                PortState state = PortState.valueOf(portStateName);
+                PortStateChangedCommand command = PortStateChangedCommand.builder().transactionInfo(tx).portState(state).build();
+                port.portStateChanged(command);
+                port = portService.save(port);
+                PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+                historyService.saveHistory(portHistoryEntity);
             }
-            if(!PortState.isExist(portStateName)){
-                continue;
-            }
-
-            Port port = optionalPorts.get();
-
-            PortState state = PortState.valueOf(portStateName);
-            PortStateChangedCommand command = PortStateChangedCommand.builder().transactionInfo(tx).portState(state).build();
-            port.portStateChanged(command);
-            port = portService.save(port);
-            PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
-            historyService.saveHistory(portHistoryEntity);
         }
     }
 
@@ -846,17 +867,44 @@ public class MessageExecuteService {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-        String transportJobDetailName = message.getBody().getTransportJobName(); // DetailName
+        String transportJobName = message.getBody().getTransportJobName(); // DetailName
         String carrierName = message.getBody().getCarrierName();
         String oldDestinationEquipmentName = message.getBody().getOldDestinationEquipmentName();
+        String oldDestinationPortName = message.getBody().getOldDestinationPortName();
+        String oldDestinationZoneName = message.getBody().getOldDestinationZoneName();
         String oldDestinationPositionType = message.getBody().getOldDestinationPositionType();
         String oldDestinationPositionName = message.getBody().getOldDestinationPositionName();
-        String oldDestinationZoneName = message.getBody().getOldDestinationZoneName();
+
         String newDestinationEquipmentName = message.getBody().getNewDestinationEquipmentName();
+        String newDestinationPortName = message.getBody().getNewDestinationPortName();
+        String newDestinationZoneName = message.getBody().getNewDestinationZoneName();
         String newDestinationPositionType = message.getBody().getNewDestinationPositionType();
         String newDestinationPositionName = message.getBody().getNewDestinationPositionName();
-        String newDestinationZoneName = message.getBody().getNewDestinationZoneName();
 
+        Optional<TransportJob> optionalTransportJob
+                = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isEmpty()){
+            return;
+        }
+        TransportJob transportJob = optionalTransportJob.get();
+
+        TransactionInfo tx =  TransactionInfo.now(eventName,eventUser,eventComment);
+
+        TransportJobUpdateCommand command =
+                TransportJobUpdateCommand
+                        .builder()
+                        .transportJobState(transportJob.getTransportJobState())
+                        .destinationEquipmentName(newDestinationEquipmentName)
+                        .destinationPortName(newDestinationPortName)
+                        .destinationZoneName(newDestinationZoneName)
+                        .destinationPositionTypeName(newDestinationPositionType)
+                        .destinationPositionName(newDestinationPositionName)
+                        .transactionInfo(tx)
+                        .build();
+        transportJob.changeDestination(command);
+        transportJob = transportJobService.save(transportJob);
+        TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+        historyService.saveHistory(transportJobHistoryEntity);
     }
 
     /**
@@ -866,7 +914,7 @@ public class MessageExecuteService {
      */
     @Transactional
     public void inventoryZoneDataReport(BaseMessage<InventoryZoneDataReport> message) {
-        // TODO: 이걸 MNG 가 알아야할 필요가 있을까? 그냥 테이블 공유 하고 실시간으로 사용하면 되는걸까..
+        // TODO: WMS <-> WCS 사이의 동기화 메시지 WMS 미팅후 확인
     }
 
     /**
@@ -874,13 +922,71 @@ public class MessageExecuteService {
      *
      */
     @Transactional
-    public void transportJobCancelCompleted() {
-        // TODO: 반송이 취소완료 되는 시나리오
-        try{
-            factoryProcessStrategy.enqueueIfEventQueue(null);
-        }
-        catch(Exception e){
-            log.error("EventQueue enqueue error",e);
+    public void transportJobCancelCompleted(BaseMessage<TransportJobCancelCompletedBody> message) {
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        String messageName =  message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
+        String currentEquipmentName = message.getBody().getCurrentEquipmentName();
+        String currentPortName = message.getBody().getCurrentPortName();
+        String transportJobName = message.getBody().getTransportJobName();
+        String transportType =  message.getBody().getTransportType();
+        String orderId =  message.getBody().getOrderId();
+        String requestSource =  message.getBody().getRequestSource();
+        String actualWeight = message.getBody().getActualWeight();
+        String travelProfile =  message.getBody().getTravelProfile();
+        List<TransportJobCancelCompletedReasonBody> reasons = message.getBody().getReasons();
+        
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        // TODO: 비관적 Lock 고민
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transportJobState(TransportJobState.REJECTED.getValue())
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            // insert EventQueue
+
+            try{
+                if(CollectionUtils.isNotEmpty(reasons)){
+                    List<String> errorList = new ArrayList<>();
+                    for(TransportJobCancelCompletedReasonBody reason : reasons){
+                        String errorMessage = reason.getMessage();
+                        errorList.add(errorMessage);
+                    }
+                    InsertEventQueueReportVo insertEventQueueReportVo
+                            = InsertEventQueueReportVo
+                            .builder()
+                            .transportJobName(transportJob.getTransportJobName())
+                            .messageName(messageName)
+                            .optionalPortDef(optionalPortDef)
+                            .optionalPort(optionalPort)
+                            .carrierName(carrierName)
+//                            .actualZoneName()
+                            .actualWeight(actualWeight)
+//                            .actualRackLocationId()
+                            .errorTexts(errorList)
+                            .tx(tx)
+                            .build();
+                    factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+
+                }
+
+            }
+            catch(Exception e){
+                log.error("EventQueue enqueue error",e);
+            }
         }
     }
 
@@ -890,13 +996,7 @@ public class MessageExecuteService {
      */
     @Transactional
     public void transportJobCancelFailed() {
-        // TODO: 반송 취소가 failed 되는 시나리오 현재는 확인중
-        try{
-            factoryProcessStrategy.enqueueIfEventQueue(null);
-        }
-        catch(Exception e){
-            log.error("EventQueue enqueue error",e);
-        }
+        // 반송잡 취소가 fail 되는 상황 확인 후 추가
     }
 
     /**
@@ -904,14 +1004,8 @@ public class MessageExecuteService {
      * 내가 걱정하는게 이 취소 시나리오가 Mixing 같이 여러개의 job이 만들어진 시나리오에서 어떻게 해야할지 고민..
      */
     @Transactional
-    public void transportJobCancelStarted() {
-        // TODO: 반송이 취소처리가 시작 되는 시나리오
-        try{
-            factoryProcessStrategy.enqueueIfEventQueue(null);
-        }
-        catch(Exception e){
-            log.error("EventQueue enqueue error",e);
-        }
+    public void transportJobCancelStarted(BaseMessage<TransportJobCancelStartedBody> message) {
+        // 반송job 이 취소가 시작 되는 시나리오 현재 없음
     }
 
     /**
@@ -926,7 +1020,12 @@ public class MessageExecuteService {
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
+        String messageName =  message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
         String transportJobName = message.getBody().getTransportJobName();
+
+        String actualWeight = message.getBody().getActualWeight();
+        String actualZoneName = message.getBody().getDestinationZoneName();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
 
@@ -944,6 +1043,28 @@ public class MessageExecuteService {
             transportJob = transportJobService.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
+
+            // insert EventQueue
+            try{
+                InsertEventQueueReportVo insertEventQueueReportVo
+                        = InsertEventQueueReportVo
+                        .builder()
+                        .transportJobName(transportJob.getTransportJobName())
+                        .messageName(messageName)
+//                            .port()
+//                            .portDef()
+                        .carrierName(carrierName)
+                            .actualZoneName(actualZoneName)
+                            .actualWeight(actualWeight)
+//                            .actualRackLocationId()
+//                            .errorTexts()
+                        .tx(tx)
+                        .build();
+                factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+            }
+            catch(Exception e){
+                log.error("EventQueue enqueue error",e);
+            }
         }
     }
 
@@ -966,8 +1087,9 @@ public class MessageExecuteService {
         List<TransportJobReplyBody> transportJobList = message.getBody().getTransportJobList();
 
         for(TransportJobReplyBody transportJobReplyBody : transportJobList){
-            // TODO: 비관적 Lock 로 조회
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobReplyBody.getTransportJobName());
+            // 비관적 Lock 로 조회
+            Optional<TransportJob> optionalTransportJob =
+            transportJobService.findWithLockByTransportJobName(transportJobReplyBody.getTransportJobName());
 
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
@@ -982,9 +1104,10 @@ public class MessageExecuteService {
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
                 String carrierName = transportJobReplyBody.getCarrierName();
+                // insert EventQueue
                 try{
-                    InsertEventLogReportVo insertEventLogReportVo
-                            = InsertEventLogReportVo
+                    InsertEventQueueReportVo insertEventQueueReportVo
+                            = InsertEventQueueReportVo
                             .builder()
                             .transportJobName(transportJob.getTransportJobName())
                             .messageName(messageName)
@@ -997,7 +1120,7 @@ public class MessageExecuteService {
 //                            .errorTexts()
                             .tx(tx)
                             .build();
-                    factoryProcessStrategy.enqueueIfEventQueue(insertEventLogReportVo);
+                    factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
                 }
                 catch(Exception e){
                     log.error("EventQueue enqueue error",e);
@@ -1021,46 +1144,53 @@ public class MessageExecuteService {
         String eventComment =  message.getResultMessage();
 
         String transportJobName = message.getBody().getTransportJobName();
-        String jobType = message.getBody().getJobType();
+        String requestSource = message.getBody().getRequestSource();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        // TODO: 비관적 Lock 로 조회
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-        if(optionalTransportJob.isPresent()){
-            TransportJob transportJob = optionalTransportJob.get();
-            TransportJobUpdateCommand command =
-                    TransportJobUpdateCommand
-                            .builder()
-                            .transportJobState(TransportJobState.STARTED.getValue())
-                            .transactionInfo(tx)
-                            .build();
-            transportJob.changeTransportJob(command);
 
-            transportJob = transportJobService.save(transportJob);
-            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
-            historyService.saveHistory(transportJobHistoryEntity);
-            try{
-                InsertEventLogReportVo insertEventLogReportVo
-                        = InsertEventLogReportVo
-                        .builder()
-                        .transportJobName(transportJob.getTransportJobName())
-                        .messageName(messageName)
+        if(StringUtils.equals(SystemName.GAL.getValue(),requestSource)){
+            Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+            if(optionalTransportJob.isPresent()){
+                TransportJob transportJob = optionalTransportJob.get();
+                TransportJobUpdateCommand command =
+                        TransportJobUpdateCommand
+                                .builder()
+                                .transportJobState(TransportJobState.STARTED.getValue())
+                                .transactionInfo(tx)
+                                .build();
+                transportJob.changeTransportJob(command);
+
+                transportJob = transportJobService.save(transportJob);
+                TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+                historyService.saveHistory(transportJobHistoryEntity);
+                try{
+                    InsertEventQueueReportVo insertEventQueueReportVo
+                            = InsertEventQueueReportVo
+                            .builder()
+                            .transportJobName(transportJob.getTransportJobName())
+                            .messageName(messageName)
 //                            .port()
 //                            .portDef()
-                        .carrierName(carrierName)
+                            .carrierName(carrierName)
 //                            .actualZoneName()
 //                            .actualWeight()
 //                            .actualRackLocationId()
 //                            .errorTexts()
-                        .jobType(jobType)
-                        .tx(tx)
-                        .build();
-                factoryProcessStrategy.enqueueIfEventQueue(insertEventLogReportVo);
-            }
-            catch(Exception e){
-                log.error("EventQueue enqueue error",e);
+                            .orderType(transportJob.getTransportType()) // I | O | R
+                            .requestSource(requestSource) // WCS | GAL
+                            .tx(tx)
+                            .build();
+                    factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+                }
+                catch(Exception e){
+                    log.error("EventQueue enqueue error",e);
+                }
             }
         }
+        else if(StringUtils.equals(SystemName.WCS.getValue(),requestSource)){
+            // TODO: WCS 자체 반송 로직 구현
+        }
+
     }
 
     /**
@@ -1071,34 +1201,36 @@ public class MessageExecuteService {
      * @param message 받은 메시지
      */
     @Transactional
-    public void communicationStateReport(BaseMessage<CommunicationStateReportBody> message) {
+    public void communicationStateReport(BaseMessage<CommunicationStateReportBodyList> message) {
 
-        String communicationState = message.getBody().getCommunicationState();
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
-        String equipmentName = message.getBody().getEquipmentName();
-
-        Optional<Equipment> optionalEquipments = equipmentService.findByEquipmentName(equipmentName);
-
-        if(optionalEquipments.isEmpty()){
-            return;
-        }
-        if(!CommunicationState.isExist(communicationState)){
-            return;
-        }
-        Equipment equipment = optionalEquipments.get();
-
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        CommunicationState state = CommunicationState.valueOf(communicationState);
-        CommunicationStateChangeCommand command = CommunicationStateChangeCommand.builder().transactionInfo(tx).communicationState(state).build();
-        equipment.communicationStateChange(command);
+        List<CommunicationStateReportBody> equipmentList = message.getBody().getEquipmentList();
+        for(CommunicationStateReportBody body : equipmentList){
+            String equipmentName = body.getEquipmentName();
+            String communicationState = body.getCommunicationState();
 
-        equipment = equipmentService.save(equipment);
-        EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
-        historyService.saveHistory(equipmentHistoryEntity);
+            Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
+            if(optionalEquipments.isEmpty()){
+                throw new RuntimeException("Equipment not found");
+            }
+            if(!CommunicationState.isExist(communicationState)){
+                throw new RuntimeException("CommunicationState not found");
+            }
+            Equipment equipment = optionalEquipments.get();
+
+            CommunicationState state = CommunicationState.valueOf(communicationState);
+            CommunicationStateChangeCommand command = CommunicationStateChangeCommand.builder().transactionInfo(tx).communicationState(state).build();
+            equipment.communicationStateChange(command);
+
+            equipment = equipmentService.save(equipment);
+            EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
+            historyService.saveHistory(equipmentHistoryEntity);
+        }
     }
 
     /**
@@ -1117,7 +1249,7 @@ public class MessageExecuteService {
 
         String equipmentName = message.getBody().getEquipmentName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1155,7 +1287,7 @@ public class MessageExecuteService {
         String equipmentName = message.getBody().getEquipmentName();
         String equipmentState = message.getBody().getEquipmentStateName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1184,32 +1316,43 @@ public class MessageExecuteService {
      * @param message 받은 메시지
      */
     @Transactional
-    public void equipmentStateReport(BaseMessage<EquipmentStateReportBody> message) {
+    public void equipmentStateReport(BaseMessage<EquipmentStateReportBodyList> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String equipmentState = message.getBody().getEquipmentStateName();
-
-        Optional<Equipment> optionalEquipments = equipmentService.findByEquipmentName(equipmentName);
-
-        if(optionalEquipments.isEmpty()){
-            return;
-        }
-
-        if(!EquipmentState.isExist(equipmentState)){
-            return;
-        }
-        Equipment equipment = optionalEquipments.get();
-
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        EquipmentState state = EquipmentState.valueOf(equipmentState);
-        EquipmentStateChangeCommand command =EquipmentStateChangeCommand.builder().equipmentState(state).transactionInfo(tx).build();
-        equipment.equipmentStateChange(command);
-        equipment = equipmentService.save(equipment);
-        EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
-        historyService.saveHistory(equipmentHistoryEntity);
+
+        List<EquipmentStateReportBody> bodyList = message.getBody().getEquipmentList();
+        for(EquipmentStateReportBody body : bodyList){
+            String equipmentName = body.getEquipmentName();
+            String equipmentType = body.getEquipmentType();
+            String equipmentState = body.getEquipmentStateName();
+            String communicationState = body.getCommunicationState();
+
+            // TODO: 비관적 LOCK 고민
+            Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+
+            if(optionalEquipments.isEmpty()){
+                throw new RuntimeException("Equipment not found");
+            }
+
+            if(!EquipmentState.isExist(equipmentState)){
+                throw new RuntimeException("EquipmentState not found");
+            }
+            Equipment equipment = optionalEquipments.get();
+            EquipmentState state = EquipmentState.valueOf(equipmentState);
+            EquipmentStateReportCommand command =
+                    EquipmentStateReportCommand
+                            .builder()
+                            .equipmentState(state)
+                            .communicationState(communicationState)
+                            .transactionInfo(tx).build();
+            equipment.equipmentStateReport(command);
+            equipment = equipmentService.save(equipment);
+            EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
+            historyService.saveHistory(equipmentHistoryEntity);
+        }
+
     }
 
     /**
@@ -1228,7 +1371,7 @@ public class MessageExecuteService {
         String equipmentName = message.getBody().getEquipmentName();
         String operationModeName = message.getBody().getOperationModeName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1264,7 +1407,7 @@ public class MessageExecuteService {
         String equipmentName = message.getBody().getEquipmentName();
         String operationModeName = message.getBody().getOperationModeName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;

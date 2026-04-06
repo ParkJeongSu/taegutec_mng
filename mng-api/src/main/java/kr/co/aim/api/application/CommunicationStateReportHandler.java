@@ -6,6 +6,7 @@ import kr.co.aim.api.service.EquipmentService;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.CommunicationStateReportBody;
+import kr.co.aim.common.format.CommunicationStateReportBodyList;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
@@ -35,8 +36,8 @@ public class CommunicationStateReportHandler implements MessageHandler<String> {
     public Object handle(String message) {
         log.info("✅ Handling Message request: {}", message);
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<CommunicationStateReportBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<CommunicationStateReportBody> request = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<CommunicationStateReportBodyList>> typeRef = new TypeReference<>() {};
+        BaseMessage<CommunicationStateReportBodyList> request = objectMapper.readValue(message, typeRef);
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출

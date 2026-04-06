@@ -81,8 +81,8 @@ public class TransportOrderEntity {
     @Column(name = "ACTUAL_LOCATION_ID")
     private String actualLocationId;
 
-    @Column(name = "DRIVING_PROFILE")
-    private String drivingProfile;
+    @Column(name = "TRAVEL_PROFILE")
+    private String travelProfile;
 
     @Column(name = "CREATE_TIME")
     private LocalDateTime createTime;

@@ -12,14 +12,19 @@ public class DestinationChangedBody {
     private String carrierName;
     
     private String oldDestinationEquipmentName;
+    private String oldDestinationPortName;
+    private String oldDestinationZoneName;
     private String oldDestinationPositionType;
     private String oldDestinationPositionName;
-    private String oldDestinationZoneName;
 
     private String newDestinationEquipmentName;
+    private String newDestinationPortName;
+    private String newDestinationZoneName;
     private String newDestinationPositionType;
     private String newDestinationPositionName;
-    private String newDestinationZoneName;
+
+    private String priority;
+    private String carrierType;
 
 
 }

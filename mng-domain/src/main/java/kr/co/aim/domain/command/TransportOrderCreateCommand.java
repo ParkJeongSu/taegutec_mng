@@ -33,7 +33,7 @@ public class TransportOrderCreateCommand {
     private final String requestedZoneName;
     private final String actualZoneName;
     private final String actualLocationId;
-    private final String drivingProfile;
+    private final String travelProfile;
     private final LocalDateTime createTime;
     private final LocalDateTime releaseTime;
     private final LocalDateTime completeTime;

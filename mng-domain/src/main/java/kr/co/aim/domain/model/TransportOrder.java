@@ -17,7 +17,7 @@ public class TransportOrder {
     private Long idocId;
     private String description;
     private String carrierName;
-    private String transportType;
+    private String transportType; // I O R
     private String transportStatus;
     private String lastTransactionCode;
     private String carrierType;
@@ -33,7 +33,7 @@ public class TransportOrder {
     private String requestedZoneName;
     private String actualZoneName;
     private String actualLocationId;
-    private String drivingProfile;
+    private String travelProfile;
     private LocalDateTime createTime;
     private LocalDateTime releaseTime;
     private LocalDateTime completeTime;
@@ -71,7 +71,7 @@ public class TransportOrder {
                         .requestedZoneName(command.getRequestedZoneName())
                         .actualZoneName(command.getActualZoneName())
                         .actualLocationId(command.getActualLocationId())
-                        .drivingProfile(command.getDrivingProfile())
+                        .travelProfile(command.getTravelProfile())
                         .createTime(command.getCreateTime())
                         .releaseTime(command.getReleaseTime())
                         .completeTime(command.getCompleteTime())

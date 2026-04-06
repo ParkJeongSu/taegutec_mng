@@ -29,7 +29,7 @@ public interface EquipmentDefRepository {
      * @param equipmentDefName equipmentDefName
      * @return Optional<EquipmentDef>
      */
-    Optional<EquipmentDef> findByEquipmentDefName(String equipmentDefName);
+    Optional<EquipmentDef> findByEquipmentName(String equipmentDefName);
 
     EquipmentDef save(EquipmentDef equipmentDef);
 

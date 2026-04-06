@@ -78,6 +78,11 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
         return transportJobJpaRepository.findByDestinationEquipmentNameAndDestinationPortNameAndTransportJobStateIn(destinationEquipmentName,destinationPortName,transportJobStates).stream().map(transportJobMapper::toDomain).collect(Collectors.toList());
     }
 
+    @Override
+    public Optional<TransportJob> findWithLockByTransportJobName(String transportJobName) {
+        return transportJobJpaRepository.findWithLockByTransportJobName(transportJobName).map(transportJobMapper::toDomain);
+    }
+
 //    @Override
 //    public Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable) {
 //        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)

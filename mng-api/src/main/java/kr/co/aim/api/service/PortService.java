@@ -63,6 +63,11 @@ public class PortService {
     }
 
     @Transactional
+    Optional<Port> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName){
+        return portRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
+    }
+
+    @Transactional
     public Optional<Port> findPortByEquipmentNameAndPortName(String equipmentName,String portName) {
         return portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
     }

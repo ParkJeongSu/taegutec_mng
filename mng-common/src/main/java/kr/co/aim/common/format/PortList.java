@@ -14,6 +14,4 @@ public class PortList {
     private String portType;
     private String portTransportMode;
     private String carrierName;
-
-
 }

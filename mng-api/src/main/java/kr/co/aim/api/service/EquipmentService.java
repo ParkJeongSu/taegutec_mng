@@ -11,6 +11,7 @@ import kr.co.aim.domain.command.EquipmentOperationModeChangeCommand;
 import kr.co.aim.domain.command.EquipmentStateChangeCommand;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.Equipment;
+import kr.co.aim.domain.model.EquipmentDef;
 import kr.co.aim.domain.repository.EquipmentDefRepository;
 import kr.co.aim.domain.repository.EquipmentGroupRepository;
 import kr.co.aim.domain.repository.EquipmentRepository;
@@ -39,8 +40,13 @@ public class EquipmentService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public Optional<Equipment> findByEquipmentName(String equipmentName){
+    public Optional<Equipment> findEquipmentByEquipmentName(String equipmentName){
         return equipmentRepository.findByEquipmentName(equipmentName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Optional<EquipmentDef> findEquipmentDefByEquipmentName(String equipmentName){
+        return equipmentDefRepository.findByEquipmentName(equipmentName);
     }
 
 }

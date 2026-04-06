@@ -34,8 +34,8 @@ public class TransportJobHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "CARRIER_TYPE")
     private String carrierType;
 
-    @Column(name = "DRIVING_PROFILE")
-    private String drivingProfile;
+    @Column(name = "TRAVEL_PROFILE")
+    private String travelProfile;
 
     @Column(name = "TRANSPORT_JOB_STATE")
     private String transportJobState;
@@ -79,8 +79,8 @@ public class TransportJobHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "ERROR_TEXT")
     private String errorText;
 
-    @Column(name = "REQUEST_TYPE")
-    private String requestType;
+    @Column(name = "REQUEST_SOURCE")
+    private String requestSource;
 
     @Column(name = "CREATE_TIME")
     private LocalDateTime createTime;
