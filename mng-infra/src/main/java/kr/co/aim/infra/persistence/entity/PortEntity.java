@@ -27,6 +27,9 @@ public class PortEntity {
     @Column(name="PORT_NAME")
     private String portName;
 
+    @Column(name = "PORT_TYPE")
+    private String portType;
+
     @Column(name="DESCRIPTION")
     private String description;
 

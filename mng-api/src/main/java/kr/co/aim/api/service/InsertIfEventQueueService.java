@@ -265,7 +265,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         }
                     }
                 }
-                if(transportOrder==null){
+                if( ObjectUtils.isEmpty(transportOrder) ){
                     List<String> transportStatus = new ArrayList<>();
                     transportStatus.add(TransportOrderStatus.STARTED.getValue());
                     List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(

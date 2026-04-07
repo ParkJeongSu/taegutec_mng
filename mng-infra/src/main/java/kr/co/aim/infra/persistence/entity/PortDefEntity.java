@@ -1,9 +1,6 @@
 package kr.co.aim.infra.persistence.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,15 +14,9 @@ import java.time.LocalDateTime;
 @Table(name = "PORT_DEF")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class PortDefEntity {
-    @Id
-    @Column(name = "ID")
-    private Long id;
 
-    @Column(name = "EQUIPMENT_NAME")
-    private String equipmentName;
-
-    @Column(name = "PORT_NAME")
-    private String portName;
+    @EmbeddedId
+    private PortDefId id; // 복합키 클래스를 ID로 사용
 
     @Column(name = "DESCRIPTION")
     private String description;
@@ -57,15 +48,15 @@ public class PortDefEntity {
     @Column(name = "DATA_STATE")
     private String dataState;
 
-    @Column(name = "EVENT_NAME")
-    private String eventName;
+    @Column(name = "LAST_EVENT_NAME")
+    private String lastEventName;
 
-    @Column(name = "EVENT_TIME")
-    private LocalDateTime eventTime;
+    @Column(name = "LAST_EVENT_TIME")
+    private LocalDateTime lastEventTime;
 
-    @Column(name = "EVENT_USER")
-    private String eventUser;
+    @Column(name = "LAST_EVENT_USER")
+    private String lastEventUser;
 
-    @Column(name = "EVENT_COMMENT")
-    private String eventComment;
+    @Column(name = "LAST_EVENT_COMMENT")
+    private String lastEventComment;
 }

@@ -820,10 +820,10 @@ public class MessageExecuteService {
                 .transactionInfo(tx)
                 .portType(portType)
                 .build();
-        portDef.portTypeChanged(command);
-        portDef = portService.save(portDef);
-        PortDefHistoryEntity portDefHistoryEntity = portDefMapper.toHistoryEntity(portDef);
-        historyService.saveHistory(portDefHistoryEntity);
+        port.portTypeChanged(command);
+        port = portService.save(port);
+        PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+        historyService.saveHistory(portHistoryEntity);
     }
 
     /**
@@ -1145,9 +1145,10 @@ public class MessageExecuteService {
         List<TransportJobReplyBody> transportJobList = message.getBody().getTransportJobList();
 
         for(TransportJobReplyBody transportJobReplyBody : transportJobList){
-            // 비관적 Lock 로 조회
-            Optional<TransportJob> optionalTransportJob =
-            transportJobService.findWithLockByTransportJobName(transportJobReplyBody.getTransportJobName());
+            String transportJobName = transportJobReplyBody.getTransportJobName();
+            // 비관적 Lock 으로 조회시 문제 발생
+            //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
 
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
@@ -1207,7 +1208,9 @@ public class MessageExecuteService {
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
 
         if(StringUtils.equals(SystemName.GAL.getValue(),requestSource)){
-            Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+            // 비관적 lock 시 EventQueue 넣으면서 에러 발생
+            //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
                 TransportJobUpdateCommand command =

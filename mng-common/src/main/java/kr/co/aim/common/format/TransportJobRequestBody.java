@@ -1,14 +1,14 @@
 package kr.co.aim.common.format;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Data
 @ToString
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransportJobRequestBody {
     private String transportJobName;
     private String transportType;

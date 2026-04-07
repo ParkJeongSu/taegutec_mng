@@ -28,7 +28,7 @@ public class TransportOrderRequestHandler implements MessageHandler<String> {
 
     @Override
     public String getSupportedMessageName() {
-        return MessageList.TRANSPORT_JOB_REQUEST.getMessageName();
+        return MessageList.TRANSPORT_ORDER_REQUEST.getMessageName();
     }
 
     @Override

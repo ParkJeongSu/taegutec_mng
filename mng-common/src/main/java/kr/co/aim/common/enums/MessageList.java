@@ -27,6 +27,7 @@ public enum MessageList {
     PORT_USE_TYPE_CHANGED("PortUseTypeChanged"),
     PORT_STATE_CHANGED("PortStateChanged"),
     TRANSPORT_JOB_REQUEST("TransportJobRequest"),
+    TRANSPORT_ORDER_REQUEST("TransportOrderRequest"),
     TRANSPORT_JOB_REPLY("TransportJobReply"),
     TRANSPORT_JOB_STARTED("TransportJobStarted"),
     TRANSPORT_JOB_COMPLETED("TransportJobCompleted"),

@@ -185,7 +185,7 @@ public class InsertTransferScheduler {
                         || IdocTypeId.Relocation.getValue().equals( idocEntity.getIdocTypId() )) {
                     // 메시지 전송
                     BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
-                    request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                    request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
                     TransportOrderRequestBody body =
                             TransportOrderRequestBody
                                     .builder()

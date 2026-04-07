@@ -1,12 +1,12 @@
 package kr.co.aim.common.format;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 @Data
 @ToString
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class TransportJobCancelStartedBody {
     private String transportJobName;
     private String transportType;

@@ -33,11 +33,6 @@ public class PortDefRepositoryImpl implements PortDefRepository {
     }
 
     @Override
-    public Optional<PortDef> findById(Long id) {
-        return portDefJpaRepository.findById(id).map(portDefMapper::toDomain);
-    }
-
-    @Override
     public Optional<PortDef> findByEquipmentNameAndPortName(String equipmentName, String portName) {
         return portDefJpaRepository.findByEquipmentNameAndPortName(equipmentName,portName).map(portDefMapper::toDomain);
     }
@@ -47,11 +42,6 @@ public class PortDefRepositoryImpl implements PortDefRepository {
         PortDefEntity entity = portDefMapper.toEntity(portDef);
         PortDefEntity savedEntity = portDefJpaRepository.save(entity);
         return portDefMapper.toDomain(savedEntity);
-    }
-
-    @Override
-    public void deleteAllByIdInBatch(List<Long> ids) {
-        portDefJpaRepository.deleteAllByIdInBatch(ids);
     }
 
 //    @Override

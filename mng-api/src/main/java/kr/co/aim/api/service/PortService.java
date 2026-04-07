@@ -2,22 +2,15 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.*;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.domain.repository.*;
-import kr.co.aim.infra.persistence.entity.PortDefHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.CarrierMapper;
 import kr.co.aim.infra.persistence.mapper.PortDefMapper;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
-import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

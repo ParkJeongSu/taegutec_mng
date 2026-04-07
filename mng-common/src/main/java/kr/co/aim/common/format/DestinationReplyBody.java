@@ -1,12 +1,12 @@
 package kr.co.aim.common.format;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 @Data
 @ToString
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class DestinationReplyBody {
     private String transportJobName; // 이 부분 좀 고민해보자
     private String carrierName;

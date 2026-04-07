@@ -39,9 +39,9 @@ public class InsertReportScheduler {
         // catch 문으로 빠지고, 재시도 횟수 증가 재시도 횟수가 3미만이면, Ready 상태로 변경
         // catch 문으로 빠지고, 재시도 횟수 증가 재시도 횟수가 3초과하면, Fail 상태로 변경
 
-        // 1단계 EvengLog 조회
+        // 1단계 EventQueue 조회
         // 1.1 단계 << 고민 만약에 트랜잭션을 강하게 유지하고 싶으면,
-        // Ready -> Processing 으로 상태 변경 << 이건 추후 고민
+        // TODO: Ready -> Processing 으로 상태 변경
         List<IfEventQueue> ifEventQueues = ifEventQueueService.findByIfStatusOrderByCreateTimeAsc(IfEventQueueState.READY.getValue());
 
         if(CollectionUtils.isNotEmpty(ifEventQueues)){

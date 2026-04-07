@@ -1,14 +1,14 @@
 package kr.co.aim.common.format;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.List;
 
 @Data
 @ToString
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ProcessJobDataReportBody {
     private String equipmentName;
     private String lotName;

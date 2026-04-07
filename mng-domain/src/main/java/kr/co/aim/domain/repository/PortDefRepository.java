@@ -19,13 +19,6 @@ public interface PortDefRepository {
 
     /**
      * ID로 사용자를 찾습니다.
-     * @param id EquipmentDef ID
-     * @return Optional<PortDef>
-     */
-    Optional<PortDef> findById(Long id);
-
-    /**
-     * ID로 사용자를 찾습니다.
      * @param equipmentName EquipmentDef equipmentName
      * @param portName EquipmentDef portName
      * @return Optional<PortDef>
@@ -33,8 +26,6 @@ public interface PortDefRepository {
     Optional<PortDef> findByEquipmentNameAndPortName(String equipmentName,String portName);
 
     PortDef save(PortDef portDef);
-
-    void deleteAllByIdInBatch(List<Long>ids);
 
 //    Page<PortDefResponseDto> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable);
 }

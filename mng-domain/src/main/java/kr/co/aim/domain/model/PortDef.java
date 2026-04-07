@@ -1,9 +1,5 @@
 package kr.co.aim.domain.model;
 
-import kr.co.aim.common.enums.PortTransportState;
-import kr.co.aim.common.handler.HasTransactionInfo;
-import kr.co.aim.domain.command.LoadCompletedCommand;
-import kr.co.aim.domain.command.PortTypeChangedCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -14,11 +10,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ToString
 @Builder
-public class PortDef implements HasTransactionInfo {
-
-    private Long id;
-    private String equipmentName;
-    private String portName;
+public class PortDef {
+    private PortDefId id;
     private String description;
     private String portType;
     private String detailPortType;
@@ -29,13 +22,8 @@ public class PortDef implements HasTransactionInfo {
     private LocalDateTime checkOutTime;
     private String checkOutUser;
     private String dataState;
-    private String eventName;
-    private LocalDateTime eventTime;
-    private String eventUser;
-    private String eventComment;
-    public void portTypeChanged(PortTypeChangedCommand command){
-        this.apply(command.getTransactionInfo());
-        setPortType(command.getPortType().getValue());
-    }
-
+    private String lastEventName;
+    private LocalDateTime lastEventTime;
+    private String lastEventUser;
+    private String lastEventComment;
 }

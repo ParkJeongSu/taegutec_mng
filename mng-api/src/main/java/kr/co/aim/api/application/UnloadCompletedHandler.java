@@ -3,7 +3,6 @@ package kr.co.aim.api.application;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
-import kr.co.aim.api.service.PortService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.UnLoadCompletedBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -19,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile({"pex","tex"})
-public class UnloadCompleteHandler implements MessageHandler<String> {
+public class UnloadCompletedHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;

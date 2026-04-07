@@ -6,7 +6,9 @@ import kr.co.aim.common.format.request.MessageHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -20,12 +22,12 @@ public class RabbitMQAspect {
     private final ObjectMapper objectMapper;
 
     // 1. @RabbitListener 어노테이션이 달린 모든 메서드를 Pointcut으로 지정
-    // @Pointcut("@annotation(org.springframework.amqp.rabbit.annotation.RabbitListener)")
+    @Pointcut("@annotation(org.springframework.amqp.rabbit.annotation.RabbitListener)")
     public void rabbitListenerPointcut() {
     }
 
-    // 2. Pointcut으로 지정된 메서드 실행 전후에 Around Advice 적용
-    // @Around("rabbitListenerPointcut()")
+    //     2. Pointcut으로 지정된 메서드 실행 전후에 Around Advice 적용
+    @Around("rabbitListenerPointcut()")
     public Object setMdcAroundRabbitListener(ProceedingJoinPoint joinPoint) throws Throwable {
         try {
             // 3. MDC에 식별자(transactionId) 추가. 메시지 헤더 값을 사용할 수도 있습니다.

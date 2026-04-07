@@ -1,4 +1,5 @@
 package kr.co.aim.domain.model;
+import jakarta.persistence.Column;
 import kr.co.aim.common.enums.PortTransportState;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.*;
@@ -16,6 +17,7 @@ public class Port implements HasTransactionInfo {
     private Long id;
     private String equipmentName;
     private String portName;
+    private String portType;
     private String description;
     private String connectedStocker;
     private String transportMode;
@@ -28,6 +30,11 @@ public class Port implements HasTransactionInfo {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
+
+    public void portTypeChanged(PortTypeChangedCommand command){
+        this.apply(command.getTransactionInfo());
+        setPortType(command.getPortType().getValue());
+    }
 
     public void loadRequest(LoadRequestCommand command){
         this.apply(command.getTransactionInfo());

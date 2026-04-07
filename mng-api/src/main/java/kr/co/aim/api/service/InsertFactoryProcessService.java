@@ -311,6 +311,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             return;
         }
         PortDef portDef = optionalPortDef.get();
+        String actualLocationId = portDef.getLocationId();
         Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
             return;
@@ -332,7 +333,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     .carrierName(carrierName)
 //                    .actualZoneName()
                     .actualWeight(actualWeight)
-//                    .actualRackLocationId()
+                    .actualRackLocationId(actualLocationId)
 //                    .errorTexts()
 //                    .jobType(jobType)
                     .tx(tx)

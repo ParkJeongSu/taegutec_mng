@@ -29,10 +29,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-//@Component
+@Component
 @Slf4j
 @RequiredArgsConstructor
-@Profile({"scheduler","tex"})
+@Profile({"scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertTransportOrderScheduler {
 
@@ -59,7 +59,7 @@ public class InsertTransportOrderScheduler {
                 try {
                     // 메시지 전송
                     BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
-                    request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+                    request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
                     TransportOrderRequestBody body =
                             TransportOrderRequestBody
                                     .builder()
