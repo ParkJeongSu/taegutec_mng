@@ -182,7 +182,7 @@ public class InsertExternalInterfaceService {
                             // .cGrWgAct(dto.getActualWeight()) // TODO: 실제 어떤 DataType 으로 넣을지 고민, 아마도 소숫점자리까지 계산
                             .cReqZone(dto.getRequestedZoneName())
                             .cZone(dto.getActualZoneName())
-                            .cLocId(dto.getActualRackLocationId())
+                            .cLocId(dto.getActualLocationId())
                             //.cErrDsc() // n개의 보고
                             .cWcId(dto.getActualWorkStationId())
                             .build();

@@ -20,8 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -58,9 +56,10 @@ public class powderIfEventQueueService implements FactoryIfEventQueueStrategy {
     @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
     public void enqueueIfEventQueue(Object vo) {
         // Java 17의 Pattern Matching 사용
+        // TODO: powder 에 맞는 ReportVo를 생성
         if (vo instanceof InsertEventQueueReportVo reportVo) {
             // save EventLog로 변경
-            Optional<IfEventQueueDto> optionalIfEventQueueDto = createEventLogDto(reportVo);
+            Optional<IfEventQueueDto> optionalIfEventQueueDto = createEventQueueDto(reportVo);
             if(optionalIfEventQueueDto.isEmpty()){
                 return;
             }
@@ -100,10 +99,10 @@ public class powderIfEventQueueService implements FactoryIfEventQueueStrategy {
 
     }
 
-    private Optional<IfEventQueueDto> createEventLogDto(InsertEventQueueReportVo vo) {
+    private Optional<IfEventQueueDto> createEventQueueDto(InsertEventQueueReportVo vo) {
         String messageName = vo.getMessageName();
-        PortDef portDef = vo.getPortDef();
-        Port port = vo.getPort();
+        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
+        Optional<Port> optionalPort = vo.getOptionalPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -113,237 +112,7 @@ public class powderIfEventQueueService implements FactoryIfEventQueueStrategy {
         String orderLineNumber = "";
         String orderType = "";
         if (StringUtils.equals(MessageList.LOAD_COMPLETE.getMessageName(), messageName)) {
-            if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
-                // Inbound Station Occupied case
-                // 106 report
-                eventType = GALTransportStatus.StationOccupied.name();
-                transactionCode = GALTransportStatus.StationOccupied.getValue();
-                idocId = "";
-                orderId = "";
-                orderLineNumber = "";
-                orderType = TransportOrderType.INBOUND.getValue();
-            } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
-                // 반송잡이 있으면 해당 반송잡으로 아래보고
-                // outbound case
-                // 108 Outbound Arrival At workStation report
-                // 90 outbound order Done report
-                // 반송잡이 없다면,
-                // 가장 최신 변경된 transportOrder 으로 108,90 보고
-                TransportOrder transportOrder = null;
-                if(StringUtils.isNotBlank(transportJobName)){
-                    Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-                    if(optionalTransportJob.isPresent()){
-                        TransportJob transportJob = optionalTransportJob.get();
-                        Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-                        if(optionalTransportOrder.isPresent()){
-                            transportOrder = optionalTransportOrder.get();
-                        }
-                    }
-                }
-                if(transportOrder==null){
-                    List<String> transportStatus = new ArrayList<>();
-                    transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                    List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
-                            carrierName,
-                            TransportOrderType.OUTBOUND.getValue(),
-                            transportStatus);
-                    if(transportOrders.isEmpty()){
-                        throw new RuntimeException("Not Exists TransportOrder");
-                    }
-                    transportOrder = transportOrders.get(0);
-                }
-                eventType = GALTransportStatus.ArrivedAtWorkStation.name();
-                transactionCode = GALTransportStatus.ArrivedAtWorkStation.getValue();
-                idocId = transportOrder.getIdocId().toString();
-                orderId = transportOrder.getTransportOrderId();
-                orderLineNumber = "";
-                orderType = TransportOrderType.OUTBOUND.getValue();
-            }
-        } else if (StringUtils.equals(MessageList.UNLOAD_COMPLETE.getMessageName(), messageName)) {
-            if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
-                // Inbound Workstation empty
-                // 105 repot
-                // transportJobName 은 존재
-                // 만일 주지 않더라도, inbound 가 시작된 가장 느린 carrier 를 기준으로 transportOrder find
-
-                TransportOrder transportOrder = null;
-                if(StringUtils.isNotBlank(transportJobName)){
-                    Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-                    if(optionalTransportJob.isPresent()){
-                        TransportJob transportJob = optionalTransportJob.get();
-                        Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-                        if(optionalTransportOrder.isPresent()){
-                            transportOrder = optionalTransportOrder.get();
-                        }
-                    }
-                }
-                if(transportOrder==null){
-                    List<String> transportStatus = new ArrayList<>();
-                    transportStatus.add(TransportOrderStatus.STARTED.getValue());
-                    List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
-                            carrierName,
-                            TransportOrderType.INBOUND.getValue(),
-                            transportStatus);
-                    if(transportOrders.isEmpty()){
-                        throw new RuntimeException("Not Exists TransportOrder");
-                    }
-                    transportOrder = transportOrders.get(0);
-                }
-                eventType = GALTransportStatus.CarrierScanned.name();
-                transactionCode = GALTransportStatus.CarrierScanned.getValue();
-                idocId = transportOrder.getIdocId().toString();
-                orderId = transportOrder.getTransportOrderId();
-                orderLineNumber = "";
-                orderType = TransportOrderType.INBOUND.getValue();
-            }
-        } else if (StringUtils.equals(MessageList.CARRIER_SCANNED.getMessageName(), messageName)) {
-            // Inbound ContainerId is Scanned
-            // 126 repot
-            // transportJobName 은 존재
-            TransportOrder transportOrder = null;
-            if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-                if(optionalTransportJob.isPresent()){
-                    TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-                    if(optionalTransportOrder.isPresent()){
-                        transportOrder = optionalTransportOrder.get();
-                    }
-                }
-            }
-            if(transportOrder==null){
-                List<String> transportStatus = new ArrayList<>();
-                transportStatus.add(TransportOrderStatus.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
-                        carrierName,
-                        TransportOrderType.INBOUND.getValue(),
-                        transportStatus);
-                if(transportOrders.isEmpty()){
-                    throw new RuntimeException("Not Exists TransportOrder");
-                }
-                transportOrder = transportOrders.get(0);
-            }
-            eventType = GALTransportStatus.CarrierScanned.name();
-            transactionCode = GALTransportStatus.CarrierScanned.getValue();
-            idocId = transportOrder.getIdocId().toString();
-            orderId = transportOrder.getTransportOrderId();
-            orderLineNumber = "";
-            orderType = TransportOrderType.INBOUND.getValue();
-        } else if (StringUtils.equals(MessageList.CARRIER_LOCATION_CHANGED.getMessageName(), messageName)) {
-            // 반송 잡은 무조건 존재
-            // 이 경우는 TransportOrder가 있을 수도 없을 수도 있음
-            // TransportOrder가 없다면, 상위로 보고하지 않음
-            if (StringUtils.equals(PortDetailType.OUT_OF_RACK.getValue(), portDef.getDetailPortType())) {
-                // Out of Rack
-                // 109 repot
-            } else if (StringUtils.equals(PortDetailType.TUNNEL.getValue(), portDef.getDetailPortType())) {
-                // S/R Machine dropped container on tunnel conveyor
-                // 109 report
-            }
-
-        } else if (StringUtils.equals(MessageList.TRANSPORT_JOB_COMPLETED.getMessageName(), messageName)) {
-            // 무조건 TransportJob 은 존재
-
-            // Type : Inbound Case
-            // 107 Arrival at Rack report
-            // 92 Inbound order Done report
-
-            // Type : Outbound Case
-            // 109 Out of Rack report
-
-            // Type : Relocation Case
-            // #1 orderId 가 존재하면
-            // 107 Arrival at Rack report
-            // 94 Relocation order confirmation report
-
-            // #2 orderId 가 존재하지 않는다면
-            // 114 internal Relocation report
-        } else if (StringUtils.equals(MessageList.TRANSPORT_JOB_REPLY.getMessageName(), messageName)) {
-            // 무조건 TransportJob 은 존재
-            // reply 는 무조건 gal에 의한 order 후 reply
-            // Type : Inbound Case
-            // Type : Outbound Case
-            // Type : Relocation Case
-            // 2 Accept report
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-            if(optionalTransportJob.isPresent()){
-                TransportJob transportJob = optionalTransportJob.get();
-                Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-                TransportOrder transportOrder = null;
-                if(optionalTransportOrder.isPresent()){
-                    transportOrder = optionalTransportOrder.get();
-                    eventType = GALTransportStatus.Accept.name();
-                    transactionCode = GALTransportStatus.Accept.getValue();
-                    idocId = transportOrder.getIdocId().toString();
-                    orderId = transportOrder.getTransportOrderId();
-                    orderLineNumber = "";
-                    orderType = transportOrder.getTransportType();
-                }
-                else{
-                    throw new RuntimeException("Not Exists TransportOrder");
-                }
-            }else{
-                throw new RuntimeException("Not Exists TransportJob");
-            }
-        } else if (StringUtils.equals(MessageList.TRANSPORT_JOB_STARTED.getMessageName(), messageName)) {
-            // GAL에 의한 반송은 TransportJob 이 존재
-            // WCS 자체적인 반송은 TransportJob 이 존재하지 않음
-            // Type : Inbound Case
-            // Type : Outbound Case
-            // Type : Relocation Case
-            // 6 Released report
-            if(StringUtils.equals(SystemName.GAL.getValue(), vo.getJobType())){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-                if(optionalTransportJob.isPresent()){
-                    TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-                    TransportOrder transportOrder = null;
-                    if(optionalTransportOrder.isPresent()){
-                        transportOrder = optionalTransportOrder.get();
-                        eventType = GALTransportStatus.Released.name();
-                        transactionCode = GALTransportStatus.Released.getValue();
-                        idocId = transportOrder.getIdocId().toString();
-                        orderId = transportOrder.getTransportOrderId();
-                        orderLineNumber = "";
-                        orderType = transportOrder.getTransportType();
-                    }
-                    else{
-                        throw new RuntimeException("Not Exists TransportOrder");
-                    }
-                }else{
-                    throw new RuntimeException("Not Exists TransportJob");
-                }
-            }else {
-                eventType = GALTransportStatus.Released.name();
-                transactionCode = GALTransportStatus.Released.getValue();
-                idocId = "";
-                orderId = "";
-                orderLineNumber = "";
-                orderType = vo.getOrderType();
-            }
-        }
-        // TODO: TransportJobFailStarted,TransportJobFailCompleted 추가하기
-        else{
-            return Optional.empty();
-        }
-        if(StringUtils.isNotBlank(transactionCode)){
-            // TODO: 추가되는 dto 관련된건 여기다가 추가하기
-            IfEventQueueDto dto = IfEventQueueDto
-                    .builder()
-                    .messageName(messageName)
-                    .eventType(eventType)
-                    .transactionCode(transactionCode)
-                    .carrierName(carrierName)
-                    .idocId(idocId)
-                    .orderId(orderId)
-                    .orderLineNumber(orderLineNumber)
-                    .orderType(orderType)
-                    .errorTexts(vo.getErrorTexts())
-                    .actualWeight(vo.getActualWeight())
-                    .actualZoneName(vo.getActualZoneName())
-                    .actualRackLocationId(vo.getActualRackLocationId())
-                    .build();
-            return Optional.ofNullable(dto);
+            // TODO: Message 에 따라서 EventQueueDto 생성
         }
         return Optional.empty();
     }

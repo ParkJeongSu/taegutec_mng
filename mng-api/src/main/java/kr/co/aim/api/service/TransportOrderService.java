@@ -69,7 +69,7 @@ public class TransportOrderService {
                         .requestedZoneName(context.isRelocation() ? details.get(1).getCZone() : details.get(0).getCZone())
                         //.actualZoneName()
                         //.actualLocationId()
-                        .drivingProfile(details.get(0).getCDrivingProfile())
+                        .travelProfile(details.get(0).getCDrivingProfile())
                         .createTime(transactionInfo.eventTime())
                         //.releaseTime()
                         //.completeTime()

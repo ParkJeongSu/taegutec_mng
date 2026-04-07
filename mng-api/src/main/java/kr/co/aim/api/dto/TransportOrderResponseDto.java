@@ -82,7 +82,7 @@ public class TransportOrderResponseDto {
 //                .toLocationId(entity.getToLocationId())
                 .carrierName(entity.getCarrierName())
                 .carrierType(entity.getCarrierType())
-                .drivingProfile(entity.getDrivingProfile())
+                .drivingProfile(entity.getTravelProfile())
                 .createTime(entity.getCreateTime())
                 .releaseTime(entity.getReleaseTime())
                 .completeTime(entity.getCompleteTime())

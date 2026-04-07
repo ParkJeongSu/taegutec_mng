@@ -119,7 +119,7 @@ public class InsertTransferScheduler {
                                     .requestedZoneName(detail.getCZone())
                                     //.actualZoneName()
                                     //.actualLocationId()
-                                    .drivingProfile(detail.getCDrivingProfile())
+                                    .travelProfile(detail.getCDrivingProfile())
                                     .createTime(transactionInfo.eventTime())
                                     //.releaseTime()
                                     //.completeTime()

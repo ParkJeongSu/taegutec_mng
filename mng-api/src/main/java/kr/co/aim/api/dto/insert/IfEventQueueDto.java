@@ -28,7 +28,7 @@ public class IfEventQueueDto {
     private List<String> errorTexts;
     private String actualWeight;
     private String actualZoneName;
-    private String actualRackLocationId;
+    private String actualLocationId; // Rack Location or Location on Conveyor System.
     private String actualWorkStationId;
 
 

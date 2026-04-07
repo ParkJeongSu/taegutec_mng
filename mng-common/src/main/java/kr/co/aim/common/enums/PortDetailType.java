@@ -11,6 +11,7 @@ public enum PortDetailType implements MetaDataEnum {
     WORKSTATION("Workstation"),
     INBOUND("Inbound"),
     TUNNEL("Tunnel"),
+    BOTH_OF_RACK("BothOfRack"),
     IN_OF_RACK("InOfRack");
     private final String value;
 }

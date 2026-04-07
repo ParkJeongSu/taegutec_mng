@@ -32,6 +32,8 @@ public enum MessageList {
     TRANSPORT_JOB_COMPLETED("TransportJobCompleted"),
     TAKE_OFF_CARRIER("TakeOffCarrier"),
     CARRIER_LOCATION_CHANGED("CarrierLocationChanged"),
+    CARRIER_BLOCKED("CarrierBlocked"),
+    CARRIER_UNBLOCKED("CarrierUnblocked"),
     TRANSPORT_JOB_CANCEL_STARTED("TransportJobCancelStarted"),
     TRANSPORT_JOB_CANCEL_COMPLETED("TransportJobCancelCompleted"),
     TRANSPORT_JOB_CANCEL_FAILED("TransportJobCancelFailed"),

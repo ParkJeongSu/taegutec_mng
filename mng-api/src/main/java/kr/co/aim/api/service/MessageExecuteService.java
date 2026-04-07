@@ -274,6 +274,64 @@ public class MessageExecuteService {
         factoryProcessStrategy.carrierLocationChanged(message);
     }
 
+    @Transactional
+    public void carrierBlocked(BaseMessage<CarrierBlockedBody> message) {
+        String messageName = message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
+        String currentPositionName =  message.getBody().getCurrentPositionName();
+        TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
+        // insert EventQueue
+        try{
+            InsertEventQueueReportVo insertEventQueueReportVo
+                    = InsertEventQueueReportVo
+                    .builder()
+                    //.transportJobName(transportJobName)
+                    .messageName(messageName)
+                    //.optionalPort(optionalPort)
+                    //.optionalPortDef(optionalPortDef)
+                    .carrierName(carrierName)
+//                    .actualZoneName()
+//                    .actualWeight()
+                    .actualRackLocationId(currentPositionName)
+//                    .errorTexts()
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
+    }
+
+    @Transactional
+    public void carrierUnBlocked(BaseMessage<CarrierUnBlockedBody> message) {
+        String messageName = message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
+        String currentPositionName =  message.getBody().getCurrentPositionName();
+        TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
+        // insert EventQueue
+        try{
+            InsertEventQueueReportVo insertEventQueueReportVo
+                    = InsertEventQueueReportVo
+                    .builder()
+                    //.transportJobName(transportJobName)
+                    .messageName(messageName)
+                    //.optionalPort(optionalPort)
+                    //.optionalPortDef(optionalPortDef)
+                    .carrierName(carrierName)
+//                    .actualZoneName()
+//                    .actualWeight()
+                    .actualRackLocationId(currentPositionName)
+//                    .errorTexts()
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
+    }
+
     /**
      * WareHouse 에 관리하는 Carrier 데이터 생성
      * 1. Carrier 의 정보 조회
@@ -430,7 +488,7 @@ public class MessageExecuteService {
 
     @Transactional
     public BaseMessage<DestinationReplyBody> destinationRequest(BaseMessage<DestinationRequestBody> message) {
-
+        // 과거에 중간 목적지가 있을때, 필요했던 메시지 현재로선 필요없음
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
