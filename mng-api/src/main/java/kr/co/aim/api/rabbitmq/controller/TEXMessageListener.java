@@ -87,6 +87,7 @@ public class TEXMessageListener implements MessageWorker{
                 });
             }
         }
-        return replyObject;
+        //return replyObject;
+        return null;
     }
 }

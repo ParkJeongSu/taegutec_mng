@@ -87,6 +87,7 @@ public class PEXMessageListener implements MessageWorker{
                 });
             }
         }
-        return replyObject;
+        //return replyObject;
+        return null;
     }
 }

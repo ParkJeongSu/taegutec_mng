@@ -1,8 +1,6 @@
 package kr.co.aim.api.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
@@ -14,7 +12,6 @@ import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
@@ -26,7 +23,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;

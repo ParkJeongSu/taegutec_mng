@@ -6,7 +6,6 @@ import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.IfEventQueueCreateCommand;
 import kr.co.aim.domain.model.*;
@@ -15,6 +14,7 @@ import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -61,48 +61,53 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     public void enqueueIfEventQueue(Object vo) {
         // Java 17의 Pattern Matching 사용
         if (vo instanceof InsertEventQueueReportVo reportVo) {
-            // save EventLog로 변경
-            Optional<IfEventQueueDto> optionalIfEventQueueDto = createEventLogDto(reportVo);
-            if(optionalIfEventQueueDto.isEmpty()){
-                return;
+            List<IfEventQueueDto> ifEventQueueDtoList = createEventQueueDto(reportVo);
+            if(CollectionUtils.isNotEmpty(ifEventQueueDtoList)){
+                for(IfEventQueueDto  dto : ifEventQueueDtoList){
+                    TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "");
+                    // DTO 객체를 JSON 문자열로 직접 변환합니다.
+                    String jsonPayload = "";
+                    try {
+                        jsonPayload = objectMapper.writeValueAsString(dto);
+                    } catch (JsonProcessingException e) {
+                        log.error("dto -> String error");
+                        // 로깅 및 예외 처리
+                        throw new RuntimeException("InterfaceEventLogDto를 JSON으로 변환하는 중 오류가 발생했습니다.", e);
+                    }
+                    log.info("Sending JSON Payload: {}", jsonPayload);
+                    IfEventQueueCreateCommand command =
+                            IfEventQueueCreateCommand
+                                    .builder()
+                                    .transactionInfo(tx)
+                                    .eventType(dto.getEventType())
+                                    .payload(jsonPayload)
+                                    .ifStatus(IfEventQueueState.READY.getValue())
+                                    .carrierName(dto.getCarrierName())
+                                    .idocId(dto.getIdocId())
+                                    .orderId(dto.getOrderId())
+                                    .orderLineNumber(dto.getOrderLineNumber())
+                                    .retryCNT(0)
+                                    .errMSG("")
+                                    .createTime(tx.eventTime())
+                                    .build();
+                    IfEventQueue interfaceEventLog = IfEventQueue.create(command);
+                    ifEventQueueService.save(interfaceEventLog);
+                }
             }
-            IfEventQueueDto dto = optionalIfEventQueueDto.get();
-            TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "",reportVo.getTx().eventTime());
-
-            // DTO 객체를 JSON 문자열로 직접 변환합니다.
-            String jsonPayload = "";
-            try {
-                jsonPayload = objectMapper.writeValueAsString(dto);
-            } catch (JsonProcessingException e) {
-                log.error("dto -> String error");
-                // 로깅 및 예외 처리
-                throw new RuntimeException("InterfaceEventLogDto를 JSON으로 변환하는 중 오류가 발생했습니다.", e);
-            }
-            log.info("Sending JSON Payload: {}", jsonPayload);
-            IfEventQueueCreateCommand command =
-                    IfEventQueueCreateCommand
-                            .builder()
-                            .transactionInfo(tx)
-                            .eventType(dto.getEventType())
-                            .payload(jsonPayload)
-                            .ifStatus(IfEventQueueState.READY.getValue())
-                            .carrierName(dto.getCarrierName())
-                            .idocId(dto.getIdocId())
-                            .orderId(dto.getOrderId())
-                            .orderLineNumber(dto.getOrderLineNumber())
-                            .retryCNT(0)
-                            .errMSG("")
-                            .createTime(tx.eventTime())
-                            .build();
-            IfEventQueue interfaceEventLog = IfEventQueue.create(command);
-            ifEventQueueService.save(interfaceEventLog);
         }else {
             log.error("잘못된 객체 타입이 전달되었습니다: {}", vo != null ? vo.getClass().getName() : "null");
         }
 
     }
 
-    private Optional<IfEventQueueDto> createEventLogDto(InsertEventQueueReportVo vo) {
+    private List<IfEventQueueDto> handleLoadCompleted(InsertEventQueueReportVo vo){
+        List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
+        return  ifEventQueueDtoList;
+    }
+
+    private List<IfEventQueueDto> createEventQueueDto(InsertEventQueueReportVo vo) {
+
+        List<IfEventQueueDto> dtos = new ArrayList<>();
         String messageName = vo.getMessageName();
         Optional<Port> optionalPort = vo.getOptionalPort();
         Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
@@ -116,13 +121,14 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String orderId = "";
         String orderLineNumber = "";
         String orderType = "";
+        String errorText = "";
         // actualLocationId : Rack Location or location on conveyor on System
         String actualLocationId = vo.getActualRackLocationId();
         if (StringUtils.equals(MessageList.LOAD_COMPLETE.getMessageName(), messageName)) {
             if(optionalPortDef.isPresent()){
                 portDef = optionalPortDef.get();
             }else{
-                return Optional.empty();
+                return dtos;
             }
 
             if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
@@ -134,6 +140,23 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 orderId = "";
                 orderLineNumber = "";
                 orderType = TransportOrderType.INBOUND.getValue();
+
+                IfEventQueueDto dto = IfEventQueueDto
+                        .builder()
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .orderId(orderId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(errorText)
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZoneName())
+                        .actualLocationId(actualLocationId)
+                        .build();
+                dtos.add(dto);
             } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
                 // 반송잡이 있으면 해당 반송잡으로 아래보고
                 // outbound case
@@ -246,7 +269,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if(optionalPortDef.isPresent()){
                 portDef = optionalPortDef.get();
             }else{
-                return Optional.empty();
+                return dtos;
             }
             if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
                 // Inbound Workstation empty
@@ -285,7 +308,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 orderType = TransportOrderType.INBOUND.getValue();
             }
             else{
-                return Optional.empty();
+                return dtos;
             }
         }
         else if (StringUtils.equals(MessageList.CARRIER_SCANNED.getMessageName(), messageName)) {
@@ -329,7 +352,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if(optionalPortDef.isPresent()){
                 portDef = optionalPortDef.get();
             }else{
-                return Optional.empty();
+                return dtos;
             }
             if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
                 // Inbound Station Occupied case
@@ -614,7 +637,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             }
         }
         else if (StringUtils.equals(MessageList.TRANSPORT_JOB_CANCEL_STARTED.getMessageName(), messageName)) {
-            return Optional.empty();
+            return dtos;
         }
         else if (StringUtils.equals(MessageList.TRANSPORT_JOB_CANCEL_COMPLETED.getMessageName(), messageName)) {
             Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
@@ -633,7 +656,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         orderType = transportOrder.getTransportType();
                     }
                     else{
-                        return Optional.empty();
+                        return dtos;
                     }
                 }
                 else if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(), transportJob.getTransportType())){
@@ -650,11 +673,11 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         orderType = transportOrder.getTransportType();
                     }
                     else{
-                        return Optional.empty();
+                        return dtos;
                     }
                 }
                 else{
-                    return Optional.empty();
+                    return dtos;
                 }
 
             }else{
@@ -678,27 +701,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderType = "";
         }
         else{
-            return Optional.empty();
+            return dtos;
         }
-        if(StringUtils.isNotBlank(transactionCode)){
-            // TODO: 추가되는 dto 관련된건 여기다가 추가하기
-            IfEventQueueDto dto = IfEventQueueDto
-                    .builder()
-                    .messageName(messageName)
-                    .eventType(eventType)
-                    .transactionCode(transactionCode)
-                    .carrierName(carrierName)
-                    .idocId(idocId)
-                    .orderId(orderId)
-                    .orderLineNumber(orderLineNumber)
-                    .orderType(orderType)
-                    .errorTexts(vo.getErrorTexts())
-                    .actualWeight(vo.getActualWeight())
-                    .actualZoneName(vo.getActualZoneName())
-                    .actualLocationId(actualLocationId)
-                    .build();
-            return Optional.ofNullable(dto);
-        }
-        return Optional.empty();
+        return dtos;
     }
 }

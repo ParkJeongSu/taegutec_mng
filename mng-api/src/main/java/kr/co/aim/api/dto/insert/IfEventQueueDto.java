@@ -25,7 +25,7 @@ public class IfEventQueueDto {
     private String galId;
     private String galWarehouse;
     private String requestedZoneName;
-    private List<String> errorTexts;
+    private String errorText;
     private String actualWeight;
     private String actualZoneName;
     private String actualLocationId; // Rack Location or Location on Conveyor System.

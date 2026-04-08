@@ -87,6 +87,7 @@ public class SchedulerMessageListener implements MessageWorker{
                 });
             }
         }
-        return replyObject;
+        //return replyObject;
+        return null;
     }
 }

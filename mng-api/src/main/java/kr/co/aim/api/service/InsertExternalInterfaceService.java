@@ -138,60 +138,35 @@ public class InsertExternalInterfaceService {
         }
         LocalDateTime now = null;
 
-        if(
-                StringUtils.equals(GALTransportStatus.Accept.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.Released.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.InternalRelocation.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.OutOfRack.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.StationOccupied.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.BinEmpty.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.Shortage.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.NotAllowedPickUp.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.ArrivedAtWorkStation.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.WorkstationEmpty.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.ArrivedAtRack.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.OrderDone_Outbound.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.OrderDone_Inbound.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.OrderDone_Relocation.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.CarrierScanned.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.ArrivedAtWorkstationWithError.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.DroppedOnTunnelConveyor.name(),ifEventQueue.getEventType())
-                    || StringUtils.equals(GALTransportStatus.TakeOff.name(),ifEventQueue.getEventType())
-        ){
-            // 단 하나의 report 만 하면 되는 경우
-            // 이 경우는 단순히 ifEventQueue 의 값에서 h2Trans로 report 하면 된다.
-            now = LocalDateTime.now().withNano(0);
+        // 단 하나의 report 만 하면 되는 경우
+        // 이 경우는 단순히 ifEventQueue 의 값에서 h2Trans로 report 하면 된다.
+        now = LocalDateTime.now().withNano(0);
 
-            IdocEntity newIdoc = buildBaseIdoc(now);
-            idocJpaRepository.save(newIdoc);
+        IdocEntity newIdoc = buildBaseIdoc(now);
+        idocJpaRepository.save(newIdoc);
 
-            H2TransEntity h2TransEntity =
-                    H2TransEntity
-                            .builder()
-                            .lineId(h2TransJpaRepository.findMaxLineId() + 1)
-                            .idocId(newIdoc.getLineId())
-                            .dtimeCre(now)
-                            //.dataCode()
-                            .cTransTy( Long.parseLong(dto.getTransactionCode()))
-                            .cClient(IdocClient.MNG.getValue())
-                            .cOrderId(ifEventQueue.getOrderId())
-                            .cOrderTy(dto.getOrderType())
-                            .cGaId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
-                            .cGalWhs(dto.getGalWarehouse())
-                            .cCoId(ifEventQueue.getCarrierName())
-                            // .cGrWgAct(dto.getActualWeight()) // TODO: 실제 어떤 DataType 으로 넣을지 고민, 아마도 소숫점자리까지 계산
-                            .cReqZone(dto.getRequestedZoneName())
-                            .cZone(dto.getActualZoneName())
-                            .cLocId(dto.getActualLocationId())
-                            //.cErrDsc() // n개의 보고
-                            .cWcId(dto.getActualWorkStationId())
-                            .build();
-            h2TransJpaRepository.save(h2TransEntity);
-        }
-        else if(StringUtils.equals(GALTransportStatus.ErrorText.name(),ifEventQueue.getEventType())){
-            // 다건의 report 가 필요한 errorText 경우
-            // errorTexts 의 건수만큼 idoc, h2Trans 의 데이터를 보고한다.
-        }
+        H2TransEntity h2TransEntity =
+                H2TransEntity
+                        .builder()
+                        .lineId(h2TransJpaRepository.findMaxLineId() + 1)
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        //.dataCode()
+                        .cTransTy( Long.parseLong(dto.getTransactionCode()))
+                        .cClient(IdocClient.MNG.getValue())
+                        .cOrderId(ifEventQueue.getOrderId())
+                        .cOrderTy(dto.getOrderType())
+                        .cGaId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
+                        .cGalWhs(dto.getGalWarehouse())
+                        .cCoId(ifEventQueue.getCarrierName())
+                        // .cGrWgAct(dto.getActualWeight()) // TODO: 실제 어떤 DataType 으로 넣을지 고민, 아마도 소숫점자리까지 계산
+                        .cReqZone(dto.getRequestedZoneName())
+                        .cZone(dto.getActualZoneName())
+                        .cLocId(dto.getActualLocationId())
+                        //.cErrDsc() // n개의 보고
+                        .cWcId(dto.getActualWorkStationId())
+                        .build();
+        h2TransJpaRepository.save(h2TransEntity);
 
     }
 
