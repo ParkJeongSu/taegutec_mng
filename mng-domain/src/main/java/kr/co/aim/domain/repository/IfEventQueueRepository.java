@@ -14,7 +14,9 @@ public interface IfEventQueueRepository {
 
     Optional<IfEventQueue> findById(Long id);
 
-    IfEventQueue save(IfEventQueue interfaceEventLog);
+    IfEventQueue save(IfEventQueue ifEventQueue);
+
+    List<IfEventQueue> save(List<IfEventQueue> ifEventQueueList);
 
     List<IfEventQueue> findByIfStatusOrderByCreateTimeAsc(String ifStatus);
 

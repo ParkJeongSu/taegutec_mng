@@ -13,7 +13,7 @@ public enum GALTransportStatus implements MetaDataEnum {
     InternalRelocation("114"),
     OutOfRack("109"),
     StationOccupied("106"),
-    BinEmpty("103"),
+    BinEmpty("113"),
     Shortage("82"),
     NotAllowedPickUp("115"),
     ArrivedAtWorkStation("108"),

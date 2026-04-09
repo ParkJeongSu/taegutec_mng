@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 public enum PortType implements MetaDataEnum {
     INPUT("Input"),
     OUTPUT("Output"),
-    INPUT_OUTPUT("InputOutput");
+    BOTH("Both");
     private final String value;
 
     public static boolean isExist(String portTypeName) {

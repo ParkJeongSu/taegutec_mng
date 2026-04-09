@@ -85,7 +85,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             // readyToLoad 일 경우만
             // portDef workstationName 을 통해서 outbound order를 찾음
             // 만약 outbound order가 있다면, reserveToLoad 로 변경 후 반송요청 메시지 빈환
-            // TODO: WORKCENTERNAME -> WORKSTATIONAME 으로 변경
             if(StringUtils.isNotBlank(portDef.getWorkCenterName())){
                 List<TransportOrder> transportOrders = transportOrderService.findOutboundOrderForTransportRequest(
                         TransportOrderType.OUTBOUND.getValue(),
@@ -106,7 +105,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     TransportJobCreateCommand command =
                             TransportJobCreateCommand.builder()
                                     //TODO: TransportJobNaming rule check
-                                    .transportJobName(carrierName + tx.eventTime().toString().substring(0,12))
+                                    .transportJobName(carrierName + tx.eventTime().toString().substring(0,14))
                                     .carrierName(carrierName)
                                     .transportType(transportType)
                                     .transportJobState(TransportJobState.REQUESTED.getValue())
@@ -120,8 +119,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                     .destinationEquipmentName(port.getEquipmentName())
                                     .destinationPortName(port.getPortName())
                                     //.destinationZoneName()
-                                    //.destinationPositionTypeName()
-                                    //.destinationPositionName()
+                                    .destinationPositionTypeName(PositionTypeName.PORT.getValue())
+                                    .destinationPositionName(port.getPortName())
                                     .priority(priority)
                                     //.errorCode()
                                     //.errorText()
@@ -426,7 +425,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String carrierName = message.getBody().getCarrierName();
         String carrierType = message.getBody().getCarrierType();
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
-        String currentPortName = message.getBody().getCurrentPortName();
         String currentZoneName = message.getBody().getCurrentZoneName();
         String currentPositionType = message.getBody().getCurrentPositionType();
         String currentPositionName = message.getBody().getCurrentPositionName();

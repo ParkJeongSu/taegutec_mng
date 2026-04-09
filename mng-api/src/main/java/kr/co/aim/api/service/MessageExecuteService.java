@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
-import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
@@ -275,6 +275,45 @@ public class MessageExecuteService {
     }
 
     @Transactional
+    public void carrierScanned(BaseMessage<CarrierScannedBody> message) {
+        String messageName = message.getMessageName();
+
+        String transportJobName = message.getBody().getTransportJobName();
+        String carrierName = message.getBody().getCarrierName();
+        String currentEquipmentName = message.getBody().getCurrentEquipmentName();
+        String currentZoneName = message.getBody().getCurrentZoneName();
+        String currentPositionType = message.getBody().getCurrentPositionType();
+        String currentPositionName = message.getBody().getCurrentPositionName();
+        String orderId = message.getBody().getOrderId();
+        String travelProfile = message.getBody().getTravelProfile();
+        String actualWeight = message.getBody().getActualWeight();
+        String carrierType = message.getBody().getCarrierType();
+
+        TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
+        // insert EventQueue
+        try{
+            InsertEventQueueReportVo insertEventQueueReportVo
+                    = InsertEventQueueReportVo
+                    .builder()
+                    .transportJobName(transportJobName)
+                    .messageName(messageName)
+                    //.optionalPort(optionalPort)
+                    //.optionalPortDef(optionalPortDef)
+                    .carrierName(carrierName)
+                    .actualZoneName(currentZoneName)
+                    .actualWeight(actualWeight)
+                    .actualRackLocationId(currentPositionName)
+//                    .errorTexts()
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
+    }
+
+    @Transactional
     public void carrierBlocked(BaseMessage<CarrierBlockedBody> message) {
         String messageName = message.getMessageName();
         String carrierName = message.getBody().getCarrierName();
@@ -443,12 +482,21 @@ public class MessageExecuteService {
     public void takeOffCarrier(BaseMessage<TakeOffCarrierBody> message) {
         // 비지니스 로직은 없음
         // TO GAL TakeOffCarrier report
+
+
         String messageName =  message.getMessageName();
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
-        TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), message.getResultMessage());
+
         String equipmentName = message.getBody().getCurrentEquipmentName();
-        String portName = message.getBody().getCurrentPortName();
+        String currentPositionType = message.getBody().getCurrentPositionType();
+        String currentPositionName = message.getBody().getCurrentPositionName();
+
+        String portName = "";
+        if(StringUtils.equals(PositionTypeName.PORT.getValue(),currentPositionType)){
+            portName = currentPositionName;
+        }
+        TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), message.getResultMessage());
 
         Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
         PortDef portDef;
@@ -908,7 +956,8 @@ public class MessageExecuteService {
     @Transactional
     public void activeTransportJobReport(BaseMessage<ActiveTransportJobReportBody> message) {
         log.info("activeTransportJobReport");
-        // TODO: 이런 시나리오가 있는지 일단 확인
+        // TODO: transportJobName 으로 검색해서 없으면, 신규 생성
+
     }
 
     /**
@@ -928,16 +977,19 @@ public class MessageExecuteService {
         String transportJobName = message.getBody().getTransportJobName(); // DetailName
         String carrierName = message.getBody().getCarrierName();
         String oldDestinationEquipmentName = message.getBody().getOldDestinationEquipmentName();
-        String oldDestinationPortName = message.getBody().getOldDestinationPortName();
         String oldDestinationZoneName = message.getBody().getOldDestinationZoneName();
         String oldDestinationPositionType = message.getBody().getOldDestinationPositionType();
         String oldDestinationPositionName = message.getBody().getOldDestinationPositionName();
 
         String newDestinationEquipmentName = message.getBody().getNewDestinationEquipmentName();
-        String newDestinationPortName = message.getBody().getNewDestinationPortName();
+        String newDestinationPortName = "";
         String newDestinationZoneName = message.getBody().getNewDestinationZoneName();
         String newDestinationPositionType = message.getBody().getNewDestinationPositionType();
         String newDestinationPositionName = message.getBody().getNewDestinationPositionName();
+
+        if(StringUtils.equals(PositionTypeName.PORT.getValue(),newDestinationPositionType)){
+            newDestinationPortName = newDestinationPositionName;
+        }
 
         Optional<TransportJob> optionalTransportJob
                 = transportJobService.findByTransportJobName(transportJobName);
@@ -988,7 +1040,9 @@ public class MessageExecuteService {
         String messageName =  message.getMessageName();
         String carrierName = message.getBody().getCarrierName();
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
-        String currentPortName = message.getBody().getCurrentPortName();
+        String currentPositionType = message.getBody().getCurrentPositionType();
+        String currentPositionName = message.getBody().getCurrentPositionName();
+        String currentPortName = currentPositionName;
         String transportJobName = message.getBody().getTransportJobName();
         String transportType =  message.getBody().getTransportType();
         String orderId =  message.getBody().getOrderId();
@@ -998,14 +1052,13 @@ public class MessageExecuteService {
         List<TransportJobCancelCompletedReasonBody> reasons = message.getBody().getReasons();
         
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        // TODO: 비관적 Lock 고민
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
                     TransportJobUpdateCommand
                             .builder()
-                            .transportJobState(TransportJobState.REJECTED.getValue())
+                            .transportJobState(TransportJobState.CANCELLED.getValue())
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
@@ -1018,10 +1071,14 @@ public class MessageExecuteService {
 
             try{
                 if(CollectionUtils.isNotEmpty(reasons)){
-                    List<String> errorList = new ArrayList<>();
+                    List<TransportCancelReasonVo> cancelReasonVoList = new ArrayList<>();
                     for(TransportJobCancelCompletedReasonBody reason : reasons){
-                        String errorMessage = reason.getMessage();
-                        errorList.add(errorMessage);
+                        TransportCancelReasonVo reasonVo = TransportCancelReasonVo
+                                .builder()
+                                .code(reason.getCode())
+                                .message(reason.getMessage())
+                                .build();
+                        cancelReasonVoList.add(reasonVo);
                     }
                     InsertEventQueueReportVo insertEventQueueReportVo
                             = InsertEventQueueReportVo
@@ -1034,7 +1091,7 @@ public class MessageExecuteService {
 //                            .actualZoneName()
                             .actualWeight(actualWeight)
 //                            .actualRackLocationId()
-                            .errorTexts(errorList)
+                            .reasonList(cancelReasonVoList)
                             .tx(tx)
                             .build();
                     factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);

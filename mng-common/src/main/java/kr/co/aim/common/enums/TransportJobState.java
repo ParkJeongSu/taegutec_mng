@@ -9,8 +9,9 @@ import lombok.RequiredArgsConstructor;
 public enum TransportJobState implements MetaDataEnum {
     REQUESTED("Requested"),
     ACCEPTED("Accepted"),
-    STARTED("Started"),
     REJECTED("Rejected"),
+    STARTED("Started"),
+    CANCELLED("Cancelled"),
     COMPLETED("Completed"),
     TERMINATED("Terminated");
     private final String value;

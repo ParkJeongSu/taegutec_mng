@@ -23,7 +23,7 @@ public class InsertEventQueueReportVo {
     private final String actualWeight;
     private final String actualRackLocationId;
     // 3. 예외 처리 정보
-    private final List<String> errorTexts;
+    private final List<TransportCancelReasonVo> reasonList;
     private final TransactionInfo tx;
     // orderType
     // I : inbound

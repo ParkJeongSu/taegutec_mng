@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
-@Component
+//@Component
 @Slf4j
 @RequiredArgsConstructor
 @Profile("scheduler")
@@ -40,9 +40,8 @@ public class InsertReportScheduler {
         // catch 문으로 빠지고, 재시도 횟수 증가 재시도 횟수가 3초과하면, Fail 상태로 변경
 
         // 1단계 EventQueue 조회
-        // 1.1 단계 << 고민 만약에 트랜잭션을 강하게 유지하고 싶으면,
-        // TODO: Ready -> Processing 으로 상태 변경
-        List<IfEventQueue> ifEventQueues = ifEventQueueService.findByIfStatusOrderByCreateTimeAsc(IfEventQueueState.READY.getValue());
+        // 조회 후 바로 Processing 상태로 변경
+        List<IfEventQueue> ifEventQueues = ifEventQueueService.findByIfStatusOrderByCreateTimeAscAndToProcessing(IfEventQueueState.READY.getValue());
 
         if(CollectionUtils.isNotEmpty(ifEventQueues)){
             for(IfEventQueue ifEventQueue : ifEventQueues){

@@ -12,7 +12,6 @@ public class TransportJobCancelStartedBody {
     private String transportType;
     private String carrierName;
     private String currentEquipmentName;
-    private String currentPortName;
     private String currentZoneName;
     private String currentPositionTypeName;
     private String currentPositionName;

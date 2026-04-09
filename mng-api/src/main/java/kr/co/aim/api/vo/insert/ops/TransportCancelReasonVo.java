@@ -1,4 +1,4 @@
-package kr.co.aim.common.format;
+package kr.co.aim.api.vo.insert.ops;
 
 import lombok.*;
 
@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TransportJobCancelCompletedReasonBody {
+public class TransportCancelReasonVo {
     private String code;
     private String message;
 }

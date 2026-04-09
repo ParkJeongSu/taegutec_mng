@@ -11,7 +11,6 @@ public class TakeOffCarrierBody {
     private String transportJobName;
     private String carrierName;
     private String currentEquipmentName;
-    private String currentPortName;
     private String currentZoneName;
     private String currentPositionType;
     private String currentPositionName;

@@ -33,13 +33,20 @@ public class IfEventQueueRepositoryImpl implements IfEventQueueRepository {
     }
 
     @Override
-    public IfEventQueue save(IfEventQueue interfaceEventLog) {
+    public IfEventQueue save(IfEventQueue ifEventQueue) {
         // 1. Domain -> Entity 변환
-        IfEventQueueEntity entity = ifEventQueueMapper.toEntity(interfaceEventLog);
+        IfEventQueueEntity entity = ifEventQueueMapper.toEntity(ifEventQueue);
         // 2. JPA 리포지토리를 통해 DB에 저장
         IfEventQueueEntity savedEntity = ifEventQueueJpaRepository.save(entity);
         // 3. 저장된 Entity -> Domain 변환 후 반환
         return ifEventQueueMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public List<IfEventQueue> save(List<IfEventQueue> ifEventQueueList) {
+        List<IfEventQueueEntity> entityList = ifEventQueueList.stream().map(ifEventQueueMapper::toEntity).collect(Collectors.toList());
+        List<IfEventQueueEntity> savedEntityList = ifEventQueueJpaRepository.saveAll(entityList);
+        return savedEntityList.stream().map(ifEventQueueMapper::toDomain).collect(Collectors.toList());
     }
 
     @Override

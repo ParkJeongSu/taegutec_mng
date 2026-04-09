@@ -20,10 +20,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-//@Component
+@Component
 @Slf4j
 @RequiredArgsConstructor
-@Profile("scheduler")
+@Profile({"scheduler","tex"})
 public class LoadRequestScheduler {
 
     private final RabbitTemplate rabbitTemplate;

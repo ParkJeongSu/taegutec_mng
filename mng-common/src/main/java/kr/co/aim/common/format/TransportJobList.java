@@ -26,7 +26,10 @@ public class TransportJobList {
     private String destinationZoneName;
 
     private String priority;
+    private String orderId;
+    private String requestSource;
+    private String travelProfile;
+    private String actualWeight;
     private String carrierType;
-    private String transferState;
 
 }
