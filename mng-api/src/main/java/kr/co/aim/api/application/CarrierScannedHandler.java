@@ -27,7 +27,7 @@ public class CarrierScannedHandler implements MessageHandler<String> {
 
     @Override
     public String getSupportedMessageName() {
-        return MessageList.CARRIER_UNBLOCKED.getMessageName();
+        return MessageList.CARRIER_SCANNED.getMessageName();
     }
 
     @Override

@@ -288,10 +288,13 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String carrierName = message.getBody().getCarrierName();
         String carrierType = message.getBody().getCarrierType();
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
-        String currentPortName = message.getBody().getCurrentPortName();
         String currentZoneName = message.getBody().getCurrentZoneName();
         String currentPositionType = message.getBody().getCurrentPositionType();
         String currentPositionName = message.getBody().getCurrentPositionName();
+        String currentPortName = "";
+        if(StringUtils.equals(PositionTypeName.PORT.getValue(), currentPositionType)){
+            currentPortName = currentPositionName;
+        }
 
         Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){

@@ -52,6 +52,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     private final IfEventQueueService ifEventQueueService;
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
 
+    private final NamingRuleService namingRuleService;
+
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
@@ -221,9 +223,10 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
         if(StringUtils.equals(transportOrder.getTransportStatus(), TransportOrderStatus.CREATED.getValue())){
             List<TransportJobCreateCommand> commandList = new ArrayList<>();
+            String transportJobName = namingRuleService.getTransportJobName(SystemName.GAL.getValue(),tx.eventTime());
             TransportJobCreateCommand command =
                     TransportJobCreateCommand.builder()
-                            .transportJobName(SystemName.GAL.getValue().charAt(0) + "_"+ tx.eventTime().toString().substring(0,12))
+                            .transportJobName(transportJobName)
                             .carrierName(carrierName)
                             .transportType(transportType)
                             .transportJobState(TransportJobState.REQUESTED.getValue())

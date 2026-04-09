@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 @Aspect
 @Component
-@Profile({"scheduler"})
+@Profile({"scheduler","tex"})
 @Slf4j
 public class SchedulerAspect {
 
