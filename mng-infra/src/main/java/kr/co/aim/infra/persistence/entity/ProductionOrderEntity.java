@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
-@Table(name = "PRODUCTION_ORDER")
+@Table(name = "PRODUCTION_ORDER", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor
 public class ProductionOrderEntity {
     @Id

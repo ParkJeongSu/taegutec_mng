@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
-@Table(name = "H2TRANS", schema = "TESTDB")
+@Table(name = "H2TRANS", catalog = "NEXBEEAS", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class H2TransEntity {
     @Id

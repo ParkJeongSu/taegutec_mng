@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,7 @@ import java.util.Optional;
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
+@Profile({"pex","tex","scheduler"})
 public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final HistoryService historyService;
@@ -213,7 +215,12 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
-    public BaseMessage<TransportJobRequestListBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
+    public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message) {
+        return null;
+    }
+
+    @Override
+    public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
         return null;
     }
 

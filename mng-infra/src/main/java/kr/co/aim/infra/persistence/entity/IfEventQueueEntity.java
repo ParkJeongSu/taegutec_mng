@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Table(name = "IF_EVENT_QUEUE")
+@Table(name = "IF_EVENT_QUEUE", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

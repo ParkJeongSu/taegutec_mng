@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;
 import kr.co.aim.common.enums.SystemName;
-import kr.co.aim.common.format.AreYouThereReplyBody;
-import kr.co.aim.common.format.AreYouThereRequestBody;
 import kr.co.aim.common.format.ConnectionBody;
 import kr.co.aim.common.format.ConnectionCheckBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -15,6 +13,7 @@ import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -41,6 +40,7 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
         TypeReference<BaseMessage<ConnectionCheckBody>> typeRef = new TypeReference<>() {};
         BaseMessage<ConnectionCheckBody> request = objectMapper.readValue(message, typeRef);
 
+        String fromSystemName = request.getMessageFrom();
         // 2. 해당 비즈니스 로직 호출
         // ConnectionCheckHandler 는 단순히 로그
         log.info("transactionId : {}", request.getTransactionId());
@@ -63,12 +63,35 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
         String jsonPayload = objectMapper.writeValueAsString(reply);
         log.info("Sending JSON Payload : {}",jsonPayload);
 
-        // 4. Message Reply
-        rabbitTemplate.convertAndSend(
-                RabbitConfig.EXCHANGE_DEAD,
-                RabbitConfig.ROUTING_DEAD,
-                reply
-        );
+        if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_WCS,
+                    RabbitConfig.ROUTING_WCS,
+                    reply
+            );
+        }else if(StringUtils.isBlank(fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_EAS,
+                    RabbitConfig.ROUTING_EAS,
+                    reply
+            );
+        }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_EAS,
+                    RabbitConfig.ROUTING_EAS,
+                    reply
+            );
+        }else{
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_WCS,
+                    RabbitConfig.ROUTING_WCS,
+                    reply
+            );
+        }
+
 
         return null;
     }

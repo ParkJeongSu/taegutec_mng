@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "STAT_WORK_ORDER_PROCESSED_DAILY")
+@Table(name = "STAT_WORK_ORDER_PROCESSED_DAILY", catalog = "NEXBEEAS", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class StatWorkOrderProcessedDailyEntity {
     @Id

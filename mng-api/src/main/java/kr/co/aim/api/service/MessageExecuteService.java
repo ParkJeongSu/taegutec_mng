@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
+@Profile({"pex","tex","scheduler"})
 public class MessageExecuteService {
 
     private final ObjectMapper objectMapper;
@@ -700,7 +702,10 @@ public class MessageExecuteService {
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message){
         return factoryProcessStrategy.unLoadRequest(message);
     }
-    public BaseMessage<TransportJobRequestListBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
+    public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message){
+        return factoryProcessStrategy.transportOrderRequestList(message);
+    }
+    public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
         return factoryProcessStrategy.transportOrderRequest(message);
     }
 
@@ -812,10 +817,14 @@ public class MessageExecuteService {
                 Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
 
                 if(optionalPorts.isEmpty()){
-                    throw new RuntimeException("port not found");
+                    //throw new RuntimeException("port not found");
+                    //TODO : 추후 수정
+                    continue;
                 }
                 if(!PortState.isExist(portStateName)){
-                    throw new RuntimeException("portState not found");
+                    //throw new RuntimeException("portState not found");
+                    //TODO : 추후 수정
+                    continue;
                 }
 
                 Port port = optionalPorts.get();
@@ -1192,55 +1201,52 @@ public class MessageExecuteService {
      * 반송잡의 상태를 rejected로 변경
      */
     @Transactional
-    public void transportJobReply(BaseMessage<TransportJobReplyListBody> message) {
+    public void transportJobReply(BaseMessage<TransportJobReplyBody> message) {
         String messageName = message.getMessageName();
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-        List<TransportJobReplyBody> transportJobList = message.getBody().getTransportJobList();
 
-        for(TransportJobReplyBody transportJobReplyBody : transportJobList){
-            String transportJobName = transportJobReplyBody.getTransportJobName();
-            // 비관적 Lock 으로 조회시 문제 발생
-            //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        String transportJobName = message.getBody().getTransportJobName();
+        String carrierName = message.getBody().getCarrierName();
+        // 비관적 Lock 으로 조회시 문제 발생
+        //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
 
-            if(optionalTransportJob.isPresent()){
-                TransportJob transportJob = optionalTransportJob.get();
-                TransportJobUpdateCommand command =
-                        TransportJobUpdateCommand
-                                .builder()
-                                .transportJobState(TransportJobState.ACCEPTED.getValue())
-                                .transactionInfo(tx)
-                                .build();
-                transportJob.changeTransportJob(command);
-                transportJob = transportJobService.save(transportJob);
-                TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
-                historyService.saveHistory(transportJobHistoryEntity);
-                String carrierName = transportJobReplyBody.getCarrierName();
-                // insert EventQueue
-                try{
-                    InsertEventQueueReportVo insertEventQueueReportVo
-                            = InsertEventQueueReportVo
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
                             .builder()
-                            .transportJobName(transportJob.getTransportJobName())
-                            .messageName(messageName)
+                            .transportJobState(TransportJobState.ACCEPTED.getValue())
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+            // insert EventQueue
+            try{
+                InsertEventQueueReportVo insertEventQueueReportVo
+                        = InsertEventQueueReportVo
+                        .builder()
+                        .transportJobName(transportJob.getTransportJobName())
+                        .messageName(messageName)
 //                            .port()
 //                            .portDef()
-                            .carrierName(carrierName)
+                        .carrierName(carrierName)
 //                            .actualZoneName()
 //                            .actualWeight()
 //                            .actualRackLocationId()
 //                            .errorTexts()
-                            .tx(tx)
-                            .build();
-                    factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
-                }
-                catch(Exception e){
-                    log.error("EventQueue enqueue error",e);
-                }
+                        .tx(tx)
+                        .build();
+                factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
+            }
+            catch(Exception e){
+                log.error("EventQueue enqueue error",e);
             }
         }
 
@@ -1451,11 +1457,15 @@ public class MessageExecuteService {
             Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
             if(optionalEquipments.isEmpty()){
-                throw new RuntimeException("Equipment not found");
+                //throw new RuntimeException("Equipment not found");
+                // TODO : 현재는 continue 추후 고민
+                continue;
             }
 
             if(!EquipmentState.isExist(equipmentState)){
-                throw new RuntimeException("EquipmentState not found");
+                // TODO : 현재는 continue 추후 고민
+                //throw new RuntimeException("EquipmentState not found");
+                continue;
             }
             Equipment equipment = optionalEquipments.get();
             EquipmentState state = EquipmentState.valueOf(equipmentState);

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
-@Table(name = "PRODUCTION_ORDER_HISTORY")
+@Table(name = "PRODUCTION_ORDER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
 @NoArgsConstructor
 public class ProductionOrderHistoryEntity implements IBaseHistoryEntity {
     @Id

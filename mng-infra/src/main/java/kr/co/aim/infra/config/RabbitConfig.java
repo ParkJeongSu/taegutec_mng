@@ -1,6 +1,7 @@
 package kr.co.aim.infra.config;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -17,6 +18,7 @@ import java.util.Map;
 
 @Configuration
 @Getter
+@Slf4j
 @Profile({"pex","tex","scheduler"})
 public class RabbitConfig {
 
@@ -80,17 +82,17 @@ public class RabbitConfig {
         admin.setAutoStartup(true);
         try {
             admin.initialize();
-            System.out.println(">>> [RabbitAdmin] All Infra (PEX, TEX, EAS, WMS, WCS, MANTI) initialized.");
+            log.info(">>> [RabbitAdmin] All Infra (PEX, TEX, EAS, WMS, WCS, MANTI) initialized.");
         } catch (Exception e) {
-            System.err.println(">>> [RabbitAdmin] Initialization failed: " + e.getMessage());
+            log.error(">>> [RabbitAdmin] Initialization failed: " + e.getMessage());
         }
         return admin;
     }
 
     // --- Queue & Exchange Beans ---
-    @Bean public Queue deadLetterQueue() { return new Queue(QUEUE_DEAD, true); }
-    @Bean public DirectExchange deadLetterExchange() { return new DirectExchange(EXCHANGE_DEAD); }
-    @Bean Binding deadLetterBinding() { return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(ROUTING_DEAD); }
+    //@Bean public Queue deadLetterQueue() { return new Queue(QUEUE_DEAD, true); }
+    //@Bean public DirectExchange deadLetterExchange() { return new DirectExchange(EXCHANGE_DEAD); }
+    //@Bean Binding deadLetterBinding() { return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(ROUTING_DEAD); }
 
     // 공통 Argument 생성 메서드 (람다 대신 사용)
     private Map<String, Object> dlqArgs() {
@@ -100,8 +102,23 @@ public class RabbitConfig {
         return args;
     }
 
-    @Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false, dlqArgs()); }
-    @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false, dlqArgs()); }
+    // 1. TTL 설정을 담은 Argument 생성
+    private Map<String, Object> ttlArgs() {
+        Map<String, Object> args = new HashMap<>();
+        // 예: 60,0000ms = 10분 동안 처리 안 되면 삭제
+        args.put("x-message-ttl", 600000);
+        return args;
+    }
+
+    @Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false); }
+    @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false); }
+
+    // TODO: 추후 고민 ttl 설정
+    //@Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false,ttlArgs()); }
+    //@Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false,ttlArgs()); }
+
+    //@Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false, dlqArgs()); }
+    //@Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false, dlqArgs()); }
     //@Bean public Queue easQueue() { return new Queue(QUEUE_EAS, true, false, false, dlqArgs()); }
     //@Bean public Queue wmsQueue() { return new Queue(QUEUE_WMS, true, false, false, dlqArgs()); }
     //@Bean public Queue wcsQueue() { return new Queue(QUEUE_WCS, true, false, false, dlqArgs()); }

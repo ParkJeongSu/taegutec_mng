@@ -1,23 +1,16 @@
 package kr.co.aim.api.schedule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.service.InsertExternalInterfaceService;
 import kr.co.aim.api.service.TransportOrderService;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.TransportOrderRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.TransportOrderCreateCommand;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.infra.config.RabbitConfig;
-import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
-import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
-import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -40,7 +33,7 @@ public class InsertTransportOrderScheduler {
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
 
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
+    @Scheduled(fixedDelay = 10000) // 5초마다 실행
     @SchedulerLock(name = "insertTransportOrderRequest",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)

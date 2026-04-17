@@ -13,6 +13,7 @@ import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
@@ -39,16 +40,16 @@ public class AreYouThereRequestHandler implements MessageHandler<String> {
         TypeReference<BaseMessage<AreYouThereRequestBody>> typeRef = new TypeReference<>() {};
         BaseMessage<AreYouThereRequestBody> request = objectMapper.readValue(message, typeRef);
 
+        String fromSystemName = request.getMessageFrom();
         // 2. 해당 비즈니스 로직 호출
         // AreYouThereRequest 는 단순히 로그
-        log.info("equipment : {}", request.getBody().getEquipmentName());
+        log.info("TransactionId : {}", request.getTransactionId());
+        log.info("MessageFrom : {}", request.getMessageFrom());
+
         
         // 3. 메시지 송신 객체 생성
         BaseMessage<AreYouThereReplyBody> reply = new BaseMessage<>();
-        AreYouThereReplyBody body = AreYouThereReplyBody.
-                builder()
-                .equipmentName(request.getBody().getEquipmentName())
-                .build();
+        AreYouThereReplyBody body = new AreYouThereReplyBody();
         
         reply.setEventTime(request.getEventTime());
         reply.setMessageFrom(SystemName.MNG.getValue());
@@ -65,11 +66,34 @@ public class AreYouThereRequestHandler implements MessageHandler<String> {
         log.info("Sending JSON Payload : {}",jsonPayload);
 
         // 4. Message Reply
-        rabbitTemplate.convertAndSend(
-                RabbitConfig.EXCHANGE_DEAD,
-                RabbitConfig.ROUTING_DEAD,
-                reply
-        );
+        if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_WCS,
+                    RabbitConfig.ROUTING_WCS,
+                    reply
+            );
+        }else if(StringUtils.isBlank(fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_EAS,
+                    RabbitConfig.ROUTING_EAS,
+                    reply
+            );
+        }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_EAS,
+                    RabbitConfig.ROUTING_EAS,
+                    reply
+            );
+        }else{
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_WCS,
+                    RabbitConfig.ROUTING_WCS,
+                    reply
+            );
+        }
 
         return null;
     }

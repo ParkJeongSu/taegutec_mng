@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
-@Table(name = "TRANSPORT_ORDER")
+@Table(name = "TRANSPORT_ORDER", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TransportOrderEntity {
 

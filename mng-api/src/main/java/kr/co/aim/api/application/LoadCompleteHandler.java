@@ -3,11 +3,9 @@ package kr.co.aim.api.application;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
-import kr.co.aim.api.service.PortService;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.LoadCompletedBody;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -19,7 +17,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex"})
 public class LoadCompleteHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;

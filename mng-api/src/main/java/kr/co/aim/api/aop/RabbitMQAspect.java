@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.common.format.request.MessageHeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -30,27 +31,36 @@ public class RabbitMQAspect {
     @Around("rabbitListenerPointcut()")
     public Object setMdcAroundRabbitListener(ProceedingJoinPoint joinPoint) throws Throwable {
         try {
-            // 3. MDC에 식별자(transactionId) 추가. 메시지 헤더 값을 사용할 수도 있습니다.
-            try {
-                MessageHeader messageHeader = objectMapper.readValue(joinPoint.getArgs()[0].toString(), MessageHeader.class);
-                //String transactionId = messageHeader.getHeader().getTransactionId();
-                String transactionId = messageHeader.getMessageName();
-                MDC.put("transactionId", transactionId);
-            } catch (Exception e) {
-                log.info("MDC set error");
+            Object[] args = joinPoint.getArgs();
+
+            if (args != null && args.length > 0 && args[0] instanceof org.springframework.amqp.core.Message) {
+                try {
+                    // 1. Message 객체로 캐스팅
+                    org.springframework.amqp.core.Message message = (org.springframework.amqp.core.Message) args[0];
+
+                    // 2. 바디(byte[]) 추출
+                    byte[] body = message.getBody();
+
+                    // 3. ObjectMapper로 필요한 헤더 정보만 읽기
+                    MessageHeader header = objectMapper.readValue(body, MessageHeader.class);
+
+                    if (ObjectUtils.isNotEmpty( header.getTransactionId())) {
+                        MDC.put("transactionId", header.getTransactionId());
+                    }
+                } catch (Exception e) {
+                    // 파싱 실패 시 로깅 (상세 에러 확인을 위해 e.getMessage() 추가 권장)
+                    log.info("MDC set error: " + e.getMessage());
+                }
             }
+
             log.info("business logic start");
-            // 4. 원래의 @RabbitListener 메서드 실행
             return joinPoint.proceed();
+
         } catch (Exception e) {
-            log.error(e.getMessage());
-            // 추가적으로 로그 더 기록
+            log.error("Aspect logic error: " + e.getMessage());
             throw e;
-        }
-        finally {
+        } finally {
             log.info("business logic end");
-            // 5. (가장 중요) 메서드 실행이 끝나면 반드시 MDC를 비워줍니다.
-            // 이렇게 하지 않으면 스레드 풀의 다른 스레드에 값이 오염됩니다.
             MDC.clear();
         }
     }

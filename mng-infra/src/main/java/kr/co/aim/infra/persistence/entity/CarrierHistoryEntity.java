@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "CARRIER_HISTORY")
+@Table(name = "M_CARRIER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class CarrierHistoryEntity implements IBaseHistoryEntity {
     @Id

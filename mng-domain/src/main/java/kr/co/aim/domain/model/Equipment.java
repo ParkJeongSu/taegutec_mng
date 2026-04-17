@@ -14,7 +14,6 @@ import java.time.LocalDateTime;
 public class Equipment implements HasTransactionInfo {
     private Long id;
     private String equipmentName;
-    private Long equipmentDefId;
     private Long parentEquipmentId;
     private String equipmentLevel;
     private String equipmentState;

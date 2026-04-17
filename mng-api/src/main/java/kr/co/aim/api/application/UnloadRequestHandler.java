@@ -7,7 +7,6 @@ import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.DestinationDispatchRequestBody;
 import kr.co.aim.common.format.UnLoadRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;

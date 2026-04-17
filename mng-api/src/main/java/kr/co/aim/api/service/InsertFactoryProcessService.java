@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ import java.util.Optional;
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
+@Profile({"pex","tex","scheduler"})
 public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
     private final HistoryService historyService;
@@ -186,7 +188,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<TransportJobRequestListBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
+    public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message) {
         // 1. TransportOrder 비관적 Lock 조회
         // 2. Created 상태인지 체크
         // 3. Created 상태라면, TransportJob 생성 후 TEX 로 전송
@@ -269,6 +271,111 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             // 3. 포맷 적용 및 출력
             String timestamp = now.format(formatter);
             request.setTransactionId(timestamp);
+            request.setBody(body);
+
+            transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
+            transportOrder = transportOrderService.save(transportOrder);
+            TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+            historyService.saveHistory(transportOrderHistoryEntity);
+
+            return request;
+        }
+
+        return null;
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
+        // 1. TransportOrder 비관적 Lock 조회
+        // 2. Created 상태인지 체크
+        // 3. Created 상태라면, TransportJob 생성 후 TEX 로 전송
+        // 4. 전송 후 Request 상태로 변경
+        Long id = message.getBody().getId();
+        Optional<TransportOrder> optionalTransportOrder = transportOrderService.findWithLockById(id);
+
+        if(optionalTransportOrder.isEmpty()){
+            return null;
+        }
+        TransportOrder transportOrder = optionalTransportOrder.get();
+
+        String transportOrderId = transportOrder.getTransportOrderId();
+        String carrierName = transportOrder.getCarrierName();
+        String transportType = transportOrder.getTransportType();
+        String carrierType = transportOrder.getCarrierType();
+        Integer priority = transportOrder.getPriority();
+        String locationId = transportOrder.getLocationId();
+        String workStationId = transportOrder.getWorkStationId();
+        String sourceZoneName = transportOrder.getSourceZoneName();
+        String destinationZoneName = transportOrder.getDestinationZoneName();
+        String requestedZoneName = transportOrder.getRequestedZoneName();
+        String actualZoneName = transportOrder.getActualZoneName();
+        String actualLocationId = transportOrder.getActualLocationId();
+        String travelProfile = transportOrder.getTravelProfile();
+        LocalDateTime createTime = transportOrder.getCreateTime();
+        LocalDateTime retrievalTime = transportOrder.getRetrievalTime();
+        String createUser = transportOrder.getCreateUser();
+        String eventName = transportOrder.getEventName();
+        LocalDateTime eventTime = transportOrder.getEventTime();
+        String eventUser = transportOrder.getEventUser();
+        String eventComment = transportOrder.getEventComment();
+
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        if(StringUtils.equals(transportOrder.getTransportStatus(), TransportOrderStatus.CREATED.getValue())){
+            List<TransportJobCreateCommand> commandList = new ArrayList<>();
+            String transportJobName = namingRuleService.getTransportJobName(SystemName.GAL.getValue(),tx.eventTime());
+            // TODO: locationId 를 토대로 PORT_DEF 에 찾은 후 sourceEquipmentName sourcePositionType 과 PositionName 에 넣어야함
+
+            TransportJobCreateCommand command =
+                    TransportJobCreateCommand.builder()
+                            .transportJobName(transportJobName)
+                            .carrierName(carrierName)
+                            .transportType(transportType)
+                            .transportJobState(TransportJobState.REQUESTED.getValue())
+                            .carrierType(carrierType)
+                            .travelProfile(travelProfile)
+                            .sourceEquipmentName("CNV01") //TODO : 현재는 hardcoding
+                            //.sourcePortName("P04") //TODO : 현재는 hardcoding
+                            //.sourceZoneName()
+                            .sourcePositionTypeName(PositionTypeName.PORT.getValue())
+                            .sourcePositionName("P04")
+                            .destinationEquipmentName("STK01") //TODO : 현재는 hardcoding
+                            //.destinationPortName("zone01") //TODO : 현재는 hardcoding
+                            .destinationZoneName(requestedZoneName)
+                            //.destinationPositionTypeName()
+                            //.destinationPositionName()
+                            .priority(priority)
+                            //.errorCode()
+                            //.errorText()
+                            .requestSource(TransportJobRequestType.GAL.getValue())
+                            .createTime(tx.eventTime())
+                            //.departedTime()
+                            //.arrivedTime()
+                            //.reasonCode()
+                            .orderId(transportOrderId)
+                            .transactionInfo(tx)
+                            .build();
+            commandList.add(command);
+            CreateTransportJobVo vo = CreateTransportJobVo
+                    .builder()
+                    .transportJobCreateCommandList(commandList)
+                    .build();
+            List<TransportJob> transportJobs = transportJobService.createTransportJob(vo);
+            BaseMessage<TransportJobRequestBody> request = new BaseMessage<>();
+            TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJobs.get(0));
+            request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+            // 1. 현재 시간 가져오기 (2026년 기준)
+            LocalDateTime now = LocalDateTime.now();
+            // 2. 18자리 포맷 정의 (연4, 월2, 일2, 시2, 분2, 초2, 소수점4)
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+            // 3. 포맷 적용 및 출력
+            String timestamp = now.format(formatter);
+            request.setTransactionId(timestamp);
+            request.setMessageFrom(SystemName.MNG.getValue());
+            request.setMessageOwner(SystemName.MNG.getValue());
+            request.setEventTime(timestamp);
+            request.setResultCode(ResultCode.OK.getValue());
+            request.setResultMessage("");
             request.setBody(body);
 
             transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());

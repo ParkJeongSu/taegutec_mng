@@ -1,12 +1,8 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.strategy.FactoryProcessStrategy;
-import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.common.format.*;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.repository.TransportJobRepository;
@@ -74,11 +70,11 @@ public class TransportJobService {
                     .carrierType(transportJob.getCarrierType())
                     .sourceEquipmentName(transportJob.getSourceEquipmentName())
                     .sourceZoneName(transportJob.getSourceZoneName())
-                    .sourcePositionTypeName(transportJob.getSourcePositionTypeName())
+                    .sourcePositionType(transportJob.getSourcePositionTypeName())
                     .sourcePositionName(transportJob.getSourcePositionName())
                     .destinationEquipmentName(transportJob.getDestinationEquipmentName())
                     .destinationZoneName(transportJob.getDestinationZoneName())
-                    .destinationPositionTypeName(transportJob.getDestinationPositionTypeName())
+                    .destinationPositionType(transportJob.getDestinationPositionTypeName())
                     .destinationPositionName(transportJob.getDestinationPositionName())
                     .priority(transportJob.getPriority() == null ? "" : transportJob.getPriority().toString())
                     .orderId(transportJob.getOrderId())
@@ -90,6 +86,28 @@ public class TransportJobService {
 
         return TransportJobRequestListBody.builder()
                 .transportJobList(transportJobRequestBodies)
+                .build();
+    }
+
+    public TransportJobRequestBody createTransportJobMessage(TransportJob transportJob) {
+
+        return TransportJobRequestBody.builder()
+                .transportJobName(transportJob.getTransportJobName())
+                .transportType(transportJob.getTransportType())
+                .carrierName(transportJob.getCarrierName())
+                .carrierType(transportJob.getCarrierType())
+                .sourceEquipmentName(transportJob.getSourceEquipmentName())
+                .sourceZoneName(transportJob.getSourceZoneName())
+                .sourcePositionType(transportJob.getSourcePositionTypeName())
+                .sourcePositionName(transportJob.getSourcePositionName())
+                .destinationEquipmentName(transportJob.getDestinationEquipmentName())
+                .destinationZoneName(transportJob.getDestinationZoneName())
+                .destinationPositionType(transportJob.getDestinationPositionTypeName())
+                .destinationPositionName(transportJob.getDestinationPositionName())
+                .priority(transportJob.getPriority() == null ? "" : transportJob.getPriority().toString())
+                .orderId(transportJob.getOrderId())
+                .requestSource(transportJob.getRequestSource())
+                .travelProfile(transportJob.getTravelProfile())
                 .build();
     }
 

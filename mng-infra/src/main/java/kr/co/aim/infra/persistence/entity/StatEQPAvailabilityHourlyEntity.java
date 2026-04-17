@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "STAT_EQP_AVAILABILITY_HOURLY")
+@Table(name = "STAT_EQP_AVAILABILITY_HOURLY", catalog = "NEXBEEAS", schema = "dbo")
 @IdClass(StatEQPAvailabilityHourlyId.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class StatEQPAvailabilityHourlyEntity {

@@ -3,7 +3,9 @@ package kr.co.aim.api.application;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import kr.co.aim.api.service.MessageExecuteService;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
+import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.TransportJobRequestListBody;
 import kr.co.aim.common.format.TransportOrderRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -19,12 +21,13 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"tex",})
+@Profile({"tex"})
 public class TransportOrderRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
     private final MessageExecuteService messageExecuteService;
+    private final JsonUtils jsonUtils;
 
     @Override
     public String getSupportedMessageName() {
@@ -41,17 +44,22 @@ public class TransportOrderRequestHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출 & reply 메시지 생성
         // 서비스 호출
-        BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = messageExecuteService.transportOrderRequest(requestMessage);
+        //BaseMessage<TransportJobRequestListBody> transportJobRequestBodyBaseMessage = messageExecuteService.transportOrderRequest(requestMessage);
+        BaseMessage<TransportJobRequestBody> transportJobRequestBodyBaseMessage = messageExecuteService.transportOrderRequest(requestMessage);
 
         if(transportJobRequestBodyBaseMessage == null){
             log.info("transportJobRequestBodyBaseMessage is null");
         }else{
             // 4. DTO 객체를 JSON 문자열로 직접 변환합니다.
             String jsonPayload = objectMapper.writeValueAsString(transportJobRequestBodyBaseMessage);
-            log.info("Sending JSON Payload: {}", jsonPayload);
+            //log.info("Sending JSON Payload: {}", jsonPayload);
+            jsonUtils.writePrettyJson(jsonPayload);
 
             // 5. String 으로 변환된 메시지 reply
-            rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_WCS,RabbitConfig.ROUTING_WCS, transportJobRequestBodyBaseMessage );
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_WCS,
+                    RabbitConfig.ROUTING_WCS,
+                    transportJobRequestBodyBaseMessage );
         }
         return null;
     }

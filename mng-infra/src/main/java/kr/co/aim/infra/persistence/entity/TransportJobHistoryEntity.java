@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "TRANSPORT_JOB_HISTORY")
+@Table(name = "TRANSPORT_JOB_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class TransportJobHistoryEntity implements IBaseHistoryEntity {
     @Id

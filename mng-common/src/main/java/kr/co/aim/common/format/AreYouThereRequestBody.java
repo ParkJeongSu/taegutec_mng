@@ -1,12 +1,10 @@
 package kr.co.aim.common.format;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.*;
 
-@Data
 @ToString
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
+@JsonSerialize
 public class AreYouThereRequestBody {
-    private String equipmentName;
 }

@@ -15,11 +15,11 @@ public class TransportJobRequestBody {
     private String carrierName;
     private String sourceEquipmentName;
     private String sourceZoneName;
-    private String sourcePositionTypeName;
+    private String sourcePositionType;
     private String sourcePositionName;
     private String destinationEquipmentName;
     private String destinationZoneName;
-    private String destinationPositionTypeName;
+    private String destinationPositionType;
     private String destinationPositionName;
     private String priority;
     private String orderId;

@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 @Configuration
-@Profile({"pex","tex","dispatcher","scheduler"})
+@Profile({"pex","tex","scheduler"})
 public class RabbitMQRetryConfig {
     @Autowired
     private ConnectionFactory connectionFactory;
@@ -33,18 +33,18 @@ public class RabbitMQRetryConfig {
                     c.setShutdownTimeout(60_000L);
                 }
         );
-        factory.setAdviceChain(retryInterceptor());
+        //factory.setAdviceChain(retryInterceptor());
 
         return factory;
     }
 
-    @Bean
-    public Advice retryInterceptor() {
-
-        return RetryInterceptorBuilder.stateless()
-                .maxAttempts(5)                    // "총 5회 시도" (첫 호출 + 재시도 4회)
-                //.backOffOptions(1000, 2.0, 10000) // 선택: 재시도 간격(초기 1s, 배수 2.0, 최대 10s)
-                .recoverer(new RejectAndDontRequeueRecoverer())
-                .build();
-    }
+//    @Bean
+//    public Advice retryInterceptor() {
+//
+//        return RetryInterceptorBuilder.stateless()
+//                .maxAttempts(5)                    // "총 5회 시도" (첫 호출 + 재시도 4회)
+//                //.backOffOptions(1000, 2.0, 10000) // 선택: 재시도 간격(초기 1s, 배수 2.0, 최대 10s)
+//                .recoverer(new RejectAndDontRequeueRecoverer())
+//                .build();
+//    }
 }

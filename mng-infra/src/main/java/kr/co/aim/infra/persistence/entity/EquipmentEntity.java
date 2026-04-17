@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "EQUIPMENT")
+@Table(name = "EQUIPMENT", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class EquipmentEntity {
     @Id
@@ -23,9 +23,6 @@ public class EquipmentEntity {
 
     @Column(name = "EQUIPMENT_NAME")
     private String equipmentName;
-
-    @Column(name = "EQUIPMENT_DEF_ID")
-    private Long equipmentDefId;
 
     @Column(name = "PARENT_EQUIPMENT_ID")
     private Long parentEquipmentId;

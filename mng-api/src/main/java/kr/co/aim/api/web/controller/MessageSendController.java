@@ -97,10 +97,8 @@ public class MessageSendController {
                 .timestamp("test")
                 .transactionId("123")
                 .build();
-        AreYouThereRequestBody body = AreYouThereRequestBody.
-                builder()
-                        .equipmentName("equipment1")
-                .build();
+        AreYouThereRequestBody body = new AreYouThereRequestBody();
+
         request.setEventTime(request.getEventTime());
         request.setMessageFrom("MNG");
         request.setMessageName(MessageList.ARE_YOU_THERE_REQUEST.getMessageName());

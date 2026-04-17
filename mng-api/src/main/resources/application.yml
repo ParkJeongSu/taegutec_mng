@@ -5,6 +5,9 @@ factory:
 spring:
   application:
     name: mng
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
   task:
     scheduling:
       pool:
@@ -15,12 +18,15 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: tex # 또는 rabbitmq | scheduler,rabbitmq | dispatcher | pex | tex | simulator 등으로 설정 가능
+    active: tex # scheduler,tex | pex | tex | simulator 등으로 설정 가능
   datasource:
     mssql:
-      jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=myprojecttest;encrypt=false;
-      username: sa
-      password: th!131030
+      #jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=myprojecttest;encrypt=false;
+      #username: sa
+      #password: th!131030
+      jdbc-url: jdbc:sqlserver://192.168.50.135:1433;databaseName=NEXBEMNG;encrypt=false;
+      username: nexbe
+      password: "!aim123456"
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       hikari:
         pool-name: mssql-pool
@@ -43,6 +49,21 @@ spring:
         idle-timeout: 600000
         max-lifetime: 1800000
         leak-detection-threshold: 2000   # ← ms 단위
+#    db2:
+#      # 1. 프리픽스가 jdbc:as400 으로 바뀝니다.
+#      # 2. 뒤에 옵션들(naming=sql 등)은 JPA를 쓸 때 필수입니다.
+#      jdbc-url: jdbc:as400://[실제_AS400_IP]/[기본_라이브러리명];naming=sql;errors=full;prompt=false;ccsid=933
+#      username: [ AS400_계정 ]
+#      password: [ AS400_비밀번호 ]
+#      driver-class-name: com.ibm.as400.access.AS400JDBCDriver # 드라이버 클래스명을 jt400 전용으로 변경합니다.
+#      hikari:
+#        pool-name: as400-pool
+#        maximum-pool-size: 20
+#        minimum-idle: 10
+#        connection-timeout: 30000
+#        idle-timeout: 600000
+#        max-lifetime: 1800000
+#        leak-detection-threshold: 2000
   jpa:
     hibernate:
       jdbc:
@@ -96,48 +117,56 @@ jwt:
 custom:
   rabbitmq:
     exchange:
-      pex: "rpc.exchange"
-      tex: "rpc.exchange"
-      dead: "dead.exchange"      # <- 그대로 유지 (알기 쉬운 이름)
-      eas: "eas.exchange"
-      wms: "wms.exchange"
-      wcs: "wcs.exchange"
-      manti: "manti.exchange"
+      pex: "system.direct" # rpc.exchange
+      tex: "system.direct"
+      dead: "system.direct"      # <- 그대로 유지 (알기 쉬운 이름)
+      eas: "system.direct"
+      wms: "system.direct"
+      wcs: "system.direct"
+      manti: "system.direct"
     queue:
-      pex: "PEX.request.queue"
-      tex: "TEX.request.queue"
+      pex: "q.pex.request" # PEX.request.queue
+      tex: "q.tex.request" # TEX.request.queue
       dead: "DEAD.request.queue"
-      eas: "EAS.request.queue"
-      wms: "WMS.request.queue"
-      wcs: "WCS.request.queue"
-      manti: "MANTI.request.queue"
+      eas: "q.eas.request"
+      wms: "q.wms.request"
+      wcs: "q.wcs.request"
+      manti: "q.manti.request"
     routing:
-      pex: "PEX.key"
-      tex: "TEX.key"
+      pex: "key.pex"
+      tex: "key.tex"
       dead: "DEAD.request.queue"           # <- 이 값이 문제의 원인이었지만, 이 이름이 더 좋음!
-      eas: "EAS.key"
-      wms: "WMS.key"
-      wcs: "WCS.key"
-      manti: "MANTI.key"
+      eas: "key.eas"
+      wms: "key.wms"
+      wcs: "key.wcs"
+      manti: "key.manti"
 ---
 # 'pex,tex,dispatcher,scheduler' 프로필이 활성화될 때만 이 설정이 적용됩니다.
 spring:
   config:
     activate:
-      on-profile: pex,tex,dispatcher,scheduler
+      on-profile: pex,tex,scheduler
 #    import:
 #      - classpath:rabbit.yml
   rabbitmq:
-    host: localhost
+    host: 192.168.50.135 #192.168.50.225 #localhost
     port: 5672
-    username: admin
-    password: admin
+    username: eosuser # eosuser
+    password: eosuser
+    # host: localhost #192.168.50.225 #localhost
+    # port: 5672
+    # username: admin # eosuser
+    # password: admin
     dynamic: true
     listener:
       simple:
         concurrency: 10 # 시작 시 생성되는 소비자(consumer) 스레드 수
         max-concurrency: 10 # 부하 증가 시 최대 확장 가능한 소비자 스레드 수
         force-stop-for-concurrency: false # 종료 시 리스너가 진행 중인 작업을 마칠 때까지 기다리게 함
+        missing-queues-fatal: true # 리슨하려는 큐가 없으면 치명적(Fatal) 에러로 간주하고 앱 종료 시도
+        default-requeue-rejected: false # 메시지 처리 중 에러가 났을 때, 다시 큐에 넣지 않음 (중요!)
+        retry:
+          enabled: false # 재시도 기능을 아예 끔
 #ezieco:
 #  eziflow:
 #    thread-properties:
