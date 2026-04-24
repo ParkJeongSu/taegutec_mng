@@ -9,10 +9,7 @@ import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.LoadCompletedCommand;
-import kr.co.aim.domain.command.LocationChangedCommand;
-import kr.co.aim.domain.command.TransportJobCreateCommand;
-import kr.co.aim.domain.command.UnLoadRequestCommand;
+import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
@@ -59,7 +56,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final ProductionOrderMapper productionOrderMapper;
 
     @Override
-    public BaseMessage<TransportJobRequestListBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message) {
+    public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -98,7 +95,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         Equipment equipment = optionalEquipments.get();
         List<CarrierSelectionResult> dispatchCarrierList = null;
 
-        BaseMessage<TransportJobRequestListBody> reply = null;
+        BaseMessage<TransportJobRequestBody> reply = null;
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
 
         CarrierDispatchRequestVo carrierDispatchRequestVo =
@@ -114,48 +111,41 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         List<TransportJob> avtiveTransportJobList = transportJobService.findActiveTransportJobs(equipmentName,portName);;
 
         if(avtiveTransportJobList.isEmpty()){
-            List<TransportJob> newTransportJobList;
             if(PortType.INPUT.getValue().equals(portDef.getPortType())){
                 dispatchCarrierList = carrierService.selectCarrierByInputPort(carrierDispatchRequestVo);
             }
             else if(PortType.OUTPUT.getValue().equals(portDef.getPortType())){
                 dispatchCarrierList = carrierService.selectCarrierByOutputPort(carrierDispatchRequestVo);
             }
+            // TODO: mix equipment 보내는 로직 보류
 
             if(CollectionUtils.isNotEmpty(dispatchCarrierList)){
+                Carrier carrier =  dispatchCarrierList.get(0).getCarrier();
+                String orderId = dispatchCarrierList.get(0).getOrderId();
+                String orderLineNumber = dispatchCarrierList.get(0).getOrderLineNumber();
+                TransportJobCreateCommand command =
+                        TransportJobCreateCommand.builder()
+                                .transportJobName(carrier.getCarrierName() + tx.eventTime().toString().substring(0,12))
+                                .carrierName(carrier.getCarrierName())
+                                .sourceEquipmentName(carrier.getEquipmentName())
+                                .sourcePortName(carrier.getPortName())
+                                .sourceZoneName(carrier.getZoneName())
+                                .sourcePositionTypeName(carrier.getPositionTypeName())
+                                .sourcePositionName(carrier.getPositionName())
+                                .destinationEquipmentName(equipment.getEquipmentName())
+                                .destinationPortName(port.getPortName())
+                                .destinationZoneName("")
+                                .destinationPositionTypeName("")
+                                .destinationPositionName("")
+                                .createTime(tx.eventTime())
+                                .requestSource(TransportJobRequestType.EQP.getValue())
+                                .orderId( orderId )
+                                .transactionInfo(tx)
+                                .build();
 
-                List<TransportJobCreateCommand> commandList = new ArrayList<>();
-
-                for(CarrierSelectionResult selectionResult : dispatchCarrierList){
-                    Carrier carrier =  selectionResult.getCarrier();
-                    TransportJobCreateCommand command =
-                            TransportJobCreateCommand.builder()
-                                    .transportJobName(carrier.getCarrierName() + tx.eventTime().toString().substring(0,12))
-                                    .carrierName(carrier.getCarrierName())
-                                    .sourceEquipmentName(carrier.getEquipmentName())
-                                    .sourcePortName(carrier.getPortName())
-                                    .sourceZoneName(carrier.getZoneName())
-                                    .sourcePositionTypeName(carrier.getPositionTypeName())
-                                    .sourcePositionName(carrier.getPositionName())
-                                    .destinationEquipmentName(equipment.getEquipmentName())
-                                    .destinationPortName(port.getPortName())
-                                    .destinationZoneName("")
-                                    .destinationPositionTypeName("")
-                                    .destinationPositionName("")
-                                    .createTime(tx.eventTime())
-                                    .requestSource(TransportJobRequestType.EQP.getValue())
-                                    .orderId( selectionResult.getOrderId() )
-                                    .transactionInfo(tx)
-                                    .build();
-                    commandList.add(command);
-                }
-                CreateTransportJobVo vo = CreateTransportJobVo
-                        .builder()
-                        .transportJobCreateCommandList(commandList)
-                        .build();
-                newTransportJobList = transportJobService.createTransportJob(vo);
+                TransportJob transportJob = transportJobService.createTransportJob(command);
                 reply = new BaseMessage<>();
-                TransportJobRequestListBody body = transportJobService.createTransportJobMessage(newTransportJobList);
+                TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
                 reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
                 reply.setBody(body);
             }
@@ -242,9 +232,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
     public void loadCompleted(BaseMessage<LoadCompletedBody> message) {
+        // TODO: connectedEQP, connectedPort 가 있으면 해당 port에도 carrier 이름 적용
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
+        String fromSystemName = message.getMessageFrom();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -282,7 +274,13 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             carrier = carrierService.save(carrier);
             CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
             historyService.saveHistory(carrierHistoryEntity);
+
+            // TODO : 만일 systemName == WCS && connectedEQP & connectedPort 가 존재하는 경우
+            // TODO : connectedEQP 와 connectedPort 로 port 조회후 carrier 이름 save
         }
+
+        // TODO: SystemName == EAS CarrierValidationReply 메시지 반환
+        // 현재 조회한 port에서 CarrierName 을 가져와서 Carrier ValidationReply 메시지 생성 후 반환
     }
 
     @Override

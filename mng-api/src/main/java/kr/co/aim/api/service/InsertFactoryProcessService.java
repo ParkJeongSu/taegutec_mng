@@ -5,6 +5,7 @@ import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
+import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -59,7 +60,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<TransportJobRequestListBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message) {
+    public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message) {
         // 1. Port, PortDef 를 조회
         // 2. PortDef 의 workStaionName 을 기준으로 outbound 명령이 있는지 조회
         // 3. 있다면, port의 상태를 reserveToLoad 로 변경 후 반송메시지 반환
@@ -70,7 +71,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String portType =  message.getBody().getPortType();
         String portTransportMode =  message.getBody().getPortTransportMode();
 
-        // TODO: 비관적 lock 으로 변경
+        // TODO: 비관적 lock 으로 변경 좀더 고민
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
         Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
         PortDef portDef = null;
@@ -105,11 +106,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     String travelProfile = transportOrder.getTravelProfile();
                     Integer priority =  transportOrder.getPriority();
                     String transportOrderId = transportOrder.getTransportOrderId();
-                    List<TransportJobCreateCommand> commandList = new ArrayList<>();
+                    String transportJobName = namingRuleService.getTransportJobName(SystemName.GAL.getValue(),tx.eventTime());
+
                     TransportJobCreateCommand command =
                             TransportJobCreateCommand.builder()
-                                    //TODO: TransportJobNaming rule check
-                                    .transportJobName(carrierName + tx.eventTime().toString().substring(0,14))
+                                    .transportJobName(transportJobName)
                                     .carrierName(carrierName)
                                     .transportType(transportType)
                                     .transportJobState(TransportJobState.REQUESTED.getValue())
@@ -136,30 +137,24 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                     .orderId(transportOrderId)
                                     .transactionInfo(tx)
                                     .build();
-                    commandList.add(command);
-                    CreateTransportJobVo vo = CreateTransportJobVo
-                            .builder()
-                            .transportJobCreateCommandList(commandList)
-                            .build();
-                    List<TransportJob> transportJobs = transportJobService.createTransportJob(vo);
-                    BaseMessage<TransportJobRequestListBody> request = new BaseMessage<>();
-                    TransportJobRequestListBody body = transportJobService.createTransportJobMessage(transportJobs);
+
+                    TransportJob transportJob = transportJobService.createTransportJob(command);
+
+                    // create message
+                    BaseMessage<TransportJobRequestBody> request = new BaseMessage<>();
+                    TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
                     request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
-                    // 1. 현재 시간 가져오기 (2026년 기준)
-                    LocalDateTime now = LocalDateTime.now();
-                    // 2. 18자리 포맷 정의 (연4, 월2, 일2, 시2, 분2, 초2, 소수점4)
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSS");
-                    // 3. 포맷 적용 및 출력
-                    String timestamp = now.format(formatter);
-                    request.setTransactionId(timestamp);
+                    String transactionId = FormatUtils.getTransactionId(tx.eventTime());;
+                    request.setTransactionId(transactionId);
                     request.setBody(body);
 
+                    // transport_order update
                     transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
                     transportOrder = transportOrderService.save(transportOrder);
                     TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                     historyService.saveHistory(transportOrderHistoryEntity);
 
-
+                    // port update
                     TransportStateChangedVo transportStateChangedVo =
                             TransportStateChangedVo
                                     .builder()

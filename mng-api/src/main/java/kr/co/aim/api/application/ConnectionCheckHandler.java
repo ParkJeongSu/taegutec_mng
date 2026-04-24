@@ -2,6 +2,7 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;
 import kr.co.aim.common.enums.SystemName;
@@ -26,6 +27,7 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final JsonUtils jsonUtils;
 
     @Override
     public String getSupportedMessageName() {
@@ -48,7 +50,7 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
         // 3. 메시지 송신 객체 생성
         BaseMessage<ConnectionBody> reply = new BaseMessage<>();
         ConnectionBody body = new  ConnectionBody();
-        
+
         reply.setEventTime(request.getEventTime());
         reply.setMessageFrom(SystemName.MNG.getValue());
         reply.setMessageName(MessageList.CONNECTION.getMessageName());
@@ -61,20 +63,14 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
 
         // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
         String jsonPayload = objectMapper.writeValueAsString(reply);
-        log.info("Sending JSON Payload : {}",jsonPayload);
+        //log.info("Sending JSON Payload : {}",jsonPayload);
+        jsonUtils.writePrettyJson(jsonPayload);
 
         if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
             // 4. Message Reply
             rabbitTemplate.convertAndSend(
                     RabbitConfig.EXCHANGE_WCS,
                     RabbitConfig.ROUTING_WCS,
-                    reply
-            );
-        }else if(StringUtils.isBlank(fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_EAS,
-                    RabbitConfig.ROUTING_EAS,
                     reply
             );
         }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
@@ -84,14 +80,20 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
                     RabbitConfig.ROUTING_EAS,
                     reply
             );
+        }else if(StringUtils.isBlank(fromSystemName)){
+            // 4. Message Reply
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_EAS,
+                    RabbitConfig.ROUTING_EAS,
+                    reply
+            );
         }else{
             rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_WCS,
-                    RabbitConfig.ROUTING_WCS,
+                    RabbitConfig.EXCHANGE_EAS,
+                    RabbitConfig.ROUTING_EAS,
                     reply
             );
         }
-
 
         return null;
     }

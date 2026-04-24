@@ -11,12 +11,12 @@ import java.io.Serializable;
 @AllArgsConstructor
 @EqualsAndHashCode // 복합키는 동등성 비교가 필수입니다.
 public class PortDefId implements Serializable {
-    @Column(name = "FACTORY_NAME")
+    @Column(name = "factoryName")
     private String factoryName;
 
-    @Column(name = "EQUIPMENT_NAME")
+    @Column(name = "equipmentName")
     private String equipmentName;
 
-    @Column(name = "PORT_NAME")
+    @Column(name = "portName")
     private String portName;
 }

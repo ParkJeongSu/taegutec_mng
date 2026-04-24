@@ -19,7 +19,7 @@ public class JsonUtils {
         try {
             Object jsonObject = objectMapper.readValue(jsonString, Object.class);
             String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
-            log.info("\n=== [Received Message Body] ===\n{}", prettyJson);
+            log.info("\n=== [Message Body] ===\n{}", prettyJson);
         } catch (Exception e) {
             log.warn("Failed to pretty print JSON, logging raw string: {}", jsonString);
         }

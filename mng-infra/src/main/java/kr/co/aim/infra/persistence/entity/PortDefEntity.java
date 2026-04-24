@@ -11,32 +11,41 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "PORT_DEF", catalog = "NEXBEEAS", schema = "dbo")
+@Table(name = "PORT_DEF", catalog = "NEXBEWCS", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class PortDefEntity {
 
     @EmbeddedId
     private PortDefId id; // 복합키 클래스를 ID로 사용
 
-    @Column(name = "DESCRIPTION")
+    @Column(name = "description")
     private String description;
 
-    @Column(name = "PORT_TYPE")
+    @Column(name = "portType")
     private String portType;
 
-    @Column(name = "DETAIL_PORT_TYPE")
+    @Column(name = "detailPortType")
     private String detailPortType;
 
-    @Column(name = "PORT_USE_TYPE")
+    @Column(name = "portUseType")
     private String portUseType;
 
-    @Column(name = "WORK_CENTER_NAME")
+    @Column(name = "portRoleType")
+    private String portRoleType;
+
+    @Column(name = "workCenterName")
     private String workCenterName;
 
-    @Column(name = "LOCATION_ID")
+    @Column(name = "locationId")
     private String locationId;
 
-    @Column(name = "CHECK_OUT_STATE")
+    @Column(name = "connectedEquipmentName")
+    private String connectedEquipmentName;
+
+    @Column(name = "connectedPortName")
+    private String connectedPortName;
+
+    @Column(name = "checkoutState")
     private String checkOutState;
 
     @Column(name = "CHECK_OUT_TIME")

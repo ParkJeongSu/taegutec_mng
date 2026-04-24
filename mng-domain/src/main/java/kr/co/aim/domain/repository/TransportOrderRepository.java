@@ -1,13 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportOrder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;

@@ -59,6 +59,15 @@ public class TransportJobService {
         return  transportJobList;
     }
 
+    @Transactional
+    public TransportJob createTransportJob(TransportJobCreateCommand command){
+        TransportJob transportJob = TransportJob.create(command);
+        transportJob = transportJobRepository.save(transportJob);
+        TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+        historyService.saveHistory(transportJobHistoryEntity);
+        return transportJob;
+    }
+
     public TransportJobRequestListBody createTransportJobMessage(List<TransportJob> transportJobList) {
 
         List<TransportJobRequestBody> transportJobRequestBodies = new ArrayList<>();

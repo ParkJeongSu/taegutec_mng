@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 public class TransportJobList {
     private String transportJobName;
+    private String transportType;
     private String carrierName;
     private String sourceEquipmentName;
     private String sourcePositionType;

@@ -5,7 +5,6 @@ import kr.co.aim.api.service.PortService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.PortTransportState;
-import kr.co.aim.common.format.CarrierDispatchRequestBody;
 import kr.co.aim.common.format.LoadRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.Port;
@@ -26,7 +25,7 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Profile({"scheduler"})
-public class LoadRequestScheduler {
+public class UnLoadRequestScheduler {
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
@@ -40,12 +39,12 @@ public class LoadRequestScheduler {
      *
      * */
     @Scheduled(fixedDelay = 60000) // 60초마다 실행
-    @SchedulerLock(name = "loadRequest",
+    @SchedulerLock(name = "unLoadRequest",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
-    public void loadRequest() {
+    public void unLoadRequest() {
 
-        List<Port> portList = portService.findByTransportState(PortTransportState.READY_TO_LOAD.getValue());
+        List<Port> portList = portService.findByTransportState(PortTransportState.READY_TO_UNLOAD.getValue());
         if(CollectionUtils.isNotEmpty(portList)){
             for(Port port : portList){
 
@@ -54,7 +53,7 @@ public class LoadRequestScheduler {
                         .equipmentName(port.getEquipmentName())
                         .portName(port.getPortName())
                         .build();
-                request.setMessageName(MessageList.LOAD_REQUEST.getMessageName());
+                request.setMessageName(MessageList.UNLOAD_REQUEST.getMessageName());
                 request.setBody(body);
 
                 String jsonPayload = "";

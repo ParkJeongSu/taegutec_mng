@@ -5,6 +5,7 @@ import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
+import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
@@ -18,11 +19,13 @@ import kr.co.aim.infra.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -696,7 +699,7 @@ public class MessageExecuteService {
         return reply;
     }
 
-    public BaseMessage<TransportJobRequestListBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message){
+    public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message){
         return factoryProcessStrategy.carrierDispatchRequest(message);
     }
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message){
@@ -721,6 +724,7 @@ public class MessageExecuteService {
 
     @Transactional
     public void loadCompleted(BaseMessage<LoadCompletedBody> message) {
+        // TODO : void -> CarrierValidationReply 메시지로 변경
         factoryProcessStrategy.loadCompleted(message);
     }
 
@@ -965,8 +969,81 @@ public class MessageExecuteService {
     @Transactional
     public void activeTransportJobReport(BaseMessage<ActiveTransportJobReportBody> message) {
         log.info("activeTransportJobReport");
-        // TODO: transportJobName 으로 검색해서 없으면, 신규 생성
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+        List<TransportJobList> transportJobList = message.getBody().getTransportJobList();
+        LocalDateTime now = LocalDateTime.now();
+        if(ObjectUtils.isNotEmpty(transportJobList)){
+            for(TransportJobList transportJob : transportJobList){
+                String transportJobName = transportJob.getTransportJobName();
+                String transportType = transportJob.getTransportType();
+                String carrierName = transportJob.getCarrierName();
+                String sourceEquipmentName=transportJob.getSourceEquipmentName();
+                String sourcePositionType = transportJob.getSourcePositionType();
+                String sourcePositionName = transportJob.getSourcePositionName();
+                String sourceZoneName = transportJob.getSourceZoneName();
+                String currentEquipmentName = transportJob.getCurrentEquipmentName();
+                String currentPositionType = transportJob.getCurrentPositionType();
+                String currentPositionName = transportJob.getCurrentPositionName();
+                String currentZoneName  = transportJob.getCurrentZoneName();
+                String destinationEquipmentName = transportJob.getDestinationEquipmentName();
+                String destinationPositionType = transportJob.getDestinationPositionType();
+                String destinationPositionName = transportJob.getDestinationPositionName();
+                String destinationZoneName = transportJob.getDestinationZoneName();
+                String priority = transportJob.getPriority();
+                String orderId = transportJob.getOrderId();
+                String requestSource = transportJob.getRequestSource();
+                String travelProfile = transportJob.getTravelProfile();
+                String actualWeight = transportJob.getActualWeight();
+                String carrierType  = transportJob.getCarrierType();
 
+                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+
+                if(optionalTransportJob.isPresent()){
+                    continue;
+                }
+                else{
+                    TransportJobCreateCommand command =
+                            TransportJobCreateCommand
+                                    .builder()
+                                    .transportJobName(transportJobName)
+                                    .carrierName(carrierName)
+                                    .transportType(transportType)
+                                    .transportJobState(TransportJobState.STARTED.getValue())
+                                    .carrierType(carrierType)
+                                    .travelProfile(travelProfile)
+                                    .sourceEquipmentName(sourceEquipmentName)
+                                    .sourcePortName(sourcePositionName)
+                                    .sourceZoneName(sourceZoneName)
+                                    .sourcePositionTypeName(sourcePositionType)
+                                    .sourcePositionName(sourcePositionName)
+                                    .destinationEquipmentName(destinationEquipmentName)
+                                    .destinationPortName(destinationPositionName)
+                                    .destinationZoneName(destinationZoneName)
+                                    .destinationPositionTypeName(destinationPositionType)
+                                    .destinationPositionName(destinationPositionName)
+                                    .priority( StringUtils.isNotBlank(priority) ? Integer.parseInt(priority) : 0 )
+                                    //.errorCode()
+                                    //.errorText()
+                                    .requestSource(requestSource)
+                                    .createTime(now)
+                                    //.departedTime()
+                                    //.arrivedTime()
+                                    //.reasonCode()
+                                    //.orderId()
+                                    .build();
+                    List<TransportJobCreateCommand> transportJobCreateCommandList =  new ArrayList<>();
+                    transportJobCreateCommandList.add(command);
+                    CreateTransportJobVo vo =
+                            CreateTransportJobVo
+                                    .builder()
+                                    .transportJobCreateCommandList(transportJobCreateCommandList)
+                                    .build();
+                    transportJobService.createTransportJob(vo);
+                }
+            }
+        }
     }
 
     /**

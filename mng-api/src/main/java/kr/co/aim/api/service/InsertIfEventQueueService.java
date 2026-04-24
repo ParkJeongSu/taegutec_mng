@@ -71,7 +71,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     // DTO 객체를 JSON 문자열로 직접 변환합니다.
                     String jsonPayload = "";
                     try {
-                        jsonPayload = objectMapper.writeValueAsString(dto);
+                        //jsonPayload = objectMapper.writeValueAsString(dto);
+                        jsonPayload = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(dto);
                     } catch (JsonProcessingException e) {
                         log.error("dto -> String error");
                         // 로깅 및 예외 처리
