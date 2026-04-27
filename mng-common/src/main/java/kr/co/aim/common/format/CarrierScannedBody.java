@@ -15,6 +15,10 @@ public class CarrierScannedBody {
     private String currentPositionType;
     private String currentPositionName;
     private String orderId;
+    private String orderLineNumber;
+    private String productionType;
+    private String lotName;
+    private String itemName;
     private String travelProfile;
     private String actualWeight;
     private String carrierType;

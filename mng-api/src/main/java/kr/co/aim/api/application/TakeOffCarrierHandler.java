@@ -37,7 +37,7 @@ public class TakeOffCarrierHandler implements MessageHandler<String> {
     @Override
     @SneakyThrows // objectMapper의 예외 처리를 간소화
     public Object handle(String message) {
-        log.info("✅ Handling Message request: {}", message);
+        
         // 1. 자신에게 맞는 DTO로 역직렬화
         TypeReference<BaseMessage<TakeOffCarrierBody>> typeRef = new TypeReference<>() {};
         BaseMessage<TakeOffCarrierBody> request = objectMapper.readValue(message, typeRef);

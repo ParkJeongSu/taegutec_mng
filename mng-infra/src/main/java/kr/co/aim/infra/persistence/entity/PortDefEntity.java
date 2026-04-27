@@ -48,24 +48,24 @@ public class PortDefEntity {
     @Column(name = "checkoutState")
     private String checkOutState;
 
-    @Column(name = "CHECK_OUT_TIME")
+    @Column(name = "checkoutTime")
     private LocalDateTime checkOutTime;
 
-    @Column(name = "CHECK_OUT_USER")
+    @Column(name = "checkoutUser")
     private String checkOutUser;
 
-    @Column(name = "DATA_STATE")
+    @Column(name = "dataState")
     private String dataState;
 
-    @Column(name = "LAST_EVENT_NAME")
+    @Column(name = "lastEventName")
     private String lastEventName;
 
-    @Column(name = "LAST_EVENT_TIME")
+    @Column(name = "lastEventTime")
     private LocalDateTime lastEventTime;
 
-    @Column(name = "LAST_EVENT_USER")
+    @Column(name = "lastEventUser")
     private String lastEventUser;
 
-    @Column(name = "LAST_EVENT_COMMENT")
+    @Column(name = "lastEventComment")
     private String lastEventComment;
 }

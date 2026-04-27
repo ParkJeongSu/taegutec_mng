@@ -16,4 +16,6 @@ public interface PortDefJpaRepository extends JpaRepository<PortDefEntity, PortD
             @Param("portName") String portName
     );
 
+    Optional<PortDefEntity> findByLocationId(String locationId);
+
 }

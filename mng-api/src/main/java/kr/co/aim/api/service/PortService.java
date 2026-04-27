@@ -71,6 +71,11 @@ public class PortService {
     }
 
     @Transactional
+    public Optional<PortDef> findByLocationId(String locationId) {
+        return portDefRepository.findByLocationId(locationId);
+    }
+
+    @Transactional
     public Port save(Port port) {
         return portRepository.save(port);
     }

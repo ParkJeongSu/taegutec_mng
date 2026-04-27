@@ -2,6 +2,8 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.carrier.CarrierDispatchRequestVo;
 import kr.co.aim.api.vo.carrier.CarrierSelectionResult;
+import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
+import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
@@ -14,6 +16,7 @@ import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
+import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
@@ -56,6 +59,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final ProductionOrderMapper productionOrderMapper;
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
@@ -164,6 +168,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
@@ -205,16 +210,19 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message) {
         return null;
     }
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
         return null;
     }
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message) {
 
     }
@@ -230,9 +238,10 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
      * @param message 받은 메시지
      */
     @Override
-    @Transactional // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public void loadCompleted(BaseMessage<LoadCompletedBody> message) {
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
         // TODO: connectedEQP, connectedPort 가 있으면 해당 port에도 carrier 이름 적용
+        // TODO: portdef 에 roleType 에 따라서 EAS 면 CarrierValidationReply 반환
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -255,7 +264,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
-            return;
+            return null;
         }
         Port port = optionalPorts.get();
         port.loadCompleted(command);
@@ -266,7 +275,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         if(StringUtils.isNotBlank(carrierName)){
             Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
             if(optionalCarriers.isEmpty()){
-                return;
+                return null;
             }
 
             Carrier carrier = optionalCarriers.get();
@@ -281,9 +290,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         // TODO: SystemName == EAS CarrierValidationReply 메시지 반환
         // 현재 조회한 port에서 CarrierName 을 가져와서 Carrier ValidationReply 메시지 생성 후 반환
+        return null;
     }
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public void carrierLocationChanged(BaseMessage<CarrierLocationChangedBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
@@ -321,5 +332,143 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         carrier = carrierService.save(carrier);
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public void transportJobCancelCompleted(BaseMessage<TransportJobCancelCompletedBody> message) {
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        String messageName =  message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
+        String currentEquipmentName = message.getBody().getCurrentEquipmentName();
+        String currentPositionType = message.getBody().getCurrentPositionType();
+        String currentPositionName = message.getBody().getCurrentPositionName();
+        String currentPortName = currentPositionName;
+        String transportJobName = message.getBody().getTransportJobName();
+        String transportType =  message.getBody().getTransportType();
+        String orderId =  message.getBody().getOrderId();
+        String requestSource =  message.getBody().getRequestSource();
+        String actualWeight = message.getBody().getActualWeight();
+        String travelProfile =  message.getBody().getTravelProfile();
+        List<TransportJobCancelCompletedReasonBody> reasons = message.getBody().getReasons();
+
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transportJobState(TransportJobState.CANCELLED.getValue())
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+
+        }
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public void transportJobCompleted(BaseMessage<TransportJobCompletedBody> message) {
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        String messageName =  message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
+        String transportJobName = message.getBody().getTransportJobName();
+
+        String actualWeight = message.getBody().getActualWeight();
+        String actualZoneName = message.getBody().getDestinationZoneName();
+
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transportJobState(TransportJobState.COMPLETED.getValue())
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+        }
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public void transportJobReply(BaseMessage<TransportJobReplyBody> message) {
+        String messageName = message.getMessageName();
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+
+        String transportJobName = message.getBody().getTransportJobName();
+        String carrierName = message.getBody().getCarrierName();
+        // 비관적 Lock 으로 조회시 문제 발생
+        //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transportJobState(TransportJobState.ACCEPTED.getValue())
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+        }
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public void transportJobStarted(BaseMessage<TransportJobStartedBody> message) {
+        String messageName = message.getMessageName();
+        String carrierName = message.getBody().getCarrierName();
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        String transportJobName = message.getBody().getTransportJobName();
+        String requestSource = message.getBody().getRequestSource();
+
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+
+        // 비관적 lock 시 EventQueue 넣으면서 에러 발생
+        //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transportJobState(TransportJobState.STARTED.getValue())
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+        }
     }
 }

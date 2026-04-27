@@ -2,6 +2,8 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.service.MessageExecuteService;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;
 import kr.co.aim.common.enums.SystemName;
@@ -13,6 +15,7 @@ import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
@@ -26,6 +29,8 @@ public class AreYouThereRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final MessageExecuteService messageExecuteService;
+    private final JsonUtils jsonUtils;
 
     @Override
     public String getSupportedMessageName() {
@@ -35,7 +40,6 @@ public class AreYouThereRequestHandler implements MessageHandler<String> {
     @Override
     @SneakyThrows // objectMapper의 예외 처리를 간소화
     public Object handle(String message) {
-        log.info("✅ Handling CreateUser request: {}", message);
         // 1. 자신에게 맞는 DTO로 역직렬화
         TypeReference<BaseMessage<AreYouThereRequestBody>> typeRef = new TypeReference<>() {};
         BaseMessage<AreYouThereRequestBody> request = objectMapper.readValue(message, typeRef);
@@ -44,57 +48,46 @@ public class AreYouThereRequestHandler implements MessageHandler<String> {
         // 2. 해당 비즈니스 로직 호출
         // AreYouThereRequest 는 단순히 로그
         log.info("TransactionId : {}", request.getTransactionId());
-        log.info("MessageFrom : {}", request.getMessageFrom());
+        log.info("MessageFrom : {}", fromSystemName);
 
-        
         // 3. 메시지 송신 객체 생성
-        BaseMessage<AreYouThereReplyBody> reply = new BaseMessage<>();
-        AreYouThereReplyBody body = new AreYouThereReplyBody();
-        
-        reply.setEventTime(request.getEventTime());
-        reply.setMessageFrom(SystemName.MNG.getValue());
-        reply.setMessageName(MessageList.ARE_YOU_THERE_REPLY.getMessageName());
-        reply.setMessageOwner(request.getMessageOwner());
-        reply.setMessageTo(request.getMessageFrom());
-        reply.setResultCode(ResultCode.OK.getValue());
-        reply.setResultMessage("");
-        reply.setTransactionId(request.getTransactionId());
-        reply.setBody(body);
+        BaseMessage<AreYouThereReplyBody> reply = messageExecuteService.areYouThereRequest(request);
 
-        // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
-        String jsonPayload = objectMapper.writeValueAsString(reply);
-        log.info("Sending JSON Payload : {}",jsonPayload);
+        // pretty Log
+        jsonUtils.writePrettyJson(reply);
 
         // 4. Message Reply
-        if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_WCS,
-                    RabbitConfig.ROUTING_WCS,
-                    reply
-            );
-        }else if(StringUtils.isBlank(fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_EAS,
-                    RabbitConfig.ROUTING_EAS,
-                    reply
-            );
-        }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_EAS,
-                    RabbitConfig.ROUTING_EAS,
-                    reply
-            );
-        }else{
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_WCS,
-                    RabbitConfig.ROUTING_WCS,
-                    reply
-            );
+        if(ObjectUtils.isNotEmpty(reply)) {
+            if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
+                // 4. Message Reply
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_WCS,
+                        RabbitConfig.ROUTING_WCS,
+                        reply
+                );
+            }else if(StringUtils.isBlank(fromSystemName)){
+                // 4. Message Reply
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_EAS,
+                        RabbitConfig.ROUTING_EAS,
+                        reply
+                );
+            }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
+                // 4. Message Reply
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_EAS,
+                        RabbitConfig.ROUTING_EAS,
+                        reply
+                );
+            }else{
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_WCS,
+                        RabbitConfig.ROUTING_WCS,
+                        reply
+                );
+            }
         }
-
+        
         return null;
     }
 }

@@ -21,9 +21,9 @@ spring:
     active: tex # scheduler,tex | pex | tex | simulator 등으로 설정 가능
   datasource:
     mssql:
-      jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=myprojecttest;encrypt=false;
-      username: sa
-      password: th!131030
+      jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
+      username: nexbe # sa
+      password: "!aim123456" #th!131030
 #      jdbc-url: jdbc:sqlserver://192.168.50.135:1433;databaseName=NEXBEMNG;encrypt=false;
 #      username: nexbe
 #      password: "!aim123456"

@@ -21,57 +21,57 @@ public class CarrierDefEntity {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "CARRIER_DEF_NAME")
+    @Column(name = "carrierDefName")
     private String carrierDefName;
 
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "CARRIER_TYPE")
+    @Column(name = "carrierType")
     private String carrierType;
 
-    @Column(name = "CARRIER_DETAIL_TYPE")
+    @Column(name = "carrierDetailType")
     private String carrierDetailType;
 
-    @Column(name = "DEFAULT_CAPACITY")
+    @Column(name = "defaultCapacity")
     private Integer defaultCapacity;
 
-    @Column(name = "USE_COUNT_LIMIT")
+    @Column(name = "useCountLimit")
     private Integer useCountLimit;
 
-    @Column(name = "USE_DURATION_LIMIT")
+    @Column(name = "useDurationLimit")
     private Integer useDurationLimit;
 
-    @Column(name = "COUNT_LIMIT_PER_CLEAN")
+    @Column(name = "countLimitPerClean")
     private Integer countLimitPerClean;
 
-    @Column(name = "DURATION_LIMIT_PER_CLEAN")
+    @Column(name = "durationLimitPerClean")
     private Integer durationLimitPerClean;
 
-    @Column(name = "CLEAN_COUNT_LIMIT")
+    @Column(name = "cleanCountLimit")
     private Integer cleanCountLimit;
 
-    @Column(name = "CHECK_OUT_STATE")
+    @Column(name = "checkoutState")
     private String checkOutState;
 
-    @Column(name = "CHECK_OUT_TIME")
+    @Column(name = "checkoutTime")
     private LocalDateTime checkOutTime;
 
-    @Column(name = "CHECK_OUT_USER")
+    @Column(name = "checkoutUser")
     private String checkOutUser;
 
-    @Column(name = "DATA_STATE")
+    @Column(name = "dataState")
     private String dataState;
 
-    @Column(name = "EVENT_NAME")
+    @Column(name = "lastEventName")
     private String eventName;
 
-    @Column(name = "EVENT_TIME")
+    @Column(name = "lastEventTime")
     private LocalDateTime eventTime;
 
-    @Column(name = "EVENT_USER")
+    @Column(name = "lastEventUser")
     private String eventUser;
 
-    @Column(name = "EVENT_COMMENT")
+    @Column(name = "lastEventComment")
     private String eventComment;
 }

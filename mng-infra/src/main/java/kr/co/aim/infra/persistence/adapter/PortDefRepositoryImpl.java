@@ -44,6 +44,11 @@ public class PortDefRepositoryImpl implements PortDefRepository {
         return portDefMapper.toDomain(savedEntity);
     }
 
+    @Override
+    public Optional<PortDef> findByLocationId(String locationId) {
+        return portDefJpaRepository.findByLocationId(locationId).map(portDefMapper::toDomain);
+    }
+
 //    @Override
 //    public Page<PortDefResponseDto> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable) {
 //

@@ -11,6 +11,10 @@ public interface FactoryProcessStrategy {
     public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message);
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message);
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message);
-    public void loadCompleted(BaseMessage<LoadCompletedBody> message);
+    public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message);
     public void carrierLocationChanged(BaseMessage<CarrierLocationChangedBody> message) ;
+    public void transportJobCancelCompleted(BaseMessage<TransportJobCancelCompletedBody> message) ;
+    public void transportJobCompleted(BaseMessage<TransportJobCompletedBody> message);
+    public void transportJobReply(BaseMessage<TransportJobReplyBody> message) ;
+    public void transportJobStarted(BaseMessage<TransportJobStartedBody> message) ;
 }

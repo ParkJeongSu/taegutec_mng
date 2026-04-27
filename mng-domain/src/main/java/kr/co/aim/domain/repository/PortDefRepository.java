@@ -27,5 +27,7 @@ public interface PortDefRepository {
 
     PortDef save(PortDef portDef);
 
+    Optional<PortDef> findByLocationId(String locationId);
+
 //    Page<PortDefResponseDto> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable);
 }

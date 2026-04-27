@@ -2,6 +2,7 @@ package kr.co.aim.api.rabbitmq.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.api.rabbitmq.controller.dispatcher.MessageDispatcher;
 import kr.co.aim.common.handler.MessageHandler;
@@ -25,6 +26,7 @@ public class SchedulerMessageListener implements MessageWorker{
     private final MessageDispatcher messageDispatcher;
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final JsonUtils jsonUtils;
 
 //    @RabbitListener(
 //            id = "scheduler-Listener",
@@ -36,17 +38,8 @@ public class SchedulerMessageListener implements MessageWorker{
     public Object process(org.springframework.amqp.core.Message message) {
         // 1. 바디를 꺼내서 직접 String으로 변환
         String jsonString = new String(message.getBody(), StandardCharsets.UTF_8);
-        //log.info("Received raw message: {}", jsonString);
 
-        // --- JSON 예쁘게 로그 찍기 ---
-        try {
-            Object jsonObject = objectMapper.readValue(jsonString, Object.class);
-            String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(jsonObject);
-            log.info("\n=== [Received Message Body] ===\n{}", prettyJson);
-        } catch (Exception e) {
-            log.warn("Failed to pretty print JSON, logging raw string: {}", jsonString);
-        }
-        // ----------------------------
+        jsonUtils.writePrettyJson(jsonString);
 
         String correlation = message.getMessageProperties().getCorrelationId();
         String reply = message.getMessageProperties().getReplyTo();

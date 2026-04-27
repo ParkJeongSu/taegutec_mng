@@ -21,6 +21,10 @@ public class TransportJobReplyBody {
     private String destinationPositionName;
     private String priority;
     private String orderId;
+    private String orderLineNumber;
+    private String productionType;
+    private String lotName;
+    private String itemName;
     private String requestSource;
     private String travelProfile;
     private String actualWeight;

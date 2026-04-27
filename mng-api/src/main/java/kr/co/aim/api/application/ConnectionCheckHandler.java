@@ -2,6 +2,7 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;
@@ -14,6 +15,7 @@ import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
@@ -28,6 +30,7 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
+    private final MessageExecuteService messageExecuteService;
 
     @Override
     public String getSupportedMessageName() {
@@ -37,62 +40,45 @@ public class ConnectionCheckHandler implements MessageHandler<String> {
     @Override
     @SneakyThrows // objectMapper의 예외 처리를 간소화
     public Object handle(String message) {
-        log.info("message: {}", message);
         // 1. 자신에게 맞는 DTO로 역직렬화
         TypeReference<BaseMessage<ConnectionCheckBody>> typeRef = new TypeReference<>() {};
         BaseMessage<ConnectionCheckBody> request = objectMapper.readValue(message, typeRef);
 
         String fromSystemName = request.getMessageFrom();
-        // 2. 해당 비즈니스 로직 호출
-        // ConnectionCheckHandler 는 단순히 로그
+
         log.info("transactionId : {}", request.getTransactionId());
-        
+
+        // 2. 해당 비즈니스 로직 호출
         // 3. 메시지 송신 객체 생성
-        BaseMessage<ConnectionBody> reply = new BaseMessage<>();
-        ConnectionBody body = new  ConnectionBody();
+        BaseMessage<ConnectionBody> reply = messageExecuteService.connectionCheckRequest(request);
 
-        reply.setEventTime(request.getEventTime());
-        reply.setMessageFrom(SystemName.MNG.getValue());
-        reply.setMessageName(MessageList.CONNECTION.getMessageName());
-        reply.setMessageOwner(request.getMessageOwner());
-        reply.setMessageTo(request.getMessageFrom());
-        reply.setResultCode(ResultCode.OK.getValue());
-        reply.setResultMessage("");
-        reply.setTransactionId(request.getTransactionId());
-        reply.setBody(body);
-
-        // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
-        String jsonPayload = objectMapper.writeValueAsString(reply);
-        //log.info("Sending JSON Payload : {}",jsonPayload);
-        jsonUtils.writePrettyJson(jsonPayload);
-
-        if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_WCS,
-                    RabbitConfig.ROUTING_WCS,
-                    reply
-            );
-        }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_EAS,
-                    RabbitConfig.ROUTING_EAS,
-                    reply
-            );
-        }else if(StringUtils.isBlank(fromSystemName)){
-            // 4. Message Reply
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_EAS,
-                    RabbitConfig.ROUTING_EAS,
-                    reply
-            );
-        }else{
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_EAS,
-                    RabbitConfig.ROUTING_EAS,
-                    reply
-            );
+        jsonUtils.writePrettyJson(reply);
+        if(ObjectUtils.isNotEmpty(reply)){
+            if(StringUtils.equals(SystemName.WCS.getValue(),fromSystemName)){
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_WCS,
+                        RabbitConfig.ROUTING_WCS,
+                        reply
+                );
+            }else if(StringUtils.equals(SystemName.EAS.getValue(),fromSystemName)){
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_EAS,
+                        RabbitConfig.ROUTING_EAS,
+                        reply
+                );
+            }else if(StringUtils.isBlank(fromSystemName)){
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_EAS,
+                        RabbitConfig.ROUTING_EAS,
+                        reply
+                );
+            }else{
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_EAS,
+                        RabbitConfig.ROUTING_EAS,
+                        reply
+                );
+            }
         }
 
         return null;

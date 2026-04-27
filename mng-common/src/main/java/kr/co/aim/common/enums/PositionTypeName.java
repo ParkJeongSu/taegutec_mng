@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum PositionTypeName implements MetaDataEnum {
     PORT("PORT"),
+    ZONE("ZONE"),
     SHELF("SHELF"),
     CRANE("CRANE"),
     CONVEYOR("CONVEYOR");

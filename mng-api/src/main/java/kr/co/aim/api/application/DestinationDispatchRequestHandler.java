@@ -5,8 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.LoadRequestBody;
-import kr.co.aim.common.format.CarrierDispatchRequestBody;
+import kr.co.aim.common.format.DestinationChangedBody;
+import kr.co.aim.common.format.DestinationDispatchRequestBody;
+import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.infra.config.RabbitConfig;
@@ -21,8 +22,8 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex"})
-public class LoadRequestHandler implements MessageHandler<String> {
+@Profile({"pex","tex","scheduler"})
+public class DestinationDispatchRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
@@ -31,7 +32,7 @@ public class LoadRequestHandler implements MessageHandler<String> {
 
     @Override
     public String getSupportedMessageName() {
-        return MessageList.LOAD_REQUEST.getMessageName();
+        return MessageList.DESTINATION_DISPATCH_REQUEST.getMessageName();
     }
 
     @Override
@@ -39,24 +40,24 @@ public class LoadRequestHandler implements MessageHandler<String> {
     public Object handle(String message) {
         
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<LoadRequestBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<LoadRequestBody> request = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<DestinationDispatchRequestBody>> typeRef = new TypeReference<>() {};
+        BaseMessage<DestinationDispatchRequestBody> requestMessage = objectMapper.readValue(message, typeRef);
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        // 3. 만일 서비스 호출 후 reply 메시지 반환
-        BaseMessage<CarrierDispatchRequestBody> carrierDispatchRequestMessage = messageExecuteService.loadRequest(request);
+        // 반송잡 메시지 반환
+        BaseMessage<TransportJobRequestBody> transportJobRequestBodyBaseMessage = messageExecuteService.destinationDispatchRequest(requestMessage);
 
-        jsonUtils.writePrettyJson(carrierDispatchRequestMessage);
+        jsonUtils.writePrettyJson(transportJobRequestBodyBaseMessage);
 
-        if(ObjectUtils.isEmpty(carrierDispatchRequestMessage)){
-            log.info("carrierDispatchRequestMessage is null");
+        if(ObjectUtils.isEmpty(transportJobRequestBodyBaseMessage)){
+            log.info("transportJobRequestBodyBaseMessage is null");
         }
-        else if(ObjectUtils.isNotEmpty(carrierDispatchRequestMessage)){
+        else if(ObjectUtils.isEmpty(transportJobRequestBodyBaseMessage)){
             rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_TEX,
-                    RabbitConfig.ROUTING_TEX,
-                    carrierDispatchRequestMessage );
+                    RabbitConfig.EXCHANGE_WCS,
+                    RabbitConfig.ROUTING_WCS,
+                    transportJobRequestBodyBaseMessage );
         }
 
         return null;

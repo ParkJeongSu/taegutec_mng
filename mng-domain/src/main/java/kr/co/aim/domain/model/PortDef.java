@@ -16,6 +16,7 @@ public class PortDef {
     private String portType;
     private String detailPortType;
     private String portUseType;
+    private String portRoleType;
     private String workCenterName;
     private String locationId;
     private String checkOutState;
