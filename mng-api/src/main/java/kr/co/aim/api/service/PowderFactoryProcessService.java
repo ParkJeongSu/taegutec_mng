@@ -261,12 +261,10 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
-        // TODO: connectedEQP, connectedPort 가 있으면 해당 port에도 carrier 이름 적용
-        // TODO: portdef 에 roleType 에 따라서 EAS 면 CarrierValidationReply 반환
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-        String fromSystemName = message.getMessageFrom();
+        String messageFrom = message.getMessageFrom();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -282,6 +280,12 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                 .equipmentName(equipmentName)
                 .portName(portName)
                 .build();
+
+        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        if(optionalPortDef.isEmpty()){
+            return null;
+        }
+        PortDef portDef = optionalPortDef.get();
 
         Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
@@ -305,12 +309,61 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
             historyService.saveHistory(carrierHistoryEntity);
 
-            // TODO : 만일 systemName == WCS && connectedEQP & connectedPort 가 존재하는 경우
-            // TODO : connectedEQP 와 connectedPort 로 port 조회후 carrier 이름 save
+            if(StringUtils.equals(PortRoleType.WCS.getValue(),portDef.getPortRoleType())){
+                // RoleType 이 WCS 인 경우
+                // 연결된 port 정보에 CarrierName 기록
+                String connectedEquipmentName = portDef.getConnectedEquipmentName();
+                String connectedPortName = portDef.getConnectedPortName();
+                LoadCompletedCommand connectedPortCommand = LoadCompletedCommand.builder()
+                        .transactionInfo(tx)
+                        .carrierTransportState(CarrierTransportState.ON_PORT.getValue())
+                        .carrierName(carrierName)
+                        .equipmentName(connectedEquipmentName)
+                        .portName(connectedPortName)
+                        .build();
+
+                Optional<Port> optionalConnectedPort = portService.findPortByEquipmentNameAndPortName(connectedEquipmentName,connectedPortName);
+                if(optionalConnectedPort.isEmpty()){
+                    return null;
+                }
+                Port connectedPort = optionalConnectedPort.get();
+                connectedPort.loadCompleted(connectedPortCommand);
+                connectedPort = portService.save(connectedPort);
+                PortHistoryEntity connectedPortHistoryEntity = portMapper.toHistoryEntity(connectedPort);
+                historyService.saveHistory(connectedPortHistoryEntity);
+            }
         }
 
-        // TODO: SystemName == EAS CarrierValidationReply 메시지 반환
-        // 현재 조회한 port에서 CarrierName 을 가져와서 Carrier ValidationReply 메시지 생성 후 반환
+        if(StringUtils.equals(PortRoleType.EAS.getValue(),portDef.getPortRoleType())){
+            // TODO: SystemName == EAS CarrierValidationReply 메시지 반환
+            // TODO: Manti 물어보는 로직 추가
+            // TODO: ReadytoProcess 에서 진행못하는 경우도 스케줄러 로직이 추가 되야함
+            // TODO: Manti가 60초 내에 응답을 주지 못하는 경우, 수동으로 수정할 수 있게, 어떤 컬럼값을 통해서 내려주기
+            // 현재 조회한 port에서 CarrierName 을 가져와서 Carrier ValidationReply 메시지 생성 후 반환
+
+            BaseMessage<CarrierValidationReplyBody> reply = new BaseMessage<>();
+
+            reply.setMessageName(MessageList.CARRIER_VALIDATION_REPLY.getMessageName());
+            reply.setTransactionId(message.getTransactionId());
+            reply.setMessageFrom(SystemName.MNG.getValue());
+            reply.setMessageOwner(SystemName.MNG.getValue());
+            reply.setMessageTo(SystemName.EAS.getValue());
+            reply.setEventTime(message.getEventTime());
+            reply.setResultMessage("");
+            reply.setResultCode(ResultCode.OK.getValue());
+
+            CarrierValidationReplyBody body = CarrierValidationReplyBody
+                    .builder()
+                    .equipmentName(equipmentName)
+                    .portName(portName)
+                    .carrierName(carrierName)
+                    .portTransportMode(portTransportMode)
+                    .build();
+            reply.setBody(body);
+            return reply;
+        }
+
+
         return null;
     }
 

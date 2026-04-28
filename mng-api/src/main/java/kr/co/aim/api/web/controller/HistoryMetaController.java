@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @Tag(name = "History-meta", description = "History-meta 관련 API")
-@RestController
+//@RestController
 @RequestMapping("/api/history-meta")
 @RequiredArgsConstructor
 public class HistoryMetaController {

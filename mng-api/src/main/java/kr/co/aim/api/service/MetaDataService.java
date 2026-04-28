@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-@Service
+//@Service
 public class MetaDataService {
 
     // "alarm-type" -> com.yourcompany.enums.AlarmType.class
