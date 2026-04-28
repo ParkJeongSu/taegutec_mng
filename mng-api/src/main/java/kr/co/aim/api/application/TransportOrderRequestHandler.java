@@ -52,7 +52,7 @@ public class TransportOrderRequestHandler implements MessageHandler<String> {
         if(ObjectUtils.isEmpty(transportJobRequestBodyBaseMessage)){
             log.info("transportJobRequestBodyBaseMessage is null");
         }
-        else if(ObjectUtils.isEmpty(transportJobRequestBodyBaseMessage)){
+        else if(ObjectUtils.isNotEmpty(transportJobRequestBodyBaseMessage)){
             rabbitTemplate.convertAndSend(
                     RabbitConfig.EXCHANGE_WCS,
                     RabbitConfig.ROUTING_WCS,

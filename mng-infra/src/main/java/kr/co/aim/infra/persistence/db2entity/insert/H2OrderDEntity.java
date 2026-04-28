@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @AllArgsConstructor
-@Table(name = "H2ORDERD", catalog = "NEXBEEAS", schema = "dbo")
+@Table(name = "H2ORDERD", catalog = "testdb", schema = "TESTDB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class H2OrderDEntity {
     @Id

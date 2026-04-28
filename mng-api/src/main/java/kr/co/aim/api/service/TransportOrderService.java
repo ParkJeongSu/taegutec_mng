@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","simulator","tex"})
+@Profile({"scheduler","simulator","tex","pex"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class TransportOrderService {
     private final TransportOrderRepository  transportOrderRepository;

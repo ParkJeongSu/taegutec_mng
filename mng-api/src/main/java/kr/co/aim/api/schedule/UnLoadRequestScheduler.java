@@ -2,9 +2,12 @@ package kr.co.aim.api.schedule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.PortService;
+import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.PortTransportState;
+import kr.co.aim.common.enums.ResultCode;
+import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.format.LoadRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.Port;
@@ -47,29 +50,27 @@ public class UnLoadRequestScheduler {
         List<Port> portList = portService.findByTransportState(PortTransportState.READY_TO_UNLOAD.getValue());
         if(CollectionUtils.isNotEmpty(portList)){
             for(Port port : portList){
-
+                String transactionId = FormatUtils.generateTransactionId();
                 BaseMessage<LoadRequestBody> request = new BaseMessage<>();
+                request.setTransactionId(transactionId);
+                request.setMessageFrom(SystemName.MNG.getValue());
+                request.setMessageOwner(SystemName.MNG.getValue());
+                request.setMessageTo(SystemName.MNG.getValue());
+                request.setEventTime(transactionId);
+                request.setResultMessage("");
+                request.setResultCode(ResultCode.OK.getValue());
+                request.setMessageName(MessageList.UNLOAD_REQUEST.getMessageName());
                 LoadRequestBody body = LoadRequestBody.builder()
                         .equipmentName(port.getEquipmentName())
                         .portName(port.getPortName())
                         .build();
-                request.setMessageName(MessageList.UNLOAD_REQUEST.getMessageName());
                 request.setBody(body);
 
-                String jsonPayload = "";
-                try {
-                    jsonPayload = objectMapper.writeValueAsString(request);
-                } catch (Exception e) {
-                    log.info("error : writeValueAsString");
-                }
-                //log.info("Sending JSON Payload: {}", jsonPayload);
-                jsonUtils.writePrettyJson(jsonPayload);
-                if(StringUtils.isNotBlank(jsonPayload) ){
-                    rabbitTemplate.convertAndSend(
-                            RabbitConfig.EXCHANGE_PEX,
-                            RabbitConfig.ROUTING_PEX,
-                            request );
-                }
+                jsonUtils.writePrettyJson(request);
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_PEX,
+                        RabbitConfig.ROUTING_PEX,
+                        request );
             }
         }
     }

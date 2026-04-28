@@ -42,7 +42,7 @@ public interface TransportOrderJpaRepository extends JpaRepository<TransportOrde
     List<TransportOrderEntity> findOutboundOrderForTransportRequest(
             @Param("transportType") String transportType,
             @Param("transportStatus") String transportStatus,
-            @Param("transportStatus") String workStationId
+            @Param("workStationId") String workStationId
     );
 
     // 2. 비관적 락 조회 (FOR UPDATE)

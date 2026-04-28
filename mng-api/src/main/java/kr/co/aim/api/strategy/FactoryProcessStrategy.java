@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Profile;
 public interface FactoryProcessStrategy {
     public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message);
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message);
-    public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message);
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message);
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message);
     public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message);

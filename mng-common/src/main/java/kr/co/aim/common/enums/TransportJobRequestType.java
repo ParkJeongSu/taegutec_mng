@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 public enum TransportJobRequestType implements MetaDataEnum {
     UI("UI"),
     EQP("EQP"),
+    WCS("WCS"),
     GAL("GAL");
     private final String value;
 }

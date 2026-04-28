@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Setter
 @AllArgsConstructor
 @Builder
-@Table(name = "IDOC", catalog = "NEXBEEAS", schema = "dbo")
+@Table(name = "IDOC", catalog = "testdb", schema = "TESTDB")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IdocEntity {
     @Id

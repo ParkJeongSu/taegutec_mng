@@ -1,5 +1,6 @@
 package kr.co.aim.domain.model;
 
+import jakarta.persistence.Column;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,8 @@ public class PortDef {
     private String portRoleType;
     private String workCenterName;
     private String locationId;
+    private String connectedEquipmentName;
+    private String connectedPortName;
     private String checkOutState;
     private LocalDateTime checkOutTime;
     private String checkOutUser;

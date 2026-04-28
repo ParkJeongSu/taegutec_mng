@@ -2,6 +2,8 @@ package kr.co.aim.api.schedule;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.*;
+import kr.co.aim.common.Utils.FormatUtils;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.TransportOrderRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -39,8 +41,9 @@ public class InsertTransferScheduler {
     private final TransportOrderService transportOrderService;
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
+    private final JsonUtils jsonUtils;
 
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
+    @Scheduled(fixedDelay = 6000000) // 5초마다 실행
     @SchedulerLock(name = "insertOrderDB2ToMSSQL",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
@@ -184,7 +187,16 @@ public class InsertTransferScheduler {
                 if(IdocTypeId.Inbound.getValue().equals( idocEntity.getIdocTypId() )
                         || IdocTypeId.Relocation.getValue().equals( idocEntity.getIdocTypId() )) {
                     // 메시지 전송
+                    String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
+
                     BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
+                    request.setMessageFrom(SystemName.MNG.getValue());
+                    request.setMessageOwner(SystemName.MNG.getValue());
+                    request.setMessageTo(SystemName.MNG.getValue());
+                    request.setEventTime(transactionId);
+                    request.setResultMessage("");
+                    request.setResultCode(ResultCode.OK.getValue());
+                    request.setTransactionId(transactionId);
                     request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
                     TransportOrderRequestBody body =
                             TransportOrderRequestBody
@@ -193,15 +205,7 @@ public class InsertTransferScheduler {
                                     .build();
 
                     request.setBody(body);
-                    // 1. 현재 시간 가져오기 (2026년 기준)
-                    LocalDateTime now = LocalDateTime.now();
-                    // 2. 18자리 포맷 정의 (연4, 월2, 일2, 시2, 분2, 초2, 소수점4)
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSSS");
-                    // 3. 포맷 적용 및 출력
-                    String timestamp = now.format(formatter);
-                    request.setTransactionId(timestamp);
-                    String jsonPayload = objectMapper.writeValueAsString(request);
-                    log.info("Sending JSON Payload: {}", jsonPayload);
+                    jsonUtils.writePrettyJson(request);
 
                     // 5. String 으로 변환된 메시지 reply
                     rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );

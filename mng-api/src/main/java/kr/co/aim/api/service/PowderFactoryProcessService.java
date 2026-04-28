@@ -148,9 +148,20 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                                 .build();
 
                 TransportJob transportJob = transportJobService.createTransportJob(command);
+
                 reply = new BaseMessage<>();
-                TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
+
                 reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+
+                reply.setTransactionId(message.getTransactionId());
+                reply.setMessageFrom(SystemName.MNG.getValue());
+                reply.setMessageOwner(SystemName.MNG.getValue());
+                reply.setMessageTo(SystemName.WCS.getValue());
+                reply.setEventTime(message.getEventTime());
+                reply.setResultMessage("");
+                reply.setResultCode(ResultCode.OK.getValue());
+
+                TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
                 reply.setBody(body);
             }
         }
@@ -202,17 +213,27 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         historyService.saveHistory(portHistoryEntity);
 
         BaseMessage<DestinationDispatchRequestBody> reply = new BaseMessage<>();
-        DestinationDispatchRequestBody body = DestinationDispatchRequestBody.builder().equipmentName(equipmentName).portName(portName).carrierName(carrierName).portType(portType).portTransportMode(portTransportMode).build();
+
         reply.setMessageName(MessageList.DESTINATION_DISPATCH_REQUEST.getMessageName());
+        reply.setTransactionId(message.getTransactionId());
+        reply.setMessageFrom(SystemName.MNG.getValue());
+        reply.setMessageOwner(SystemName.MNG.getValue());
+        reply.setMessageTo(SystemName.MNG.getValue());
+        reply.setEventTime(message.getEventTime());
+        reply.setResultMessage("");
+        reply.setResultCode(ResultCode.OK.getValue());
+
+        DestinationDispatchRequestBody body = DestinationDispatchRequestBody
+                .builder()
+                .equipmentName(equipmentName)
+                .portName(portName)
+                .carrierName(carrierName)
+                .portType(portType)
+                .portTransportMode(portTransportMode)
+                .build();
         reply.setBody(body);
 
         return reply;
-    }
-
-    @Override
-    @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<TransportJobRequestListBody> transportOrderRequestList(BaseMessage<TransportOrderRequestBody> message) {
-        return null;
     }
 
     @Override
