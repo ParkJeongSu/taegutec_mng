@@ -1,15 +1,19 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
+import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.common.format.*;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.TransportJob;
+import kr.co.aim.domain.model.TransportJobHistory;
 import kr.co.aim.domain.repository.TransportJobRepository;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -138,6 +142,10 @@ public class TransportJobService {
     @Transactional
     Optional<TransportJob> findWithLockByTransportJobName(String transportJobName){
         return transportJobRepository.findWithLockByTransportJobName(transportJobName);
+    }
+    @Transactional(readOnly = true)
+    public Page<TransportJobHistory> findTransportJobHistoryByCondition(TransportJobHistorySearchCondition condition, Pageable pageable){
+        return transportJobRepository.findTransportJobHistoryByCondition(condition, pageable);
     }
 
 }

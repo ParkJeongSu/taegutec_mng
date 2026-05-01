@@ -38,11 +38,20 @@ public class CarrierService {
     private final ObjectMapper objectMapper;
     private final CarrierDefRepository carrierDefRepository;
     private final CarrierRepository carrierRepository;
-    private final Optional<ProductionOrderService> optionalProductionOrderService;
 
     @Transactional(value = "mssqlTransactionManager")
     public Optional<Carrier> findByCarrierName(String carrierName){
         return carrierRepository.findByCarrierName(carrierName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
+    public List<Carrier> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber){
+        return carrierRepository.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
+    }
+
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
+    public List<CarrierHistory> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber,String eventName){
+        return carrierRepository.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -70,50 +79,9 @@ public class CarrierService {
         // (2) 존재하면, 해당 order Select
         // (3) 존재하지 않으면, 설비명으로 신규 Production Order Select
         // (4) Order 에서 가장 우선순위가 높은 Carrier Select
-        List<CarrierSelectionResult> carrierSelectionResultList = new ArrayList<>();
-        if(optionalProductionOrderService.isEmpty()){
-            return  carrierSelectionResultList;
-        }
-        ProductionOrderService productionOrderService = optionalProductionOrderService.get();
-        ProductionOrder productionOrder = null;
-        List<ProductionOrder> activeProductionOrderList = productionOrderService.findActiveProductionOrderList(vo.getEquipment().getEquipmentName());
-        if(activeProductionOrderList.isEmpty()){
-            List<ProductionOrder> newProductionOrderList = productionOrderService.findNewProductionOrderList(vo.getEquipment().getEquipmentName());
 
-            if(newProductionOrderList.isEmpty()){
-                return new ArrayList<>();
-            }
-            else{
-                productionOrder =  newProductionOrderList.get(0);
-            }
-        }else{
-            productionOrder =  activeProductionOrderList.get(0);
-        }
-        List<Carrier> carriers = carrierRepository.findCarriersForFullContainer(
-                CarrierCleanState.CLEAN.getValue(),
-                CarrierTransportState.IN_WAREHOUSE.getValue(),
-                "",
-                CarrierUseState.IN_USE.getValue(),
-                productionOrder.getOrderId(),
-                productionOrder.getOrderLineNumber()
-        );
-
-        // 리스트가 비어있을 수 있으므로 방어 로직 추가
-        if (carriers == null || carriers.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        for(Carrier carrier : carriers) {
-            CarrierSelectionResult
-                    .builder()
-                    .carrier(carrier)
-                    .orderId(productionOrder.getOrderId())
-                    .orderLineNumber(productionOrder.getOrderLineNumber())
-                    .build();
-        }
-
-        return carrierSelectionResultList;
-
+        // TODO: ProductionOrderService 는 순환참조되기 때문에 따로 CarrierDispatchServer 생성
+        return null;
     }
 
     @Transactional(value = "mssqlTransactionManager")

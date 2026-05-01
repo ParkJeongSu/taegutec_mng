@@ -1,7 +1,10 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.domain.model.TransportJob;
-import org.springframework.data.repository.query.Param;
+import kr.co.aim.domain.model.TransportJobHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -54,5 +57,5 @@ public interface TransportJobRepository {
 
     Optional<TransportJob> findWithLockByTransportJobName(String transportJobName);
 
-//    Page<TransportJobResponseDto> findTransportJobWithConditions(TransportJobSearchConditionDto condition, Pageable pageable);
+    Page<TransportJobHistory> findTransportJobHistoryByCondition(TransportJobHistorySearchCondition condition, Pageable pageable);
 }

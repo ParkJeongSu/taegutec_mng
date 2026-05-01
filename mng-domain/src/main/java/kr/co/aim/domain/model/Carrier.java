@@ -54,6 +54,34 @@ public class Carrier implements HasTransactionInfo {
     private String eventUser;
     private String eventComment;
 
+    public static Carrier fromHistory(CarrierHistory carrierHistory){
+        return Carrier.builder()
+                .id(carrierHistory.getId())
+                .carrierName(carrierHistory.getCarrierName())
+                .carrierDefId(carrierHistory.getCarrierDefId())
+                .carrierState(carrierHistory.getCarrierState())
+                .equipmentName(carrierHistory.getEquipmentName())
+                .portName(carrierHistory.getPortName())
+                .zoneName(carrierHistory.getZoneName())
+                .capacity(carrierHistory.getCapacity())
+                .cleanState(carrierHistory.getCleanState())
+                .transportState(carrierHistory.getTransportState())
+                .holdState(carrierHistory.getHoldState())
+                .reasonCode(carrierHistory.getReasonCode())
+                .useState(carrierHistory.getUseState())
+                .useCount(carrierHistory.getUseCount())
+                .useCountPerClean(carrierHistory.getUseCountPerClean())
+                .cleanCount(carrierHistory.getCleanCount())
+                .lastCleanTime(carrierHistory.getLastCleanTime())
+                .createTime(carrierHistory.getCreateTime())
+                .eventName(carrierHistory.getEventName())
+                .eventTime(carrierHistory.getEventTime())
+                .eventUser(carrierHistory.getEventUser())
+                .eventComment(carrierHistory.getEventComment())
+                .containerType(carrierHistory.getContainerType())
+                .build();
+    }
+
     public static Carrier create(CarrierCreateCommand command){
         return Carrier.builder()
                 .carrierName(command.getCarrierName())

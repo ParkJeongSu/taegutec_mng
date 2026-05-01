@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,21 +26,11 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
+@Profile({"pex","tex","scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class powderIfEventQueueService implements FactoryIfEventQueueStrategy {
 
-    private final HistoryService historyService;
     private final ObjectMapper objectMapper;
-
-    private final PortService portService;
-    private final PortMapper portMapper;
-
-    private final TransportJobService transportJobService;
-    private final TransportJobMapper transportJobMapper;
-
-    private final TransportOrderService transportOrderService;
-    private final TransportOrderMapper transportOrderMapper;
-
     private final IfEventQueueService ifEventQueueService;
 
     /**

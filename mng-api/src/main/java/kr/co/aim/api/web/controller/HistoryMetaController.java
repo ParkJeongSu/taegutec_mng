@@ -1,5 +1,6 @@
 package kr.co.aim.api.web.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+@Hidden
 @Tag(name = "History-meta", description = "History-meta 관련 API")
 //@RestController
 @RequestMapping("/api/history-meta")

@@ -1,7 +1,7 @@
 server:
   port: 8081
 factory:
-  type: insert # [ powder | insert ]
+  type: powder # [ powder | insert ]
 spring:
   application:
     name: mng
@@ -18,7 +18,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: pex # scheduler,tex | pex | tex | simulator 등으로 설정 가능
+    active: web # scheduler,tex | pex | tex | simulator 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;

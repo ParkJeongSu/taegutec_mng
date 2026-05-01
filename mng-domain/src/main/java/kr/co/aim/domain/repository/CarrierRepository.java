@@ -1,6 +1,7 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.domain.model.Carrier;
+import kr.co.aim.domain.model.CarrierHistory;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -61,4 +62,8 @@ public interface CarrierRepository {
             String orderId,
             String orderLineNumber
     );
+
+    List<Carrier> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
+
+    List<CarrierHistory> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber, String eventName);
 }

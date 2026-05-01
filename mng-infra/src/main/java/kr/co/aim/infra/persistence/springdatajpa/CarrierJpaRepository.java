@@ -1,5 +1,6 @@
 package kr.co.aim.infra.persistence.springdatajpa;
 
+import jakarta.persistence.Column;
 import kr.co.aim.infra.persistence.entity.CarrierEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -46,4 +47,6 @@ public interface CarrierJpaRepository extends JpaRepository<CarrierEntity, Long>
             @Param("orderId") String orderId,
             @Param("orderLineNumber") String orderLineNumber
     );
+
+    List<CarrierEntity> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
 }

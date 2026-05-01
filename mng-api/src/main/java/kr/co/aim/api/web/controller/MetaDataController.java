@@ -1,5 +1,6 @@
 package kr.co.aim.api.web.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import kr.co.aim.api.service.MetaDataService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+@Hidden
 //@RestController
 @RequestMapping("/api/meta-data")
 @RequiredArgsConstructor

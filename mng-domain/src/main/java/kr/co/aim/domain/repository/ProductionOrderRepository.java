@@ -1,7 +1,11 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.ProductionOrderSearchCondition;
+import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
 import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.domain.model.TransportJob;
+import kr.co.aim.domain.model.ProductionOrderSummary;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,4 +45,8 @@ public interface ProductionOrderRepository {
             String equipmentName,
             List<String> productionOrderState
     );
+
+    Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable);
+
+    Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable);
 }

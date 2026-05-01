@@ -29,7 +29,7 @@ public class MSSQLDataSourceConfig {
     @Bean(name = "mssqlDataSource")
     @Primary
     @ConfigurationProperties(prefix = "spring.datasource.mssql")
-    @Profile({"pex","tex","scheduler","simulator"})
+    @Profile({"pex","tex","scheduler","simulator","web"})
     public DataSource mssqlDataSource() {
         return DataSourceBuilder.create().build();
     }

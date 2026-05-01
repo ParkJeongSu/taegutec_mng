@@ -2,9 +2,11 @@ package kr.co.aim.infra.persistence.adapter;
 
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.domain.model.Carrier;
+import kr.co.aim.domain.model.CarrierHistory;
 import kr.co.aim.domain.repository.CarrierRepository;
 import kr.co.aim.infra.persistence.entity.CarrierEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
+import kr.co.aim.infra.persistence.springdatajpa.CarrierHistoryJpaRepository;
 import kr.co.aim.infra.persistence.springdatajpa.CarrierJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class CarrierRepositoryImpl implements CarrierRepository {
     // Spring Data JPA가 자동으로 구현해주는 JPA 리포지토리. UserEntity를 다룬다.
     private final CarrierJpaRepository carrierJpaRepository;
+    private final CarrierHistoryJpaRepository carrierHistoryJpaRepository;
     private final CarrierMapper carrierMapper;
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
 
@@ -86,6 +89,16 @@ public class CarrierRepositoryImpl implements CarrierRepository {
                 orderId,
                 orderLineNumber
         ).stream().map(carrierMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Carrier> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber) {
+        return carrierJpaRepository.findByOrderIdAndOrderLineNumber(orderId, orderLineNumber).stream().map(carrierMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CarrierHistory> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber, String eventName) {
+        return carrierHistoryJpaRepository.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName).stream().map(carrierMapper::toDomain).collect(Collectors.toList());
     }
 
 //    @Override

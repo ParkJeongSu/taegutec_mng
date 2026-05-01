@@ -15,7 +15,7 @@ import javax.sql.DataSource;
 @Configuration
 @EnableScheduling
 @EnableSchedulerLock(defaultLockAtMostFor = "PT2M")  // ⬅️ 이거 추가!
-@Profile({"scheduler"})
+@Profile({"scheduler","web"})
 public class SchedulerConfig {
 
     @Bean

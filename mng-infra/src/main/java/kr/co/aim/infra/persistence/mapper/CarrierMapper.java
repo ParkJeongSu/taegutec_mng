@@ -1,6 +1,7 @@
 package kr.co.aim.infra.persistence.mapper;
 
 import kr.co.aim.domain.model.Carrier;
+import kr.co.aim.domain.model.CarrierHistory;
 import kr.co.aim.infra.persistence.entity.CarrierEntity;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import org.mapstruct.Mapper;
@@ -16,6 +17,10 @@ public interface CarrierMapper {
     Carrier toDomain(CarrierEntity entity);
 
     CarrierEntity toEntity(Carrier domain);
+
+    CarrierHistory toDomain(CarrierHistoryEntity entity);
+
+    CarrierHistoryEntity toEntity(CarrierHistory domain);
 
     @Mapping(target = "id", expression = "java(TsidUtils.nextId())") // [3] 자바 코드 호출!
     CarrierHistoryEntity toHistoryEntity(Carrier domain);

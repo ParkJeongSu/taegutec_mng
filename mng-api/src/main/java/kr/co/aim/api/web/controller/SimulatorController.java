@@ -1,5 +1,6 @@
 package kr.co.aim.api.web.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import kr.co.aim.api.dto.*;
 import kr.co.aim.api.dto.insert.*;
 import kr.co.aim.api.service.InsertSimulatorInterfaceService;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+@Hidden
 @RestController
 @RequestMapping("/api/simulator")
 @RequiredArgsConstructor

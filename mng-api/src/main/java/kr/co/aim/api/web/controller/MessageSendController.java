@@ -1,6 +1,7 @@
 package kr.co.aim.api.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.Hidden;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.AreYouThereRequestBody;
 import kr.co.aim.common.format.Header;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @RestController
 @RequiredArgsConstructor
 @Slf4j
