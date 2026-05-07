@@ -1,5 +1,6 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.ProductionOrderSearchByOrderId;
 import kr.co.aim.common.condition.ProductionOrderSearchCondition;
 import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
 import kr.co.aim.domain.model.ProductionOrder;
@@ -48,5 +49,5 @@ public interface ProductionOrderRepository {
 
     Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable);
 
-    Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable);
+    Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchByOrderId condition, Pageable pageable);
 }

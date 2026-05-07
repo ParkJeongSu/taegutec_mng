@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "MNG 반송잡 관리", description = "MNG 반송관련 API")
 @RestController
-@RequestMapping("/api/transport-job")
+@RequestMapping("/wcs-web/api/mng/transport-job")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")

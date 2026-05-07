@@ -2,10 +2,7 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.carrier.CarrierDispatchRequestVo;
 import kr.co.aim.api.vo.carrier.CarrierSelectionResult;
-import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
-import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
-import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -19,7 +16,6 @@ import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
-import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +24,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,8 +49,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final TransportJobService  transportJobService;
     private final TransportJobMapper transportJobMapper;
 
-    private final ProductionOrderRepository productionOrderRepository;
-    private final ProductionOrderMapper productionOrderMapper;
+    private final CarrierSelectionService carrierSelectionService;
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
@@ -116,10 +109,10 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         if(avtiveTransportJobList.isEmpty()){
             if(PortType.INPUT.getValue().equals(portDef.getPortType())){
-                dispatchCarrierList = carrierService.selectCarrierByInputPort(carrierDispatchRequestVo);
+                dispatchCarrierList = carrierSelectionService.selectCarrierByInputPort(carrierDispatchRequestVo);
             }
             else if(PortType.OUTPUT.getValue().equals(portDef.getPortType())){
-                dispatchCarrierList = carrierService.selectCarrierByOutputPort(carrierDispatchRequestVo);
+                dispatchCarrierList = carrierSelectionService.selectCarrierByOutputPort(carrierDispatchRequestVo);
             }
             // TODO: mix equipment 보내는 로직 보류
 

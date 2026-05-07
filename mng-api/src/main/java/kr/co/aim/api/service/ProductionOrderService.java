@@ -1,8 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.condition.ProductionOrderHistorySearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
+import kr.co.aim.common.condition.*;
 import kr.co.aim.common.enums.ProductionOrderState;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.CarrierHistory;
@@ -59,7 +57,7 @@ public class ProductionOrderService {
     }
 
     @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable) {
+    public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchByOrderId condition, Pageable pageable) {
         return productionOrderRepository.findProductionOrderByCondition(condition,pageable);
     }
 
@@ -69,25 +67,26 @@ public class ProductionOrderService {
     }
 
     @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public Page<Carrier> findCarrierByCondition(ProductionOrderSearchCondition condition, Pageable pageable) {
+    public Page<Carrier> findCarrierByCondition(ProductionOrderSearchOrderIdAndOrderLineNumber condition, Pageable pageable) {
 
         String orderId = condition.getOrderId();
         String orderLineNumber = condition.getOrderLineNumber();
         String eventName = "A"; // TODO : 쏟아 부은 EVENT_NAME으로 변경
 
-        List<CarrierHistory> carrierHistoryList = carrierService.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName);
-        List<Carrier> historyToCarrierList = carrierHistoryList.stream().map(Carrier::fromHistory).collect(Collectors.toList());
-        List<Carrier> carrierList = carrierService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
-
         // 3. 통합 리스트 생성 및 변환 (Entity -> Domain)
         List<Carrier> totalList = new ArrayList<>();
-        for(Carrier carrier  : carrierList) {
-            totalList.add(carrier);
-        }
 
-        for(Carrier carrier  : historyToCarrierList) {
-            totalList.add(carrier);
-        }
+//        List<CarrierHistory> carrierHistoryList = carrierService.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName);
+//        List<Carrier> historyToCarrierList = carrierHistoryList.stream().map(Carrier::fromHistory).collect(Collectors.toList());
+//        List<Carrier> carrierList = carrierService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
+//
+//        for(Carrier carrier  : carrierList) {
+//            totalList.add(carrier);
+//        }
+//
+//        for(Carrier carrier  : historyToCarrierList) {
+//            totalList.add(carrier);
+//        }
 
         return new PageImpl<>(totalList, pageable, totalList.size());
     }

@@ -71,53 +71,20 @@ public class CarrierService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public List<CarrierSelectionResult> selectCarrierByInputPort(CarrierDispatchRequestVo vo) {
-
-        // TODO : Input Port
-        // Input Port :
-        // (1) 설비에서 Production Order Select
-        // (2) 존재하면, 해당 order Select
-        // (3) 존재하지 않으면, 설비명으로 신규 Production Order Select
-        // (4) Order 에서 가장 우선순위가 높은 Carrier Select
-
-        // TODO: ProductionOrderService 는 순환참조되기 때문에 따로 CarrierDispatchServer 생성
-        return null;
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public List<CarrierSelectionResult> selectCarrierByOutputPort(CarrierDispatchRequestVo vo) {
-        // TODO : Output Port
-        // (1) EquipmentDef 에서 ContainerType을 Select
-        // (2) ContainerType None 이거나 위에서 찾은 type으로 가장 우선 순위가 높은 Carrier 찾기
-        List<String> containerTypes = new ArrayList<>();
-        containerTypes.add(ContainerType.NONE.getValue());
-        containerTypes.add(vo.getEquipmentDef().getContainerType());
-        List<Carrier> carriers = carrierRepository.findCarriersForEmptyContainer(
-                CarrierCleanState.CLEAN.getValue(),
-                CarrierTransportState.IN_WAREHOUSE.getValue(),
-                "",
-                CarrierUseState.AVAILABLE.getValue(),
-                0,
+    public List<Carrier> findCarriersForEmptyContainer (String cleanState,
+                                                        String transportState,
+                                                        String transportJobId,
+                                                        String useState,
+                                                        Integer quantity,
+                                                        List<String> containerTypes){
+        return carrierRepository.findCarriersForEmptyContainer(
+                cleanState,
+                transportState,
+                transportJobId,
+                useState,
+                quantity,
                 containerTypes
         );
-
-        // 리스트가 비어있을 수 있으므로 방어 로직 추가
-        if (carriers == null || carriers.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        List<CarrierSelectionResult> carrierSelectionResultList = new ArrayList<>();
-        for(Carrier carrier : carriers) {
-            CarrierSelectionResult
-                    .builder()
-                    .carrier(carrier)
-                    .build();
-        }
-
-        return carrierSelectionResultList;
-
     }
-
-
 
 }

@@ -3,10 +3,7 @@ package kr.co.aim.api.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.ProductionOrderService;
-import kr.co.aim.common.condition.ProductionOrderHistorySearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
-import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
+import kr.co.aim.common.condition.*;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.model.ProductionOrderSummary;
@@ -26,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "MNG ProductionOrder 관리", description = "MNG order관련 API")
 @RestController
-@RequestMapping("/api/production-order")
+@RequestMapping("/wcs-web/api/mng/production-order")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")
@@ -49,8 +46,8 @@ public class ProductionOrderController {
     @Operation(summary = "Production Order", description = "order Info 조회")
     @GetMapping("/")
     public ResponseEntity<Page<ProductionOrder>> getProductionOrder(
-            ProductionOrderSearchCondition condition,
-            @PageableDefault(size = 100, sort = "createTime", direction = Sort.Direction.DESC)
+            ProductionOrderSearchByOrderId condition,
+            @PageableDefault(size = 100, sort = "createTime", direction = Sort.Direction.ASC)
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
     ) {
@@ -61,7 +58,7 @@ public class ProductionOrderController {
     @Operation(summary = "Carrier", description = "Carrier Info 조회 by orderId,orderLineNumber")
     @GetMapping("/carriers")
     public ResponseEntity<Page<Carrier>> getCarrier(
-            ProductionOrderSearchCondition condition,
+            ProductionOrderSearchOrderIdAndOrderLineNumber condition,
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
     ) {

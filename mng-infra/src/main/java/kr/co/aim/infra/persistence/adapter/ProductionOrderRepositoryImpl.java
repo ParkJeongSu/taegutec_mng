@@ -4,18 +4,18 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.ComparablePath;
+import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
-import kr.co.aim.common.condition.ProductionOrderSearchCondition;
+import kr.co.aim.common.condition.ProductionOrderSearchByOrderId;
 import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.model.ProductionOrderSummary;
-import kr.co.aim.domain.model.TransportJobHistory;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
 import kr.co.aim.infra.persistence.entity.ProductionOrderEntity;
-import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import kr.co.aim.infra.persistence.springdatajpa.ProductionOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -127,7 +127,7 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                 );
 
         // 2. 정렬 적용
-        query.orderBy(getOrderSpecifiers(pageable.getSort()));
+        query.orderBy(getOrderSpecifiersGroupByOrderId(pageable.getSort()));
 
         // 3. 페이징 적용 (isPaged()로 분기)
         if (pageable.isPaged()) {
@@ -160,7 +160,7 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
-    public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable) {
+    public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchByOrderId condition, Pageable pageable) {
         //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductionOrderEntity> query = queryFactory
                 .selectFrom(productionOrderEntity)
@@ -170,7 +170,7 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                 );
 
         // 2. 정렬 적용
-        query.orderBy(getOrderSpecifiersOrderLineNumber(pageable.getSort()));
+        query.orderBy(getOrderSpecifiersByOrderId(pageable.getSort()));
 
         // 3. 페이징 적용 (isPaged()로 분기)
         if (pageable.isPaged()) {
@@ -210,28 +210,42 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     /**
      * Pageable의 Sort 객체를 Querydsl의 OrderSpecifier 배열로 변환합니다.
      */
-    private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
+    private OrderSpecifier<?>[] getOrderSpecifiersGroupByOrderId(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
 
         if (sort != null && sort.isSorted()) {
             for (Sort.Order order : sort) {
                 String property = order.getProperty();
 
-                // [핵심] property가 null이 아니고, 공백이 아닐 때만 정렬을 추가합니다.
                 if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
                     Order direction = order.isAscending() ? Order.ASC : Order.DESC;
 
-                    PathBuilder pathBuilder = new PathBuilder<>(
+                    // PathBuilder를 통해 표현식 생성
+                    PathBuilder<ProductionOrderEntity> pathBuilder = new PathBuilder<>(
                             productionOrderEntity.getType(),
                             productionOrderEntity.getMetadata()
                     );
 
-                    orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
+                    // 정렬 대상 필드가 orderId(GROUP BY 기준)가 아닌 경우 집계 함수 적용
+                    if (property.equals("orderId")) {
+                        orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
+                    } else {
+                        // 수량 관련 필드는 sum으로 정렬하고 싶다면 별도 처리가 가능합니다.
+                        // 여기서는 질문하신 대로 대다수의 필드에 max()를 적용하는 방식을 사용합니다.
+                        if (isQuantityField(property)) {
+                            NumberPath<Long> numberPath = pathBuilder.getNumber(property, Long.class);
+                            orders.add(new OrderSpecifier(direction, numberPath.sum()));
+                        } else {
+                            // 날짜(CREATE_TIME 등) 및 기타 필드는 max() 적용
+                            ComparablePath<Comparable> comparablePath = pathBuilder.getComparable(property, Comparable.class);
+                            orders.add(new OrderSpecifier(direction, comparablePath.max()));
+                        }
+                    }
                 }
             }
         }
 
-        // 유효한 정렬 필드가 하나도 없었다면 (스웨거에서 잘못 보낸 경우 포함) 기본값 적용
+        // 기본 정렬값 설정 (여기서도 집계가 필요할 수 있음)
         if (orders.isEmpty()) {
             orders.add(new OrderSpecifier(Order.DESC, productionOrderEntity.orderId));
         }
@@ -239,7 +253,14 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
         return orders.toArray(new OrderSpecifier[0]);
     }
 
-    private OrderSpecifier<?>[] getOrderSpecifiersOrderLineNumber(Sort sort) {
+    /**
+     * 수량 관련 필드인지 확인하는 헬퍼 메서드
+     */
+    private boolean isQuantityField(String property) {
+        return property.contains("Quantity");
+    }
+
+    private OrderSpecifier<?>[] getOrderSpecifiersByOrderId(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
 
         if (sort != null && sort.isSorted()) {
