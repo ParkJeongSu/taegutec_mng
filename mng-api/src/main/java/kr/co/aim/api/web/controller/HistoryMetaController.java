@@ -21,7 +21,7 @@ import java.util.List;
 @Hidden
 @Tag(name = "History-meta", description = "History-meta 관련 API")
 //@RestController
-@RequestMapping("/api/history-meta")
+//@RequestMapping("/api/history-meta")
 @RequiredArgsConstructor
 public class HistoryMetaController {
 

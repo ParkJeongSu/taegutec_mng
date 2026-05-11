@@ -1,5 +1,7 @@
 server:
   port: 8081
+  servlet:
+    context-path: /wcs-web
 factory:
   type: powder # [ powder | insert ]
 spring:
@@ -22,6 +24,7 @@ spring:
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
+      schema-name: dbo  # MSSQL용 스키마
       username: nexbe # sa
       password: "!aim123456" #th!131030
 #      jdbc-url: jdbc:sqlserver://192.168.50.135:1433;databaseName=NEXBEMNG;encrypt=false;
@@ -38,6 +41,7 @@ spring:
         leak-detection-threshold: 2000   # ← ms 단위
     db2:
       jdbc-url: jdbc:db2://localhost:50000/testdb # 실제 DB2 URL로 변경해주세요
+      schema-name: TESTDB # Db2용 스키마 (운영 환경에서는 라이브러리명)
       username: db2inst1 # 실제 DB2 계정으로 변경해주세요
       password: 1234 # 실제 DB2 비밀번호로 변경해주세요
       driver-class-name: com.ibm.db2.jcc.DB2Driver
@@ -53,6 +57,7 @@ spring:
 #      # 1. 프리픽스가 jdbc:as400 으로 바뀝니다.
 #      # 2. 뒤에 옵션들(naming=sql 등)은 JPA를 쓸 때 필수입니다.
 #      jdbc-url: jdbc:as400://[실제_AS400_IP]/[기본_라이브러리명];naming=sql;errors=full;prompt=false;ccsid=933
+#      schema-name: TESTDB # Db2용 스키마 (운영 환경에서는 라이브러리명)
 #      username: [ AS400_계정 ]
 #      password: [ AS400_비밀번호 ]
 #      driver-class-name: com.ibm.as400.access.AS400JDBCDriver # 드라이버 클래스명을 jt400 전용으로 변경합니다.
@@ -80,6 +85,10 @@ spring:
         globally_quoted_identifiers: true
         #globally_quoted_identifiers_skip_naming_strategy: true # 따옴표로 감싼 이름(Quoted Identifiers)은 명명 규칙 변환을 건너뛰도록 설정
     show-sql: true # 실행되는 SQL 쿼리를 로그로 보여줌
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true
   #mail:
   #  host: smtp.naver.com
   #  port: 587

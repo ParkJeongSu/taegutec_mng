@@ -2,10 +2,7 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.common.condition.*;
 import kr.co.aim.common.enums.ProductionOrderState;
-import kr.co.aim.domain.model.Carrier;
-import kr.co.aim.domain.model.CarrierHistory;
-import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.domain.model.ProductionOrderSummary;
+import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,7 +26,7 @@ public class ProductionOrderService {
     private final CarrierService carrierService;
     private final ProductionOrderRepository productionOrderRepository;
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional(readOnly = true)
     public List<ProductionOrder> findActiveProductionOrderList(String equipmentName) {
         List<String> productionOrderStateList = new ArrayList<>();
         productionOrderStateList.add(ProductionOrderState.REQUESTED.getValue());
@@ -41,7 +37,15 @@ public class ProductionOrderService {
         );
     }
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional(readOnly = true)
+    public List<ProductionOrder> findByProductionOrderStateInOrderByCreateTimeAsc(
+            List<String> productionOrderState
+    ){
+       return  productionOrderRepository.findByProductionOrderStateInOrderByCreateTimeAsc(productionOrderState);
+    }
+
+
+    @Transactional(readOnly = true)
     public List<ProductionOrder> findNewProductionOrderList(String equipmentName) {
         List<String> productionOrderStateList = new ArrayList<>();
         productionOrderStateList.add(ProductionOrderState.CREATED.getValue());
@@ -51,23 +55,23 @@ public class ProductionOrderService {
         );
     }
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
+    @Transactional(readOnly = true)
     public Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable) {
         return productionOrderRepository.findProductionOrderSummaryByCondition(condition,pageable);
     }
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchByOrderId condition, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable) {
         return productionOrderRepository.findProductionOrderByCondition(condition,pageable);
     }
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public Page<ProductionOrder> findProductionOrderHistoryByCondition(ProductionOrderHistorySearchCondition condition, Pageable pageable) {
-        return null;
+    @Transactional(readOnly = true)
+    public Page<ProductionOrderHistory> findProductionOrderHistoryByCondition(ProductionOrderHistorySearchCondition condition, Pageable pageable) {
+        return productionOrderRepository.findProductionOrderHistoryByCondition(condition,pageable);
     }
 
-    @Transactional(readOnly = true) // 이 메소드가 하나의 트랜잭션으로 동작하도록 보장합니다.
-    public Page<Carrier> findCarrierByCondition(ProductionOrderSearchOrderIdAndOrderLineNumber condition, Pageable pageable) {
+    @Transactional(readOnly = true)
+    public Page<Carrier> findCarrierByCondition(CarrierSearchByProductionOrder condition, Pageable pageable) {
 
         String orderId = condition.getOrderId();
         String orderLineNumber = condition.getOrderLineNumber();
@@ -78,11 +82,9 @@ public class ProductionOrderService {
 
 //        List<CarrierHistory> carrierHistoryList = carrierService.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName);
 //        List<Carrier> historyToCarrierList = carrierHistoryList.stream().map(Carrier::fromHistory).collect(Collectors.toList());
-//        List<Carrier> carrierList = carrierService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
-//
-//        for(Carrier carrier  : carrierList) {
-//            totalList.add(carrier);
-//        }
+        List<Carrier> carrierList = carrierService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
+
+        totalList.addAll(carrierList);
 //
 //        for(Carrier carrier  : historyToCarrierList) {
 //            totalList.add(carrier);

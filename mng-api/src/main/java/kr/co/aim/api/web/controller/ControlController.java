@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-@Profile("!simulator")
+//@Profile("!simulator")
 public class ControlController {
 
     private final RabbitListenerEndpointRegistry registry;
@@ -26,7 +26,6 @@ public class ControlController {
 
         // 1. 여기서 권한 체크나 로그 기록 (보안 작업)
         log.info("Authorized shutdown request received.");
-
 
         System.out.println("애플리케이션 종료 작업 시작...");
         log.info("애플리케이션 종료 작업 시작...");

@@ -9,19 +9,18 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(name = "IDOCP")
 @Getter
 @Setter
-@AllArgsConstructor
-@Builder
-@Table(name = "IDOC", catalog = "NEXBEEAS", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class IdocEntity {
+public class IdocPEntity {
+
     @Id
-    @Column(name = "LINEID", nullable = false)
+    @Column(name = "LINEID")
     private Long lineId;
 
     @Column(name = "IDOCTYPID")
-    private Long idocTypId;
+    private Integer idocTypId;
 
     @Column(name = "STATE")
     private Integer state;
@@ -30,34 +29,10 @@ public class IdocEntity {
     private Integer errorCode;
 
     @Column(name = "SOURCE")
-    private Long source;
+    private Integer source;
 
     @Column(name = "DESTINATION")
-    private Long destination;
-
-    @Column(name = "TIDID")
-    private Long tidId;
-
-    @Column(name = "DOCNUM")
-    private String docNum;
-
-    @Column(name = "QUEUENAME")
-    private String queueName;
-
-    @Column(name = "PARTNERTYPE")
-    private String partnerType;
-
-    @Column(name = "PARTNERNAME")
-    private String partnerName;
-
-    @Column(name = "PARTNERPORT")
-    private String partnerPort;
-
-    @Column(name = "MSGVARIANT")
-    private String msgVariant;
-
-    @Column(name = "ARCKEY")
-    private String arcKey;
+    private Integer destination;
 
     @Column(name = "DTIMECRE")
     private LocalDateTime dtimeCre;
@@ -73,5 +48,4 @@ public class IdocEntity {
 
     @Column(name = "MODCNT")
     private Integer modCnt;
-
 }

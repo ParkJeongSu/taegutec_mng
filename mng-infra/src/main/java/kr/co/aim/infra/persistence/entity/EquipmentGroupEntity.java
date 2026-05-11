@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "EQUIPMENT_GROUP", catalog = "NEXBEMNG", schema = "dbo")
+@Table(name = "EQUIPMENT_GROUP_DEF", catalog = "NEXBEWCS", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class EquipmentGroupEntity {
     @Id

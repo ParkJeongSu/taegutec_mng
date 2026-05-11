@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor//(access = AccessLevel.PROTECTED) // JPA Entity 등을 위한 기본 생성자
-public class ProductionOrderSearchOrderIdAndOrderLineNumber {
+public class CarrierSearchByProductionOrder {
     private String orderId;
     private String orderLineNumber;
 }

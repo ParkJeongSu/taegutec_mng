@@ -3,6 +3,7 @@ package kr.co.aim.api.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.TransportJobService;
+import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.domain.model.TransportJobHistory;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,10 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "MNG 반송잡 관리", description = "MNG 반송관련 API")
 @RestController
-@RequestMapping("/wcs-web/api/mng/transport-job")
+@RequestMapping("/api/v1/mng/transport-job")
 @RequiredArgsConstructor
 @Slf4j
+@ResponseAnnotation
 @Profile("web")
 public class TransportJobController {
     private final TransportJobService transportJobService;

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Profile("!simulator")
 public class MessageSendController {
+    // Test 용 controller
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper; // ObjectMapper 선언

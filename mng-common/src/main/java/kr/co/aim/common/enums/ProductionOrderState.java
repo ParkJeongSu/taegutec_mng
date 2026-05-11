@@ -10,6 +10,6 @@ public enum ProductionOrderState implements MetaDataEnum {
     CREATED("Created"),
     REQUESTED("Requested"),
     RELEASED("Released"),
-    COMPLETED("Completed"),;
+    COMPLETED("Completed");
     private final String value;
 }

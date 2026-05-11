@@ -41,5 +41,4 @@ public class ProductionOrderSearchCondition {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
-
 }

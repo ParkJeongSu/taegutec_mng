@@ -3,11 +3,9 @@ package kr.co.aim.api.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.ProductionOrderService;
+import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.*;
-import kr.co.aim.domain.model.Carrier;
-import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.domain.model.ProductionOrderSummary;
-import kr.co.aim.domain.model.TransportJobHistory;
+import kr.co.aim.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,9 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "MNG ProductionOrder 관리", description = "MNG order관련 API")
 @RestController
-@RequestMapping("/wcs-web/api/mng/production-order")
+@RequestMapping("/api/v1/mng/production-order")
 @RequiredArgsConstructor
 @Slf4j
+@ResponseAnnotation
 @Profile("web")
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class ProductionOrderController {
@@ -44,9 +43,9 @@ public class ProductionOrderController {
     }
 
     @Operation(summary = "Production Order", description = "order Info 조회")
-    @GetMapping("/")
+    @GetMapping("")
     public ResponseEntity<Page<ProductionOrder>> getProductionOrder(
-            ProductionOrderSearchByOrderId condition,
+            ProductionOrderSearchCondition condition,
             @PageableDefault(size = 100, sort = "createTime", direction = Sort.Direction.ASC)
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
@@ -58,7 +57,7 @@ public class ProductionOrderController {
     @Operation(summary = "Carrier", description = "Carrier Info 조회 by orderId,orderLineNumber")
     @GetMapping("/carriers")
     public ResponseEntity<Page<Carrier>> getCarrier(
-            ProductionOrderSearchOrderIdAndOrderLineNumber condition,
+            CarrierSearchByProductionOrder condition,
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
     ) {
@@ -68,10 +67,10 @@ public class ProductionOrderController {
 
     @Operation(summary = "order history", description = "order history 조회")
     @GetMapping("/history")
-    public ResponseEntity<Page<ProductionOrder>> getHistory(
+    public ResponseEntity<Page<ProductionOrderHistory>> getHistory(
             ProductionOrderHistorySearchCondition condition,
             @org.springdoc.core.annotations.ParameterObject Pageable pageable) {
-        Page<ProductionOrder> reuslt = null;
+        Page<ProductionOrderHistory> reuslt = productionOrderService.findProductionOrderHistoryByCondition(condition,pageable);
         return ResponseEntity.ok(reuslt);
     }
 }

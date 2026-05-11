@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class CarrierHistory implements IBaseHistoryEntity {
     private Long id;
     private String carrierName;
-    private Long carrierDefId;
+    private Long carrierDefName;
     private String carrierState;
     private String equipmentName;
     private String portName;

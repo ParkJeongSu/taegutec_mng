@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -25,8 +26,12 @@ public class MessageDispatcher {
     // 의존성 주입이 완료된 후, 리스트를 맵으로 변환하여 초기화
     @PostConstruct
     public void init() {
-        this.handlerMap = handlers.stream()
-                .collect(Collectors.toMap(MessageHandler::getSupportedMessageName, Function.identity()));
+        this.handlerMap = new HashMap<>();
+        for (MessageHandler<String> handler : handlers) {
+            this.handlerMap.put(handler.getSupportedMessageName(), handler);
+        }
+//        this.handlerMap = handlers.stream()
+//                .collect(Collectors.toMap(MessageHandler::getSupportedMessageName, Function.identity()));
     }
 
     // messageName에 맞는 핸들러를 찾아 반환

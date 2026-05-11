@@ -1,8 +1,12 @@
 package kr.co.aim.api.web.controller;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.MetaDataService;
+import kr.co.aim.common.annotation.ResponseAnnotation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -16,10 +20,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-@Hidden
-//@RestController
-@RequestMapping("/api/meta-data")
+
+@Tag(name = "MNG META 관리", description = "MNG META Data 관련 API")
+@RestController
+@RequestMapping("/api/v1/mng/meta-data")
 @RequiredArgsConstructor
+@ResponseAnnotation
+@Profile("web")
 public class MetaDataController {
     private final MetaDataService metaDataService;
 
@@ -28,6 +35,7 @@ public class MetaDataController {
      * 예: GET /api/meta-data/alarm-type
      * GET /api/meta-data/alarm-state
      */
+    @Operation(summary = "Production Order", description = "order Info 조회")
     @GetMapping("/{enumKey}")
     public ResponseEntity<Page<Map<String, String>>> getMetaData(@PathVariable String enumKey) {
         try {
@@ -47,6 +55,7 @@ public class MetaDataController {
      * 예: GET /api/meta-data/carrier-type/container
      * GET /api/meta-data/carrier-type/container
      */
+    @Operation(summary = "Production Order", description = "order Info 조회")
     @GetMapping("/{enumKey}/{enumValue}")
     public ResponseEntity<Page<Map<String, String>>> getMetaData(@PathVariable String enumKey,@PathVariable String enumValue) {
         try {
@@ -66,6 +75,7 @@ public class MetaDataController {
      * 예: GET /api/meta-data
      * -> ["alarm-type", "alarm-state"]
      */
+    @Operation(summary = "Production Order", description = "order Info 조회")
     @GetMapping
     public ResponseEntity<Set<String>> listAllMetaDataKeys() {
         return ResponseEntity.ok(metaDataService.getAllMetaDataKeys());

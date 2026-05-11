@@ -1,7 +1,12 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.CarrierSearchCondition;
+import kr.co.aim.common.condition.ProductionOrderHistorySearchCondition;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.CarrierHistory;
+import kr.co.aim.domain.model.ProductionOrderHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -66,4 +71,6 @@ public interface CarrierRepository {
     List<Carrier> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
 
     List<CarrierHistory> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber, String eventName);
+
+    Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition, Pageable pageable);
 }

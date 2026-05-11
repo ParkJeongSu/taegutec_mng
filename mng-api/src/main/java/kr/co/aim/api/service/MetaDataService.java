@@ -3,6 +3,7 @@ package kr.co.aim.api.service;
 import jakarta.annotation.PostConstruct;
 import kr.co.aim.common.handler.MetaDataEnum;
 import kr.co.aim.common.handler.ParentMetaDataEnum;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AssignableTypeFilter;
@@ -11,8 +12,9 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Service
+@RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
-//@Service
 public class MetaDataService {
 
     // "alarm-type" -> com.yourcompany.enums.AlarmType.class

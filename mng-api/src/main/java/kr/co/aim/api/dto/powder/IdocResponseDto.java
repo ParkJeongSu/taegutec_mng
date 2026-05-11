@@ -1,7 +1,7 @@
 package kr.co.aim.api.dto.powder;
 
 
-import kr.co.aim.infra.persistence.db2entity.powder.IdocEntity;
+import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -51,29 +51,5 @@ public class IdocResponseDto {
 
     private Integer modCnt; // numeric(10, 0), Default 0
 
-    public static IdocResponseDto from (IdocEntity entity){
-        return IdocResponseDto.builder()
-                .lineId(entity.getLineId())
-                .idocTypId(entity.getIdocTypId())
-                .state(entity.getState())
-                .errorCode(entity.getErrorCode())
-                .source(entity.getSource())
-                .destination(entity.getDestination())
-                .tidId(entity.getTidId())
-                .docNum(entity.getDocNum())
-                .queueName(entity.getQueueName())
-                .partnerType(entity.getPartnerType())
-                .partnerName(entity.getPartnerName())
-                .partnerPort(entity.getPartnerPort())
-                .msgVariant(entity.getMsgVariant())
-                .arcKey(entity.getArcKey())
-                .dtimeCre(entity.getDtimeCre())
-                .dtimeMod(entity.getDtimeMod())
-                .usrMod(entity.getUsrMod())
-                .pgmMod(entity.getPgmMod())
-                .modCnt(entity.getModCnt())
-                .build();
-
-    }
     
 }

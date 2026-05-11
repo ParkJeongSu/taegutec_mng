@@ -1,9 +1,8 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.ProductionOrderSearchByOrderId;
-import kr.co.aim.common.condition.ProductionOrderSearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
+import kr.co.aim.common.condition.*;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.model.ProductionOrderHistory;
 import kr.co.aim.domain.model.ProductionOrderSummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -49,5 +48,11 @@ public interface ProductionOrderRepository {
 
     Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable);
 
-    Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchByOrderId condition, Pageable pageable);
+    Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable);
+
+    Page<ProductionOrderHistory> findProductionOrderHistoryByCondition(ProductionOrderHistorySearchCondition condition, Pageable pageable);
+
+    List<ProductionOrder> findByProductionOrderStateInOrderByCreateTimeAsc(
+            List<String> productionOrderState
+    );
 }

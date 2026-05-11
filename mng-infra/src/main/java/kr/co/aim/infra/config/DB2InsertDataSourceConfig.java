@@ -1,6 +1,7 @@
 package kr.co.aim.infra.config;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DataSourceBuilder;
@@ -16,6 +17,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
@@ -27,6 +30,9 @@ import javax.sql.DataSource;
 )
 @Profile({"scheduler","simulator","web"})
 public class DB2InsertDataSourceConfig {
+
+    @Value("${spring.datasource.db2.schema-name}")
+    private String db2Schema;
 
     @Bean(name = "db2DataSource")
     @ConfigurationProperties(prefix = "spring.datasource.db2")
@@ -40,9 +46,16 @@ public class DB2InsertDataSourceConfig {
     public LocalContainerEntityManagerFactoryBean db2EntityManagerFactory(
             EntityManagerFactoryBuilder builder,
             @Qualifier("db2DataSource") DataSource dataSource) {
+
+        Map<String, Object> properties = new HashMap<>();
+
+        // 하드코딩 대신 주입받은 변수를 사용합니다.
+        properties.put("hibernate.default_schema", db2Schema);
+
         return builder
                 .dataSource(dataSource)
                 .packages("kr.co.aim.infra.persistence.db2entity.insert") // 4. 이 EntityManager는 이 패키지의 엔티티만 스캔!
+                .properties(properties)
                 .build();
     }
 

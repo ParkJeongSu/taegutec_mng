@@ -1,6 +1,5 @@
 package kr.co.aim.infra.persistence.springdatajpa;
 
-import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.infra.persistence.entity.ProductionOrderEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -23,8 +22,14 @@ public interface ProductionOrderJpaRepository extends JpaRepository<ProductionOr
             String productionOrderType,
             String productionOrderState
     );
+
     List<ProductionOrderEntity> findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(
             String equipmentName,
             List<String> productionOrderState
     );
+
+    List<ProductionOrderEntity> findByProductionOrderStateInOrderByCreateTimeAsc(
+            List<String> productionOrderState
+    );
+
 }

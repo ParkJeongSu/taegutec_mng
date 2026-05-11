@@ -25,8 +25,8 @@ public class CarrierHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "CARRIER_NAME")
     private String carrierName;
 
-    @Column(name = "CARRIER_DEF_ID")
-    private Long carrierDefId;
+    @Column(name = "CARRIER_DEF_Name")
+    private String carrierDefName;
 
     @Column(name = "CARRIER_STATE")
     private String carrierState;

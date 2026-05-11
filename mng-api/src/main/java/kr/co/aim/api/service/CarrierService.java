@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.vo.carrier.CarrierDispatchRequestVo;
 import kr.co.aim.api.vo.carrier.CarrierSelectionResult;
 import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.common.condition.CarrierSearchCondition;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
@@ -23,6 +24,8 @@ import kr.co.aim.infra.persistence.springdatajpa.IfEventQueueJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +45,11 @@ public class CarrierService {
     @Transactional(value = "mssqlTransactionManager")
     public Optional<Carrier> findByCarrierName(String carrierName){
         return carrierRepository.findByCarrierName(carrierName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition,Pageable pageable){
+        return carrierRepository.findCarrierByCondition(condition,pageable);
     }
 
     @Transactional(value = "mssqlTransactionManager",readOnly = true)

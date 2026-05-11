@@ -1,6 +1,11 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.CarrierSearchCondition;
+import kr.co.aim.common.condition.EquipmentSearchCondition;
+import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.Equipment;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +43,7 @@ public interface EquipmentRepository {
      */
     Equipment save(Equipment equipment);
 
-//    Page<EquipmentsResponseDto> findEquipmentsWithConditions(EquipmentsSearchConditionDto condition, Pageable pageable);
+    Page<Equipment> findEquipmentByCondition(EquipmentSearchCondition condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 

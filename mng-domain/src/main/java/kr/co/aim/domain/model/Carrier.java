@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class Carrier implements HasTransactionInfo {
     private Long id;
     private String carrierName;
-    private Long carrierDefId;
+    private Long carrierDefName;
     private String carrierState;
     private String equipmentName;
     private String portName;
@@ -58,7 +58,7 @@ public class Carrier implements HasTransactionInfo {
         return Carrier.builder()
                 .id(carrierHistory.getId())
                 .carrierName(carrierHistory.getCarrierName())
-                .carrierDefId(carrierHistory.getCarrierDefId())
+                .carrierDefName(carrierHistory.getCarrierDefName())
                 .carrierState(carrierHistory.getCarrierState())
                 .equipmentName(carrierHistory.getEquipmentName())
                 .portName(carrierHistory.getPortName())
@@ -85,7 +85,7 @@ public class Carrier implements HasTransactionInfo {
     public static Carrier create(CarrierCreateCommand command){
         return Carrier.builder()
                 .carrierName(command.getCarrierName())
-                .carrierDefId(command.getCarrierDefId())
+                .carrierDefName(command.getCarrierDefId())
                 .carrierState(command.getCarrierState())
                 .equipmentName(command.getEquipmentName())
                 .portName(command.getPortName())
