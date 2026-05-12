@@ -55,6 +55,7 @@ public class DB2InsertDataSourceConfig {
         return builder
                 .dataSource(dataSource)
                 .packages("kr.co.aim.infra.persistence.db2entity.insert") // 4. 이 EntityManager는 이 패키지의 엔티티만 스캔!
+                .persistenceUnit("db2InsertUnit") // ★ 고유한 이름 부여
                 .properties(properties)
                 .build();
     }

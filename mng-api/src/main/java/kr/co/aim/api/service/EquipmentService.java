@@ -2,6 +2,7 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.EquipmentDataDashboard;
 import kr.co.aim.api.dto.EquipmentGroupDashboard;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.condition.EquipmentSearchCondition;
 import kr.co.aim.common.enums.ProductionOrderState;
 import kr.co.aim.domain.model.Equipment;
@@ -85,13 +86,13 @@ public class EquipmentService {
 
             // 설비군 ID에 해당하는 설비정의 찾기 -> 그 설비정의에 해당하는 설비 찾기
             for (EquipmentDef equipmentDef : allEquipmentDefList) {
-                if (group.getId().equals(equipmentDef.getEquipmentGroupId())) {
+                if (group.getEquipmentGroupName().equals(equipmentDef.getEquipmentGroupName())) {
 
                     for (Equipment equipment : allEquipmentList) {
                         // 설비명이나 특정 ID를 통해 설비와 설비정의를 매핑 (구조에 따라 조건 수정 필요)
                         // 여기서는 설비정의의 특정 속성과 설비가 매핑된다고 가정하거나
                         // 설비 엔티티에 Def ID가 있다면 그것을 사용합니다.
-                        if (equipment.getEquipmentName().equals(equipmentDef.getEquipmentDefName())) {
+                        if (equipment.getEquipmentName().equals(equipmentDef.getEquipmentName())) {
 
                             long count = taskCountMap.getOrDefault(equipment.getEquipmentName(), 0L);
                             groupTotalTaskCount += count;
@@ -114,7 +115,7 @@ public class EquipmentService {
 
             // Group DTO 생성
             EquipmentGroupDashboard groupDto = EquipmentGroupDashboard.builder()
-                    .id(group.getId())
+                    .id(TsidUtils.nextId())
                     .equipmentGroupName(group.getEquipmentGroupName())
                     .totalTaskCount(groupTotalTaskCount)
                     .description(group.getDescription())

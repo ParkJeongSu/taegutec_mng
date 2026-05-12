@@ -14,6 +14,7 @@ import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -31,10 +32,14 @@ import static kr.co.aim.infra.persistence.db2entity.insert.QH2TransEntity.h2Tran
 
 
 @Repository
-@RequiredArgsConstructor
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository {
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
+
+    // 생성자를 직접 쓰면 @Qualifier를 가장 정확하게 제어할 수 있습니다.
+    public GALInterfaceInsertRepositoryImpl(@Qualifier("db2QueryFactory") JPAQueryFactory queryFactory) {
+        this.queryFactory = queryFactory;
+    }
 
     @Override
     public Page<GALInterfaceResponse> getInterfaceList(GALInterfaceSearchCondition condition, Pageable pageable) {

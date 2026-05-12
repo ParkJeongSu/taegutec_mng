@@ -1,10 +1,14 @@
 package kr.co.aim.infra.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.List;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -42,4 +46,19 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addViewController("/{p1:[^\\.]*}/{p2:[^\\.]*}/{p3:[^\\.]*}")
                 .setViewName("forward:/index.html");
     }
+
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        PageableHandlerMethodArgumentResolver resolver = new PageableHandlerMethodArgumentResolver();
+
+        // 1페이지부터 시작하도록 설정 (0-indexed를 1-indexed로 변경)
+        resolver.setOneIndexedParameters(true);
+
+        // 페이지 사이즈 제한 등 추가 설정이 필요하다면 여기서 가능합니다.
+        // resolver.setMaxPageSize(2000);
+
+        resolvers.add(resolver);
+    }
+
+
 }

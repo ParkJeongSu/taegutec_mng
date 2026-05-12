@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -36,16 +37,19 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
     private final GALInterfaceRepository galInterfaceRepository;
 
     @Override
+    @Transactional(value = "db2TransactionManager")
     public Page<GALInterfaceResponse> getInterfaceList(GALInterfaceSearchCondition condition, Pageable pageable) {
         return galInterfaceRepository.getInterfaceList(condition,pageable);
     }
 
     @Override
+    @Transactional(value = "db2TransactionManager")
     public Page<GALDetailInterfaceResponse> getDetailInterfaceList(GALDetailInterfaceSearchCondition condition, Pageable pageable) {
         return galInterfaceRepository.getDetailInterfaceList(condition,pageable);
     }
 
     @Override
+    @Transactional(value = "db2TransactionManager")
     public Page<GALPartResponse> getPartList(GALPartSearchCondition condition, Pageable pageable) {
         return galInterfaceRepository.getPartList(condition,pageable);
     }

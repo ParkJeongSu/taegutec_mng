@@ -18,36 +18,33 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class EquipmentGroupEntity {
     @Id
-    @Column(name = "ID")
-    private Long id;
-
-    @Column(name = "EQUIPMENT_GROUP_NAME")
+    @Column(name = "EQUIPMENTGROUPNAME")
     private String equipmentGroupName;
 
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "CHECK_OUT_STATE")
+    @Column(name = "checkoutState")
     private String checkOutState;
 
-    @Column(name = "CHECK_OUT_TIME")
+    @Column(name = "checkoutTime")
     private LocalDateTime checkOutTime;
 
-    @Column(name = "CHECK_OUT_USER")
+    @Column(name = "checkoutUser")
     private String checkOutUser;
 
-    @Column(name = "DATA_STATE")
+    @Column(name = "dataState")
     private String dataState;
 
-    @Column(name = "EVENT_NAME")
-    private String eventName;
+    @Column(name = "lastEventName")
+    private String lastEventName;
 
-    @Column(name = "EVENT_TIME")
-    private LocalDateTime eventTime;
+    @Column(name = "lastEventTime")
+    private LocalDateTime lastEventTime;
 
-    @Column(name = "EVENT_USER")
-    private String eventUser;
+    @Column(name = "lastEventUser")
+    private String lastEventUser;
 
-    @Column(name = "EVENT_COMMENT")
-    private String eventComment;
+    @Column(name = "lastEventComment")
+    private String lastEventComment;
 }

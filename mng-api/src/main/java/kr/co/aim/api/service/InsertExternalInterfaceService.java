@@ -183,16 +183,19 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
 
 
     @Override
+    @Transactional(value = "db2TransactionManager")
     public Page<GALInterfaceResponse> getInterfaceList(GALInterfaceSearchCondition condition, Pageable pageable) {
         return galInterfaceRepository.getInterfaceList(condition,pageable);
     }
 
     @Override
+    @Transactional(value = "db2TransactionManager")
     public Page<GALDetailInterfaceResponse> getDetailInterfaceList(GALDetailInterfaceSearchCondition condition, Pageable pageable) {
         return galInterfaceRepository.getDetailInterfaceList(condition,pageable);
     }
 
     @Override
+    @Transactional(value = "db2TransactionManager")
     public Page<GALPartResponse> getPartList(GALPartSearchCondition condition, Pageable pageable) {
         return null;
     }

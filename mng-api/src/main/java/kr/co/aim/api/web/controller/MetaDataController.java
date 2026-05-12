@@ -1,6 +1,5 @@
 package kr.co.aim.api.web.controller;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.MetaDataService;
@@ -35,11 +34,10 @@ public class MetaDataController {
      * 예: GET /api/meta-data/alarm-type
      * GET /api/meta-data/alarm-state
      */
-    @Operation(summary = "Production Order", description = "order Info 조회")
+    @Operation(summary = "Meta Data", description = "Meta Data 조회")
     @GetMapping("/{enumKey}")
     public ResponseEntity<Page<Map<String, String>>> getMetaData(@PathVariable String enumKey) {
         try {
-            //List<String> data = metaDataService.getMetaDataList(enumKey);
             List<Map<String, String>> dataList = metaDataService.getMetaData(enumKey);
             long total = dataList.size();
 
@@ -55,27 +53,26 @@ public class MetaDataController {
      * 예: GET /api/meta-data/carrier-type/container
      * GET /api/meta-data/carrier-type/container
      */
-    @Operation(summary = "Production Order", description = "order Info 조회")
-    @GetMapping("/{enumKey}/{enumValue}")
-    public ResponseEntity<Page<Map<String, String>>> getMetaData(@PathVariable String enumKey,@PathVariable String enumValue) {
-        try {
-            //List<String> data = metaDataService.getMetaDataList(enumKey);
-            List<Map<String, String>> dataList = metaDataService.getMetaData(enumKey,enumValue);
-            long total = dataList.size();
-
-            Page<Map<String, String>> dataPage = new PageImpl<>(dataList, Pageable.unpaged(), total);
-            return ResponseEntity.ok(dataPage);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
+//    @Operation(summary = "Meta Data key value", description = "Meta Data key value 조회")
+//    @GetMapping("/{enumKey}/{enumValue}")
+//    public ResponseEntity<Page<Map<String, String>>> getMetaData(@PathVariable String enumKey,@PathVariable String enumValue) {
+//        try {
+//            List<Map<String, String>> dataList = metaDataService.getMetaData(enumKey,enumValue);
+//            long total = dataList.size();
+//
+//            Page<Map<String, String>> dataPage = new PageImpl<>(dataList, Pageable.unpaged(), total);
+//            return ResponseEntity.ok(dataPage);
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.notFound().build();
+//        }
+//    }
 
     /**
      * (선택 사항) 현재 등록된 모든 메타데이터 키 목록 조회
      * 예: GET /api/meta-data
      * -> ["alarm-type", "alarm-state"]
      */
-    @Operation(summary = "Production Order", description = "order Info 조회")
+    @Operation(summary = "All Meta Data", description = "All Meta Data 조회")
     @GetMapping
     public ResponseEntity<Set<String>> listAllMetaDataKeys() {
         return ResponseEntity.ok(metaDataService.getAllMetaDataKeys());

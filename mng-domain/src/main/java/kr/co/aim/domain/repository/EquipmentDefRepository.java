@@ -18,22 +18,13 @@ public interface EquipmentDefRepository {
     List<EquipmentDef> findAll();
 
     /**
-     * ID로 사용자를 찾습니다.
-     * @param id EquipmentDef ID
-     * @return Optional<EquipmentDef>
-     */
-    Optional<EquipmentDef> findById(Long id);
-
-    /**
      * carrierDefName로 사용자를 찾습니다.
-     * @param equipmentDefName equipmentDefName
+     * @param equipmentName equipmentName
      * @return Optional<EquipmentDef>
      */
-    Optional<EquipmentDef> findByEquipmentName(String equipmentDefName);
+    Optional<EquipmentDef> findByEquipmentName(String equipmentName);
 
     EquipmentDef save(EquipmentDef equipmentDef);
-
-//    Page<EquipmentDefResponseDto> findEquipmentDefWithConditions(EquipmentDefSearchConditionDto condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

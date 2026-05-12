@@ -18,28 +18,11 @@ public interface EquipmentGroupRepository {
     List<EquipmentGroup> findAll();
 
     /**
-     * ID로 사용자를 찾습니다.
-     * @param id carrierDef ID
-     * @return Optional<CarrierDef>
-     */
-    Optional<EquipmentGroup> findById(Long id);
-
-    /**
-     * equipmentName로 설비를 찾습니다.
-     * @param equipmentGroupName EquipmentGroup EquipmentGroupName
-     * @return Optional<Equipments>
-     */
-    Optional<EquipmentGroup> findByEquipmentGroupName(String equipmentGroupName);
-
-    /**
      * equipmentName로 설비를 찾습니다.
      * @param equipmentGroup EquipmentGroup
      * @return Equipments
      */
     EquipmentGroup save(EquipmentGroup equipmentGroup);
-
-//    Page<EquipmentGroupResponseDto> findEquipmentGroupWithConditions(EquipmentGroupSearchCondtionDto condition, Pageable pageable);
-
 
     void deleteAllByIdInBatch(List<Long>ids);
 

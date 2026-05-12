@@ -1,6 +1,4 @@
 package kr.co.aim.domain.model;
-
-import kr.co.aim.common.handler.HasTransactionInfo;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,24 +9,24 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Builder
 @ToString
-public class EquipmentDef implements HasTransactionInfo {
-    private Long id;
-    private String equipmentDefName;
+public class EquipmentDef {
+    private String equipmentName;
+    private String factoryName;
     private String description;
     private String equipmentType;
-    private Long equipmentGroupId;
+    private String equipmentGroupName;
     private String detailEquipmentType;
     private String vendorId;
     private String modelId;
     private Integer processCapacity;
+    private String containerType;
     private String checkOutState;
     private LocalDateTime checkOutTime;
     private String checkOutUser;
     private String dataState;
-    private String eventName;
-    private LocalDateTime eventTime;
-    private String eventUser;
-    private String eventComment;
-    private String containerType;
+    private String lastEventName;
+    private LocalDateTime lastEventTime;
+    private String lastEventUser;
+    private String lastEventComment;
 
 }

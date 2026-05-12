@@ -42,6 +42,7 @@ public class MSSQLDataSourceConfig {
         return builder
                 .dataSource(dataSource)
                 .packages("kr.co.aim.infra.persistence.entity") // 2. 담당할 엔티티 패키지 지정
+                .persistenceUnit("mssqlUnit") // ★ 고유한 이름 부여
                 .build();
     }
 

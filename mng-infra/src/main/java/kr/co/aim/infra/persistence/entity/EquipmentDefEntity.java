@@ -14,63 +14,64 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "EQUIPMENT_DEF", catalog = "NEXBEEAS", schema = "dbo")
+@Table(name = "EQUIPMENT_DEF", catalog = "NEXBEWCS", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class EquipmentDefEntity {
-    @Id
-    @Column(name = "ID")
-    private Long id;
 
-    @Column(name = "EQUIPMENT_DEF_NAME")
-    private String equipmentDefName;
+    @Id
+    @Column(name = "equipmentName")
+    private String equipmentName;
+
+    @Column(name = "factoryName")
+    private String factoryName;
 
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "EQUIPMENT_TYPE")
+    @Column(name = "equipmentType")
     private String equipmentType;
 
-    @Column(name = "EQUIPMENT_GROUP_ID")
-    private Long equipmentGroupId;
+    @Column(name = "equipmentGroupName")
+    private String equipmentGroupName;
 
-    @Column(name = "DETAIL_EQUIPMENT_TYPE")
+    @Column(name = "detailEquipmentType")
     private String detailEquipmentType;
 
-    @Column(name = "VENDOR_ID")
+    @Column(name = "vendorId")
     private String vendorId;
 
-    @Column(name = "MODEL_ID")
+    @Column(name = "modelId")
     private String modelId;
 
-    @Column(name = "PROCESS_CAPACITY")
+    @Column(name = "processCapacity")
     private Integer processCapacity;
 
-    @Column(name = "CONTAINER_TYPE")
+    @Column(name = "containerType")
     private String containerType;
 
-    @Column(name = "CHECK_OUT_STATE")
+    @Column(name = "checkoutState")
     private String checkOutState;
 
-    @Column(name = "CHECK_OUT_TIME")
+    @Column(name = "checkoutTime")
     private LocalDateTime checkOutTime;
 
-    @Column(name = "CHECK_OUT_USER")
+    @Column(name = "checkoutUser")
     private String checkOutUser;
 
-    @Column(name = "DATA_STATE")
+    @Column(name = "dataState")
     private String dataState;
 
-    @Column(name = "EVENT_NAME")
-    private String eventName;
+    @Column(name = "lastEventName")
+    private String lastEventName;
 
-    @Column(name = "EVENT_TIME")
-    private LocalDateTime eventTime;
+    @Column(name = "lastEventTime")
+    private LocalDateTime lastEventTime;
 
-    @Column(name = "EVENT_USER")
-    private String eventUser;
+    @Column(name = "lastEventUser")
+    private String lastEventUser;
 
-    @Column(name = "EVENT_COMMENT")
-    private String eventComment;
+    @Column(name = "lastEventComment")
+    private String lastEventComment;
 
 
 }

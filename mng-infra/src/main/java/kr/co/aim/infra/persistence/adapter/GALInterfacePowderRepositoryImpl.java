@@ -15,6 +15,7 @@ import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -35,10 +36,14 @@ import static kr.co.aim.infra.persistence.db2entity.powder.QH2TransPEntity.h2Tra
 import static kr.co.aim.infra.persistence.db2entity.powder.QH2PartMPEntity.h2PartMPEntity;
 
 @Repository
-@RequiredArgsConstructor
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository {
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
+
+    // 생성자를 직접 쓰면 @Qualifier를 가장 정확하게 제어할 수 있습니다.
+    public GALInterfacePowderRepositoryImpl(@Qualifier("db2QueryFactory") JPAQueryFactory queryFactory) {
+        this.queryFactory = queryFactory;
+    }
 
     @Override
     public Page<GALInterfaceResponse> getInterfaceList(GALInterfaceSearchCondition condition, Pageable pageable) {
@@ -66,7 +71,7 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                         // === H2TRANSP (Result) 필드 - Powder 전용 ===
                         h2TransPEntity.cOrderId.as("cOrderId"),
                         h2TransPEntity.rrn.as("rrn"),
-                        h2TransPEntity.lineNo.as("lineno"),
+                        h2TransPEntity.lineNo.as("lineNo"),
                         h2TransPEntity.lot.as("lot"),
                         h2TransPEntity.galKey.as("galKey"),
                         h2TransPEntity.cTransTy.as("cTransTy"),
@@ -192,7 +197,7 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                 .where();
 
         // 2. 정렬 및 페이징 적용
-        query.orderBy(getOrderSpecifiersDetail(pageable.getSort()));
+        query.orderBy(getOrderSpecifiersPart(pageable.getSort()));
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset());
             query.limit(pageable.getPageSize());

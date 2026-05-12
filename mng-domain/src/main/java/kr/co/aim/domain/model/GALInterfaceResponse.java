@@ -15,11 +15,11 @@ public class GALInterfaceResponse {
     // === 공통 관리 필드 (Common Header) ===
     private Long lineId;
     private Long idocId;         // Powder의 lineid 또는 Insert의 idocId 대응
-    private Long idocTypId;
+    private Integer idocTypId;
     private Integer state;
     private Integer errorCode;
-    private Long source;
-    private Long destination;
+    private Integer source;
+    private Integer destination;
     private LocalDateTime dtimeCre;
     private LocalDateTime dtimeMod;
     private String usrMod;
@@ -55,7 +55,7 @@ public class GALInterfaceResponse {
     private String toWhCd;       // Powder 전용
 
     // === Transaction / Result 필드 (Insert & Powder 통합) ===
-    private Long cTransTy;
+    private Integer cTransTy;
     private Long cErrId;         // Insert 전용
     private String cText1;       // Insert 전용
     private Long cOrderLn;       // Insert 전용
@@ -78,6 +78,6 @@ public class GALInterfaceResponse {
     private String resultStat;   // Powder 전용
     private String errReason;    // Powder 전용
     private LocalDateTime eventDt; // Powder 전용
-    private Long h2ordLineid;    // Powder 전용
+    private Long h2ordLineId;    // Powder 전용
 
 }
