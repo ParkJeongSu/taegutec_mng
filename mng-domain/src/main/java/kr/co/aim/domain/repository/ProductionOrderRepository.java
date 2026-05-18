@@ -7,6 +7,7 @@ import kr.co.aim.domain.model.ProductionOrderSummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,5 +55,15 @@ public interface ProductionOrderRepository {
 
     List<ProductionOrder> findByProductionOrderStateInOrderByCreateTimeAsc(
             List<String> productionOrderState
+    );
+
+    // 금일 특정 기간(00:00:00 ~ 23:59:59) 동안 생성된 order 조회
+    List<ProductionOrder> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
+
+    // 금일 생성된 완료 order 조회용 (기간 + 상태 조건)
+    List<ProductionOrder> findByCreateTimeBetweenAndProductionOrderState(
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
+            String productionOrderState
     );
 }

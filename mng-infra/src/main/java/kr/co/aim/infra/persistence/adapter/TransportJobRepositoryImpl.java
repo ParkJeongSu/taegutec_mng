@@ -23,6 +23,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -146,6 +147,16 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
 
         // 6. PageImpl 반환
         return new PageImpl<>(converted, pageable, total);
+    }
+
+    @Override
+    public List<TransportJob> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return transportJobJpaRepository.findByCreateTimeBetween(startDateTime,endDateTime).stream().map(transportJobMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<TransportJob> findByCreateTimeBetweenAndTransportJobState(LocalDateTime startDateTime, LocalDateTime endDateTime, String transportJobState) {
+        return transportJobJpaRepository.findByCreateTimeBetweenAndTransportJobState(startDateTime,endDateTime,transportJobState).stream().map(transportJobMapper::toDomain).collect(Collectors.toList());
     }
 
     /**

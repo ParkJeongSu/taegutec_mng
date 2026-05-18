@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -146,6 +147,20 @@ public class TransportJobService {
     @Transactional(readOnly = true)
     public Page<TransportJobHistory> findTransportJobHistoryByCondition(TransportJobHistorySearchCondition condition, Pageable pageable){
         return transportJobRepository.findTransportJobHistoryByCondition(condition, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransportJob> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime){
+        return transportJobRepository.findByCreateTimeBetween(startDateTime,endDateTime);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TransportJob> findByCreateTimeBetweenAndTransportJobState(
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
+            String transportJobState
+    ){
+        return transportJobRepository.findByCreateTimeBetweenAndTransportJobState(startDateTime,endDateTime,transportJobState);
     }
 
 }

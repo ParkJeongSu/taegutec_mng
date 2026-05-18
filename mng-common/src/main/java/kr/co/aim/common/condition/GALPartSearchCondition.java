@@ -11,17 +11,17 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor//(access = AccessLevel.PROTECTED) // JPA Entity 등을 위한 기본 생성자
 public class GALPartSearchCondition {
-    private Long lineid;
-    private Long idocid;
-    private LocalDateTime dtimecre;
-    private LocalDateTime dtimemod;
-    private String usrmod;
-    private String pgmmod;
-    private Integer modcnt;
-    private String corderid;
+    private Long lineId;
+    private Long idocId;
+    private LocalDateTime dtimeCre;
+    private LocalDateTime dtimeMod;
+    private String usrMod;
+    private String pgmMod;
+    private Integer modCnt;
+    private String cOrderId;
     private Integer rrn;
-    private Integer lineno;
-    private String cpartid;
+    private Integer lineNo;
+    private String cPartId;
     private Integer lot;
     private BigDecimal qty;
     private String uom;
@@ -32,5 +32,5 @@ public class GALPartSearchCondition {
     private BigDecimal maxReceiveQty;
     private BigDecimal defaultReceiveQty;
     private Long h2trnLineid;
-    private String galkey;
+    private String galKey;
 }

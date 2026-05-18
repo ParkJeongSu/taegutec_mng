@@ -30,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -106,6 +107,16 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
+    public List<ProductionOrder> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return productionOrderJpaRepository.findByCreateTimeBetween(startDateTime,endDateTime).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductionOrder> findByCreateTimeBetweenAndProductionOrderState(LocalDateTime startDateTime, LocalDateTime endDateTime, String productionOrderState) {
+        return productionOrderJpaRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime,endDateTime,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable) {
         //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductionOrderSummary> query = queryFactory
@@ -177,7 +188,8 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                 .selectFrom(productionOrderEntity)
                 .where(
                         // (WHERE 조건이 있다면 여기에 추가)
-                        orderIdContains(condition.getOrderId())
+                        orderIdContains(condition.getOrderId()),
+                        equipmentNameEqual(condition.getEquipmentName())
                 );
 
         // 2. 정렬 적용
@@ -203,7 +215,8 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                     .from(productionOrderEntity)
                     .where(
                             // (WHERE 조건이 있다면 여기에 추가)
-                            orderIdContains(condition.getOrderId())
+                            orderIdContains(condition.getOrderId()),
+                            equipmentNameEqual(condition.getEquipmentName())
                     )
                     .fetchOne();
 
@@ -379,6 +392,10 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
 
 
     // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
+    private BooleanExpression equipmentNameEqual(String equipmentName) {
+        return StringUtils.hasText(equipmentName) ? productionOrderEntity.equipmentName.eq(equipmentName) : null;
+    }
+
     private BooleanExpression orderIdContains(String orderId) {
         return StringUtils.hasText(orderId) ? productionOrderEntity.orderId.contains(orderId) : null;
     }

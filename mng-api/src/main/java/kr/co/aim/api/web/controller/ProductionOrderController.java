@@ -46,7 +46,7 @@ public class ProductionOrderController {
     @GetMapping("")
     public ResponseEntity<Page<ProductionOrder>> getProductionOrder(
             ProductionOrderSearchCondition condition,
-            @PageableDefault(size = 100, sort = "createTime", direction = Sort.Direction.ASC)
+            @PageableDefault(size = 100, sort = "createTime", direction = Sort.Direction.DESC)
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
     ) {

@@ -3,10 +3,10 @@ package kr.co.aim.infra.persistence.adapter;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import jakarta.persistence.Column;
 import kr.co.aim.common.condition.GALDetailInterfaceSearchCondition;
 import kr.co.aim.common.condition.GALInterfaceSearchCondition;
 import kr.co.aim.common.condition.GALPartSearchCondition;
@@ -14,7 +14,7 @@ import kr.co.aim.domain.model.GALDetailInterfaceResponse;
 import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
-import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
@@ -23,8 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +50,7 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                 .select(Projections.fields(GALInterfaceResponse.class,
                         // === IDOC (Common Header) 필드 ===
                         idocPEntity.lineId.as("lineId"),
+                        idocPEntity.lineId.as("idocId"),
                         idocPEntity.idocTypId.as("idocTypId"),
                         idocPEntity.state.as("state"),
                         idocPEntity.errorCode.as("errorCode"),
@@ -149,7 +148,9 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                         h2OrderDPEntity.galKey.as("galKey")
                 ))
                 .from(h2OrderDPEntity)
-                .where();
+                .where(
+                        IdocIdEqual(condition.getIdocId())
+                );
 
         // 2. 정렬 및 페이징 적용
         query.orderBy(getOrderSpecifiersDetail(pageable.getSort()));
@@ -166,7 +167,9 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
             Long count = queryFactory
                     .select(h2OrderDPEntity.lineId.count())
                     .from(h2OrderDPEntity)
-                    .where()
+                    .where(
+                            IdocIdEqual(condition.getIdocId())
+                    )
                     .fetchOne();
             total = (count != null) ? count : 0L;
         } else {
@@ -267,6 +270,13 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
             orders.add(new OrderSpecifier(Order.DESC, h2PartMPEntity.cPartId));
         }
         return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
+
+
+    private BooleanExpression IdocIdEqual(Long idocId) {
+        return ObjectUtils.isNotEmpty(idocId) ? h2OrderDPEntity.idocId.eq(idocId) : null;
     }
 
 

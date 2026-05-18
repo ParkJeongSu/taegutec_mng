@@ -3,6 +3,7 @@ package kr.co.aim.infra.persistence.springdatajpa;
 import kr.co.aim.infra.persistence.entity.ProductionOrderEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +31,16 @@ public interface ProductionOrderJpaRepository extends JpaRepository<ProductionOr
 
     List<ProductionOrderEntity> findByProductionOrderStateInOrderByCreateTimeAsc(
             List<String> productionOrderState
+    );
+
+    // 금일 특정 기간(00:00:00 ~ 23:59:59) 동안 생성된 order 조회
+    List<ProductionOrderEntity> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime);
+
+    // 금일 생성된 완료 order 조회용 (기간 + 상태 조건)
+    List<ProductionOrderEntity> findByCreateTimeBetweenAndProductionOrderState(
+            LocalDateTime startDateTime,
+            LocalDateTime endDateTime,
+            String productionOrderState
     );
 
 }

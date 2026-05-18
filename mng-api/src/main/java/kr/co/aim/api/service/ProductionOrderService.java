@@ -14,13 +14,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","web"})
+@Profile({"scheduler","web","pex","tex"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class ProductionOrderService {
     private final CarrierService carrierService;
@@ -91,6 +92,20 @@ public class ProductionOrderService {
 //        }
 
         return new PageImpl<>(totalList, pageable, totalList.size());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductionOrder> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
+        return productionOrderRepository.findByCreateTimeBetween(startDateTime, endDateTime);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductionOrder> findByCreateTimeBetweenAndProductionOrderState(LocalDateTime startDateTime,
+                                                         LocalDateTime endDateTime,
+                                                         String productionOrderState) {
+        return productionOrderRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime,
+                endDateTime,
+                productionOrderState);
     }
 
 
