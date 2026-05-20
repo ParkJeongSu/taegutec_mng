@@ -35,7 +35,7 @@ public class H2OrderDPEntity {
     private String pgmMod;
 
     @Column(name = "MODCNT")
-    private Integer modCnt;
+    private Long modCnt;
 
     @Column(name = "CORDERID")
     private String cOrderId;

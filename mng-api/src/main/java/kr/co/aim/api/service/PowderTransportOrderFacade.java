@@ -12,7 +12,5 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class PowderTransportOrderFacade {
-    private final TransportOrderService transportOrderService;
     private final PowderExternalInterfaceService powderExternalInterfaceService;
-
 }

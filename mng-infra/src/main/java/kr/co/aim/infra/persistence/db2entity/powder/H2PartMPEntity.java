@@ -35,7 +35,7 @@ public class H2PartMPEntity {
     private String pgmMod;
 
     @Column(name = "MODCNT")
-    private Integer modCnt;
+    private Long modCnt;
 
     @Column(name = "CPARTID")
     private String cPartId;

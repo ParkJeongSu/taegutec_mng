@@ -82,8 +82,13 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
-    public Optional<ProductionOrder> findByGalId(String galId) {
-        return productionOrderJpaRepository.findByGalId(galId).map(productionOrderMapper::toDomain);
+    public Optional<ProductionOrder> findByGalKey(String galKey) {
+        return productionOrderJpaRepository.findByGalKey(galKey).map(productionOrderMapper::toDomain);
+    }
+
+    @Override
+    public Optional<ProductionOrder> findByH2OrderDpLineId(Long h2orderDPLineId) {
+        return productionOrderJpaRepository.findByH2OrderDpLineId(h2orderDPLineId).map(productionOrderMapper::toDomain);
     }
 
     @Override

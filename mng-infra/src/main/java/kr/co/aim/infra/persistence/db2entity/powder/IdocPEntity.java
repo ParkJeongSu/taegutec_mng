@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "IDOCP")
+@Builder
 @Getter
 @Setter
+@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IdocPEntity {
 
@@ -20,19 +22,19 @@ public class IdocPEntity {
     private Long lineId;
 
     @Column(name = "IDOCTYPID")
-    private Integer idocTypId;
+    private Long idocTypId;
 
     @Column(name = "STATE")
-    private Integer state;
+    private Long state;
 
     @Column(name = "ERRORCODE")
-    private Integer errorCode;
+    private Long errorCode;
 
     @Column(name = "SOURCE")
-    private Integer source;
+    private Long source;
 
     @Column(name = "DESTINATION")
-    private Integer destination;
+    private Long destination;
 
     @Column(name = "DTIMECRE")
     private LocalDateTime dtimeCre;
@@ -47,5 +49,5 @@ public class IdocPEntity {
     private String pgmMod;
 
     @Column(name = "MODCNT")
-    private Integer modCnt;
+    private Long modCnt;
 }

@@ -1,7 +1,5 @@
-package kr.co.aim.domain.model;
+package kr.co.aim.api.dto;
 
-import jakarta.persistence.Column;
-import kr.co.aim.common.handler.IBaseHistoryEntity;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -9,11 +7,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+@NoArgsConstructor//(access = AccessLevel.PROTECTED) // JPA Entity 등을 위한 기본 생성자
 @Builder
-public class ProductionOrderHistory implements IBaseHistoryEntity {
+@AllArgsConstructor
+public class ProductionOrderSimulatorRequestDto {
     private Long id;
     private String orderId;
     private String orderLineNumber;
@@ -48,5 +45,4 @@ public class ProductionOrderHistory implements IBaseHistoryEntity {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
-
 }

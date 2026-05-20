@@ -26,7 +26,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","web"})
+@Profile({"scheduler","web","simulator"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class PowderExternalInterfaceService implements FactoryGALInterfaceStrategy {
 

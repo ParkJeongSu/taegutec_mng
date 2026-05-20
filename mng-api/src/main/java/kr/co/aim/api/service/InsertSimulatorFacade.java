@@ -15,6 +15,7 @@ import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2OrderMJpaRepository
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.util.Optional;
 @Slf4j
 @Profile({"simulator"})
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertSimulatorFacade {
 
     private final TransportOrderService transportOrderService;

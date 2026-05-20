@@ -9,9 +9,6 @@ import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.IfEventQueueCreateCommand;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.infra.persistence.mapper.PortMapper;
-import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
-import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +25,7 @@ import java.util.Optional;
 @Slf4j
 @Profile({"pex","tex","scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
-public class powderIfEventQueueService implements FactoryIfEventQueueStrategy {
+public class PowderIfEventQueueService implements FactoryIfEventQueueStrategy {
 
     private final ObjectMapper objectMapper;
     private final IfEventQueueService ifEventQueueService;

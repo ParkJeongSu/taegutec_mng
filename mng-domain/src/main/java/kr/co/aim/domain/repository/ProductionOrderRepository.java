@@ -30,7 +30,9 @@ public interface ProductionOrderRepository {
     Optional<ProductionOrder> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
 
     // (2) galId 로 조회
-    Optional<ProductionOrder> findByGalId(String galId);
+    Optional<ProductionOrder> findByGalKey(String galKey);
+
+    Optional<ProductionOrder> findByH2OrderDpLineId(Long h2orderDPLineId);
 
     // (3) equipmentName, productionOrderState 로 조회
     List<ProductionOrder> findByEquipmentNameAndProductionOrderState(String equipmentName, String productionOrderState);

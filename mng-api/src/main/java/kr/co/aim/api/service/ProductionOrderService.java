@@ -1,9 +1,20 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.vo.powder.sim.H2TransReportVo;
+import kr.co.aim.api.vo.powder.sim.ProductionOrderContext;
 import kr.co.aim.common.condition.*;
+import kr.co.aim.common.enums.HoldState;
 import kr.co.aim.common.enums.ProductionOrderState;
+import kr.co.aim.common.enums.SystemName;
+import kr.co.aim.common.record.TransactionInfo;
+import kr.co.aim.domain.command.ProductionOrderCreateCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
+import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDPEntity;
+import kr.co.aim.infra.persistence.db2entity.powder.H2OrderMPEntity;
+import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
+import kr.co.aim.infra.persistence.entity.ProductionOrderHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,20 +23,110 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","web","pex","tex"})
+@Profile({"scheduler","web","pex","tex","simulator"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class ProductionOrderService {
     private final CarrierService carrierService;
     private final ProductionOrderRepository productionOrderRepository;
+    private final ProductionOrderMapper productionOrderMapper;
+
+
+    private final HistoryService historyService;
+
+    public ProductionOrder createBaseBuilder(ProductionOrderContext context) {
+        TransactionInfo transactionInfo = TransactionInfo.now(
+                "Transfer",
+                SystemName.MNG.getValue(),
+                "");
+        String productionOrderType = ""; // TODO : Idoc의 데이터에 따라서 구분
+        IdocPEntity idoc = context.getIdoc();
+        H2OrderMPEntity master = context.getMaster();
+        H2OrderDPEntity detail = context.getDetail();
+        ProductionOrderCreateCommand command =
+                ProductionOrderCreateCommand
+                        .builder()
+                        .transactionInfo(transactionInfo)
+                        //.id()
+                        .orderId(detail.getCOrderId())
+                        .orderLineNumber(detail.getRrn().toString())
+                        .lotName(detail.getLot().toString())
+                        //.description()
+                        .itemName(detail.getCPartId())
+                        //.recipeName()
+                        //.carrierName()
+                        .idocId(detail.getIdocId())
+                        .h2OrderDpLineId(detail.getLineId())
+                        .galKey(detail.getGalKey())
+                        .productionOrderType(productionOrderType)
+                        .productionOrderState(ProductionOrderState.CREATED.getValue())
+                        .holdState(HoldState.NOT_ON_HOLD.getValue())
+                        //.reasonCode()
+                        .equipmentName(detail.getMachine())
+                        .planQuantity(detail.getQty())
+                        //.releasedQuantity()
+                        //.startedQuantity()
+                        //.endedQuantity()
+                        //.scrappedQuantity()
+                        .createTime(transactionInfo.eventTime())
+                        //.releaseTime()
+                        //.completeTime()
+                        //.validationTime()
+                        .createUser(SystemName.MNG.getValue())
+                        //.releaseUser()
+                        //.completeUser()
+                        //.dueDate()
+                        .eventName(transactionInfo.eventName())
+                        .eventTime(transactionInfo.eventTime())
+                        .eventUser(transactionInfo.eventUser())
+                        .eventComment(transactionInfo.eventComment())
+                        .build();
+
+        return ProductionOrder.create(command);
+    }
+
+    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public ProductionOrder createProductionOrder(ProductionOrder productionOrder) {
+        ProductionOrder savedProductionOrder = productionOrderRepository.save(productionOrder);
+        ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(savedProductionOrder);
+        historyService.saveHistory(historyEntity);
+        return savedProductionOrder;
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public ProductionOrder registerProductionOrder(ProductionOrderContext context) {
+        ProductionOrder productionOrder = createBaseBuilder(context);
+        ProductionOrder savedProductionOrder = productionOrderRepository.save(productionOrder);
+        ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(savedProductionOrder);
+        historyService.saveHistory(historyEntity);
+        return savedProductionOrder;
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public ProductionOrder updateStatusProductionOrder(H2TransReportVo vo) {
+        log.info("updateStatusProductionOrder");
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findByH2OrderDpLineId(vo.getH2OrderDpLineId());
+        if(optionalProductionOrder.isEmpty()){
+            throw new RuntimeException("ProductionOrder를 찾을 수 없습니다. (요청 ID: " + vo.getH2OrderDpLineId() + ")");
+        }
+
+        ProductionOrder productionOrder = optionalProductionOrder.get();
+        productionOrder.setReportState( vo.getStatus().name());
+        ProductionOrder savedProductionOrder = productionOrderRepository.save(productionOrder);
+        ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(savedProductionOrder);
+        historyService.saveHistory(historyEntity);
+        return savedProductionOrder;
+    }
 
     @Transactional(readOnly = true)
     public List<ProductionOrder> findActiveProductionOrderList(String equipmentName) {
@@ -106,6 +207,15 @@ public class ProductionOrderService {
         return productionOrderRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime,
                 endDateTime,
                 productionOrderState);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<ProductionOrder> findByH2OrderDpLineId(Long h2orderDPLineId) {
+        return productionOrderRepository.findByH2OrderDpLineId(h2orderDPLineId);
+    }
+
+    public Optional<ProductionOrder> findById(Long id){
+        return productionOrderRepository.findById(id);
     }
 
 

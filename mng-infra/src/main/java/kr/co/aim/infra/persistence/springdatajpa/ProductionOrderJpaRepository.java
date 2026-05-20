@@ -12,7 +12,9 @@ public interface ProductionOrderJpaRepository extends JpaRepository<ProductionOr
     Optional<ProductionOrderEntity> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
 
     // (2) galId 로 조회
-    Optional<ProductionOrderEntity> findByGalId(String galId);
+    Optional<ProductionOrderEntity> findByGalKey(String galId);
+
+    Optional<ProductionOrderEntity> findByH2OrderDpLineId(Long h2orderDPLineId);
 
     // (3) equipmentName, productionOrderState 로 조회
     List<ProductionOrderEntity> findByEquipmentNameAndProductionOrderState(String equipmentName, String productionOrderState);

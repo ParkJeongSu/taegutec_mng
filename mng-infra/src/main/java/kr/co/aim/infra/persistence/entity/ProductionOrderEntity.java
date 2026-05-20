@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -43,14 +44,23 @@ public class ProductionOrderEntity {
     @Column(name = "CARRIER_NAME")
     private String carrierName;
 
-    @Column(name = "GAL_ID")
-    private String galId;
+    @Column(name = "IDOC_ID")
+    private Long idocId;
+
+    @Column(name = "H2_ORDER_DP_LINE_ID")
+    private Long h2OrderDpLineId;
+
+    @Column(name = "GAL_KEY")
+    private String galKey;
 
     @Column(name = "PRODUCTION_ORDER_TYPE")
     private String productionOrderType;
 
     @Column(name = "PRODUCTION_ORDER_STATE")
     private String productionOrderState;
+
+    @Column(name = "REPORT_STATE")
+    private String reportState;
 
     @Column(name = "HOLD_STATE")
     private String holdState;
@@ -62,19 +72,19 @@ public class ProductionOrderEntity {
     private String equipmentName;
 
     @Column(name = "PLAN_QUANTITY")
-    private Integer planQuantity;
+    private BigDecimal planQuantity;
 
     @Column(name = "RELEASED_QUANTITY")
-    private Integer releasedQuantity;
+    private BigDecimal releasedQuantity;
 
     @Column(name = "STARTED_QUANTITY")
-    private Integer startedQuantity;
+    private BigDecimal startedQuantity;
 
     @Column(name = "ENDED_QUANTITY")
-    private Integer endedQuantity;
+    private BigDecimal endedQuantity;
 
     @Column(name = "SCRAPPED_QUANTITY")
-    private Integer scrappedQuantity;
+    private BigDecimal scrappedQuantity;
 
     @Column(name = "CREATE_TIME")
     private LocalDateTime createTime;

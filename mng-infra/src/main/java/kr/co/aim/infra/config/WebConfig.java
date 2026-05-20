@@ -7,6 +7,11 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+
+import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
+import org.springframework.context.annotation.Bean;
 
 import java.util.List;
 
@@ -58,6 +63,31 @@ public class WebConfig implements WebMvcConfigurer {
         // resolver.setMaxPageSize(2000);
 
         resolvers.add(resolver);
+    }
+
+//    @Override
+//    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+//        Jackson2ObjectMapperBuilder builder = new Jackson2ObjectMapperBuilder();
+//
+//        // Long 및 long 타입을 전체 문자열 변환 처리 지정
+//        builder.serializerByType(Long.class, ToStringSerializer.instance);
+//        builder.serializerByType(Long.TYPE, ToStringSerializer.instance);
+//
+//        ObjectMapper objectMapper = builder.build();
+//        converters.add(0, new MappingJackson2HttpMessageConverter(objectMapper));
+//    }
+
+    @Bean
+    public Jackson2ObjectMapperBuilderCustomizer jacksonCustomizer() {
+        // 람다식을 배제하기 위해 익명 내부 클래스(Anonymous Inner Class) 구조로 명시적 정의
+        return new Jackson2ObjectMapperBuilderCustomizer() {
+            @Override
+            public void customize(Jackson2ObjectMapperBuilder jacksonObjectMapperBuilder) {
+                // Long 및 필수 기본형 long 타입에 대해서만 문자열 직렬화 지정
+                jacksonObjectMapperBuilder.serializerByType(Long.class, ToStringSerializer.instance);
+                jacksonObjectMapperBuilder.serializerByType(Long.TYPE, ToStringSerializer.instance);
+            }
+        };
     }
 
 

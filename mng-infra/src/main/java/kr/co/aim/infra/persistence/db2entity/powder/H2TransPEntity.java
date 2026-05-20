@@ -11,8 +11,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "H2TRANSP")
-@Getter @Setter
+@Builder
+@Getter
+@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class H2TransPEntity {
 
     @Id
@@ -35,7 +38,7 @@ public class H2TransPEntity {
     private String pgmMod;
 
     @Column(name = "MODCNT")
-    private Integer modCnt;
+    private Long modCnt;
 
     @Column(name = "CORDERID")
     private String cOrderId;
@@ -53,7 +56,7 @@ public class H2TransPEntity {
     private String galKey;
 
     @Column(name = "CTRANSTY")
-    private Integer cTransTy;
+    private Long cTransTy;
 
     @Column(name = "CARRIER_ID")
     private String carrierId;
