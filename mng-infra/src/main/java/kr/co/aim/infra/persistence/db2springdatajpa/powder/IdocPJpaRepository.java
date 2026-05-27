@@ -26,6 +26,9 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
     @Query("SELECT COALESCE(MAX(i.lineId), 0) FROM IdocPEntity i")
     Long findMaxLineId();
 
+//    @Query(value = "SELECT NEXT VALUE FOR AIMTESTTK.IDOCP_AIM FROM SYSIBM.SYSDUMMY1", nativeQuery = true)
+//    Long getNextLineId();
+
     @Query("SELECT new kr.co.aim.common.dto.powder.IdocOrderMasterResponseDto(" +
             "i.lineId, " +
             "i.idocTypId, " +

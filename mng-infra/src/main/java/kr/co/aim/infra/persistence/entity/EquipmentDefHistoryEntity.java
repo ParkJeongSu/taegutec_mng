@@ -14,15 +14,16 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "CARRIER_DEF", catalog = "NEXBEDEF", schema = "dbo")
+@Table(name = "EQUIPMENT_DEF", catalog = "NEXBEDEF", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
-public class CarrierDefEntity {
+public class EquipmentDefHistoryEntity {
+
     @Id
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "CARRIER_DEF_NAME")
-    private String carrierDefName;
+    @Column(name = "EQUIPMENT_NAME")
+    private String equipmentName;
 
     @Column(name = "FACTORY_NAME")
     private String factoryName;
@@ -30,29 +31,35 @@ public class CarrierDefEntity {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "CARRIER_TYPE")
-    private String carrierType;
+    @Column(name = "EQUIPMENT_TYPE")
+    private String equipmentType;
 
-    @Column(name = "CARRIER_DETAIL_TYPE")
-    private String carrierDetailType;
+    @Column(name = "EQUIPMENT_GROUP_NAME")
+    private String equipmentGroupName;
 
-    @Column(name = "DEFAULT_CAPACITY")
-    private Integer defaultCapacity;
+    @Column(name = "DETAIL_EQUIPMENT_TYPE")
+    private String detailEquipmentType;
 
-    @Column(name = "USE_COUNT_LIMIT")
-    private Integer useCountLimit;
+    @Column(name = "VENDOR_ID")
+    private String vendorId;
 
-    @Column(name = "USE_DURATION_LIMIT")
-    private Integer useDurationLimit;
+    @Column(name = "MODEL_ID")
+    private String modelId;
 
-    @Column(name = "COUNT_LIMIT_PER_CLEAN")
-    private Integer countLimitPerClean;
+    @Column(name = "PROCESS_CAPACITY")
+    private Integer processCapacity;
 
-    @Column(name = "DURATION_LIMIT_PER_CLEAN")
-    private Integer durationLimitPerClean;
+    @Column(name = "CONTAINER_TYPE")
+    private String containerType;
 
-    @Column(name = "CLEAN_COUNT_LIMIT")
-    private Integer cleanCountLimit;
+    @Column(name = "PLC_TYPE")
+    private String plcType;
+
+    @Column(name = "ROUTE_KEY")
+    private String routeKey;
+
+    @Column(name = "SERVER_NAME")
+    private String serverName;
 
     @Column(name = "CHECK_OUT_STATE")
     private String checkOutState;
@@ -65,6 +72,9 @@ public class CarrierDefEntity {
 
     @Column(name = "DATA_STATE")
     private String dataState;
+
+    @Column(name = "LOCAL_NO")
+    private Integer localNo;
 
     @Column(name = "EVENT_NAME")
     private String eventName;

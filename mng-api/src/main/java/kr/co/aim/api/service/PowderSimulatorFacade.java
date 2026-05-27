@@ -115,6 +115,7 @@ public class PowderSimulatorFacade {
         String itemName = null;
         String carrierName = null;
         String equipmentName = null;
+        BigDecimal actualQuantity = null;
         BigDecimal planQuantity = null;
         BigDecimal releasedQuantity = null;
         BigDecimal startedQuantity = null;
@@ -126,6 +127,7 @@ public class PowderSimulatorFacade {
             itemName = dto.getItemName();
             carrierName = dto.getCarrierName();
             equipmentName = dto.getEquipmentName();
+            actualQuantity = dto.getActualQuantity();
             planQuantity = dto.getPlanQuantity();
             releasedQuantity = dto.getReleasedQuantity();
             startedQuantity = dto.getStartedQuantity();
@@ -142,6 +144,7 @@ public class PowderSimulatorFacade {
                 .itemName(itemName)
                 .carrierName(carrierName)
                 .equipmentName(equipmentName)
+                .actualQuantity(actualQuantity)
                 .planQuantity(planQuantity)
                 .releasedQuantity(releasedQuantity)
                 .startedQuantity(startedQuantity)
@@ -165,7 +168,27 @@ public class PowderSimulatorFacade {
         return result;
     }
 
+    public ProductionOrder transferUnpacker(Long h2orderDpLineId) {
+        ProductionOrderContext ctx = prepareByH2orderDpLineIdNotInProductionOrder(h2orderDpLineId);
+        ProductionOrder result = productionOrderService.registerProductionOrder(ctx);
+        powderSimulatorInterfaceService.transfer(ctx.getIdoc().getLineId());
+        return result;
+    }
+
     public ProductionOrder acceptInbound(Long productionOrderId) {
+        ProductionOrderContext ctx = prepareByProductionOrderId(productionOrderId,null);
+        powderSimulatorInterfaceService.accept(ctx);
+        H2TransReportVo vo = H2TransReportVo
+                .builder()
+                .productionOrderId(ctx.getProductionOrder().getId())
+                .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
+                .orderId(ctx.getDetail().getCOrderId())
+                .status(GALProductionStatus.Accept)
+                .build();
+        return productionOrderService.updateStatusProductionOrder(vo);
+    }
+
+    public ProductionOrder acceptUnpacker(Long productionOrderId) {
         ProductionOrderContext ctx = prepareByProductionOrderId(productionOrderId,null);
         powderSimulatorInterfaceService.accept(ctx);
         H2TransReportVo vo = H2TransReportVo
@@ -191,6 +214,19 @@ public class PowderSimulatorFacade {
         return productionOrderService.updateStatusProductionOrder(vo);
     }
 
+    public ProductionOrder releaseUnpacker(Long productionOrderId) {
+        ProductionOrderContext ctx = prepareByProductionOrderId(productionOrderId,null);
+        powderSimulatorInterfaceService.release(ctx);
+        H2TransReportVo vo = H2TransReportVo
+                .builder()
+                .productionOrderId(ctx.getProductionOrder().getId())
+                .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
+                .orderId(ctx.getDetail().getCOrderId())
+                .status(GALProductionStatus.Released)
+                .build();
+        return productionOrderService.updateStatusProductionOrder(vo);
+    }
+
     public ProductionOrder fibcOnPalletInbound(Long productionOrderId, ProductionOrderSimulatorRequestDto dto) {
         ProductionOrderContext ctx = prepareByProductionOrderId(productionOrderId,dto);
         powderSimulatorInterfaceService.fibcOnPallet(ctx);
@@ -200,6 +236,34 @@ public class PowderSimulatorFacade {
                 .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
                 .orderId(ctx.getDetail().getCOrderId())
                 .status(GALProductionStatus.FibcOnPallet)
+                .build();
+        return productionOrderService.updateStatusProductionOrder(vo);
+    }
+
+    public ProductionOrder startUnpacker(Long productionOrderId, ProductionOrderSimulatorRequestDto dto) {
+        ProductionOrderContext ctx = prepareByProductionOrderId(productionOrderId,dto);
+        powderSimulatorInterfaceService.productionStart(ctx);
+        H2TransReportVo vo = H2TransReportVo
+                .builder()
+                .productionOrderId(ctx.getProductionOrder().getId())
+                .actQty(ctx.getActualQuantity())
+                .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
+                .orderId(ctx.getDetail().getCOrderId())
+                .status(GALProductionStatus.ProductionStarted)
+                .build();
+        return productionOrderService.updateStatusProductionOrder(vo);
+    }
+
+    public ProductionOrder endUnpacker(Long productionOrderId, ProductionOrderSimulatorRequestDto dto) {
+        ProductionOrderContext ctx = prepareByProductionOrderId(productionOrderId,dto);
+        powderSimulatorInterfaceService.productionEnd(ctx);
+        H2TransReportVo vo = H2TransReportVo
+                .builder()
+                .productionOrderId(ctx.getProductionOrder().getId())
+                .actQty(ctx.getActualQuantity())
+                .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
+                .orderId(ctx.getDetail().getCOrderId())
+                .status(GALProductionStatus.ProductionEnded)
                 .build();
         return productionOrderService.updateStatusProductionOrder(vo);
     }

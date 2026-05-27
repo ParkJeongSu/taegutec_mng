@@ -28,6 +28,7 @@ public class ProductionOrderSimulatorRequestDto {
     private String holdState;
     private String reasonCode;
     private String equipmentName;
+    private BigDecimal actualQuantity;
     private BigDecimal planQuantity;
     private BigDecimal releasedQuantity;
     private BigDecimal startedQuantity;

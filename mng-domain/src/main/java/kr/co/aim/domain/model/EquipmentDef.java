@@ -1,4 +1,6 @@
 package kr.co.aim.domain.model;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -10,6 +12,8 @@ import java.time.LocalDateTime;
 @Builder
 @ToString
 public class EquipmentDef {
+
+    private Long id;
     private String equipmentName;
     private String factoryName;
     private String description;
@@ -20,13 +24,17 @@ public class EquipmentDef {
     private String modelId;
     private Integer processCapacity;
     private String containerType;
+    private String plcType;
+    private String routeKey;
+    private String serverName;
     private String checkOutState;
     private LocalDateTime checkOutTime;
     private String checkOutUser;
     private String dataState;
-    private String lastEventName;
-    private LocalDateTime lastEventTime;
-    private String lastEventUser;
-    private String lastEventComment;
+    private Integer localNo;
+    private String eventName;
+    private LocalDateTime eventTime;
+    private String eventUser;
+    private String eventComment;
 
 }

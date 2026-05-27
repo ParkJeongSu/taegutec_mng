@@ -21,6 +21,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -138,7 +139,52 @@ public class PowderSimulatorInterfaceService {
                         .master(ctx.getMaster())
                         .detail(ctx.getDetail())
                         .carrierName(ctx.getCarrierName())
-                        .actQty(ctx.getDetail().getQty())
+                        .actQty(ctx.getDetail().getDefaultReceiveQty())
+                        .build();
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void productionStart(ProductionOrderContext ctx) {
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.ProductionStarted)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void productionEnd(ProductionOrderContext ctx) {
+
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.ProductionEnded)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
                         .build();
         saveTransportProgress(vo);
     }
@@ -152,32 +198,7 @@ public class PowderSimulatorInterfaceService {
                         .sourceIdoc(ctx.getIdoc())
                         .master(ctx.getMaster())
                         .detail(ctx.getDetail())
-                        .build();
-        saveTransportProgress(vo);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    public void productionStarted(ProductionOrderContext ctx) {
-        H2TransReportVo vo =
-                H2TransReportVo
-                        .builder()
-                        .status(GALProductionStatus.ProductionStarted)
-                        .sourceIdoc(ctx.getIdoc())
-                        .master(ctx.getMaster())
-                        .detail(ctx.getDetail())
-                        .build();
-        saveTransportProgress(vo);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    public void productionEnded(ProductionOrderContext ctx) {
-        H2TransReportVo vo =
-                H2TransReportVo
-                        .builder()
-                        .status(GALProductionStatus.ProductionEnded)
-                        .sourceIdoc(ctx.getIdoc())
-                        .master(ctx.getMaster())
-                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
                         .build();
         saveTransportProgress(vo);
     }

@@ -1,5 +1,6 @@
 package kr.co.aim.infra.config;
 
+import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -33,12 +34,23 @@ public class DB2PowderDataSourceConfig {
 
     @Value("${spring.datasource.db2.schema-name}")
     private String db2Schema;
+    // ★ YAML에서 테스트 쿼리 문자열만 명시적으로 가져옵니다.
+    @Value("${spring.datasource.db2.hikari.connection-test-query}")
+    private String db2ConnectionTestQuery;
+
+    // ★ YAML에서 방언 문자열을 동적으로 주입받습니다.
+    @Value("${spring.datasource.db2.dialect}")
+    private String db2Dialect;
 
     @Bean(name = "db2DataSource")
     @ConfigurationProperties(prefix = "spring.datasource.db2")
     @Profile({"scheduler","simulator","web","pex","tex"})
     public DataSource db2DataSource() {
-        return DataSourceBuilder.create().build();
+        // HikariDataSource 타입으로 명시적 생성하여 빌드합니다.
+        HikariDataSource dataSource = DataSourceBuilder.create().type(HikariDataSource.class).build();
+        // 2. ★ 다른 설정은 자동 주입되게 두고, 테스트 쿼리만 가져온 변수로 명시하여 덮어씁니다.
+        dataSource.setConnectionTestQuery(db2ConnectionTestQuery);
+        return dataSource;
     }
 
     @Bean(name = "db2EntityManagerFactory")
@@ -51,6 +63,8 @@ public class DB2PowderDataSourceConfig {
 
         // 하드코딩 대신 주입받은 변수를 사용합니다.
         properties.put("hibernate.default_schema", db2Schema);
+        // 커넥션 오류 시 발생하는 Dialect 예외를 방지하기 위해 명시적으로 설정을 추가합니다.
+        properties.put("hibernate.dialect", db2Dialect);
 
         return builder
                 .dataSource(dataSource)

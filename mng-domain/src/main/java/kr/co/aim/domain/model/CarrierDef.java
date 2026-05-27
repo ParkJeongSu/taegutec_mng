@@ -1,5 +1,7 @@
 package kr.co.aim.domain.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import lombok.*;
 
@@ -11,8 +13,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CarrierDef implements HasTransactionInfo {
+
     private Long id;
     private String carrierDefName;
+    private String factoryName;
     private String description;
     private String carrierType;
     private String carrierDetailType;

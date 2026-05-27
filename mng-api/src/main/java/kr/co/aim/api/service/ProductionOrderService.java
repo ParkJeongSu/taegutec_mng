@@ -3,9 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.vo.powder.sim.H2TransReportVo;
 import kr.co.aim.api.vo.powder.sim.ProductionOrderContext;
 import kr.co.aim.common.condition.*;
-import kr.co.aim.common.enums.HoldState;
-import kr.co.aim.common.enums.ProductionOrderState;
-import kr.co.aim.common.enums.SystemName;
+import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProductionOrderCreateCommand;
 import kr.co.aim.domain.model.*;
@@ -17,6 +15,7 @@ import kr.co.aim.infra.persistence.entity.ProductionOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
@@ -26,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +49,12 @@ public class ProductionOrderService {
                 "Transfer",
                 SystemName.MNG.getValue(),
                 "");
-        String productionOrderType = ""; // TODO : Idoc의 데이터에 따라서 구분
+        String productionOrderType = "";
+        if(context.getIdoc().getIdocTypId() == 12L){
+            productionOrderType = ProductionOrderType.INBOUND.getValue();
+        }else if(context.getIdoc().getIdocTypId() == 13L){
+            productionOrderType = ProductionOrderType.UNPACK.getValue();
+        }
         IdocPEntity idoc = context.getIdoc();
         H2OrderMPEntity master = context.getMaster();
         H2OrderDPEntity detail = context.getDetail();
@@ -59,7 +64,7 @@ public class ProductionOrderService {
                         .transactionInfo(transactionInfo)
                         //.id()
                         .orderId(detail.getCOrderId())
-                        .orderLineNumber(detail.getRrn().toString())
+                        .orderLineNumber(ObjectUtils.isNotEmpty(detail.getRrn()) ? detail.getRrn().toString() : "")
                         .lotName(detail.getLot().toString())
                         //.description()
                         .itemName(detail.getCPartId())
@@ -121,6 +126,31 @@ public class ProductionOrderService {
         }
 
         ProductionOrder productionOrder = optionalProductionOrder.get();
+        // 1. NullPointerException 방지를 위한 실적 수량 안전장치 처리
+        BigDecimal actQty = vo.getActQty();
+        if (actQty == null) {
+            actQty = BigDecimal.ZERO;
+        }
+
+        if(vo.getStatus() == GALProductionStatus.ProductionStarted){
+            BigDecimal startQuantity = productionOrder.getStartedQuantity();
+            if(startQuantity == null){
+                // 2. new 연산자 배제하고 전역 캐싱 상수 활용
+                startQuantity = BigDecimal.ZERO;
+            }
+            BigDecimal resultQuantity = startQuantity.add(actQty);
+            productionOrder.setStartedQuantity(resultQuantity);
+        }
+        else if(vo.getStatus() == GALProductionStatus.ProductionEnded){
+            BigDecimal endQuantity = productionOrder.getEndedQuantity();
+            if(endQuantity == null){
+                endQuantity = BigDecimal.ZERO;
+            }
+            BigDecimal resultQuantity = endQuantity.add(actQty);
+
+            // 3. 버그 수정: setStartedQuantity에서 setEndedQuantity로 정정
+            productionOrder.setEndedQuantity(resultQuantity);
+        }
         productionOrder.setReportState( vo.getStatus().name());
         ProductionOrder savedProductionOrder = productionOrderRepository.save(productionOrder);
         ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(savedProductionOrder);

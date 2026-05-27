@@ -14,9 +14,9 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "CARRIER_DEF", catalog = "NEXBEDEF", schema = "dbo")
+@Table(name = "CARRIER_DEF_HISTORY", catalog = "NEXBEDEF", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
-public class CarrierDefEntity {
+public class CarrierDefHistoryEntity {
     @Id
     @Column(name = "ID")
     private Long id;

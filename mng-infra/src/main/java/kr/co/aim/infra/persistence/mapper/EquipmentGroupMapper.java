@@ -1,7 +1,7 @@
 package kr.co.aim.infra.persistence.mapper;
 
 import kr.co.aim.domain.model.EquipmentGroup;
-import kr.co.aim.infra.persistence.entity.EquipmentGroupEntity;
+import kr.co.aim.infra.persistence.entity.EquipmentGroupDefEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -11,8 +11,8 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface EquipmentGroupMapper {
 
-    EquipmentGroup toDomain(EquipmentGroupEntity entity);
+    EquipmentGroup toDomain(EquipmentGroupDefEntity entity);
 
-    EquipmentGroupEntity toEntity(EquipmentGroup domain);
+    EquipmentGroupDefEntity toEntity(EquipmentGroup domain);
 
 }

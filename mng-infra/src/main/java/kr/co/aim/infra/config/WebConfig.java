@@ -29,25 +29,28 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // 실제 파일(js, css, 이미지)이 들어있는 assets 폴더를 최우선으로 찾게 합니다.
-        registry.addResourceHandler("/assets/**")
-                .addResourceLocations("classpath:/static/assets/");
-
+        // 복잡하게 나눌 필요 없이, static 폴더 전체를 정적 자원 루트로 단일 매핑합니다.
+        // 이 설정이 들어가면 /wcs-web/assets/xxx.js 요청이 들어왔을 때
+        // 내부적으로 static/assets/xxx.js 를 정확하게 찾아갑니다.
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/");
     }
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        // 1단계 경로 대응 (예: /login, /dashboard)
+        // [추가] 사용자가 /wcs-web 또는 /wcs-web/ 로 진입했을 때 index.html을 열어줍니다.
+        registry.addViewController("/")
+                .setViewName("forward:/index.html");
+
+        // 1단계 경로 대응 (예: /wcs-web/login, /wcs-web/dashboard)
         registry.addViewController("/{p1:[^\\.]*}")
                 .setViewName("forward:/index.html");
 
-        // 2단계 경로 대응 (예: /order/list) - 변수명을 p1, p2로 다르게 설정
+        // 2단계 경로 대응 (예: /wcs-web/order/list)
         registry.addViewController("/{p1:[^\\.]*}/{p2:[^\\.]*}")
                 .setViewName("forward:/index.html");
 
-        // 3단계 경로 대응 (예: /order/detail/1)
+        // 3단계 경로 대응 (예: /wcs-web/order/detail/1)
         registry.addViewController("/{p1:[^\\.]*}/{p2:[^\\.]*}/{p3:[^\\.]*}")
                 .setViewName("forward:/index.html");
     }

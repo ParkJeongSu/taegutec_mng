@@ -3,14 +3,13 @@ package kr.co.aim.infra.persistence.adapter;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.domain.model.EquipmentGroup;
 import kr.co.aim.domain.repository.EquipmentGroupRepository;
-import kr.co.aim.infra.persistence.entity.EquipmentGroupEntity;
+import kr.co.aim.infra.persistence.entity.EquipmentGroupDefEntity;
 import kr.co.aim.infra.persistence.mapper.EquipmentGroupMapper;
 import kr.co.aim.infra.persistence.springdatajpa.EquipmentGroupJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -38,8 +37,8 @@ public class EquipmentGroupRepositoryImpl implements EquipmentGroupRepository {
 
     @Override
     public EquipmentGroup save(EquipmentGroup equipmentGroup) {
-        EquipmentGroupEntity entity = equipmentGroupMapper.toEntity(equipmentGroup);
-        EquipmentGroupEntity savedEntity = equipmentGroupJpaRepository.save(entity);
+        EquipmentGroupDefEntity entity = equipmentGroupMapper.toEntity(equipmentGroup);
+        EquipmentGroupDefEntity savedEntity = equipmentGroupJpaRepository.save(entity);
         return equipmentGroupMapper.toDomain(savedEntity);
     }
 

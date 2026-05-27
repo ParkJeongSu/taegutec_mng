@@ -24,6 +24,7 @@ public class ProductionOrderContext {
     private final String itemName;
     private final String carrierName;
     private final String equipmentName;
+    private final BigDecimal actualQuantity;
     private final BigDecimal planQuantity;
     private final BigDecimal releasedQuantity;
     private final BigDecimal startedQuantity;
