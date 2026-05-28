@@ -38,9 +38,8 @@ public class PowderSimulatorInterfaceService {
     private final H2TransPJpaRepository h2TransPJpaRepository;
 
     private IdocPEntity buildBaseIdoc(LocalDateTime now) {
-        //TODO : max 값 시퀀스로 수정하기
         return IdocPEntity.builder()
-                .lineId(idocPJpaRepository.findMaxLineId() + 1)
+                .lineId(idocPJpaRepository.findMaxLineId())
                 .idocTypId(IdocTypeId.Confirmation.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
@@ -49,9 +48,8 @@ public class PowderSimulatorInterfaceService {
     }
 
     private H2TransPEntity buildBaseH2Trans(H2TransReportVo vo) {
-        // TODO: max 값 시퀀스로 수정
         return H2TransPEntity.builder()
-                .lineId(h2TransPJpaRepository.findMaxLineId() + 1)
+                .lineId(h2TransPJpaRepository.findMaxLineId())
                 .idocId(vo.getNewIdoc().getLineId())
                 .dtimeCre(vo.getNewIdoc().getDtimeCre())
                 .dtimeMod(vo.getNewIdoc().getDtimeMod())
@@ -240,21 +238,6 @@ public class PowderSimulatorInterfaceService {
                         .detail(ctx.getDetail())
                         .build();
         saveTransportProgress(vo);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    public Page<IdocOrderMasterResponseDto> findIdocWithOrderMasterByIdocTypId(Long idocTypId, Pageable pageable) {
-        return idocPJpaRepository.findIdocWithOrderMasterByIdocTypId(idocTypId,pageable);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    public Page<IdocH2TransResponseDto> findIdocWithH2TransByGalKey(String galKey, Pageable pageable) {
-        return idocPJpaRepository.findIdocWithH2TransByGalKey(galKey,pageable);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    public Page<H2OrderDPEntity> findByIdocId(Long idocId, Pageable pageable) {
-        return h2OrderDPJpaRepository.findByIdocId(idocId,pageable);
     }
 
 }

@@ -45,8 +45,8 @@ spring:
         max-lifetime: 1800000
         leak-detection-threshold: 2000   # ← ms 단위
     db2:
-      jdbc-url: jdbc:db2://localhost:50000/testdb # 실제 DB2 URL로 변경해주세요
-      schema-name: TESTDB # Db2용 스키마 (운영 환경에서는 라이브러리명)
+      jdbc-url: jdbc:db2://localhost:50000/testdb:currentSchema=AIMTESTTK; # 실제 DB2 URL로 변경해주세요
+      schema-name: AIMTESTTK # Db2용 스키마 (운영 환경에서는 라이브러리명)
       username: db2inst1 # 실제 DB2 계정으로 변경해주세요
       password: 1234 # 실제 DB2 비밀번호로 변경해주세요
       driver-class-name: com.ibm.db2.jcc.DB2Driver

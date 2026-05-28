@@ -17,6 +17,7 @@ import kr.co.aim.domain.repository.GALInterfaceRepository;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +36,7 @@ import static kr.co.aim.infra.persistence.db2entity.powder.QH2PartMPEntity.h2Par
 
 @Repository
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
+@Profile({"scheduler","simulator","web"})
 public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository {
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
 

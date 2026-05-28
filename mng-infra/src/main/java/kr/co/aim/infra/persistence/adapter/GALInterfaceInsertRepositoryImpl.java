@@ -16,6 +16,7 @@ import kr.co.aim.domain.repository.GALInterfaceRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +34,7 @@ import static kr.co.aim.infra.persistence.db2entity.insert.QH2TransEntity.h2Tran
 
 @Repository
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
+@Profile({"scheduler","simulator","web"})
 public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository {
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
 

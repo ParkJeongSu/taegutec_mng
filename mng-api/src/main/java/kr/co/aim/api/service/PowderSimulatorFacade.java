@@ -3,7 +3,12 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.ProductionOrderSimulatorRequestDto;
 import kr.co.aim.api.vo.powder.sim.H2TransReportVo;
 import kr.co.aim.api.vo.powder.sim.ProductionOrderContext;
+import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.enums.GALProductionStatus;
+import kr.co.aim.common.enums.SystemName;
+import kr.co.aim.common.record.TransactionInfo;
+import kr.co.aim.domain.command.ProductDefCreateCommand;
+import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDPEntity;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderMPEntity;
@@ -17,9 +22,13 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -31,9 +40,11 @@ public class PowderSimulatorFacade {
 
     private final ProductionOrderService productionOrderService;
     private final PowderSimulatorInterfaceService powderSimulatorInterfaceService;
+    private final PowderExternalInterfaceService powderExternalInterfaceService;
     private final IdocPJpaRepository idocPJpaRepository;
     private final H2OrderMPJpaRepository h2OrderMPJpaRepository;
     private final H2OrderDPJpaRepository h2OrderDPJpaRepository;
+    private final ProductDefService productDefService;
 
     // 1. IDOC ID 기준으로 전체 컨텍스트 준비 (최초 주문 생성용)
     private ProductionOrderContext prepareByH2orderDpLineIdNotInProductionOrder(Long h2orderDpLineId) {
@@ -305,6 +316,32 @@ public class PowderSimulatorFacade {
                 .status(GALProductionStatus.OrderCompleted)
                 .build();
         return productionOrderService.updateStatusProductionOrder(vo);
+    }
+
+    public List<ProductDef> transferH2PartM(Long idocId, Pageable pageable){
+        ProductionOrderContext ctx = prepareByProductionOrderId(idocId,null);
+        powderSimulatorInterfaceService.transfer(idocId);
+        Page<IdocH2PartMResponseDto> idocH2PartMResponseDtoPage = powderExternalInterfaceService.findIdocWithPartMasterByIdocId(idocId,pageable);
+
+        List<ProductDef> createRequestList = new ArrayList<>();
+        TransactionInfo tx = TransactionInfo.now("userTransfer", SystemName.MNG.getValue(), "user Transfer");
+        for (IdocH2PartMResponseDto dto : idocH2PartMResponseDtoPage) {
+            ProductDefCreateCommand command =
+                    ProductDefCreateCommand
+                            .builder()
+                            .productDefName(dto.getCPartId())
+                            .factoryName("")
+                            .description1(dto.getCPartDsc())
+                            .description2(dto.getCPartDsc2())
+                            .ratio(dto.getCratIo())
+                            .defaultReceiveQuantity(dto.getDefaultReceiveQty())
+                            .transactionInfo(tx)
+                            .build();
+            ProductDef productDef = ProductDef.create(command);
+            createRequestList.add(productDef);
+        }
+
+        return productDefService.save(createRequestList);
     }
 
 }

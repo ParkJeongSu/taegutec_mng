@@ -48,4 +48,7 @@ public class H2PartMPEntity {
 
     @Column(name = "CRATIO")
     private BigDecimal cratIo;
+
+    @Column(name = "DEFAULT_RECEIVE_QTY")
+    private BigDecimal defaultReceiveQty;
 }

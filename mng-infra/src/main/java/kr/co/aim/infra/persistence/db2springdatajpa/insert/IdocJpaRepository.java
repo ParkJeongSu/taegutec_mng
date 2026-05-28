@@ -34,6 +34,6 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
             @Param("idocTypIds") List<Long> idocTypIds,
             @Param("errorCode") Integer errorCode);
 
-    @Query("SELECT COALESCE(MAX(i.lineId), 0) FROM IdocEntity i")
+    @Query("SELECT COALESCE(MAX(i.lineId), 0) +1 FROM IdocEntity i")
     Long findMaxLineId();
 }

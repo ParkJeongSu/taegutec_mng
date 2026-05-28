@@ -30,8 +30,8 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class powderSimulatorController {
     private final PowderSimulatorFacade powderSimulatorFacade;
-    private final PowderSimulatorInterfaceService powderSimulatorInterfaceService;
     private final ProductionOrderService productionOrderService;
+    private final PowderExternalInterfaceService powderExternalInterfaceService;
 
 
     @GetMapping("/inbound/idocs/{idoc-typ-id}")
@@ -39,7 +39,7 @@ public class powderSimulatorController {
             @PathVariable("idoc-typ-id") Long idocTypId,
             @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<IdocOrderMasterResponseDto> result = powderSimulatorInterfaceService.findIdocWithOrderMasterByIdocTypId(idocTypId,pageable);
+        Page<IdocOrderMasterResponseDto> result = powderExternalInterfaceService.findIdocWithOrderMasterByIdocTypId(idocTypId,pageable);
         return ResponseEntity.ok(result);
     }
 
@@ -48,7 +48,7 @@ public class powderSimulatorController {
             @PathVariable("gal-key") String galKey,
             @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<IdocH2TransResponseDto> result = powderSimulatorInterfaceService.findIdocWithH2TransByGalKey(galKey,pageable);
+        Page<IdocH2TransResponseDto> result = powderExternalInterfaceService.findIdocWithH2TransByGalKey(galKey,pageable);
         return ResponseEntity.ok(result);
     }
 
@@ -57,7 +57,7 @@ public class powderSimulatorController {
             @PathVariable("idocId") Long idocId,
             @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        Page<H2OrderDPEntity> result = powderSimulatorInterfaceService.findByIdocId(idocId,pageable);
+        Page<H2OrderDPEntity> result = powderExternalInterfaceService.findByIdocId(idocId,pageable);
         return ResponseEntity.ok(result);
     }
 

@@ -18,6 +18,9 @@ public interface H2TransPJpaRepository extends JpaRepository<H2TransPEntity, Lon
     Optional<H2TransPEntity> findByLineId(Long lineId);
     List<H2TransPEntity> findByIdocId(Long idocId);
     Page<H2TransPEntity> findByIdocId(Long idocId, Pageable pageable);
-    @Query("SELECT COALESCE(MAX(h.lineId), 0) FROM H2TransPEntity h")
+//    @Query("SELECT COALESCE(MAX(h.lineId), 0) +1 FROM H2TransPEntity h")
+//    Long findMaxLineId();
+
+    @Query(value = "SELECT NEXT VALUE FOR AIMTESTTK.H2TRANSP_L FROM SYSIBM.SYSDUMMY1", nativeQuery = true)
     Long findMaxLineId();
 }

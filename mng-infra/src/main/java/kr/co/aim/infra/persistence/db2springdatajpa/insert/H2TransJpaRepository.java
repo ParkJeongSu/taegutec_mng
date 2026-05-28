@@ -25,6 +25,6 @@ public interface H2TransJpaRepository extends JpaRepository<H2TransEntity, Long>
     )
     Page<H2TransEntity> selectByCOrderId(@Param("cOrderId") String cOrderId, Pageable pageable);
 
-    @Query("SELECT COALESCE(MAX(h.lineId), 0) FROM H2TransEntity h")
+    @Query("SELECT COALESCE(MAX(h.lineId), 0) +1 FROM H2TransEntity h")
     Long findMaxLineId();
 }
