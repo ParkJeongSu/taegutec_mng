@@ -12,10 +12,9 @@ import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDPEntity;
-import kr.co.aim.infra.persistence.db2springdatajpa.powder.H2OrderDPJpaRepository;
-import kr.co.aim.infra.persistence.db2springdatajpa.powder.H2OrderMPJpaRepository;
-import kr.co.aim.infra.persistence.db2springdatajpa.powder.H2TransPJpaRepository;
-import kr.co.aim.infra.persistence.db2springdatajpa.powder.IdocPJpaRepository;
+import kr.co.aim.infra.persistence.db2entity.powder.H2PartMPEntity;
+import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
+import kr.co.aim.infra.persistence.db2springdatajpa.powder.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,6 +40,7 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
     private final H2OrderDPJpaRepository h2OrderDPJpaRepository;
     private final H2TransPJpaRepository h2TransPJpaRepository;
     private final GALInterfaceRepository galInterfaceRepository;
+    private final H2PartMPJpaRepository h2PartMPJpaRepository;
 
     @Override
     @Transactional(value = "db2TransactionManager")
@@ -69,6 +69,10 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
     public Page<IdocH2TransResponseDto> findIdocWithH2TransByGalKey(String galKey, Pageable pageable) {
         return idocPJpaRepository.findIdocWithH2TransByGalKey(galKey,pageable);
     }
+    @Transactional(value = "db2TransactionManager")
+    public Page<IdocH2TransResponseDto> findIdocWithH2TransByPartIsNotNull(Pageable pageable) {
+        return idocPJpaRepository.findIdocWithH2TransByPartIsNotNull(pageable);
+    }
 
     @Transactional(value = "db2TransactionManager")
     public Page<H2OrderDPEntity> findByIdocId(Long idocId, Pageable pageable) {
@@ -81,5 +85,18 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
             Pageable pageable
     ){
         return idocPJpaRepository.findIdocWithPartMasterByIdocId(idocId,pageable);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public Page<IdocPEntity> findByIdocTypId(
+            Long idocTyId,
+            Pageable pageable
+    ){
+        return idocPJpaRepository.findByIdocTypId(idocTyId,pageable);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public Page<H2PartMPEntity> getPartList(Long idocId, Pageable pageable) {
+        return h2PartMPJpaRepository.findByIdocId(idocId,pageable);
     }
 }

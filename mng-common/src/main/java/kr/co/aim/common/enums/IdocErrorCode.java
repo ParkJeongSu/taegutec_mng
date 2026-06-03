@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum IdocErrorCode implements MetaDataEnum {
-    Init("0"),
-    temporarilyParked("14"),
-    Parked("50"),
-    Processed("60"),
-    Error("99");
-    private final String value;
+    Init(0L),
+    temporarilyParked(14L),
+    Parked(50L),
+    Processed(60L),
+    Error(99L);
+    private final Long value;
 }

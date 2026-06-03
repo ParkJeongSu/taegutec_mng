@@ -42,4 +42,6 @@ public class H2TransReportVo {
     private H2OrderDPEntity detail;        // DB2 Details
     private IdocPEntity newIdoc;        // new IDOC
 
+    private String partId;
+
 }

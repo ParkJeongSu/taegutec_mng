@@ -81,12 +81,49 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "d.resultStat, " +
             "d.errReason, " +
             "d.eventDt, " +
-            "d.h2ordLineId " +
+            "d.h2ordLineId," +
+            "d.cPartId" +
             ") " +
             "FROM IdocPEntity i " +
             "JOIN H2TransPEntity d ON i.lineId = d.idocId " +
             "WHERE d.galKey = :galKey") // 1. WHERE 조건 절 추가
     Page<IdocH2TransResponseDto> findIdocWithH2TransByGalKey(@Param("galKey")String galKey, Pageable pageable);
+
+    @Query("SELECT new kr.co.aim.common.dto.powder.IdocH2TransResponseDto(" +
+            "i.lineId, " +
+            "i.idocTypId, " +
+            "i.state, " +
+            "i.errorCode, " +
+            "i.source, " +
+            "i.destination, " +
+            "i.dtimeCre, " +
+            "i.dtimeMod, " +
+            "i.usrMod, " +
+            "i.pgmMod, " +
+            "i.modCnt, " +
+            "d.idocId, " +
+            "d.cOrderId, " +
+            "d.rrn, " +
+            "d.lineNo, " +
+            "d.lot, " +
+            "d.galKey, " +
+            "d.cTransTy, " +
+            "d.carrierId, " +
+            "d.currRrn, " +
+            "d.nextRrn, " +
+            "d.actQty, " +
+            "d.missQty, " +
+            "d.surpQty, " +
+            "d.resultStat, " +
+            "d.errReason, " +
+            "d.eventDt, " +
+            "d.h2ordLineId," +
+            "d.cPartId" +
+            ") " +
+            "FROM IdocPEntity i " +
+            "JOIN H2TransPEntity d ON i.lineId = d.idocId " +
+            "WHERE d.cPartId is not null") // 1. WHERE 조건 절 추가
+    Page<IdocH2TransResponseDto> findIdocWithH2TransByPartIsNotNull(Pageable pageable);
 
     @Query("SELECT new kr.co.aim.common.dto.powder.IdocH2PartMResponseDto(" +
             "i.lineId, " +
@@ -112,6 +149,12 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "WHERE i.lineId = :idocId") // 1. WHERE 조건 절 추가
     Page<IdocH2PartMResponseDto> findIdocWithPartMasterByIdocId(
             @Param("idocId") Long idocId,   // 2. @Param으로 바인딩
+            Pageable pageable                    // 3. 페이징 구조 결합
+    );
+
+
+    Page<IdocPEntity> findByIdocTypId(
+            Long idocTypId,   // 2. @Param으로 바인딩
             Pageable pageable                    // 3. 페이징 구조 결합
     );
 

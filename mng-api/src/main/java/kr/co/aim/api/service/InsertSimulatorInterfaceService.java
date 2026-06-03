@@ -366,7 +366,7 @@ public class InsertSimulatorInterfaceService {
     public IdocEntity transferedIdocId(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
-        idoc.setErrorCode(Integer.parseInt(IdocErrorCode.Processed.getValue()));
+        idoc.setErrorCode(IdocErrorCode.Processed.getValue());
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         return idocJpaRepository.save(idoc);
     }

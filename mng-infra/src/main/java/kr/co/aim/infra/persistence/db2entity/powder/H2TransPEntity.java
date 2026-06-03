@@ -87,4 +87,7 @@ public class H2TransPEntity {
 
     @Column(name = "H2ORD_LINEID")
     private Long h2ordLineId;
+
+    @Column(name = "CPARTID")
+    private String cPartId;
 }

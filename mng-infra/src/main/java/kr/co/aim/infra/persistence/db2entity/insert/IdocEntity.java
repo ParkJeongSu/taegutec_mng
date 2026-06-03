@@ -26,10 +26,10 @@ public class IdocEntity {
     private Long idocTypId;
 
     @Column(name = "STATE")
-    private Integer state;
+    private Long state;
 
     @Column(name = "ERRORCODE")
-    private Integer errorCode;
+    private Long errorCode;
 
     @Column(name = "SOURCE")
     private Long source;

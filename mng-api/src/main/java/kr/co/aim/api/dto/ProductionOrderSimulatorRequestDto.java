@@ -34,6 +34,8 @@ public class ProductionOrderSimulatorRequestDto {
     private BigDecimal startedQuantity;
     private BigDecimal endedQuantity;
     private BigDecimal scrappedQuantity;
+    private BigDecimal missingQuantity;
+    private BigDecimal surplusQuantity;
     private LocalDateTime createTime;
     private LocalDateTime releaseTime;
     private LocalDateTime completeTime;

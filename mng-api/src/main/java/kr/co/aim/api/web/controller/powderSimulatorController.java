@@ -2,10 +2,14 @@ package kr.co.aim.api.web.controller;
 
 import kr.co.aim.api.dto.ProductionOrderSimulatorRequestDto;
 import kr.co.aim.api.service.*;
+import kr.co.aim.common.condition.ProductDefSearchCondition;
 import kr.co.aim.common.dto.powder.IdocH2TransResponseDto;
 import kr.co.aim.common.dto.powder.IdocOrderMasterResponseDto;
+import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDPEntity;
+import kr.co.aim.infra.persistence.db2entity.powder.H2PartMPEntity;
+import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -32,10 +36,11 @@ public class powderSimulatorController {
     private final PowderSimulatorFacade powderSimulatorFacade;
     private final ProductionOrderService productionOrderService;
     private final PowderExternalInterfaceService powderExternalInterfaceService;
+    private final ProductDefService productDefService;
 
 
-    @GetMapping("/inbound/idocs/{idoc-typ-id}")
-    public ResponseEntity<Page<IdocOrderMasterResponseDto>> getInboundIdocList(
+    @GetMapping("/idocs/{idoc-typ-id}")
+    public ResponseEntity<Page<IdocOrderMasterResponseDto>> getIdocList(
             @PathVariable("idoc-typ-id") Long idocTypId,
             @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
     ) {
@@ -43,12 +48,47 @@ public class powderSimulatorController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/idocs/part/{idoc-typ-id}")
+    public ResponseEntity<Page<IdocPEntity>> getIdocListForPart(
+            @PathVariable("idoc-typ-id") Long idocTypId,
+            @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<IdocPEntity> result = powderExternalInterfaceService.findByIdocTypId(idocTypId,pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/h2-part/{idoc-id}")
+    public ResponseEntity<Page<H2PartMPEntity>> getH2PartList(
+            @PathVariable("idoc-id") Long idocId,
+            @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<H2PartMPEntity> result = powderExternalInterfaceService.getPartList(idocId,pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/part")
+    public ResponseEntity<Page<ProductDef>> getPartList(
+            @ModelAttribute ProductDefSearchCondition condition,
+            @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<ProductDef> productDefPage = productDefService.findProductDefByCondition(condition,pageable);
+        return ResponseEntity.ok(productDefPage);
+    }
+
     @GetMapping("/h2trans/{gal-key}")
-    public ResponseEntity<Page<IdocH2TransResponseDto>> getInboundH2TransList(
+    public ResponseEntity<Page<IdocH2TransResponseDto>> getH2TransList(
             @PathVariable("gal-key") String galKey,
             @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<IdocH2TransResponseDto> result = powderExternalInterfaceService.findIdocWithH2TransByGalKey(galKey,pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/h2trans/part")
+    public ResponseEntity<Page<IdocH2TransResponseDto>> getH2TransListByPart(
+            @PageableDefault(page = 0, size = 10, sort = "lineId", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        Page<IdocH2TransResponseDto> result = powderExternalInterfaceService.findIdocWithH2TransByPartIsNotNull(pageable);
         return ResponseEntity.ok(result);
     }
 
@@ -191,6 +231,223 @@ public class powderSimulatorController {
         List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
         return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
     }
+
+    // part : part
+
+    @PostMapping("/part/transfer/{idoc-id}")
+    public ResponseEntity<Page<ProductDef>> partTransfer(
+            @PathVariable("idoc-id") Long idocId
+    ){
+        Pageable pageable = Pageable.unpaged();
+        //Pageable pageable = PageRequest.of(0,10);
+
+        List<ProductDef> productDefList = powderSimulatorFacade.transferH2PartM(idocId,pageable);
+        return ResponseEntity.ok(new PageImpl<>(productDefList, pageable, productDefList.size()));
+    }
+
+    // production : production 조업
+
+    @PostMapping("/production/transfer/{h2order-dp-line-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionTransfer(
+            @PathVariable("h2order-dp-line-id") Long h2orderDpLineId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.transferProduction(h2orderDpLineId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/production/accept/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionAccept(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.acceptProduction(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/production/release/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionRelease(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.releaseProduction(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/production/start/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionStart(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.startProduction(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/production/end/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionEnd(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.endProduction(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/production/what-is-next-rrn/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionWhatIsNextRRN(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.whatIsNextRRNProduction(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/production/move-rrn/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> productionMoveRRN(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(productionOrderId);
+        if(optionalProductionOrder.isPresent()){
+            ProductionOrder productionOrder = optionalProductionOrder.get();
+            List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+            return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+        }
+        else{
+            return ResponseEntity.ok(new PageImpl<>(Collections.emptyList(), org.springframework.data.domain.PageRequest.of(0, 1), 1));
+        }
+
+    }
+
+    // MoveRRN : MoveRRN 조업
+
+    @PostMapping("/moverrn/transfer/{h2order-dp-line-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNTransfer(
+            @PathVariable("h2order-dp-line-id") Long h2orderDpLineId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.transferMoveRRN(h2orderDpLineId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/moverrn/accept/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNAccept(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.acceptMoveRRN(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/moverrn/missing-qty/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNMissingQty(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.missingQtyMoveRRN(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/moverrn/surplus-qty/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNSurplusQty(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.surplusQtyMoveRRN(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/moverrn/release/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNRelease(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.releaseMoveRRN(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/moverrn/container/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNContainer(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.containerChangedMoveRRN(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/moverrn/complete/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> moveRRNCompleted(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.completedMoveRRN(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    // EnterToStock : EnterToStock 조업
+
+    @PostMapping("/stock/transfer/{h2order-dp-line-id}")
+    public ResponseEntity<Page<ProductionOrder>> enterToStockTransfer(
+            @PathVariable("h2order-dp-line-id") Long h2orderDpLineId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.transferEnterToStock(h2orderDpLineId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/stock/accept/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> enterToStockAccept(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.acceptEnterToStockAccept(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/stock/release/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> enterToStockRelease(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.releaseEnterToStock(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/stock/container/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> enterToStockContainer(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.containerEnterToStock(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/stock/missing-qty/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> enterToStockMissingQty(
+            @PathVariable("production-order-id") Long productionOrderId,
+            @RequestBody ProductionOrderSimulatorRequestDto dto
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.missingQtyEnterToStock(productionOrderId,dto);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
+    @PostMapping("/stock/complete/{production-order-id}")
+    public ResponseEntity<Page<ProductionOrder>> enterToStockComplete(
+            @PathVariable("production-order-id") Long productionOrderId
+    ){
+        ProductionOrder productionOrder = powderSimulatorFacade.orderCompleted(productionOrderId);
+        List<ProductionOrder> productionOrderList = Collections.singletonList(productionOrder);
+        return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
+    }
+
 
 
 

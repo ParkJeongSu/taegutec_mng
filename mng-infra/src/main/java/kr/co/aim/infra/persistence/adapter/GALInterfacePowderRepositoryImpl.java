@@ -199,7 +199,9 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                         h2PartMPEntity.cratIo.as("cratIo")
                 ))
                 .from(h2PartMPEntity)
-                .where();
+                .where(
+                        IdocIdEqualForPart(condition.getIdocId())
+                );
 
         // 2. 정렬 및 페이징 적용
         query.orderBy(getOrderSpecifiersPart(pageable.getSort()));
@@ -216,7 +218,9 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
             Long count = queryFactory
                     .select(h2PartMPEntity.lineId.count())
                     .from(h2PartMPEntity)
-                    .where()
+                    .where(
+                            IdocIdEqualForPart(condition.getIdocId())
+                    )
                     .fetchOne();
             total = (count != null) ? count : 0L;
         } else {
@@ -279,6 +283,10 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
 
     private BooleanExpression IdocIdEqual(Long idocId) {
         return ObjectUtils.isNotEmpty(idocId) ? h2OrderDPEntity.idocId.eq(idocId) : null;
+    }
+
+    private BooleanExpression IdocIdEqualForPart(Long idocId) {
+        return ObjectUtils.isNotEmpty(idocId) ? h2PartMPEntity.idocId.eq(idocId) : null;
     }
 
 

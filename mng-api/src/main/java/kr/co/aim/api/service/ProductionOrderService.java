@@ -16,6 +16,7 @@ import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
@@ -58,14 +59,18 @@ public class ProductionOrderService {
         IdocPEntity idoc = context.getIdoc();
         H2OrderMPEntity master = context.getMaster();
         H2OrderDPEntity detail = context.getDetail();
+
+        String orderLineNumber = ObjectUtils.isNotEmpty(detail.getRrn()) ? detail.getRrn().toString() : "";
+        String lotName = detail.getLot()== null ? "" : detail.getLot().toString();
+
         ProductionOrderCreateCommand command =
                 ProductionOrderCreateCommand
                         .builder()
                         .transactionInfo(transactionInfo)
                         //.id()
                         .orderId(detail.getCOrderId())
-                        .orderLineNumber(ObjectUtils.isNotEmpty(detail.getRrn()) ? detail.getRrn().toString() : "")
-                        .lotName(detail.getLot().toString())
+                        .orderLineNumber(orderLineNumber)
+                        .lotName(lotName)
                         //.description()
                         .itemName(detail.getCPartId())
                         //.recipeName()
@@ -132,7 +137,7 @@ public class ProductionOrderService {
             actQty = BigDecimal.ZERO;
         }
 
-        if(vo.getStatus() == GALProductionStatus.ProductionStarted){
+        if(vo.getStatus() == GALProductionStatus.PRODUCTION_STARTED){
             BigDecimal startQuantity = productionOrder.getStartedQuantity();
             if(startQuantity == null){
                 // 2. new 연산자 배제하고 전역 캐싱 상수 활용
@@ -141,7 +146,7 @@ public class ProductionOrderService {
             BigDecimal resultQuantity = startQuantity.add(actQty);
             productionOrder.setStartedQuantity(resultQuantity);
         }
-        else if(vo.getStatus() == GALProductionStatus.ProductionEnded){
+        else if(vo.getStatus() == GALProductionStatus.PRODUCTION_ENDED){
             BigDecimal endQuantity = productionOrder.getEndedQuantity();
             if(endQuantity == null){
                 endQuantity = BigDecimal.ZERO;

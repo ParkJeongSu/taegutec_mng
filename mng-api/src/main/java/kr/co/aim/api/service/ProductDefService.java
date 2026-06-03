@@ -1,9 +1,12 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.common.condition.ProductDefSearchCondition;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.repository.ProductDefRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,4 +50,8 @@ public class ProductDefService {
         productDefRepository.deleteAllByIdInBatch(ids);
     }
 
+    @Transactional(value = "mssqlTransactionManager")
+    public Page<ProductDef> findProductDefByCondition(ProductDefSearchCondition condition, Pageable pageable){
+        return productDefRepository.findProductDefByCondition(condition, pageable);
+    }
 }

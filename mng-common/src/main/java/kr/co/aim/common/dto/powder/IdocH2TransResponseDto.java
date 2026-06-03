@@ -37,6 +37,7 @@ public class IdocH2TransResponseDto {
     private String errReason;
     private LocalDateTime eventDt;
     private Long h2ordLineId;
+    private String cPartId;
 
     public IdocH2TransResponseDto(
             Long lineId,
@@ -66,7 +67,8 @@ public class IdocH2TransResponseDto {
             String resultStat,
             String errReason,
             LocalDateTime eventDt,
-            Long h2ordLineId
+            Long h2ordLineId,
+            String cPartId
 
     ) {
         this.lineId = lineId;
@@ -97,6 +99,7 @@ public class IdocH2TransResponseDto {
         this.errReason = errReason;
         this.eventDt = eventDt;
         this.h2ordLineId = h2ordLineId;
+        this.cPartId = cPartId;
 
 
     }
