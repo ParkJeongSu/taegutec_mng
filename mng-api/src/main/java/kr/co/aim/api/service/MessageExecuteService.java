@@ -690,6 +690,10 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
+
+        //TODO: POWDER , INSERT 로직 분리
+        // POWDER는 아래의 로직을 그대로 수행하면 되고
+        // INSERT는 PORT_DEF에서 오직 ROLE_TYPE이 INTERNAL 인 경우에만 변경
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();

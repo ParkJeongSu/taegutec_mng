@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum IdocTypeId implements MetaDataEnum {
-    Outbound(11L),
-    Inbound(12L),
-    Relocation(15L),
-    Confirmation(16L);
+    OUTBOUND(11L),
+    INBOUND(12L),
+    RELOCATION(15L),
+    CONFIRMATION(16L);
     private final Long value;
 }

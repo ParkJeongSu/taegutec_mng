@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum IfEventQueueState implements MetaDataEnum {
-    READY("Ready"),
-    PROCESSING("Processing"),
-    SUCCESS("Success"),
-    FAIL("Fail");
+    READY("READY"),
+    PROCESSING("PROCESSING"),
+    SUCCESS("SUCCESS"),
+    FAIL("FAIL");
     private final String value;
 }

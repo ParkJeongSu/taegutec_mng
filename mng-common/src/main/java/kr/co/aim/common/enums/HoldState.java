@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum HoldState implements MetaDataEnum {
-    ON_HOLD("OnHold"),
-    NOT_ON_HOLD("NotOnHold");
+    ON_HOLD("ON_HOLD"),
+    NOT_ON_HOLD("NOT_ON_HOLD");
     private final String value;
 }

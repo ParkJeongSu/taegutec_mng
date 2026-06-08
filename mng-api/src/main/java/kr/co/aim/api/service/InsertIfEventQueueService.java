@@ -157,8 +157,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String actualLocationId = vo.getActualRackLocationId();
         // unblocked message 를 수신하면, 해당 carrier를 상위 시스템에도
         // 도착보고를 다시해서 이동 가능한 상태임을 보고
-        eventType = GALTransportStatus.ArrivedAtRack.name();
-        transactionCode = GALTransportStatus.ArrivedAtRack.getValue();
+        eventType = GALTransportStatus.ARRIVED_AT_RACK.name();
+        transactionCode = GALTransportStatus.ARRIVED_AT_RACK.getValue();
         idocId = "";
         orderId = "";
         orderLineNumber = "";
@@ -204,8 +204,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String actualLocationId = vo.getActualRackLocationId();
         // blocked message 를 수신하면, 해당 carrier를 상위 시스템에도
         // 해당 carrier 는 움직일수 없는 NotAllowedPickUp 상태임을 상위 시스템에 보고
-        eventType = GALTransportStatus.NotAllowedPickUp.name();
-        transactionCode = GALTransportStatus.NotAllowedPickUp.getValue();
+        eventType = GALTransportStatus.NOT_ALLOWED_PICK_UP.name();
+        transactionCode = GALTransportStatus.NOT_ALLOWED_PICK_UP.getValue();
         idocId = "";
         orderId = "";
         orderLineNumber = "";
@@ -276,16 +276,16 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 TransportOrder transportOrder = null;
                 if(optionalTransportOrder.isPresent()){
                     transportOrder = optionalTransportOrder.get();
-                    eventType = GALTransportStatus.BinEmpty.name();
-                    transactionCode = GALTransportStatus.BinEmpty.getValue();
+                    eventType = GALTransportStatus.BIN_EMPTY.name();
+                    transactionCode = GALTransportStatus.BIN_EMPTY.getValue();
                     idocId = transportOrder.getIdocId().toString();
                     orderId = transportOrder.getTransportOrderId();
                     orderLineNumber = "";
                     orderType = transportOrder.getTransportType();
                 }
                 else{
-                    eventType = GALTransportStatus.BinEmpty.name();
-                    transactionCode = GALTransportStatus.BinEmpty.getValue();
+                    eventType = GALTransportStatus.BIN_EMPTY.name();
+                    transactionCode = GALTransportStatus.BIN_EMPTY.getValue();
                     idocId = "";
                     orderId = "";
                     orderLineNumber = "";
@@ -310,8 +310,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 ifEventQueueDtoList.add(dto);
 
                 // 82 report
-                eventType = GALTransportStatus.Shortage.name();
-                transactionCode = GALTransportStatus.Shortage.getValue();
+                eventType = GALTransportStatus.SHORTAGE.name();
+                transactionCode = GALTransportStatus.SHORTAGE.getValue();
 
                 IfEventQueueDto dto2 = IfEventQueueDto
                         .builder()
@@ -331,8 +331,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 ifEventQueueDtoList.add(dto2);
 
                 // 82 report
-                eventType = GALTransportStatus.OrderDone_Outbound.name();
-                transactionCode = GALTransportStatus.OrderDone_Outbound.getValue();
+                eventType = GALTransportStatus.ORDER_DONE_OUTBOUND.name();
+                transactionCode = GALTransportStatus.ORDER_DONE_OUTBOUND.getValue();
 
                 IfEventQueueDto dto3 = IfEventQueueDto
                         .builder()
@@ -367,16 +367,16 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     TransportOrder transportOrder = null;
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
-                        eventType = GALTransportStatus.ArrivedAtWorkstationWithError.name();
-                        transactionCode = GALTransportStatus.ArrivedAtWorkstationWithError.getValue();
+                        eventType = GALTransportStatus.ARRIVED_AT_WORKSTATION_WITH_ERROR.name();
+                        transactionCode = GALTransportStatus.ARRIVED_AT_WORKSTATION_WITH_ERROR.getValue();
                         idocId = transportOrder.getIdocId().toString();
                         orderId = transportOrder.getTransportOrderId();
                         orderLineNumber = "";
                         orderType = transportOrder.getTransportType();
                     }
                     else{
-                        eventType = GALTransportStatus.ArrivedAtWorkstationWithError.name();
-                        transactionCode = GALTransportStatus.ArrivedAtWorkstationWithError.getValue();
+                        eventType = GALTransportStatus.ARRIVED_AT_WORKSTATION_WITH_ERROR.name();
+                        transactionCode = GALTransportStatus.ARRIVED_AT_WORKSTATION_WITH_ERROR.getValue();
                         idocId = "";
                         orderId = "";
                         orderLineNumber = "";
@@ -403,8 +403,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     // error code 만큼 111 Report
                     for(TransportCancelReasonVo reason : reasonList){
                         errorText = reason.getCode();
-                        eventType = GALTransportStatus.ErrorText.name();
-                        transactionCode = GALTransportStatus.ErrorText.getValue();
+                        eventType = GALTransportStatus.ERROR_TEXT.name();
+                        transactionCode = GALTransportStatus.ERROR_TEXT.getValue();
 
                         IfEventQueueDto dto1 = IfEventQueueDto
                                 .builder()
@@ -470,8 +470,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 TransportOrder transportOrder = null;
                 if(optionalTransportOrder.isPresent()){
                     transportOrder = optionalTransportOrder.get();
-                    eventType = GALTransportStatus.Released.name();
-                    transactionCode = GALTransportStatus.Released.getValue();
+                    eventType = GALTransportStatus.RELEASED.name();
+                    transactionCode = GALTransportStatus.RELEASED.getValue();
                     idocId = transportOrder.getIdocId().toString();
                     orderId = transportOrder.getTransportOrderId();
                     orderLineNumber = "";
@@ -484,8 +484,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 throw new RuntimeException("Not Exists TransportJob");
             }
         }else {
-            eventType = GALTransportStatus.Released.name();
-            transactionCode = GALTransportStatus.Released.getValue();
+            eventType = GALTransportStatus.RELEASED.name();
+            transactionCode = GALTransportStatus.RELEASED.getValue();
             idocId = "";
             orderId = "";
             orderLineNumber = "";
@@ -544,8 +544,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             TransportOrder transportOrder = null;
             if(optionalTransportOrder.isPresent()){
                 transportOrder = optionalTransportOrder.get();
-                eventType = GALTransportStatus.Accept.name();
-                transactionCode = GALTransportStatus.Accept.getValue();
+                eventType = GALTransportStatus.ACCEPT.name();
+                transactionCode = GALTransportStatus.ACCEPT.getValue();
                 idocId = transportOrder.getIdocId().toString();
                 orderId = transportOrder.getTransportOrderId();
                 orderLineNumber = "";
@@ -627,8 +627,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         throw new RuntimeException("Not Exists TransportOrder");
                     }
                     if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(), transportOrder.getTransportType())){
-                        eventType = GALTransportStatus.OutOfRack.name();
-                        transactionCode = GALTransportStatus.OutOfRack.getValue();
+                        eventType = GALTransportStatus.OUT_OF_RACK.name();
+                        transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
                         idocId = transportOrder.getIdocId().toString();
                         orderId = transportOrder.getTransportOrderId();
                         orderLineNumber = "";
@@ -651,8 +651,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         ifEventQueueDtoList.add(dto);
                     }
                     else if(StringUtils.equals(TransportOrderType.INBOUND.getValue(), transportOrder.getTransportType())){
-                        eventType = GALTransportStatus.ArrivedAtRack.name();
-                        transactionCode = GALTransportStatus.ArrivedAtRack.getValue();
+                        eventType = GALTransportStatus.ARRIVED_AT_RACK.name();
+                        transactionCode = GALTransportStatus.ARRIVED_AT_RACK.getValue();
                         idocId = transportOrder.getIdocId().toString();
                         orderId = transportOrder.getTransportOrderId();
                         orderLineNumber = "";
@@ -675,8 +675,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         ifEventQueueDtoList.add(dto);
                     }
                     else if(StringUtils.equals(TransportOrderType.RELOCATION.getValue(), transportOrder.getTransportType())){
-                        eventType = GALTransportStatus.OutOfRack.name();
-                        transactionCode = GALTransportStatus.OutOfRack.getValue();
+                        eventType = GALTransportStatus.OUT_OF_RACK.name();
+                        transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
                         idocId = transportOrder.getIdocId().toString();
                         orderId = transportOrder.getTransportOrderId();
                         orderLineNumber = "";
@@ -710,8 +710,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     // outbound : OutOfRack
                     // inbound : ArrivedAtRack
                     if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(), transportJob.getTransportType())){
-                        eventType = GALTransportStatus.OutOfRack.name();
-                        transactionCode = GALTransportStatus.OutOfRack.getValue();
+                        eventType = GALTransportStatus.OUT_OF_RACK.name();
+                        transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
                         idocId = "";
                         orderId = "";
                         orderLineNumber = "";
@@ -734,8 +734,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         ifEventQueueDtoList.add(dto);
                     }
                     else if(StringUtils.equals(TransportOrderType.INBOUND.getValue(), transportJob.getTransportType())){
-                        eventType = GALTransportStatus.ArrivedAtRack.name();
-                        transactionCode = GALTransportStatus.ArrivedAtRack.getValue();
+                        eventType = GALTransportStatus.ARRIVED_AT_RACK.name();
+                        transactionCode = GALTransportStatus.ARRIVED_AT_RACK.getValue();
                         idocId = "";
                         orderId = "";
                         orderLineNumber = "";
@@ -758,8 +758,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         ifEventQueueDtoList.add(dto);
                     }
                     else if(StringUtils.equals(TransportOrderType.RELOCATION.getValue(), transportJob.getTransportType())){
-                        eventType = GALTransportStatus.InternalRelocation.name();
-                        transactionCode = GALTransportStatus.InternalRelocation.getValue();
+                        eventType = GALTransportStatus.INTERNAL_RELOCATION.name();
+                        transactionCode = GALTransportStatus.INTERNAL_RELOCATION.getValue();
                         idocId = "";
                         orderId = "";
                         orderLineNumber = "";
@@ -825,8 +825,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
             // Inbound Station Occupied case
             // 106 report
-            eventType = GALTransportStatus.StationOccupied.name();
-            transactionCode = GALTransportStatus.StationOccupied.getValue();
+            eventType = GALTransportStatus.STATION_OCCUPIED.name();
+            transactionCode = GALTransportStatus.STATION_OCCUPIED.getValue();
             idocId = "";
             orderId = "";
             orderLineNumber = "";
@@ -861,8 +861,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.ArrivedAtWorkStation.name();
-            transactionCode = GALTransportStatus.ArrivedAtWorkStation.getValue();
+            eventType = GALTransportStatus.ARRIVED_AT_WORK_STATION.name();
+            transactionCode = GALTransportStatus.ARRIVED_AT_WORK_STATION.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";
@@ -896,8 +896,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.OutOfRack.name();
-            transactionCode = GALTransportStatus.OutOfRack.getValue();
+            eventType = GALTransportStatus.OUT_OF_RACK.name();
+            transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";
@@ -931,8 +931,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.OutOfRack.name();
-            transactionCode = GALTransportStatus.OutOfRack.getValue();
+            eventType = GALTransportStatus.OUT_OF_RACK.name();
+            transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";
@@ -1001,8 +1001,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             }
             transportOrder = transportOrders.get(0);
         }
-        eventType = GALTransportStatus.CarrierScanned.name();
-        transactionCode = GALTransportStatus.CarrierScanned.getValue();
+        eventType = GALTransportStatus.CARRIER_SCANNED.name();
+        transactionCode = GALTransportStatus.CARRIER_SCANNED.getValue();
         idocId = transportOrder.getIdocId().toString();
         orderId = transportOrder.getTransportOrderId();
         orderLineNumber = "";
@@ -1080,8 +1080,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.CarrierScanned.name();
-            transactionCode = GALTransportStatus.CarrierScanned.getValue();
+            eventType = GALTransportStatus.CARRIER_SCANNED.name();
+            transactionCode = GALTransportStatus.CARRIER_SCANNED.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";
@@ -1137,8 +1137,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
             // Inbound Station Occupied case
             // 106 report
-            eventType = GALTransportStatus.StationOccupied.name();
-            transactionCode = GALTransportStatus.StationOccupied.getValue();
+            eventType = GALTransportStatus.STATION_OCCUPIED.name();
+            transactionCode = GALTransportStatus.STATION_OCCUPIED.getValue();
             idocId = "";
             orderId = "";
             orderLineNumber = "";
@@ -1174,8 +1174,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.ArrivedAtWorkStation.name();
-            transactionCode = GALTransportStatus.ArrivedAtWorkStation.getValue();
+            eventType = GALTransportStatus.ARRIVED_AT_WORK_STATION.name();
+            transactionCode = GALTransportStatus.ARRIVED_AT_WORK_STATION.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";
@@ -1209,8 +1209,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.OutOfRack.name();
-            transactionCode = GALTransportStatus.OutOfRack.getValue();
+            eventType = GALTransportStatus.OUT_OF_RACK.name();
+            transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";
@@ -1244,8 +1244,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.OutOfRack.name();
-            transactionCode = GALTransportStatus.OutOfRack.getValue();
+            eventType = GALTransportStatus.OUT_OF_RACK.name();
+            transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
             idocId = transportOrder.getIdocId().toString();
             orderId = transportOrder.getTransportOrderId();
             orderLineNumber = "";

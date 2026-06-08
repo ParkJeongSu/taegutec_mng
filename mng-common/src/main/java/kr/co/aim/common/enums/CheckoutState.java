@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CheckoutState implements MetaDataEnum {
-    CHECKED_IN("CheckedIn"),
-    CHECKED_OUT("CheckedOut");
+    CHECKED_IN("CHECKED_IN"),
+    CHECKED_OUT("CHECKED_OUT");
     private final String value;
 }

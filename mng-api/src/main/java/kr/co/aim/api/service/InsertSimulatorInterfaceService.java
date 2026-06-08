@@ -41,7 +41,7 @@ public class InsertSimulatorInterfaceService {
     private IdocEntity buildBaseIdoc(LocalDateTime now) {
         return IdocEntity.builder()
                 .lineId(idocJpaRepository.findMaxLineId())
-                .idocTypId(IdocTypeId.Confirmation.getValue())
+                .idocTypId(IdocTypeId.CONFIRMATION.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
                 .dtimeCre(now)
@@ -87,7 +87,7 @@ public class InsertSimulatorInterfaceService {
         H2TransReportVo vo =
                 H2TransReportVo
                         .builder()
-                        .status(GALTransportStatus.Accept)
+                        .status(GALTransportStatus.ACCEPT)
                         .sourceIdoc(ctx.getIdoc())
                         .master(ctx.getMaster())
                         .details(ctx.getDetails())
@@ -99,7 +99,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void acceptInbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.Accept)
+                .status(GALTransportStatus.ACCEPT)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -112,7 +112,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void workStationEmptyInbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.WorkstationEmpty)
+                .status(GALTransportStatus.WORKSTATION_EMPTY)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -125,7 +125,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void arrivedWorkstationErrorInbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.ArrivedAtWorkstationWithError)
+                .status(GALTransportStatus.ARRIVED_AT_WORKSTATION_WITH_ERROR)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -138,7 +138,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void errorTextInbound(String errorText, TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.ErrorText)
+                .status(GALTransportStatus.ERROR_TEXT)
                 .errorText(errorText)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
@@ -154,7 +154,7 @@ public class InsertSimulatorInterfaceService {
         String carrierName = StringUtils.isNotBlank(dto.getCarrierId()) ? dto.getCarrierId() : ctx.getFirstDetail().getCCoId();
 
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.CarrierScanned)
+                .status(GALTransportStatus.CARRIER_SCANNED)
                 .carrierName(carrierName)
                 .locationCode(dto.getLocationCode())
                 .sourceIdoc(ctx.getIdoc())
@@ -169,7 +169,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void releaseOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.Released)
+                .status(GALTransportStatus.RELEASED)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -182,7 +182,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void internalRelocationOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.InternalRelocation)
+                .status(GALTransportStatus.INTERNAL_RELOCATION)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -195,7 +195,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void dropOnTunnelRelocation(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.DroppedOnTunnelConveyor)
+                .status(GALTransportStatus.DROPPED_ON_TUNNEL_CONVEYOR)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -208,7 +208,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void outOfRackOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.OutOfRack)
+                .status(GALTransportStatus.OUT_OF_RACK)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -221,7 +221,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void outOfRackInbound(TransportOrderContext ctx, SimulatorIdsDto dto) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.OutOfRack)
+                .status(GALTransportStatus.OUT_OF_RACK)
                 .actualZone(dto.getRackActualPosition())
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
@@ -234,7 +234,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void arrivedAtWorkStationOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.ArrivedAtWorkStation)
+                .status(GALTransportStatus.ARRIVED_AT_WORK_STATION)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -247,7 +247,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void completedInbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.OrderDone_Inbound)
+                .status(GALTransportStatus.ORDER_DONE_INBOUND)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -260,7 +260,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void completedRelocation(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.OrderDone_Relocation)
+                .status(GALTransportStatus.ORDER_DONE_RELOCATION)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -273,7 +273,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void completedOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.OrderDone_Outbound)
+                .status(GALTransportStatus.ORDER_DONE_OUTBOUND)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -286,7 +286,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void takeOffOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.TakeOff)
+                .status(GALTransportStatus.TAKE_OFF)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -299,7 +299,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void binEmptyOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.BinEmpty)
+                .status(GALTransportStatus.BIN_EMPTY)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -312,7 +312,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void shortageOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.Shortage)
+                .status(GALTransportStatus.SHORTAGE)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -325,7 +325,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void notAllowedPickUpOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.NotAllowedPickUp)
+                .status(GALTransportStatus.NOT_ALLOWED_PICK_UP)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -338,7 +338,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void notAllowedPickUpInbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.NotAllowedPickUp)
+                .status(GALTransportStatus.NOT_ALLOWED_PICK_UP)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -351,7 +351,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void arrivedAtRackOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.ArrivedAtRack)
+                .status(GALTransportStatus.ARRIVED_AT_RACK)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -366,7 +366,7 @@ public class InsertSimulatorInterfaceService {
     public IdocEntity transferedIdocId(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
-        idoc.setErrorCode(IdocErrorCode.Processed.getValue());
+        idoc.setErrorCode(IdocErrorCode.PROCESSED.getValue());
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         return idocJpaRepository.save(idoc);
     }
@@ -390,7 +390,7 @@ public class InsertSimulatorInterfaceService {
                         .lineId(h2TransJpaRepository.findMaxLineId() + 1)
                         .idocId(idocEntity.getLineId())
                         .dtimeCre(localDateTime).dataCode(10L)
-                        .cTransTy(Long.parseLong(GALTransportStatus.StationOccupied.getValue()))
+                        .cTransTy(Long.parseLong(GALTransportStatus.STATION_OCCUPIED.getValue()))
                         .cClient("999")
                         .cCoId(vo.getCarrierName())
                         .cLocId(vo.getLocationId())

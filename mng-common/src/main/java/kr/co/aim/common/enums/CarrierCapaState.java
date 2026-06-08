@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CarrierCapaState implements MetaDataEnum {
-    EMPTY("Empty"),
-    PARTIAL("Partial"),
-    FULL("Full");
+    EMPTY("EMPTY"),
+    PARTIAL("PARTIAL"),
+    FULL("FULL");
     private final String value;
 }

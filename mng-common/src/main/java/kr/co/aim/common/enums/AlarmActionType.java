@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum AlarmActionType implements MetaDataEnum {
-    MAIL("mail"),
-    MESSAGE("message"),
-    OP_CALL("opCall");
+    MAIL("MAIL"),
+    MESSAGE("MESSAGE"),
+    OP_CALL("OP_CALL");
 
     private final String value;
 }

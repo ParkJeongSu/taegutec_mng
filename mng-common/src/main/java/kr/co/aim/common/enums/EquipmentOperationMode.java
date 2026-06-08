@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EquipmentOperationMode implements MetaDataEnum {
-    MIXING("Mixing"),
-    MERGE("Merge"),
-    SORTER("Sorter"),
-    CHANGER("Changer");
+    MIXING("MIXING"),
+    MERGE("MERGE"),
+    SORTER("SORTER"),
+    CHANGER("CHANGER");
 
     public static boolean isExist(String operationMode) {
         for (EquipmentOperationMode mode : EquipmentOperationMode.values()) {

@@ -7,12 +7,12 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum TransportOrderStatus implements MetaDataEnum {
-    CREATED("Created"),
-    REQUESTED("Requested"),
-    ACCEPTED("Accepted"),
-    STARTED("Started"),
-    REJECTED("Rejected"),
-    COMPLETED("Completed"),
-    TERMINATED("Terminated");
+    CREATED("CREATED"),
+    REQUESTED("REQUESTED"),
+    ACCEPTED("ACCEPTED"),
+    STARTED("STARTED"),
+    REJECTED("REJECTED"),
+    COMPLETED("COMPLETED"),
+    TERMINATED("TERMINATED");
     private final String value;
 }

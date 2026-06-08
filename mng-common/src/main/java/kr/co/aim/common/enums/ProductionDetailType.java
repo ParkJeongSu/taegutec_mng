@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductionDetailType implements MetaDataEnum {
-    SAMPLE("Sample"),
-    SOURCE_MONITOR("SourceMonitor"),
-    MONITOR("Monitor"),
-    DUMMY("Dummy"),
-    SIDE_DUMMY("SideDummy");
+    SAMPLE("SAMPLE"),
+    SOURCE_MONITOR("SOURCE_MONITOR"),
+    MONITOR("MONITOR"),
+    DUMMY("DUMMY"),
+    SIDE_DUMMY("SIDE_DUMMY");
     private final String value;
 }

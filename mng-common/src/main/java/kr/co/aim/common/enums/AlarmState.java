@@ -12,8 +12,8 @@ import java.util.Optional;
 @Getter
 @RequiredArgsConstructor
 public enum AlarmState implements MetaDataEnum {
-    SET("Set"),
-    CLEAR("Clear");
+    SET("SET"),
+    CLEAR("CLEAR");
 
     // 1. 최종적으로 사용할 불변 Map을 선언합니다.
     private static final Map<String, AlarmState> VALUE_MAP;

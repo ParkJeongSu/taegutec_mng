@@ -20,7 +20,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: simulator # scheduler,tex | pex | tex | simulator 등으로 설정 가능
+    active: tex # scheduler,tex | pex | tex | simulator 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
@@ -157,17 +157,21 @@ custom:
     queue:
       pex: "q.pex.request" # PEX.request.queue
       tex: "q.tex.request" # TEX.request.queue
+      tex.sync: "q.tex.request.sync"
       dead: "DEAD.request.queue"
       eas: "q.eas.request"
       wms: "q.wms.request"
+      wms.sync: "q.wms.request.sync"
       wcs: "q.wcs.request"
       manti: "q.manti.request"
     routing:
       pex: "key.pex"
       tex: "key.tex"
+      tex.sync: "key.tex.sync"
       dead: "DEAD.request.queue"           # <- 이 값이 문제의 원인이었지만, 이 이름이 더 좋음!
       eas: "key.eas"
       wms: "key.wms"
+      wms.sync: "key.wms.sync"
       wcs: "key.wcs"
       manti: "key.manti"
 ---
@@ -175,7 +179,7 @@ custom:
 spring:
   config:
     activate:
-      on-profile: pex,tex,scheduler
+      on-profile: pex,tex,scheduler,simulator
 #    import:
 #      - classpath:rabbit.yml
   rabbitmq:

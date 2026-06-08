@@ -7,10 +7,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductSubType implements MetaDataEnum {
-    GLASS("Glass"),
-    PANEL("Panel"),
-    WAFER("Wafer"),
-    CELL("Cell"),
-    CHIP("Chip");
+    GLASS("GLASS"),
+    PANEL("PANEL"),
+    WAFER("WAFER"),
+    CELL("CELL"),
+    CHIP("CHIP");
     private final String value;
 }

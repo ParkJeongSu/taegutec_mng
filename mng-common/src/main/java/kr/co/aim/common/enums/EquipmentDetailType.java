@@ -9,17 +9,17 @@ import lombok.RequiredArgsConstructor;
 public enum EquipmentDetailType implements MetaDataEnum {
     CVD("CVD"),
     CD("CD"),
-    OVERLAY("Overlay"),
-    THICKNESS("Thickness"),
-    PHOTO("Photo"),
-    STEPPER("Stepper"),
-    TRACK("Track"),
-    FURNACE("Furnace"),
-    ETC("Etc"),
-    DUMMY("Dummy"),
+    OVERLAY("OVERLAY"),
+    THICKNESS("THICKNESS"),
+    PHOTO("PHOTO"),
+    STEPPER("STEPPER"),
+    TRACK("TRACK"),
+    FURNACE("FURNACE"),
+    ETC("ETC"),
+    DUMMY("DUMMY"),
     EPM("EPM"),
     TEST("TEST"),
-    FINAL_QC("FinalQC"),
-    MERGE("Merge");
+    FINAL_QC("FINAL_QC"),
+    MERGE("MERGE");
     private final String value;
 }

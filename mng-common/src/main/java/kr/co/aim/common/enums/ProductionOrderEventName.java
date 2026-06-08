@@ -7,12 +7,12 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductionOrderEventName implements MetaDataEnum {
-    CREATED("Created"),
-    ARRIVED("Arrived"),
-    DOWNLOAD("Download"),
-    STARTED("Started"),
-    MATERIAL_INPUT_EQP("Material_Input_EQP"),
-    MATERIAL_OUTPUT_EQP("Material_Output_EQP"),
-    ENDED("Ended");
+    CREATED("CREATED"),
+    ARRIVED("ARRIVED"),
+    DOWNLOAD("DOWNLOAD"),
+    STARTED("STARTED"),
+    MATERIAL_INPUT_EQP("MATERIAL_INPUT_EQP"),
+    MATERIAL_OUTPUT_EQP("MATERIAL_OUTPUT_EQP"),
+    ENDED("ENDED");
     private final String value;
 }

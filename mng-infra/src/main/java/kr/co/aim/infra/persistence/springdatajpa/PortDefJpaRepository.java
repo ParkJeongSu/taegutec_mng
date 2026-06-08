@@ -10,7 +10,7 @@ import java.util.Optional;
 
 public interface PortDefJpaRepository extends JpaRepository<PortDefEntity, PortDefId> {
 
-    @Query("SELECT p FROM PortDefEntity p WHERE p.id.equipmentName = :equipmentName AND p.id.portName = :portName")
+    @Query("SELECT p FROM PortDefEntity p WHERE p.equipmentName = :equipmentName AND p.portName = :portName")
     Optional<PortDefEntity> findByEquipmentNameAndPortName(
             @Param("equipmentName") String equipmentName,
             @Param("portName") String portName

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CarrierCleanState implements MetaDataEnum {
-    CLEAN("Clean"),
-    DIRTY("Dirty");
+    CLEAN("CLEAN"),
+    DIRTY("DIRTY");
     private final String value;
 }

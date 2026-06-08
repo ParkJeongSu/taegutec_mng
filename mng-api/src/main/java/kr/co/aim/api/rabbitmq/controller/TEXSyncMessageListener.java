@@ -19,8 +19,8 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex"})
-public class PEXMessageListener implements MessageWorker{
+@Profile({"tex"})
+public class TEXSyncMessageListener implements MessageWorker{
 
     private final MessageDispatcher messageDispatcher;
     private final ObjectMapper objectMapper;
@@ -28,16 +28,15 @@ public class PEXMessageListener implements MessageWorker{
     private final JsonUtils jsonUtils;
 
     @RabbitListener(
-            id = "pex-Listener",
-            queues= "${custom.rabbitmq.queue.pex}",
+            id = "tex-sync-Listener",
+            queues= "${custom.rabbitmq.queue.tex.sync}",
             concurrency = "10",
             containerFactory = "rabbitListenerContainerFactory"
     )
     @SneakyThrows
     public Object process(org.springframework.amqp.core.Message message) {
-    	// 1. 바디를 꺼내서 직접 String으로 변환
+        // 1. 바디를 꺼내서 직접 String으로 변환
         String jsonString = new String(message.getBody(), StandardCharsets.UTF_8);
-
         jsonUtils.writePrettyJson(jsonString);
 
         String correlation = message.getMessageProperties().getCorrelationId();
@@ -74,12 +73,10 @@ public class PEXMessageListener implements MessageWorker{
         } else {
             log.warn("⚠️ No handler found for messageName: {}", messageName);
         }
-
         if (replyObject != null) {
             // 1. 응답 시 요청의 correlationId를 그대로 유지해야 함
             String correlationId = message.getMessageProperties().getCorrelationId();
             String replyTo = message.getMessageProperties().getReplyTo();
-
 
             if (replyTo != null) {
                 log.info("🚀 Replying to queue: {} with correlationId: {}", replyTo, correlationId);

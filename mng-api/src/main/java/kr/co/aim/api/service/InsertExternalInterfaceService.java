@@ -55,7 +55,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         //TODO : max 값 시퀀스로 수정하기
         return IdocEntity.builder()
                 .lineId(idocJpaRepository.findMaxLineId() + 1)
-                .idocTypId(IdocTypeId.Confirmation.getValue())
+                .idocTypId(IdocTypeId.CONFIRMATION.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
                 .dtimeCre(now)
@@ -122,7 +122,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     public void transferCompleted(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
-        idoc.setErrorCode(IdocErrorCode.Processed.getValue());
+        idoc.setErrorCode(IdocErrorCode.PROCESSED.getValue());
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         idocJpaRepository.save(idoc);
     }
@@ -131,7 +131,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     public void transferFail(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
-        idoc.setErrorCode(IdocErrorCode.Error.getValue());
+        idoc.setErrorCode(IdocErrorCode.ERROR.getValue());
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         idocJpaRepository.save(idoc);
     }
@@ -159,7 +159,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         H2TransEntity h2TransEntity =
                 H2TransEntity
                         .builder()
-                        .lineId(h2TransJpaRepository.findMaxLineId() + 1)
+                        .lineId(h2TransJpaRepository.findMaxLineId())
                         .idocId(newIdoc.getLineId())
                         .dtimeCre(now)
                         //.dataCode()

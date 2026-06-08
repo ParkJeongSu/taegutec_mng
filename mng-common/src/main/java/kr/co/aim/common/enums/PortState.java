@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PortState implements MetaDataEnum {
-    UP("Up"),
-    DOWN("Down");
+    UP("UP"),
+    DOWN("DOWN");
     private final String value;
 
     public static boolean isExist(String portStateName) {

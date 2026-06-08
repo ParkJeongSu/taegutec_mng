@@ -12,10 +12,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public enum CarrierType implements ParentMetaDataEnum {
     CST("CST"),
-    TRAY("Tray"),
-    MAGAZINE("Magazine"),
-    CONTAINER("Container"),
-    PALLET("Pallet");
+    TRAY("TRAY"),
+    MAGAZINE("MAGAZINE"),
+    CONTAINER("CONTAINER"),
+    PALLET("PALLET");
     private final String value;
 
     @Override

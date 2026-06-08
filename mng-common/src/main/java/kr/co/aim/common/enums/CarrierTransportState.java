@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CarrierTransportState implements MetaDataEnum {
-    MOVING("Moving"),
-    IN_EQP("InEQP"),
-    ON_PORT("OnPort"),
-    IN_WAREHOUSE("InWarehouse"),
-    IN_AREA("InArea"),
-    IN_STK("InSTK");
+    MOVING("MOVING"),
+    IN_EQP("IN_EQP"),
+    ON_PORT("ON_PORT"),
+    IN_WAREHOUSE("IN_WAREHOUSE"),
+    IN_AREA("IN_AREA"),
+    IN_STK("IN_STK");
     private final String value;
 }

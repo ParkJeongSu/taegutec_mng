@@ -62,7 +62,7 @@ public class H2TransReportVo {
                 // Inbound Station Occupied case
                 // 106 report
                 // 반송잡이 없음
-                return GALTransportStatus.StationOccupied;
+                return GALTransportStatus.STATION_OCCUPIED;
             } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
                 // 반송잡이 있으면 해당 반송잡으로 아래보고
                 // outbound case

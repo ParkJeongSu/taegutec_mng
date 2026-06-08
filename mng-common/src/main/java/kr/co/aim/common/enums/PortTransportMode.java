@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PortTransportMode implements MetaDataEnum {
-    AUTO("Auto"),
-    MANUAL("Manual");
+    AUTO("AUTO"),
+    MANUAL("MANUAL");
     private final String value;
 }

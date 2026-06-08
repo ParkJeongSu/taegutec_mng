@@ -19,7 +19,7 @@ import java.util.Map;
 @Configuration
 @Getter
 @Slf4j
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex","scheduler","simulator"})
 public class RabbitConfig {
 
     // --- Public Static 상수 (외부 참조용) ---
@@ -33,16 +33,20 @@ public class RabbitConfig {
 
     public static String QUEUE_PEX;
     public static String QUEUE_TEX;
+    public static String QUEUE_TEX_SYNC;
     public static String QUEUE_EAS;
     public static String QUEUE_WMS;
+    public static String QUEUE_WMS_SYNC;
     public static String QUEUE_WCS;
     public static String QUEUE_MANTI;
     public static String QUEUE_DEAD;
 
     public static String ROUTING_PEX;
     public static String ROUTING_TEX;
+    public static String ROUTING_TEX_SYNC;
     public static String ROUTING_EAS;
     public static String ROUTING_WMS;
+    public static String ROUTING_WMS_SYNC;
     public static String ROUTING_WCS;
     public static String ROUTING_MANTI;
     public static String ROUTING_DEAD;
@@ -61,16 +65,20 @@ public class RabbitConfig {
 
     @Value("${custom.rabbitmq.queue.pex}") public void setQp(String v) { QUEUE_PEX = v; }
     @Value("${custom.rabbitmq.queue.tex}") public void setQt(String v) { QUEUE_TEX = v; }
+    @Value("${custom.rabbitmq.queue.tex.sync}") public void setQTexSync(String v) { QUEUE_TEX_SYNC = v; }
     @Value("${custom.rabbitmq.queue.eas}") public void setQe(String v) { QUEUE_EAS = v; }
     @Value("${custom.rabbitmq.queue.wms}") public void setQw(String v) { QUEUE_WMS = v; }
+    @Value("${custom.rabbitmq.queue.wms.sync}") public void setQWmsSync(String v) { QUEUE_WMS_SYNC = v; }
     @Value("${custom.rabbitmq.queue.wcs}") public void setQc(String v) { QUEUE_WCS = v; }
     @Value("${custom.rabbitmq.queue.manti}") public void setQm(String v) { QUEUE_MANTI = v; }
     @Value("${custom.rabbitmq.queue.dead}") public void setQd(String v) { QUEUE_DEAD = v; }
 
     @Value("${custom.rabbitmq.routing.pex}") public void setRp(String v) { ROUTING_PEX = v; }
     @Value("${custom.rabbitmq.routing.tex}") public void setRt(String v) { ROUTING_TEX = v; }
+    @Value("${custom.rabbitmq.routing.tex.sync}") public void setRoutingTexSync(String v) { ROUTING_TEX_SYNC = v; }
     @Value("${custom.rabbitmq.routing.eas}") public void setRe(String v) { ROUTING_EAS = v; }
     @Value("${custom.rabbitmq.routing.wms}") public void setRw(String v) { ROUTING_WMS = v; }
+    @Value("${custom.rabbitmq.routing.wms.sync}") public void setRoutingWmsSync(String v) { ROUTING_WMS_SYNC = v; }
     @Value("${custom.rabbitmq.routing.wcs}") public void setRc(String v) { ROUTING_WCS = v; }
     @Value("${custom.rabbitmq.routing.manti}") public void setRm(String v) { ROUTING_MANTI = v; }
     @Value("${custom.rabbitmq.routing.dead}") public void setRd(String v) { ROUTING_DEAD = v; }
@@ -112,6 +120,7 @@ public class RabbitConfig {
 
     @Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false); }
     @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false); }
+    @Bean public Queue texQueueSync() { return new Queue(QUEUE_TEX_SYNC, true, false, false); }
 
     // TODO: 추후 고민 ttl 설정
     //@Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false,ttlArgs()); }
@@ -120,7 +129,8 @@ public class RabbitConfig {
     //@Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false, dlqArgs()); }
     //@Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false, dlqArgs()); }
     //@Bean public Queue easQueue() { return new Queue(QUEUE_EAS, true, false, false, dlqArgs()); }
-    //@Bean public Queue wmsQueue() { return new Queue(QUEUE_WMS, true, false, false, dlqArgs()); }
+    @Bean public Queue wmsQueue() { return new Queue(QUEUE_WMS, true, false, false); }
+    @Bean public Queue wmsQueueSync() { return new Queue(QUEUE_WMS_SYNC, true, false, false); }
     //@Bean public Queue wcsQueue() { return new Queue(QUEUE_WCS, true, false, false, dlqArgs()); }
     //@Bean public Queue mantiQueue() { return new Queue(QUEUE_MANTI, true, false, false, dlqArgs()); }
 
@@ -128,15 +138,17 @@ public class RabbitConfig {
     @Bean public DirectExchange pexExchange() { return new DirectExchange(EXCHANGE_PEX); } // rpc.exchange
     @Bean public DirectExchange texExchange() { return new DirectExchange(EXCHANGE_TEX); } // rpc.exchange
     //@Bean public DirectExchange easExchange() { return new DirectExchange(EXCHANGE_EAS); }
-    //@Bean public DirectExchange wmsExchange() { return new DirectExchange(EXCHANGE_WMS); }
+    @Bean public DirectExchange wmsExchange() { return new DirectExchange(EXCHANGE_WMS); }
     //@Bean public DirectExchange wcsExchange() { return new DirectExchange(EXCHANGE_WCS); }
     //@Bean public DirectExchange mantiExchange() { return new DirectExchange(EXCHANGE_MANTI); }
 
     // Bindings
     @Bean Binding pexBinding() { return BindingBuilder.bind(pexQueue()).to(pexExchange()).with(ROUTING_PEX); }
     @Bean Binding texBinding() { return BindingBuilder.bind(texQueue()).to(texExchange()).with(ROUTING_TEX); }
+    @Bean Binding texSyncBinding() { return BindingBuilder.bind(texQueueSync()).to(texExchange()).with(ROUTING_TEX_SYNC); }
     //@Bean Binding easBinding() { return BindingBuilder.bind(easQueue()).to(easExchange()).with(ROUTING_EAS); }
-    //@Bean Binding wmsBinding() { return BindingBuilder.bind(wmsQueue()).to(wmsExchange()).with(ROUTING_WMS); }
+    @Bean Binding wmsBinding() { return BindingBuilder.bind(wmsQueue()).to(wmsExchange()).with(ROUTING_WMS); }
+    @Bean Binding wmsSyncBinding() { return BindingBuilder.bind(wmsQueueSync()).to(wmsExchange()).with(ROUTING_WMS_SYNC); }
     //@Bean Binding wcsBinding() { return BindingBuilder.bind(wcsQueue()).to(wcsExchange()).with(ROUTING_WCS); }
     //@Bean Binding mantiBinding() { return BindingBuilder.bind(mantiQueue()).to(mantiExchange()).with(ROUTING_MANTI); }
 

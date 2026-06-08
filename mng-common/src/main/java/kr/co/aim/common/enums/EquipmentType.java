@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EquipmentType implements MetaDataEnum {
-    PROCESS("Process"),
-    WAREHOUSE("Warehouse"),
-    SORTER("Sorter"),
-    STOCKER("Stocker");
+    PROCESS("PROCESS"),
+    WAREHOUSE("WAREHOUSE"),
+    SORTER("SORTER"),
+    STOCKER("STOCKER");
     private final String value;
 }

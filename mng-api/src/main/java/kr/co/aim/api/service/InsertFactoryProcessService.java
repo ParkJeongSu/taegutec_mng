@@ -93,6 +93,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             // portDef workstationName 을 통해서 outbound order를 찾음
             // 만약 outbound order가 있다면, reserveToLoad 로 변경 후 반송요청 메시지 빈환
             if(StringUtils.isNotBlank(portDef.getWorkCenterName())){
+                // 이 쿼리가 WORK_CENTER를 기준으로 FIFO 로 ORDER를 가져오는 로직
                 List<TransportOrder> transportOrders = transportOrderService.findOutboundOrderForTransportRequest(
                         TransportOrderType.OUTBOUND.getValue(),
                         TransportOrderStatus.CREATED.getValue(),
@@ -241,10 +242,15 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 Optional<PortDef> optionalPortDef = portService.findByLocationId(locationId);
                 if(optionalPortDef.isPresent()){
                     PortDef portDef = optionalPortDef.get();
-                    sourceEquipmentName = portDef.getId().getEquipmentName();
-                    sourcePortName = portDef.getId().getPortName();
+//                    sourceEquipmentName = portDef.getId().getEquipmentName();
+//                    sourcePortName = portDef.getId().getPortName();
+//                    sourcePositionTypeName = PositionTypeName.PORT.getValue();
+//                    sourcePositionName = portDef.getId().getPortName();
+
+                    sourceEquipmentName = portDef.getEquipmentName();
+                    sourcePortName = portDef.getPortName();
                     sourcePositionTypeName = PositionTypeName.PORT.getValue();
-                    sourcePositionName = portDef.getId().getPortName();
+                    sourcePositionName = portDef.getPortName();
                 }
             }
             if(StringUtils.isNotEmpty(galWarehouse)){

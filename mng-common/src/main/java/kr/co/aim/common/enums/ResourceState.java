@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ResourceState implements MetaDataEnum {
-    IN_SERVICE("InService"),
-    OUT_OF_SERVICE("OutOfService");
+    IN_SERVICE("IN_SERVICE"),
+    OUT_OF_SERVICE("OUT_OF_SERVICE");
     private final String value;
 }

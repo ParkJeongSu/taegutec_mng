@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductionOrderState implements MetaDataEnum {
-    CREATED("Created"),
-    REQUESTED("Requested"),
-    RELEASED("Released"),
-    COMPLETED("Completed");
+    CREATED("CREATED"),
+    REQUESTED("REQUESTED"),
+    RELEASED("RELEASED"),
+    COMPLETED("COMPLETED");
     private final String value;
 }

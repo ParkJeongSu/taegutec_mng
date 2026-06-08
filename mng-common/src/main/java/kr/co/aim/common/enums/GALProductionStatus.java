@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum GALProductionStatus implements MetaDataEnum {
-    CREATE("Create"),
     ACCEPT("2"),
     RELEASE("6"),
     FIBC_ON_PALLET("10"),

@@ -1,6 +1,9 @@
 package kr.co.aim.infra.persistence.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,9 +14,9 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "PORT_DEF", catalog = "NEXBEDEF", schema = "dbo")
+@Table(name = "PORT_DEF_HISTORY", catalog = "NEXBEDEF", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
-public class PortDefEntity {
+public class PortDefHistoryEntity {
 
     //@EmbeddedId
     //private PortDefId id; // 복합키 클래스를 ID로 사용

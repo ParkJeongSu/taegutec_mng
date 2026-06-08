@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PortRoleType implements MetaDataEnum {
-    INTERNAL("Internal"),
-    EXTERNAL("External"),
+    INTERNAL("INTERNAL"),
+    EXTERNAL("EXTERNAL"),
     WCS("WCS"),
     EAS("EAS");
     private final String value;

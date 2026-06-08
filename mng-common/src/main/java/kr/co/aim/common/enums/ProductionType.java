@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductionType implements MetaDataEnum {
-    PRODUCTION("Production"),
-    ENGINEER("Engineer"),
-    DEVELOP("Develop");
+    PRODUCTION("PRODUCTION"),
+    ENGINEER("ENGINEER"),
+    DEVELOP("DEVELOP");
     private final String value;
 }

@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EquipmentLevel implements MetaDataEnum {
-    LEVEL_1("Line"),
-    LEVEL_2("Machine"),
-    LEVEL_3("Unit"),
-    LEVEL_4("SubUnit"),
-    UNIT("Unit"),
-    GROUP("Group");
+    LEVEL_1("LINE"),
+    LEVEL_2("MACHINE"),
+    LEVEL_3("UNIT"),
+    LEVEL_4("SUBUNIT"),
+    UNIT("UNIT"),
+    GROUP("GROUP");
     private final String value;
 }

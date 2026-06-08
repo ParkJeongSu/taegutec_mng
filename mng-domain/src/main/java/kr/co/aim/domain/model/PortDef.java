@@ -1,6 +1,4 @@
 package kr.co.aim.domain.model;
-
-import jakarta.persistence.Column;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -12,8 +10,14 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 public class PortDef {
-    private PortDefId id;
+
+    private Long id;
+    private String equipmentName;
+    private String portName;
+    private String factoryName;
+    private Integer portNumber;
     private String description;
+    private String transportMode;
     private String portType;
     private String detailPortType;
     private String portUseType;
@@ -26,8 +30,8 @@ public class PortDef {
     private LocalDateTime checkOutTime;
     private String checkOutUser;
     private String dataState;
-    private String lastEventName;
-    private LocalDateTime lastEventTime;
-    private String lastEventUser;
-    private String lastEventComment;
+    private String eventName;
+    private LocalDateTime eventTime;
+    private String eventUser;
+    private String eventComment;
 }

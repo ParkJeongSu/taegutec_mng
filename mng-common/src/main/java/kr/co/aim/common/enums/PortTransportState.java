@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PortTransportState implements MetaDataEnum {
-    READY_TO_LOAD("ReadyToLoad"){
+    READY_TO_LOAD("READY_TO_LOAD"){
         @Override
         public boolean canTransitionTo(PortTransportState nextState) {
             // RUN 상태에서는 IDLE 또는 DOWN으로만 변경 가능
@@ -16,19 +16,19 @@ public enum PortTransportState implements MetaDataEnum {
             return true;
         }
     },
-    RESERVED_TO_LOAD("ReservedToLoad"){
+    RESERVED_TO_LOAD("RESERVED_TO_LOAD"){
 
     },
-    READY_TO_PROCESS("ReadyToProcess"){
+    READY_TO_PROCESS("READY_TO_PROCESS"){
 
     },
-    PROCESSING("Processing"){
+    PROCESSING("PROCESSING"){
 
     },
-    READY_TO_UNLOAD("ReadyToUnload"){
+    READY_TO_UNLOAD("READY_TO_UNLOAD"){
 
     },
-    RESERVED_TO_UNLOAD("ReservedToUnload"){
+    RESERVED_TO_UNLOAD("RESERVED_TO_UNLOAD"){
 
     };
     private final String value;

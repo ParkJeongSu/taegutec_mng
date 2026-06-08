@@ -12,9 +12,9 @@ public enum CarrierDetailType implements DependentMetaDataEnum {
     // CarrierType.CONTAINER 자식
     TO("TO", CarrierType.CONTAINER),
     DO("DO", CarrierType.CONTAINER),
-    SAMPLE("Sample",CarrierType.CST),
-    DUMMY("Dummy",CarrierType.CST),
-    SCRAP("Scrap",CarrierType.CST);
+    SAMPLE("SAMPLE",CarrierType.CST),
+    DUMMY("DUMMY",CarrierType.CST),
+    SCRAP("SCRAP",CarrierType.CST);
     private final String value;
     private final CarrierType carrierType;
 

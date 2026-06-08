@@ -25,8 +25,6 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,9 +61,9 @@ public class InsertTransferScheduler {
 
         List<Long> idocTypIds = new ArrayList<>();
         Integer errorCode = 0;
-        idocTypIds.add(IdocTypeId.Inbound.getValue());
-        idocTypIds.add(IdocTypeId.Outbound.getValue());
-        idocTypIds.add(IdocTypeId.Relocation.getValue());
+        idocTypIds.add(IdocTypeId.INBOUND.getValue());
+        idocTypIds.add(IdocTypeId.OUTBOUND.getValue());
+        idocTypIds.add(IdocTypeId.RELOCATION.getValue());
         List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndErrorCode(idocTypIds,errorCode);
 
         if(CollectionUtils.isEmpty(idocEntities)){
@@ -184,8 +182,8 @@ public class InsertTransferScheduler {
                 // 정상적으로 수행했기 때문에, errorCode (60 : processed)와 dtimemode를 수정
                 insertExternalInterfaceService.transferCompleted(idocEntity.getLineId());
 
-                if(IdocTypeId.Inbound.getValue().equals( idocEntity.getIdocTypId() )
-                        || IdocTypeId.Relocation.getValue().equals( idocEntity.getIdocTypId() )) {
+                if(IdocTypeId.INBOUND.getValue().equals( idocEntity.getIdocTypId() )
+                        || IdocTypeId.RELOCATION.getValue().equals( idocEntity.getIdocTypId() )) {
                     // 메시지 전송
                     String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
 

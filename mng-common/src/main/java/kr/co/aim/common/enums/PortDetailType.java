@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PortDetailType implements MetaDataEnum {
-    OUT_OF_RACK("OutOfRack"),
-    WORKSTATION("Workstation"),
-    INBOUND("Inbound"),
-    TUNNEL("Tunnel"),
-    BOTH_OF_RACK("BothOfRack"),
-    IN_OF_RACK("InOfRack");
+    OUT_OF_RACK("OUT_OF_RACK"),
+    WORKSTATION("WORKSTATION"),
+    INBOUND("INBOUND"),
+    TUNNEL("TUNNEL"),
+    BOTH_OF_RACK("BOTH_OF_RACK"),
+    IN_OF_RACK("IN_OF_RACK");
     private final String value;
 }

@@ -36,9 +36,9 @@ public class PowderSimulatorInterfaceService {
     private IdocPEntity buildBaseIdoc(LocalDateTime now) {
         return IdocPEntity.builder()
                 .lineId(idocPJpaRepository.findMaxLineId())
-                .idocTypId(IdocTypeId.Confirmation.getValue())
+                .idocTypId(IdocTypeId.CONFIRMATION.getValue())
                 .state(IdocState.INITIAL.getValue())
-                .errorCode(IdocErrorCode.Init.getValue())
+                .errorCode(IdocErrorCode.INIT.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
                 .dtimeCre(now)
@@ -117,7 +117,7 @@ public class PowderSimulatorInterfaceService {
         }
         IdocPEntity idocPEntity = optionalIdocPEntity.get();
         idocPEntity.setState(IdocState.COMPLETED.getValue());
-        idocPEntity.setErrorCode(IdocErrorCode.Processed.getValue());
+        idocPEntity.setErrorCode(IdocErrorCode.PROCESSED.getValue());
         idocPEntity.setDtimeMod(LocalDateTime.now().withNano(0));
         idocPEntity.setPgmMod(SystemName.MNG.getValue());
         Long modifyCount = idocPEntity.getModCnt();

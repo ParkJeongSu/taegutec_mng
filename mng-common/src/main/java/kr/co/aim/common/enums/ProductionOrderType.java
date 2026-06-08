@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductionOrderType implements MetaDataEnum {
-    INBOUND("Inbound"),
-    UNPACK("Unpack"),
-    PRODUCTION("Production"),
-    PACKING("Packing");
+    INBOUND("INBOUND"),
+    UNPACK("UNPACK"),
+    PRODUCTION("PRODUCTION"),
+    PACKING("PACKING");
     private final String value;
 }

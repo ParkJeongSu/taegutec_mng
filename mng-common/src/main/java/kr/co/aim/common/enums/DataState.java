@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum DataState implements MetaDataEnum {
-    CREATED("Created"),
-    REMOVED("Removed");
+    CREATED("CREATED"),
+    REMOVED("REMOVED");
     private final String value;
 }

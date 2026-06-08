@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum LotState implements MetaDataEnum {
-    CREATED("Created"),
-    RELEASED("Released"),
-    SCRAPPED("Scrapped"),
-    SHIPPED("Shipped");
+    CREATED("CREATED"),
+    RELEASED("RELEASED"),
+    SCRAPPED("SCRAPPED"),
+    SHIPPED("SHIPPED");
     private final String value;
 }

@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CommunicationState implements MetaDataEnum {
-    OFFLINE("Offline"),
-    ONLINE_LOCAL("OnlineLocal"),
-    ONLINE_REMOTE("OnlineRemote");
+    OFFLINE("OFFLINE"),
+    ONLINE_LOCAL("ONLINE_LOCAL"),
+    ONLINE_REMOTE("ONLINE_REMOTE");
 
     public static boolean isExist(String communicationState) {
         for (CommunicationState state : CommunicationState.values()) {

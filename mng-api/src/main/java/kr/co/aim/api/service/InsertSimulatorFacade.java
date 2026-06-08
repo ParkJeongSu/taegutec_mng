@@ -124,57 +124,57 @@ public class InsertSimulatorFacade {
     }
 
     public void acceptOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Create);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.CREATED);
         
         insertSimulatorInterfaceService.acceptOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.Accept)
+                .status(GALTransportStatus.ACCEPT)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void acceptInbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Create);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.CREATED);
         insertSimulatorInterfaceService.acceptInbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.Accept)
+                .status(GALTransportStatus.ACCEPT)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void acceptRelocation(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.Create);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.CREATED);
         insertSimulatorInterfaceService.acceptInbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.Accept)
+                .status(GALTransportStatus.ACCEPT)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void workStationEmptyInbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Accept);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.ACCEPT);
         insertSimulatorInterfaceService.workStationEmptyInbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.WorkstationEmpty)
+                .status(GALTransportStatus.WORKSTATION_EMPTY)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void arrivedWorkstationErrorInbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.WorkstationEmpty);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.WORKSTATION_EMPTY);
         insertSimulatorInterfaceService.arrivedWorkstationErrorInbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.ArrivedAtWorkstationWithError)
+                .status(GALTransportStatus.ARRIVED_AT_WORKSTATION_WITH_ERROR)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -186,7 +186,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.ErrorText)
+                .status(GALTransportStatus.ERROR_TEXT)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -197,18 +197,18 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(dto.getIds().get(0).toString())
-                .status(GALTransportStatus.CarrierScanned)
+                .status(GALTransportStatus.CARRIER_SCANNED)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void releaseOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Accept);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.ACCEPT);
         insertSimulatorInterfaceService.releaseOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.Released)
+                .status(GALTransportStatus.RELEASED)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -219,29 +219,29 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.OutOfRack)
+                .status(GALTransportStatus.OUT_OF_RACK)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void outOfRackInbound(SimulatorIdsDto dto) {
-        TransportOrderContext ctx = prepareByOrderId(dto.getIds().get(0), 1, GALTransportStatus.CarrierScanned);
+        TransportOrderContext ctx = prepareByOrderId(dto.getIds().get(0), 1, GALTransportStatus.CARRIER_SCANNED);
         insertSimulatorInterfaceService.outOfRackInbound(ctx, dto);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(dto.getIds().get(0).toString())
-                .status(GALTransportStatus.OutOfRack)
+                .status(GALTransportStatus.OUT_OF_RACK)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void arrivedAtWorkstationOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.OutOfRack);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.OUT_OF_RACK);
         insertSimulatorInterfaceService.arrivedAtWorkStationOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.ArrivedAtWorkStation)
+                .status(GALTransportStatus.ARRIVED_AT_WORK_STATION)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -252,7 +252,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.OrderDone_Outbound)
+                .status(GALTransportStatus.ORDER_DONE_OUTBOUND)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -263,7 +263,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.OrderDone_Inbound)
+                .status(GALTransportStatus.ORDER_DONE_INBOUND)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -274,67 +274,67 @@ public class InsertSimulatorFacade {
     }
 
     public void internalRelocationOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Released);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.RELEASED);
         insertSimulatorInterfaceService.internalRelocationOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.InternalRelocation)
+                .status(GALTransportStatus.INTERNAL_RELOCATION)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void takeOffOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.OrderDone_Outbound);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.ORDER_DONE_OUTBOUND);
         insertSimulatorInterfaceService.takeOffOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.TakeOff)
+                .status(GALTransportStatus.TAKE_OFF)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void binEmptyOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Released);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.RELEASED);
         insertSimulatorInterfaceService.binEmptyOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.BinEmpty)
+                .status(GALTransportStatus.BIN_EMPTY)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void shortageOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.BinEmpty);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.BIN_EMPTY);
         insertSimulatorInterfaceService.shortageOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.Shortage)
+                .status(GALTransportStatus.SHORTAGE)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void notAllowedPickUpOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.Released);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.RELEASED);
         insertSimulatorInterfaceService.notAllowedPickUpOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.NotAllowedPickUp)
+                .status(GALTransportStatus.NOT_ALLOWED_PICK_UP)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void arrivedAtRackOutbound(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.NotAllowedPickUp);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 1, GALTransportStatus.NOT_ALLOWED_PICK_UP);
         insertSimulatorInterfaceService.arrivedAtRackOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.ArrivedAtRack)
+                .status(GALTransportStatus.ARRIVED_AT_RACK)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -345,7 +345,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.NotAllowedPickUp)
+                .status(GALTransportStatus.NOT_ALLOWED_PICK_UP)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -356,7 +356,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.ArrivedAtRack)
+                .status(GALTransportStatus.ARRIVED_AT_RACK)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -364,34 +364,34 @@ public class InsertSimulatorFacade {
     // --- Relocation(이송) 관련: 상세데이터(Detail)가 2개인 그룹 ---
 
     public void internalRelocationRelocation(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.Accept);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.ACCEPT);
         insertSimulatorInterfaceService.internalRelocationOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.InternalRelocation)
+                .status(GALTransportStatus.INTERNAL_RELOCATION)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void dropOnTunnelRelocation(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.Accept);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.ACCEPT);
         insertSimulatorInterfaceService.dropOnTunnelRelocation(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.DroppedOnTunnelConveyor)
+                .status(GALTransportStatus.DROPPED_ON_TUNNEL_CONVEYOR)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
 
     public void arrivedAtRackRelocation(Long orderId) {
-        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.DroppedOnTunnelConveyor);
+        TransportOrderContext ctx = prepareByOrderId(orderId, 2, GALTransportStatus.DROPPED_ON_TUNNEL_CONVEYOR);
         insertSimulatorInterfaceService.arrivedAtRackOutbound(ctx);
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.ArrivedAtRack)
+                .status(GALTransportStatus.ARRIVED_AT_RACK)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
@@ -403,7 +403,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.OrderDone_Relocation)
+                .status(GALTransportStatus.ORDER_DONE_RELOCATION)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }

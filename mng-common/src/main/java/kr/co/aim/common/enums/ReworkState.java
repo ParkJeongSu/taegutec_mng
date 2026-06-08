@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ReworkState implements MetaDataEnum {
-    REWORK("Rework"),
-    NOT_IN_REWORK("NotInRework");
+    REWORK("REWORK"),
+    NOT_IN_REWORK("NOT_IN_REWORK");
     private final String value;
 }
