@@ -9,10 +9,13 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
 import kr.co.aim.common.condition.EquipmentSearchCondition;
 import kr.co.aim.domain.model.Equipment;
+import kr.co.aim.domain.model.EquipmentHistory;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.repository.EquipmentRepository;
 import kr.co.aim.infra.persistence.entity.EquipmentEntity;
+import kr.co.aim.infra.persistence.entity.EquipmentHistoryEntity;
 import kr.co.aim.infra.persistence.entity.ProductionOrderEntity;
+import kr.co.aim.infra.persistence.mapper.EquipmentHistoryMapper;
 import kr.co.aim.infra.persistence.mapper.EquipmentMapper;
 import kr.co.aim.infra.persistence.springdatajpa.EquipmentJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,12 +26,14 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QEquipmentEntity.equipmentEntity;
+import static kr.co.aim.infra.persistence.entity.QEquipmentHistoryEntity.equipmentHistoryEntity;
 
 /**
  * UserRepository의 JPA 기반 구현체.
@@ -41,6 +46,7 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
     // Spring Data JPA가 자동으로 구현해주는 JPA 리포지토리. UserEntity를 다룬다.
     private final EquipmentJpaRepository equipmentJpaRepository;
     private final EquipmentMapper equipmentMapper;
+    private final EquipmentHistoryMapper  equipmentHistoryMapper;
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
 
     @Override
@@ -146,6 +152,22 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
     @Override
     public void deleteAllByIdInBatch(List<Long> ids) {
         equipmentJpaRepository.deleteAllByIdInBatch(ids);
+    }
+
+    @Override
+    public List<EquipmentHistory> findEquipmentHistoryByPeriod(LocalDateTime start, LocalDateTime end) {
+        // QEquipmentHistoryEntity 스태틱 임포트 가정
+        List<EquipmentHistoryEntity> entities = queryFactory
+                .selectFrom(equipmentHistoryEntity)
+                .where(equipmentHistoryEntity.eventTime.between(start, end))
+                .orderBy(equipmentHistoryEntity.equipmentName.asc(), equipmentHistoryEntity.eventTime.asc())
+                .fetch();
+
+        List<kr.co.aim.domain.model.EquipmentHistory> domains = new ArrayList<>();
+        for (EquipmentHistoryEntity entity : entities) {
+            domains.add(equipmentHistoryMapper.toDomain(entity)); // 해당 매퍼 주입 필요
+        }
+        return domains;
     }
 
 

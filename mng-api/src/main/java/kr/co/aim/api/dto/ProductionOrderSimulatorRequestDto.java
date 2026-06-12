@@ -28,6 +28,8 @@ public class ProductionOrderSimulatorRequestDto {
     private String holdState;
     private String reasonCode;
     private String equipmentName;
+    private String portName;
+    private String transactionId;
     private BigDecimal actualQuantity;
     private BigDecimal planQuantity;
     private BigDecimal releasedQuantity;

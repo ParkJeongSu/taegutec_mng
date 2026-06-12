@@ -179,14 +179,10 @@ public class MessageSendController {
                 RabbitConfig.ROUTING_WMS_SYNC,
                 request );
 
-        // 2. 응답결과 null 체크 및 로그 출력
+        // 2. 응답결과 null 체크 (타임아웃 분기 로직 정상화)
         if (reply == null) {
-            // 실제 어떤 클래스 타입으로 변환되어 들어왔는지 콘솔에서 확인 가능합니다.
-            log.info("✅ 반환된 객체의 실제 타입: {}", reply.getClass().getName());
-            log.info("✅ 반환된 객체의 내용: {}", reply.toString());
-            return;
-        }else {
-            log.error("❌ 응답 타임아웃");
+            log.error("❌ [Simulator] 응답 타임아웃 발생! WMS로부터 reply를 받지 못했습니다.");
+            return; // 타임아웃이므로 아래 객체 분석 로직으로 안 내려가고 여기서 종료
         }
 
         log.info("✅ [Simulator] Reply Received. Class Type: {}", reply.getClass().getName());

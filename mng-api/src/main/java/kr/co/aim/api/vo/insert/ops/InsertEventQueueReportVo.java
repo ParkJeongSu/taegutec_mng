@@ -18,6 +18,7 @@ public class InsertEventQueueReportVo {
     private final Optional<Port> optionalPort;
     private final Optional<PortDef> optionalPortDef;
     private final String carrierName;
+    private final String virtualCarrierName;
     private final String actualZoneName;
     // 측정 무게
     private final String actualWeight;

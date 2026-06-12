@@ -147,6 +147,8 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        String virtualCarrierName = dto.getVirtualCarrierName();
+
         LocalDateTime now = null;
 
         // 단 하나의 report 만 하면 되는 경우
@@ -170,6 +172,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .cGaId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
                         .cGalWhs(dto.getGalWarehouse())
                         .cCoId(ifEventQueue.getCarrierName())
+                        .cText1(virtualCarrierName)
                         // .cGrWgAct(dto.getActualWeight()) // TODO: 실제 어떤 DataType 으로 넣을지 고민, 아마도 소숫점자리까지 계산
                         .cReqZone(dto.getRequestedZoneName())
                         .cZone(dto.getActualZoneName())

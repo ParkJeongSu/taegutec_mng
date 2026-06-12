@@ -158,4 +158,18 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             Pageable pageable                    // 3. 페이징 구조 결합
     );
 
+    @Query(value =
+            "SELECT i FROM IdocPEntity i " +
+            "JOIN H2PartMPEntity m ON i.lineId = m.idocId " +
+            "WHERE i.idocTypId = :idocTypId",
+            countQuery =
+                    "SELECT count(i) FROM IdocPEntity i " +
+                    "JOIN H2PartMPEntity m ON i.lineId = m.idocId " +
+                    "WHERE i.idocTypId = :idocTypId"
+    )
+    Page<IdocPEntity> findByIdocTypIdWithPartMaster(
+            @Param("idocTypId") Long idocTypId,
+            Pageable pageable
+    );
+
 }

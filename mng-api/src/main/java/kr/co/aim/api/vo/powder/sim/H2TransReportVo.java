@@ -43,5 +43,6 @@ public class H2TransReportVo {
     private IdocPEntity newIdoc;        // new IDOC
 
     private String partId;
+    private Long refLineId;
 
 }

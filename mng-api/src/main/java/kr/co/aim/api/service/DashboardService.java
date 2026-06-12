@@ -61,4 +61,36 @@ public class DashboardService {
 
         return new PageImpl<>(dtoList);
     }
+
+    public Page<DashboardResponseDto> getDashboardInfoV2() {
+
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfToday = today.atStartOfDay();              // 2026-05-15T00:00
+        LocalDateTime endOfToday = today.atTime(LocalTime.MAX);         // 2026-05-15T23:59:59.999999999
+
+        String completedOrderState = ProductionOrderState.COMPLETED.getValue();
+        String completedTransportState = TransportJobState.COMPLETED.getValue();
+        String cancelTransportState = TransportJobState.CANCELLED.getValue();
+
+        List<ProductionOrder> todayOrderReceivedOrders = productionOrderService.findByCreateTimeBetween(startOfToday, endOfToday);
+        List<ProductionOrder> todayOrderCompletedOrders = productionOrderService.findByCreateTimeBetweenAndProductionOrderState(startOfToday, endOfToday, completedOrderState);
+
+        List<TransportJob> todayJobTotalList  = transportJobService.findByCreateTimeBetween(startOfToday, endOfToday);
+        List<TransportJob> todayJobSuccessList =  transportJobService.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,completedTransportState);
+        List<TransportJob> todayJobFailList =  transportJobService.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,cancelTransportState);
+
+        DashboardResponseDto dashboardResponseDto = DashboardResponseDto
+                .builder()
+                .id(TsidUtils.nextId())
+                .todayOrderReceivedCount(todayOrderReceivedOrders.size())
+                .todayOrderCompletedCount(todayOrderCompletedOrders.size())
+                .todayTransportTotalCount(todayJobTotalList.size())
+                .todayTransportSuccessCount(todayJobSuccessList.size())
+                .todayTransportFailureCount(todayJobFailList.size())
+                .build();
+
+        List<DashboardResponseDto> dtoList = Collections.singletonList(dashboardResponseDto);
+
+        return new PageImpl<>(dtoList);
+    }
 }

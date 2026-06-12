@@ -12,6 +12,8 @@ public enum MessageList {
     ARE_YOU_THERE_REPLY("AreYouThereReply"),
     ARE_YOU_THERE_REQUEST("AreYouThereRequest"),
     ORDER_CREATE_REQUEST("OrderCreateRequest"),
+    RECIPE_REQUEST("RecipeRequest"),
+    RECIPE_REPLY("RecipeReply"),
     ZONE_REQUEST("ZoneRequest"),
     ZONE_REPLY("ZoneReply"),
     MATERIAL_ASSIGN_CARRIER_REQUEST("MaterialAssignCarrierRequest"),

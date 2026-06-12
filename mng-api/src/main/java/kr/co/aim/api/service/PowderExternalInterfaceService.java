@@ -4,6 +4,7 @@ import kr.co.aim.common.condition.GALDetailInterfaceSearchCondition;
 import kr.co.aim.common.condition.GALInterfaceSearchCondition;
 import kr.co.aim.api.strategy.FactoryGALInterfaceStrategy;
 import kr.co.aim.common.condition.GALPartSearchCondition;
+import kr.co.aim.common.dto.powder.H2OrderMDetailResponseDto;
 import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.dto.powder.IdocH2TransResponseDto;
 import kr.co.aim.common.dto.powder.IdocOrderMasterResponseDto;
@@ -80,6 +81,11 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
     }
 
     @Transactional(value = "db2TransactionManager")
+    Page<H2OrderMDetailResponseDto> findH2OrderMDetailByIdocId(Long idocId, Pageable pageable){
+        return h2OrderMPJpaRepository.findH2OrderMDetailByIdocId(idocId,pageable);
+    }
+
+    @Transactional(value = "db2TransactionManager")
     public Page<IdocH2PartMResponseDto> findIdocWithPartMasterByIdocId(
             Long idocId,
             Pageable pageable
@@ -93,6 +99,14 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
             Pageable pageable
     ){
         return idocPJpaRepository.findByIdocTypId(idocTyId,pageable);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public Page<IdocPEntity> findByIdocTypIdWithPartMaster(
+            Long idocTypId,
+            Pageable pageable
+    ){
+        return idocPJpaRepository.findByIdocTypIdWithPartMaster(idocTypId,pageable);
     }
 
     @Transactional(value = "db2TransactionManager")

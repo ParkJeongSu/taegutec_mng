@@ -157,7 +157,7 @@ public class RabbitConfig {
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory, MessageConverter messageConverter) {
         RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
         rabbitTemplate.setMessageConverter(messageConverter);
-        rabbitTemplate.setReplyTimeout(60000);
+        rabbitTemplate.setReplyTimeout(30000);
         return rabbitTemplate;
     }
 

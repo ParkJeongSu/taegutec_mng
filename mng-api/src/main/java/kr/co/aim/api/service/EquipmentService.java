@@ -5,10 +5,7 @@ import kr.co.aim.api.dto.EquipmentGroupDashboard;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.condition.EquipmentSearchCondition;
 import kr.co.aim.common.enums.ProductionOrderState;
-import kr.co.aim.domain.model.Equipment;
-import kr.co.aim.domain.model.EquipmentDef;
-import kr.co.aim.domain.model.EquipmentGroup;
-import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.EquipmentDefRepository;
 import kr.co.aim.domain.repository.EquipmentGroupRepository;
 import kr.co.aim.domain.repository.EquipmentRepository;
@@ -21,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -129,6 +127,11 @@ public class EquipmentService {
         long totalCount = equipmentGroupList.stream().count();
         // 3. PageImpl을 사용하여 수동으로 생성하여 반환
         return new PageImpl<>(dashboardList, pageable, totalCount);
+    }
+
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
+    public List<EquipmentHistory> findEquipmentHistoryByPeriod(LocalDateTime start, LocalDateTime end){
+        return equipmentRepository.findEquipmentHistoryByPeriod(start, end);
     }
 
 }

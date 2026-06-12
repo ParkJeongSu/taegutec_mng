@@ -3,17 +3,13 @@ package kr.co.aim.api.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.dto.DashboardResponseDto;
-import kr.co.aim.api.service.CarrierService;
 import kr.co.aim.api.service.DashboardService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.CarrierSearchCondition;
-import kr.co.aim.domain.model.Carrier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Profile("web")
 @ResponseAnnotation
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
-public class DashBoardController {
+public class DashBoardV1Controller {
     private final DashboardService dashboardService;
 
     @Operation(summary = "Dashboard", description = "Dashboard 조회")

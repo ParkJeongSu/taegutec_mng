@@ -294,6 +294,7 @@ public class MessageExecuteService {
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
+        String virtualCarrierName = message.getBody().getVirtualCarrierName();
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
         String currentZoneName = message.getBody().getCurrentZoneName();
         String currentPositionType = message.getBody().getCurrentPositionType();
@@ -314,6 +315,7 @@ public class MessageExecuteService {
                     //.optionalPort(optionalPort)
                     //.optionalPortDef(optionalPortDef)
                     .carrierName(carrierName)
+                    .virtualCarrierName(virtualCarrierName)
                     .actualZoneName(currentZoneName)
                     .actualWeight(actualWeight)
                     .actualRackLocationId(currentPositionName)

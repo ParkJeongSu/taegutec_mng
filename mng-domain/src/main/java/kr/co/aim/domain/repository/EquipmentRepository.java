@@ -4,9 +4,11 @@ import kr.co.aim.common.condition.CarrierSearchCondition;
 import kr.co.aim.common.condition.EquipmentSearchCondition;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.Equipment;
+import kr.co.aim.domain.model.EquipmentHistory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,5 +49,5 @@ public interface EquipmentRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
-
+    List<EquipmentHistory> findEquipmentHistoryByPeriod(LocalDateTime start, LocalDateTime end);
 }

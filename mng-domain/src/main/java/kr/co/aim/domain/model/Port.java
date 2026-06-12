@@ -1,5 +1,4 @@
 package kr.co.aim.domain.model;
-import jakarta.persistence.Column;
 import kr.co.aim.common.enums.PortTransportState;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.*;

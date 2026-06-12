@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,9 @@ public class PowderSimulatorInterfaceService {
     private final H2OrderMPJpaRepository h2OrderMPJpaRepository;
     private final H2OrderDPJpaRepository h2OrderDPJpaRepository;
     private final H2TransPJpaRepository h2TransPJpaRepository;
+
+    // Production Start의 lineId를 추적하기 위한 스레드 안전한 맵 (Key: cOrderId, Value: lineId)
+    private final ConcurrentHashMap<String, Long> startLineIdCache = new ConcurrentHashMap<>();
 
     private IdocPEntity buildBaseIdoc(LocalDateTime now) {
         return IdocPEntity.builder()
@@ -93,10 +97,11 @@ public class PowderSimulatorInterfaceService {
                 .eventDt(vo.getNewIdoc().getDtimeCre())
                 .h2ordLineId(h2ordLineId)
                 .cPartId(partId)
+                .refLineId(vo.getRefLineId()) // 전달받은 refLineId 매핑
                 .build();
     }
 
-    private void saveTransportProgress(H2TransReportVo report) {
+    private Long saveTransportProgress(H2TransReportVo report) {
         log.info("Reporting Status: {}", report.getStatus());
         LocalDateTime now = LocalDateTime.now().withNano(0);
 
@@ -106,7 +111,8 @@ public class PowderSimulatorInterfaceService {
         report.setNewIdoc(newIdoc);
 
         H2TransPEntity newTrans = buildBaseH2Trans(report);
-        h2TransPJpaRepository.save(newTrans);
+        H2TransPEntity savedTrans = h2TransPJpaRepository.save(newTrans);
+        return savedTrans.getLineId();
     }
 
     @Transactional(value = "db2TransactionManager")
@@ -182,6 +188,51 @@ public class PowderSimulatorInterfaceService {
     }
 
     @Transactional(value = "db2TransactionManager")
+    public void unpackStart(ProductionOrderContext ctx) {
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.UNPACK_STARTED)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void unpackEnd(ProductionOrderContext ctx) {
+
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.UNPACK_ENDED)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
     public void productionStart(ProductionOrderContext ctx) {
         BigDecimal actQty = null;
         if(ctx.getIdoc().getIdocTypId().equals(12L)){
@@ -200,7 +251,14 @@ public class PowderSimulatorInterfaceService {
                         .carrierName(ctx.getCarrierName())
                         .actQty(actQty)
                         .build();
-        saveTransportProgress(vo);
+        long generatedLineId = saveTransportProgress(vo);
+        // 2. 고유 키(cOrderId)를 기반으로 생성된 lineId를 맵에 저장
+        if (ObjectUtils.isNotEmpty(ctx.getDetail()) && ObjectUtils.isNotEmpty(ctx.getDetail().getCOrderId())) {
+            String orderId = ctx.getDetail().getCOrderId();
+            startLineIdCache.put(orderId, generatedLineId);
+            log.info("[Simulation] Production Start - OrderId: {}, Saved LineId: {}", orderId, generatedLineId);
+        }
+
     }
 
     @Transactional(value = "db2TransactionManager")
@@ -217,6 +275,112 @@ public class PowderSimulatorInterfaceService {
                 H2TransReportVo
                         .builder()
                         .status(GALProductionStatus.PRODUCTION_ENDED)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+
+        // 1. 캐시 맵에서 동일한 OrderId에 해당하는 Start 시점의 lineId가 있는지 확인 후 추출 (꺼내면서 삭제)
+        if (ObjectUtils.isNotEmpty(ctx.getDetail()) && ObjectUtils.isNotEmpty(ctx.getDetail().getCOrderId())) {
+            String orderId = ctx.getDetail().getCOrderId();
+            Long refLineId = startLineIdCache.remove(orderId);
+
+            if (refLineId != null) {
+                vo.setRefLineId(refLineId);
+                log.info("[Simulation] Production End - OrderId: {}, Found RefLineId: {}", orderId, refLineId);
+            } else {
+                log.warn("[Simulation] Production End - No matching Start LineId found for OrderId: {}", orderId);
+            }
+        }
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void issueEnd(ProductionOrderContext ctx) {
+
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.UNPACK_ENDED_STOCK_TO_WIP)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void packingIssueEnd(ProductionOrderContext ctx) {
+
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.PRODUCTION_ENDED_STOCK_TO_WIP)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void packingStart(ProductionOrderContext ctx) {
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.PACKING_STARTED)
+                        .sourceIdoc(ctx.getIdoc())
+                        .master(ctx.getMaster())
+                        .detail(ctx.getDetail())
+                        .carrierName(ctx.getCarrierName())
+                        .actQty(actQty)
+                        .build();
+        saveTransportProgress(vo);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void packingEnd(ProductionOrderContext ctx) {
+
+        BigDecimal actQty = null;
+        if(ctx.getIdoc().getIdocTypId().equals(12L)){
+            actQty = ctx.getDetail().getDefaultReceiveQty();
+        }else{
+            actQty = ctx.getActualQuantity();
+        }
+
+        H2TransReportVo vo =
+                H2TransReportVo
+                        .builder()
+                        .status(GALProductionStatus.PACKING_ENDED)
                         .sourceIdoc(ctx.getIdoc())
                         .master(ctx.getMaster())
                         .detail(ctx.getDetail())

@@ -10,6 +10,7 @@ import lombok.*;
 public class CarrierScannedBody {
     private String transportJobName;
     private String carrierName;
+    private String virtualCarrierName;
     private String currentEquipmentName;
     private String currentZoneName;
     private String currentPositionType;

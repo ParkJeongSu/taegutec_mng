@@ -968,6 +968,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String eventType = "";
         String transactionCode ="";
         String carrierName = vo.getCarrierName(); // 어떠한 경우에도 공백이 없음
+        String virtualCarrierName = vo.getVirtualCarrierName();
         String idocId = "";
         String orderId = "";
         String orderLineNumber = "";
@@ -1013,6 +1014,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 .eventType(eventType)
                 .transactionCode(transactionCode)
                 .carrierName(carrierName)
+                .virtualCarrierName(virtualCarrierName)
                 .idocId(idocId)
                 .orderId(orderId)
                 .orderLineNumber(orderLineNumber)

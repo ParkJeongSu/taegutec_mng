@@ -18,6 +18,7 @@ public class IfEventQueueDto {
     private String eventType;
     private String transactionCode;
     private String carrierName;
+    private String virtualCarrierName;
     private String idocId; // 기존 order idocId
     private String orderId;
     private String orderLineNumber; // insert 에선 현재로선 필요 없음

@@ -1,6 +1,8 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.condition.ProductDefSearchCondition;
+import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
+import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.repository.ProductDefRepository;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +45,25 @@ public class ProductDefService {
     @Transactional(value = "mssqlTransactionManager")
     public List<ProductDef> save(List<ProductDef> productDefList){
         return productDefRepository.save(productDefList);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public ProductDef update(IdocH2PartMResponseDto dto, TransactionInfo tx){
+        Optional<ProductDef> optionalProductDef = productDefRepository.findByProductDefName(dto.getCPartId());
+        if(optionalProductDef.isEmpty()){
+            return null;
+        }
+
+        ProductDef productDef = optionalProductDef.get();
+        productDef.setDescription1(dto.getCPartDsc());
+        productDef.setDescription2(dto.getCPartDsc2());
+        productDef.setDefaultReceiveQuantity(dto.getDefaultReceiveQty());
+        productDef.setRatio(dto.getCratIo());
+        productDef.setEventTime(tx.eventTime());
+        productDef.setEventUser(tx.eventUser());
+        productDef.setEventName(tx.eventName());
+
+        return productDefRepository.save(productDef);
     }
 
     @Transactional(value = "mssqlTransactionManager")

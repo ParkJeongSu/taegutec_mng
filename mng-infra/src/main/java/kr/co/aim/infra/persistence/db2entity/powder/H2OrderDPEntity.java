@@ -81,4 +81,10 @@ public class H2OrderDPEntity {
 
     @Column(name = "GALKEY")
     private String galKey;
+
+    @Column(name = "REF_LOT")
+    private Integer refLot;
+
+    @Column(name = "CMOORD")
+    private Integer cmoord;
 }

@@ -90,4 +90,7 @@ public class H2TransPEntity {
 
     @Column(name = "CPARTID")
     private String cPartId;
+
+    @Column(name = "REF_LINEID")
+    private Long refLineId;
 }
