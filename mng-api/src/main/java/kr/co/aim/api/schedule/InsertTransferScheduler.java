@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,7 +42,7 @@ public class InsertTransferScheduler {
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
-    @Scheduled(fixedDelay = 6000000) // 5초마다 실행
+    @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "insertOrderDB2ToMSSQL",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
@@ -172,7 +173,9 @@ public class InsertTransferScheduler {
                     transportOrder = TransportOrder.create(command);
                 }
 
-                if(transportOrder == null){
+                // transportOrder 객체 생성
+
+                if(ObjectUtils.isEmpty(transportOrder)){
                     throw new RuntimeException("transportOrder create error");
                 }
 

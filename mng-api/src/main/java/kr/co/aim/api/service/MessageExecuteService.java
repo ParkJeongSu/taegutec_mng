@@ -1570,5 +1570,60 @@ public class MessageExecuteService {
         return reply;
     }
 
+    /**
+     * WMS 의 오더의 시작보고
+     *
+     * @param message 받은 메시지
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<OrderReleaseReplyBody> orderReleaseRequest(BaseMessage<OrderReleaseRequestBody> message) {
+        BaseMessage<OrderReleaseReplyBody> reply = new BaseMessage<>();
+        OrderReleaseReplyBody body =
+                OrderReleaseReplyBody
+                        .builder()
+                        .id(message.getBody().getId())
+                        .orderId(message.getBody().getOrderId())
+                        .build();
+
+        reply.setEventTime(message.getEventTime());
+        reply.setMessageFrom(SystemName.MNG.getValue());
+        reply.setMessageName(MessageList.ORDER_RELEASE_REPLY.getMessageName());
+        reply.setMessageOwner(message.getMessageOwner());
+        reply.setMessageTo(message.getMessageFrom());
+        reply.setResultCode(ResultCode.OK.getValue());
+        reply.setResultMessage("");
+        reply.setTransactionId(message.getTransactionId());
+        reply.setBody(body);
+        return reply;
+    }
+
+    /**
+     * 설비의 communicationState 를 보고 받음
+     * 1. 설비 데이터 조회
+     * 2. 설비의 상태 변경 < 이건 좀 고민
+     * 3. history 생성
+     * @param message 받은 메시지
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<MaterialAssignCarrierReplyBody> materialAssignCarrierRequest(BaseMessage<MaterialAssignCarrierRequestBody> message) {
+        BaseMessage<MaterialAssignCarrierReplyBody> reply = new BaseMessage<>();
+        MaterialAssignCarrierReplyBody body = new MaterialAssignCarrierReplyBody();
+        body.setId(message.getBody().getId());
+        body.setCarrierName(message.getBody().getCarrierName());
+        body.setOrderId(message.getBody().getOrderId());
+        body.setMaterialList(message.getBody().getMaterialList());
+
+        reply.setEventTime(message.getEventTime());
+        reply.setMessageFrom(SystemName.MNG.getValue());
+        reply.setMessageName(MessageList.MATERIAL_ASSIGN_CARRIER_REPLY.getMessageName());
+        reply.setMessageOwner(message.getMessageOwner());
+        reply.setMessageTo(message.getMessageFrom());
+        reply.setResultCode(ResultCode.OK.getValue());
+        reply.setResultMessage("");
+        reply.setTransactionId(message.getTransactionId());
+        reply.setBody(body);
+        return reply;
+    }
+
 
 }

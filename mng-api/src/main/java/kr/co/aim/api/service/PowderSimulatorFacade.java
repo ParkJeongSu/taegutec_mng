@@ -768,7 +768,7 @@ public class PowderSimulatorFacade {
         TransactionInfo tx = TransactionInfo.now("userTransfer", SystemName.MNG.getValue(), "user Transfer");
         for (IdocH2PartMResponseDto dto : idocH2PartMResponseDtoPage) {
 
-            Optional<ProductDef> optionalProductDef = productDefService.findByProductDefName(dto.getCPartId());
+            Optional<ProductDef> optionalProductDef = productDefService.findByH2PartMPEntity(dto.getCPartId());
             ProductionOrderContext pctx =
                     ProductionOrderContext
                             .builder()

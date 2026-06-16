@@ -19,4 +19,5 @@ public interface H2OrderDPJpaRepository extends JpaRepository<H2OrderDPEntity, L
     Page<H2OrderDPEntity> findByIdocId(Long idocId, Pageable pageable);
     @Query("SELECT h FROM H2OrderDPEntity h WHERE h.cOrderId = :cOrderId")
     List<H2OrderDPEntity> findByCOrderId(String cOrderId);
+    List<H2OrderDPEntity> findByIdocIdOrderByLineIdAsc(Long idocId);
 }

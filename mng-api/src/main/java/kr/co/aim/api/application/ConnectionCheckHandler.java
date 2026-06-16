@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex"})
 public class ConnectionCheckHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;

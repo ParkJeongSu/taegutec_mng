@@ -2,7 +2,6 @@ package kr.co.aim.common.format;
 
 import lombok.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -10,6 +9,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreateRequestBody {
-    private List<ProductionOrder> orderList = new ArrayList<>();
+public class OrderCreateReplyBody {
+    private List<ProductionOrder> orderList;
 }

@@ -10,6 +10,8 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderCreateRequestBody {
-    private List<ProductionOrder> orderList = new ArrayList<>();
+public class OrderReleaseRequestBody {
+    private Long id;
+    private String orderId;
+
 }

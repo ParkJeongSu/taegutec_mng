@@ -2,10 +2,11 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.service.EquipmentService;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.EquipmentStateChangedBody;
+import kr.co.aim.common.format.OperationModeChangedBody;
+import kr.co.aim.common.format.OrderReleaseReplyBody;
+import kr.co.aim.common.format.OrderReleaseRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile({"pex","tex"})
-public class EquipmentStateChangedHandler implements MessageHandler<String> {
+public class OrderReleaseRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
@@ -27,7 +28,7 @@ public class EquipmentStateChangedHandler implements MessageHandler<String> {
 
     @Override
     public String getSupportedMessageName() {
-        return MessageList.EQUIPMENT_STATE_CHANGED.getMessageName();
+        return MessageList.ORDER_RELEASE_REQUEST.getMessageName();
     }
 
     @Override
@@ -35,13 +36,13 @@ public class EquipmentStateChangedHandler implements MessageHandler<String> {
     public Object handle(String message) {
         
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<EquipmentStateChangedBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<EquipmentStateChangedBody> request = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<OrderReleaseRequestBody>> typeRef = new TypeReference<>() {};
+        BaseMessage<OrderReleaseRequestBody> requestMessage = objectMapper.readValue(message, typeRef);
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        messageExecuteService.equipmentStateChanged(request);
+        BaseMessage<OrderReleaseReplyBody> reply = messageExecuteService.orderReleaseRequest(requestMessage);
 
-        return null;
+        return reply;
     }
 }

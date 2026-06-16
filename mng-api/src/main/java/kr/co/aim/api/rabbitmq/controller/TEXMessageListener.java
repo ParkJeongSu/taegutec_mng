@@ -3,12 +3,15 @@ package kr.co.aim.api.rabbitmq.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.rabbitmq.controller.dispatcher.MessageDispatcher;
 import kr.co.aim.common.Utils.JsonUtils;
+import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.format.request.MessageHeader;
 import kr.co.aim.common.handler.MessageHandler;
 import kr.co.aim.common.handler.MessageWorker;
+import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
@@ -72,6 +75,26 @@ public class TEXMessageListener implements MessageWorker{
             replyObject = handler.handle(jsonString);
         } else {
             log.warn("⚠️ No handler found for messageName: {}", messageName);
+
+            if(StringUtils.equals(SystemName.WCS.getValue(),messageHeader.getMessageOwner()) ){
+                log.warn("WMS message send start");
+                jsonUtils.writePrettyJson(jsonString);
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_WMS,
+                        RabbitConfig.ROUTING_WMS,
+                        jsonString );
+                log.warn("WMS message send end");
+            }
+            else if(StringUtils.equals(SystemName.WMS.getValue(),messageHeader.getMessageOwner()) ){
+                log.warn("WCS message send start");
+                jsonUtils.writePrettyJson(jsonString);
+                rabbitTemplate.convertAndSend(
+                        RabbitConfig.EXCHANGE_WCS,
+                        RabbitConfig.ROUTING_WCS,
+                        jsonString );
+                log.warn("WCS message send end");
+            }
+
         }
         if (replyObject != null) {
             // 1. 응답 시 요청의 correlationId를 그대로 유지해야 함
@@ -80,6 +103,7 @@ public class TEXMessageListener implements MessageWorker{
 
             if (replyTo != null) {
                 log.info("🚀 Replying to queue: {} with correlationId: {}", replyTo, correlationId);
+                jsonUtils.writePrettyJson(replyObject);
 
                 // 2. replyTo 주소를 Routing Key로 사용 (Exchange는 기본 익스체인지 "" 사용)
                 rabbitTemplate.convertAndSend("", replyTo, replyObject, m -> {

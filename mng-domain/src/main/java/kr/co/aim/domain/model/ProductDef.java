@@ -3,6 +3,7 @@ package kr.co.aim.domain.model;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.ProductDefCreateCommand;
+import kr.co.aim.domain.command.ProductDefUpdateCommand;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -43,5 +44,18 @@ public class ProductDef implements HasTransactionInfo {
                 .eventComment(command.getTransactionInfo().eventComment())
                 .build();
 
+    }
+
+    public ProductDef update(ProductDefUpdateCommand command) {
+        setFactoryName(command.getFactoryName());
+        setDescription1(command.getDescription1());
+        setDescription2(command.getDescription2());
+        setRatio(command.getRatio());
+        setDefaultReceiveQuantity(command.getDefaultReceiveQuantity());
+        setEventName(command.getTransactionInfo().eventName());
+        setEventTime(command.getTransactionInfo().eventTime());
+        setEventUser(command.getTransactionInfo().eventUser());
+        setEventComment(command.getTransactionInfo().eventComment());
+        return this;
     }
 }

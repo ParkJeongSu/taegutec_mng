@@ -2,11 +2,11 @@ package kr.co.aim.api.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
+import kr.co.aim.api.dto.ProductionOrderSimulatorRequestDto;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.AreYouThereRequestBody;
-import kr.co.aim.common.format.Header;
-import kr.co.aim.common.format.OrderCreateRequestBody;
-import kr.co.aim.common.format.ZoneRequestBody;
+import kr.co.aim.common.enums.ResultCode;
+import kr.co.aim.common.enums.SystemName;
+import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.format.request.Sample;
 import kr.co.aim.common.format.response.ReplySample;
@@ -17,12 +17,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
 
-@Hidden
 @RestController
 @RequiredArgsConstructor
 @Slf4j
@@ -108,12 +108,12 @@ public class MessageSendController {
         AreYouThereRequestBody body = new AreYouThereRequestBody();
 
         request.setEventTime(request.getEventTime());
-        request.setMessageFrom("MNG");
+        request.setMessageFrom(SystemName.MNG.getValue());
         request.setMessageName(MessageList.ARE_YOU_THERE_REQUEST.getMessageName());
-        request.setMessageOwner("MNG");
+        request.setMessageOwner(SystemName.MNG.getValue());
         request.setMessageTo(request.getMessageFrom());
-        request.setResultCode("0");
-        request.setResultMessage("0");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setResultMessage("");
         request.setTransactionId(request.getTransactionId());
         request.setBody(body);
 
@@ -134,12 +134,12 @@ public class MessageSendController {
         OrderCreateRequestBody body = new OrderCreateRequestBody();
 
         request.setEventTime(request.getEventTime());
-        request.setMessageFrom("MNG");
+        request.setMessageFrom(SystemName.MNG.getValue());
         request.setMessageName(MessageList.ORDER_CREATE_REQUEST.getMessageName());
-        request.setMessageOwner("MNG");
+        request.setMessageOwner(SystemName.MNG.getValue());
         request.setMessageTo(request.getMessageFrom());
-        request.setResultCode("0");
-        request.setResultMessage("0");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setResultMessage("");
         request.setTransactionId(request.getTransactionId());
         request.setBody(body);
 
@@ -161,12 +161,12 @@ public class MessageSendController {
         ZoneRequestBody body = new ZoneRequestBody();
 
         request.setEventTime(request.getEventTime());
-        request.setMessageFrom("MNG");
+        request.setMessageFrom(SystemName.MNG.getValue());
         request.setMessageName(MessageList.ZONE_REQUEST.getMessageName());
-        request.setMessageOwner("MNG");
+        request.setMessageOwner(SystemName.MNG.getValue());
         request.setMessageTo(request.getMessageFrom());
-        request.setResultCode("0");
-        request.setResultMessage("0");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setResultMessage("");
         request.setTransactionId(request.getTransactionId());
         request.setBody(body);
 
@@ -201,5 +201,86 @@ public class MessageSendController {
             String prettyJson = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(reply);
             log.info("📝 [Object Type Reply] Pretty JSON:\n{}", prettyJson);
         }
+    }
+
+
+    @SneakyThrows
+    @PostMapping("/carrier-in-warehouse-to-wms")
+    public void sendCarrierInWarehouseToWMS(@RequestBody CarrierInWareHouseBody dto){
+
+        BaseMessage<CarrierInWareHouseBody> request = new BaseMessage<>();
+        CarrierInWareHouseBody body =
+                CarrierInWareHouseBody
+                        .builder()
+                        .equipmentName(dto.getEquipmentName())
+                        .zoneName(dto.getZoneName())
+                        .shelfName(dto.getShelfName())
+                        .carrierName(dto.getCarrierName())
+                        .carrierType(dto.getCarrierType())
+                        .carrierState(dto.getCarrierState())
+                        .quantity(dto.getQuantity())
+                        .itemName(dto.getItemName())
+                        .orderId(dto.getOrderId())
+                        .orderLineNumber(dto.getOrderLineNumber())
+                        .build();
+
+        request.setEventTime(request.getEventTime());
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageName(MessageList.CARRIER_IN_WAREHOUSE.getMessageName());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(request.getMessageFrom());
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setResultMessage("");
+        request.setTransactionId(request.getTransactionId());
+        request.setBody(body);
+
+        // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
+        String jsonPayload = objectMapper.writeValueAsString(request);
+        log.info("Sending JSON Payload: {}" , jsonPayload);
+
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EXCHANGE_WMS,
+                RabbitConfig.ROUTING_WMS,
+                request );
+    }
+
+    @SneakyThrows
+    @PostMapping("/carrier-out-warehouse-to-wms")
+    public void sendCarrierOutWarehouseToWMS(@RequestBody CarrierOutWareHouseBody dto){
+
+        BaseMessage<CarrierOutWareHouseBody> request = new BaseMessage<>();
+        CarrierOutWareHouseBody body =
+                CarrierOutWareHouseBody
+                        .builder()
+                        .equipmentName(dto.getEquipmentName())
+                        .zoneName(dto.getZoneName())
+                        .shelfName(dto.getShelfName())
+                        .carrierName(dto.getCarrierName())
+                        .carrierType(dto.getCarrierType())
+                        .carrierState(dto.getCarrierState())
+                        .quantity(dto.getQuantity())
+                        .itemName(dto.getItemName())
+                        .orderId(dto.getOrderId())
+                        .orderLineNumber(dto.getOrderLineNumber())
+                        .build();
+
+        request.setEventTime(request.getEventTime());
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageName(MessageList.CARRIER_OUT_WAREHOUSE.getMessageName());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(request.getMessageFrom());
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setResultMessage("");
+        request.setTransactionId(request.getTransactionId());
+        request.setBody(body);
+
+        // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.
+        String jsonPayload = objectMapper.writeValueAsString(request);
+        log.info("Sending JSON Payload: {}" , jsonPayload);
+
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EXCHANGE_WMS,
+                RabbitConfig.ROUTING_WMS,
+                request );
     }
 }

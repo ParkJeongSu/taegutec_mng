@@ -21,6 +21,7 @@ import java.util.Optional;
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
     List<IdocPEntity> findByState(Long state);
+    List<IdocPEntity> findByStateAndErrorCode(Long state,Long errorCode);
     Optional<IdocPEntity> findByLineId(Long lineId);
     Page<IdocPEntity> findAll(Pageable pageable);
 //    @Query("SELECT COALESCE(MAX(i.lineId), 0) +1 FROM IdocPEntity i")

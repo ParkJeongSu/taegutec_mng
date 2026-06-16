@@ -54,7 +54,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     private IdocEntity buildBaseIdoc(LocalDateTime now) {
         //TODO : max 값 시퀀스로 수정하기
         return IdocEntity.builder()
-                .lineId(idocJpaRepository.findMaxLineId() + 1)
+                .lineId(idocJpaRepository.findMaxLineId())
                 .idocTypId(IdocTypeId.CONFIRMATION.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
@@ -65,7 +65,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     private H2TransEntity buildBaseH2Trans(H2TransReportVo vo) {
         // TODO: max 값 시퀀스로 수정
         return H2TransEntity.builder()
-                .lineId(h2TransJpaRepository.findMaxLineId() + 1)
+                .lineId(h2TransJpaRepository.findMaxLineId())
                 .idocId(vo.getNewIdoc().getLineId())
                 .dtimeCre(vo.getNewIdoc().getDtimeCre())
                 .dataCode(vo.getIdocDataCode().getValue())

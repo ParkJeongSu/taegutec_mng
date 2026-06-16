@@ -5,9 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.MaterialAssignedCarrierReplyByWMSBody;
-import kr.co.aim.common.format.MaterialAssignedCarrierRequestByWMSBody;
-import kr.co.aim.common.format.ZoneRequestBody;
+import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
@@ -38,25 +36,11 @@ public class MaterialAssignCarrierRequestHandler implements MessageHandler<Strin
     public Object handle(String message) {
 
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<MaterialAssignedCarrierRequestByWMSBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<MaterialAssignedCarrierRequestByWMSBody> request = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<MaterialAssignCarrierRequestBody>> typeRef = new TypeReference<>() {};
+        BaseMessage<MaterialAssignCarrierRequestBody> request = objectMapper.readValue(message, typeRef);
         jsonUtils.writePrettyJson(request);
 
-
-        BaseMessage<MaterialAssignedCarrierReplyByWMSBody> reply = new BaseMessage<>();
-        MaterialAssignedCarrierReplyByWMSBody body = new MaterialAssignedCarrierReplyByWMSBody();
-
-        reply.setEventTime(request.getEventTime());
-        reply.setMessageFrom("MNG");
-        reply.setMessageName(MessageList.MATERIAL_ASSIGN_CARRIER_REPLY.getMessageName());
-        reply.setMessageOwner("MNG");
-        reply.setMessageTo(request.getMessageFrom());
-        reply.setResultCode("0");
-        reply.setResultMessage("0");
-        reply.setTransactionId(request.getTransactionId());
-        reply.setBody(body);
-        jsonUtils.writePrettyJson(reply);
-
+        BaseMessage<MaterialAssignCarrierReplyBody> reply = messageExecuteService.materialAssignCarrierRequest(request);
         return reply;
     }
 }

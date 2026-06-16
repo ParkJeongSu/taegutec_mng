@@ -80,6 +80,7 @@ public class TEXSyncMessageListener implements MessageWorker{
 
             if (replyTo != null) {
                 log.info("🚀 Replying to queue: {} with correlationId: {}", replyTo, correlationId);
+                jsonUtils.writePrettyJson(replyObject);
 
                 // 2. replyTo 주소를 Routing Key로 사용 (Exchange는 기본 익스체인지 "" 사용)
                 rabbitTemplate.convertAndSend("", replyTo, replyObject, m -> {
