@@ -2,6 +2,7 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.powder.sim.H2TransReportVo;
 import kr.co.aim.api.vo.powder.sim.ProductionOrderContext;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.infra.persistence.db2entity.powder.H2TransPEntity;
 import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
@@ -12,6 +13,7 @@ import kr.co.aim.infra.persistence.db2springdatajpa.powder.IdocPJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -34,8 +36,9 @@ public class PowderSimulatorInterfaceService {
     private final H2OrderDPJpaRepository h2OrderDPJpaRepository;
     private final H2TransPJpaRepository h2TransPJpaRepository;
 
+
     // Production Start의 lineId를 추적하기 위한 스레드 안전한 맵 (Key: cOrderId, Value: lineId)
-    private final ConcurrentHashMap<String, Long> startLineIdCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Long> mngKeyCache = new ConcurrentHashMap<>();
 
     private IdocPEntity buildBaseIdoc(LocalDateTime now) {
         return IdocPEntity.builder()
@@ -61,8 +64,8 @@ public class PowderSimulatorInterfaceService {
         Long h2ordLineId = null;
         String partId = "";
         if(ObjectUtils.isNotEmpty(vo.getDetail())){
-            orderId = vo.getDetail().getCOrderId();
-            rrn = vo.getDetail().getRrn();
+            orderId = StringUtils.isEmpty(vo.getOrderId()) ? vo.getDetail().getCOrderId() : vo.getOrderId();
+            rrn = ObjectUtils.isEmpty(vo.getDetail().getRrn()) ? 0 : vo.getDetail().getRrn();
             lineNo = vo.getDetail().getLineNo();
             lot = vo.getDetail().getLot();
             galKey = vo.getDetail().getGalKey();
@@ -95,13 +98,12 @@ public class PowderSimulatorInterfaceService {
                 .resultStat(vo.getResultStat())
                 .errReason(vo.getErrReason())
                 .eventDt(vo.getNewIdoc().getDtimeCre())
-                .h2ordLineId(h2ordLineId)
                 .cPartId(partId)
-                .refLineId(vo.getRefLineId()) // 전달받은 refLineId 매핑
+                .mngKey(vo.getMngKey())
                 .build();
     }
 
-    private Long saveTransportProgress(H2TransReportVo report) {
+    private void saveTransportProgress(H2TransReportVo report) {
         log.info("Reporting Status: {}", report.getStatus());
         LocalDateTime now = LocalDateTime.now().withNano(0);
 
@@ -112,7 +114,6 @@ public class PowderSimulatorInterfaceService {
 
         H2TransPEntity newTrans = buildBaseH2Trans(report);
         H2TransPEntity savedTrans = h2TransPJpaRepository.save(newTrans);
-        return savedTrans.getLineId();
     }
 
     @Transactional(value = "db2TransactionManager")
@@ -183,18 +184,15 @@ public class PowderSimulatorInterfaceService {
                         .master(ctx.getMaster())
                         .detail(ctx.getDetail())
                         .carrierName(ctx.getCarrierName())
+                        .mngKey(TsidUtils.nextId())
+                        .orderId(ctx.getDetail().getCmoord().toString())
                         .build();
         saveTransportProgress(vo);
     }
 
     @Transactional(value = "db2TransactionManager")
     public void unpackStart(ProductionOrderContext ctx) {
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo
@@ -212,12 +210,7 @@ public class PowderSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void unpackEnd(ProductionOrderContext ctx) {
 
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo
@@ -234,11 +227,13 @@ public class PowderSimulatorInterfaceService {
 
     @Transactional(value = "db2TransactionManager")
     public void productionStart(ProductionOrderContext ctx) {
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
+        BigDecimal actQty =ctx.getActualQuantity();
+        Long mngKey = TsidUtils.nextId();
+        // 2. 고유 키(cOrderId)를 기반으로 생성된 lineId를 맵에 저장
+        if (ObjectUtils.isNotEmpty(ctx.getDetail()) && ObjectUtils.isNotEmpty(ctx.getDetail().getCOrderId())) {
+            String orderId = ctx.getDetail().getCOrderId();
+            mngKeyCache.put(orderId, mngKey);
+            log.info("[Simulation] Production Start - OrderId: {}, Saved mngKey: {}", orderId, mngKey);
         }
 
         H2TransReportVo vo =
@@ -250,26 +245,15 @@ public class PowderSimulatorInterfaceService {
                         .detail(ctx.getDetail())
                         .carrierName(ctx.getCarrierName())
                         .actQty(actQty)
+                        .mngKey(mngKey)
                         .build();
-        long generatedLineId = saveTransportProgress(vo);
-        // 2. 고유 키(cOrderId)를 기반으로 생성된 lineId를 맵에 저장
-        if (ObjectUtils.isNotEmpty(ctx.getDetail()) && ObjectUtils.isNotEmpty(ctx.getDetail().getCOrderId())) {
-            String orderId = ctx.getDetail().getCOrderId();
-            startLineIdCache.put(orderId, generatedLineId);
-            log.info("[Simulation] Production Start - OrderId: {}, Saved LineId: {}", orderId, generatedLineId);
-        }
-
+        saveTransportProgress(vo);
     }
 
     @Transactional(value = "db2TransactionManager")
     public void productionEnd(ProductionOrderContext ctx) {
 
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo
@@ -285,11 +269,11 @@ public class PowderSimulatorInterfaceService {
         // 1. 캐시 맵에서 동일한 OrderId에 해당하는 Start 시점의 lineId가 있는지 확인 후 추출 (꺼내면서 삭제)
         if (ObjectUtils.isNotEmpty(ctx.getDetail()) && ObjectUtils.isNotEmpty(ctx.getDetail().getCOrderId())) {
             String orderId = ctx.getDetail().getCOrderId();
-            Long refLineId = startLineIdCache.remove(orderId);
+            Long mngkey = mngKeyCache.remove(orderId);
 
-            if (refLineId != null) {
-                vo.setRefLineId(refLineId);
-                log.info("[Simulation] Production End - OrderId: {}, Found RefLineId: {}", orderId, refLineId);
+            if (mngkey != null) {
+                vo.setMngKey(mngkey);
+                log.info("[Simulation] Production End - OrderId: {}, Found mngKey: {}", orderId, mngkey);
             } else {
                 log.warn("[Simulation] Production End - No matching Start LineId found for OrderId: {}", orderId);
             }
@@ -300,12 +284,7 @@ public class PowderSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void issueEnd(ProductionOrderContext ctx) {
 
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo
@@ -324,12 +303,7 @@ public class PowderSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void packingIssueEnd(ProductionOrderContext ctx) {
 
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo
@@ -347,12 +321,7 @@ public class PowderSimulatorInterfaceService {
 
     @Transactional(value = "db2TransactionManager")
     public void packingStart(ProductionOrderContext ctx) {
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo
@@ -370,12 +339,7 @@ public class PowderSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void packingEnd(ProductionOrderContext ctx) {
 
-        BigDecimal actQty = null;
-        if(ctx.getIdoc().getIdocTypId().equals(12L)){
-            actQty = ctx.getDetail().getDefaultReceiveQty();
-        }else{
-            actQty = ctx.getActualQuantity();
-        }
+        BigDecimal actQty = ctx.getActualQuantity();
 
         H2TransReportVo vo =
                 H2TransReportVo

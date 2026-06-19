@@ -79,5 +79,8 @@ public class GALInterfaceResponse {
     private String errReason;    // Powder 전용
     private LocalDateTime eventDt; // Powder 전용
     private Long h2ordLineId;    // Powder 전용
+    private Integer refLot;
+    private Integer cmoord;
+    private Long mngKey;
 
 }

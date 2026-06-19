@@ -44,5 +44,6 @@ public class H2TransReportVo {
 
     private String partId;
     private Long refLineId;
+    private Long mngKey;
 
 }

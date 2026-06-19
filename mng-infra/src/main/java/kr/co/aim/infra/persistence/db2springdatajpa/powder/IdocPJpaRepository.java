@@ -82,8 +82,8 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "d.resultStat, " +
             "d.errReason, " +
             "d.eventDt, " +
-            "d.h2ordLineId," +
-            "d.cPartId" +
+            "d.cPartId," +
+            "d.mngKey" +
             ") " +
             "FROM IdocPEntity i " +
             "JOIN H2TransPEntity d ON i.lineId = d.idocId " +
@@ -118,8 +118,8 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "d.resultStat, " +
             "d.errReason, " +
             "d.eventDt, " +
-            "d.h2ordLineId," +
-            "d.cPartId" +
+            "d.cPartId," +
+            "d.mngKey" +
             ") " +
             "FROM IdocPEntity i " +
             "JOIN H2TransPEntity d ON i.lineId = d.idocId " +
@@ -143,7 +143,8 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "m.cPartDsc, " +
             "m.cPartDsc2, " +
             "m.cratIo, " +
-            "m.defaultReceiveQty " +
+            "m.defaultReceiveQty, " +
+            "m.toleranceVal " +
             ") " +
             "FROM IdocPEntity i " +
             "JOIN H2PartMPEntity m ON i.lineId = m.idocId " +

@@ -51,4 +51,7 @@ public class H2PartMPEntity {
 
     @Column(name = "DEFAULT_RECEIVE_QTY")
     private BigDecimal defaultReceiveQty;
+
+    @Column(name = "TOLERANCE_VAL")
+    private BigDecimal toleranceVal;
 }

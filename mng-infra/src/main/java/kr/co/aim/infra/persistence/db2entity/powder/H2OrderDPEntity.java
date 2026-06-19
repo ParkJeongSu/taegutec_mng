@@ -67,17 +67,17 @@ public class H2OrderDPEntity {
     @Column(name = "NEXT_RRN")
     private Integer nextRrn;
 
-    @Column(name = "MIN_RECEIVE_QTY")
-    private BigDecimal minReceiveQty;
-
-    @Column(name = "MAX_RECEIVE_QTY")
-    private BigDecimal maxReceiveQty;
-
-    @Column(name = "DEFAULT_RECEIVE_QTY")
-    private BigDecimal defaultReceiveQty;
-
-    @Column(name = "H2TRN_LINEID")
-    private Long h2trnLineId;
+//    @Column(name = "MIN_RECEIVE_QTY")
+//    private BigDecimal minReceiveQty;
+//
+//    @Column(name = "MAX_RECEIVE_QTY")
+//    private BigDecimal maxReceiveQty;
+//
+//    @Column(name = "DEFAULT_RECEIVE_QTY")
+//    private BigDecimal defaultReceiveQty;
+//
+//    @Column(name = "H2TRN_LINEID")
+//    private Long h2trnLineId;
 
     @Column(name = "GALKEY")
     private String galKey;
@@ -87,4 +87,7 @@ public class H2OrderDPEntity {
 
     @Column(name = "CMOORD")
     private Integer cmoord;
+
+    @Column(name = "MNGKEY")
+    private Long mngKey;
 }

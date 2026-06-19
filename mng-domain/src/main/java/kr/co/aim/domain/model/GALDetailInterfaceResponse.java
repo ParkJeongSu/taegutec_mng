@@ -1,5 +1,5 @@
 package kr.co.aim.domain.model;
-import jakarta.persistence.Id;
+import jakarta.persistence.Column;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -43,10 +43,9 @@ public class GALDetailInterfaceResponse {
     private String machine;
     private Integer currRrn;
     private Integer nextRrn;
-    private BigDecimal minReceiveQty;
-    private BigDecimal maxReceiveQty;
-    private BigDecimal defaultReceiveQty;
-    private Long h2trnLineId;
     private String galKey;
+    private Integer refLot;
+    private Integer cmoord;
+    private Long mngKey;
 
 }

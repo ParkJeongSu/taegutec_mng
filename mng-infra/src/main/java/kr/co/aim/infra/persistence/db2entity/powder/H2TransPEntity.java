@@ -85,12 +85,15 @@ public class H2TransPEntity {
     @Column(name = "EVENT_DT")
     private LocalDateTime eventDt;
 
-    @Column(name = "H2ORD_LINEID")
-    private Long h2ordLineId;
+//    @Column(name = "H2ORD_LINEID")
+//    private Long h2ordLineId;
 
     @Column(name = "CPARTID")
     private String cPartId;
 
-    @Column(name = "REF_LINEID")
-    private Long refLineId;
+//    @Column(name = "REF_LINEID")
+//    private Long refLineId;
+
+    @Column(name = "MNGKEY")
+    private Long mngKey;
 }

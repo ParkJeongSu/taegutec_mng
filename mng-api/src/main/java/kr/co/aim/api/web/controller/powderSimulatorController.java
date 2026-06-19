@@ -499,6 +499,7 @@ public class powderSimulatorController {
         return ResponseEntity.ok(new PageImpl<>(productionOrderList, org.springframework.data.domain.PageRequest.of(0, 1), 1));
     }
 
+    // TODO: 21 ISSUE 완료는 컨테이별이 아니고 요청한 수량을 한번에 변경
     @PostMapping("/issue/end/{production-order-id}")
     public ResponseEntity<Page<ProductionOrder>> issueEnd(
             @PathVariable("production-order-id") Long productionOrderId,

@@ -85,7 +85,7 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                         h2TransPEntity.resultStat.as("resultStat"),
                         h2TransPEntity.errReason.as("errReason"),
                         h2TransPEntity.eventDt.as("eventDt"),
-                        h2TransPEntity.h2ordLineId.as("h2ordLineId")
+                        h2TransPEntity.mngKey.as("mngKey")
                 ))
                 .from(idocPEntity)
                 // Powder는 lineid와 idocid가 조인 키입니다.
@@ -143,11 +143,10 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
                         h2OrderDPEntity.machine.as("machine"),
                         h2OrderDPEntity.currRrn.as("currRrn"),
                         h2OrderDPEntity.nextRrn.as("nextRrn"),
-                        h2OrderDPEntity.minReceiveQty.as("minReceiveQty"),
-                        h2OrderDPEntity.maxReceiveQty.as("maxReceiveQty"),
-                        h2OrderDPEntity.defaultReceiveQty.as("defaultReceiveQty"),
-                        h2OrderDPEntity.h2trnLineId.as("h2trnLineId"),
-                        h2OrderDPEntity.galKey.as("galKey")
+                        h2OrderDPEntity.galKey.as("galKey"),
+                        h2OrderDPEntity.refLot.as("refLot"),
+                        h2OrderDPEntity.cmoord.as("cmoord"),
+                        h2OrderDPEntity.mngKey.as("mngKey")
                 ))
                 .from(h2OrderDPEntity)
                 .where(

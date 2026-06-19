@@ -1,12 +1,15 @@
 package kr.co.aim.common.dto.powder;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class H2OrderMDetailResponseDto {
     // 1. H2ORDERMP (오더 마스터) 필드
     private Long masterLineId;
@@ -35,44 +38,6 @@ public class H2OrderMDetailResponseDto {
     private BigDecimal minReceiveQty;
     private BigDecimal maxReceiveQty;
     private BigDecimal defaultReceiveQty;
-    private Long h2trnLineId;
     private String galKey;
 
-    // JPQL new 인스턴스 생성을 위한 매핑 생성자
-    public H2OrderMDetailResponseDto(
-            Long masterLineId, Long idocId, LocalDateTime masterDtimeCre, LocalDateTime masterDtimeMod,
-            String masterUsrMod, String masterPgmMod, Long masterModCnt, String corderTy, String fromWhCd, String toWhCd,
-            Long lineId, String cOrderId, Integer rrn, Integer lineNo, String cPartId, Integer lot,
-            BigDecimal qty, String uom, String machine, Integer currRrn, Integer nextRrn,
-            BigDecimal minReceiveQty, BigDecimal maxReceiveQty, BigDecimal defaultReceiveQty,
-            Long h2trnLineId, String galKey
-    ) {
-        this.masterLineId = masterLineId;
-        this.idocId = idocId;
-        this.masterDtimeCre = masterDtimeCre;
-        this.masterDtimeMod = masterDtimeMod;
-        this.masterUsrMod = masterUsrMod;
-        this.masterPgmMod = masterPgmMod;
-        this.masterModCnt = masterModCnt;
-        this.corderTy = corderTy;
-        this.fromWhCd = fromWhCd;
-        this.toWhCd = toWhCd;
-
-        this.lineId = lineId;
-        this.cOrderId = cOrderId;
-        this.rrn = rrn;
-        this.lineNo = lineNo;
-        this.cPartId = cPartId;
-        this.lot = lot;
-        this.qty = qty;
-        this.uom = uom;
-        this.machine = machine;
-        this.currRrn = currRrn;
-        this.nextRrn = nextRrn;
-        this.minReceiveQty = minReceiveQty;
-        this.maxReceiveQty = maxReceiveQty;
-        this.defaultReceiveQty = defaultReceiveQty;
-        this.h2trnLineId = h2trnLineId;
-        this.galKey = galKey;
-    }
 }

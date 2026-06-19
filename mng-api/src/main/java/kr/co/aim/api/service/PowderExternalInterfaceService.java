@@ -82,9 +82,8 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
                 .resultStat(vo.getResultStat())
                 .errReason(vo.getErrReason())
                 .eventDt(vo.getEventDt())
-                .h2ordLineId(vo.getH2ordLineId())
                 .cPartId(vo.getCPartId())
-                .refLineId(vo.getRefLineId())
+                .mngKey(vo.getMngKey())
                 .build();
     }
 
@@ -137,11 +136,6 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
     @Transactional(value = "db2TransactionManager")
     public Page<H2OrderDPEntity> findByIdocId(Long idocId, Pageable pageable) {
         return h2OrderDPJpaRepository.findByIdocId(idocId,pageable);
-    }
-
-    @Transactional(value = "db2TransactionManager")
-    Page<H2OrderMDetailResponseDto> findH2OrderMDetailByIdocId(Long idocId, Pageable pageable){
-        return h2OrderMPJpaRepository.findH2OrderMDetailByIdocId(idocId,pageable);
     }
 
     @Transactional(value = "db2TransactionManager")
