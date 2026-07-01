@@ -34,21 +34,21 @@ public class ProductionOrder {
     private BigDecimal startedQuantity;
     private BigDecimal endedQuantity;
     private BigDecimal scrappedQuantity;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-filter HH:mm:ss", timezone = "Asia/Seoul")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private LocalDateTime createTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-filter HH:mm:ss", timezone = "Asia/Seoul")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private LocalDateTime releaseTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-filter HH:mm:ss", timezone = "Asia/Seoul")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private LocalDateTime completeTime;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-filter HH:mm:ss", timezone = "Asia/Seoul")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private LocalDateTime validationTime;
     private String createUser;
     private String releaseUser;
     private String completeUser;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-filter HH:mm:ss", timezone = "Asia/Seoul")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private LocalDateTime dueDate;
     private String eventName;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-filter HH:mm:ss", timezone = "Asia/Seoul")
+//    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.SSS", timezone = "Asia/Seoul")
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;

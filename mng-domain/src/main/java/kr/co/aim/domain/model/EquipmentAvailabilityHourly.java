@@ -1,9 +1,11 @@
 package kr.co.aim.domain.model;
 
 
+import kr.co.aim.common.Utils.FormatUtils;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Setter
 @Getter
@@ -13,7 +15,9 @@ import java.time.LocalDateTime;
 @ToString
 public class EquipmentAvailabilityHourly {
 
-    private IdAvailabilityHourly id;
+    private Long id;
+    private String statDate;
+    private String statHour;
     private String equipmentName;
     private Integer runDurationSec;
     private Integer idleDurationSec;
@@ -22,8 +26,10 @@ public class EquipmentAvailabilityHourly {
     private Integer alarmCount;
     private LocalDateTime createTime;
 
-    public EquipmentAvailabilityHourly(IdAvailabilityHourly id, String equipmentName) {
+    public EquipmentAvailabilityHourly(Long id, String equipmentName,LocalDateTime eventTime) {
         this.id = id;
+        this.statDate = eventTime.toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        this.statHour = eventTime.format(FormatUtils.TIME_FORMATTER);
         this.equipmentName = equipmentName;
         this.runDurationSec = 0;
         this.idleDurationSec = 0;

@@ -46,8 +46,6 @@ public interface CarrierRepository {
      */
     List<Carrier> findAll();
 
-//    Page<CarriersResponseDto> findCarriersWithConditions(CarriersSearchConditionDto condition, Pageable pageable);
-
     void deleteAllByIdInBatch(List<Long>ids);
 
     List<Carrier> findCarriersForEmptyContainer(
@@ -58,19 +56,6 @@ public interface CarrierRepository {
             Integer quantity,
             List<String> containerTypes
     );
-
-    List<Carrier> findCarriersForFullContainer(
-            String cleanState,
-            String transportState,
-            String transportJobId,
-            String useState,
-            String orderId,
-            String orderLineNumber
-    );
-
-    List<Carrier> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
-
-    List<CarrierHistory> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber, String eventName);
 
     Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition, Pageable pageable);
 }

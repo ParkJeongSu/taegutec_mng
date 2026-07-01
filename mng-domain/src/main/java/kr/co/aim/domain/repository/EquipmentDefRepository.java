@@ -1,6 +1,9 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.dto.EquipmentDefSearchConditionDto;
 import kr.co.aim.domain.model.EquipmentDef;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +20,8 @@ public interface EquipmentDefRepository {
      */
     List<EquipmentDef> findAll();
 
+    Optional<EquipmentDef> findById(Long id);
+
     /**
      * carrierDefName로 사용자를 찾습니다.
      * @param equipmentName equipmentName
@@ -25,6 +30,8 @@ public interface EquipmentDefRepository {
     Optional<EquipmentDef> findByEquipmentName(String equipmentName);
 
     EquipmentDef save(EquipmentDef equipmentDef);
+
+    Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchConditionDto condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

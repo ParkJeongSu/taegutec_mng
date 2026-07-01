@@ -1,36 +1,18 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.vo.carrier.CarrierDispatchRequestVo;
-import kr.co.aim.api.vo.carrier.CarrierSelectionResult;
-import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.condition.CarrierSearchCondition;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.payload.MaterialDeassignFromCarrier;
-import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.CarrierDeassignCommand;
-import kr.co.aim.domain.command.CleanJobEndedCommand;
-import kr.co.aim.domain.command.CleanJobStartedCommand;
-import kr.co.aim.domain.command.LocationChangedCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
-import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
-import kr.co.aim.infra.persistence.entity.IfEventQueueEntity;
-import kr.co.aim.infra.persistence.mapper.CarrierMapper;
-import kr.co.aim.infra.persistence.springdatajpa.IfEventQueueJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,16 +32,6 @@ public class CarrierService {
     @Transactional(value = "mssqlTransactionManager")
     public Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition,Pageable pageable){
         return carrierRepository.findCarrierByCondition(condition,pageable);
-    }
-
-    @Transactional(value = "mssqlTransactionManager",readOnly = true)
-    public List<Carrier> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber){
-        return carrierRepository.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
-    }
-
-    @Transactional(value = "mssqlTransactionManager",readOnly = true)
-    public List<CarrierHistory> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber,String eventName){
-        return carrierRepository.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName);
     }
 
     @Transactional(value = "mssqlTransactionManager")

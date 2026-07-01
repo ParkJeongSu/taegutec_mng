@@ -82,7 +82,7 @@ public class H2TransResponseDto {
                 .cText1(entity.getCText1())
                 .cTCode(entity.getCTCode())
                 .cOrderLn(entity.getCOrderLn())
-                .cGaId(entity.getCGaId())
+                .cGaId(entity.getCGalId())
                 .cGalWhs(entity.getCGalWhs())
                 .cCoId(entity.getCCoId())
                 .cGrWgAct(entity.getCGrWgAct())

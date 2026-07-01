@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "EQUIPMENT_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
+@Table(name = "EQUIPMENT_HISTORY", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 @Builder
 public class EquipmentHistoryEntity implements IBaseHistoryEntity {

@@ -1,10 +1,12 @@
 package kr.co.aim.domain.model;
-import jakarta.persistence.Column;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.CarrierCleanState;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.*;
 import lombok.*;
+import org.apache.commons.lang3.ObjectUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Setter
@@ -15,7 +17,7 @@ import java.time.LocalDateTime;
 public class Carrier implements HasTransactionInfo {
     private Long id;
     private String carrierName;
-    private Long carrierDefName;
+    private String carrierDefName;
     private String carrierState;
     private String equipmentName;
     private String portName;
@@ -32,18 +34,8 @@ public class Carrier implements HasTransactionInfo {
     private Integer useCount;
     private Integer useCountPerClean;
     private Integer cleanCount;
-    private String lotName;
-    private String lotStatus;
-    private String orderId;
-    private String orderLineNumber;
-    private String itemId;
-    private Integer quantity;
-    private String lastIdocId;
-    private String interfaceStatus;
-    private LocalDateTime interfaceRequestTime;
-    private LocalDateTime interfaceReplyTime;
-    private String equipmentFlag;
-    private LocalDateTime jobEndTime;
+    private BigDecimal quantity;
+    private BigDecimal galQuantity;
     private LocalDateTime lastCleanTime;
     private LocalDateTime createTime;
     private LocalDateTime inboundTime;
@@ -54,38 +46,11 @@ public class Carrier implements HasTransactionInfo {
     private String eventUser;
     private String eventComment;
 
-    public static Carrier fromHistory(CarrierHistory carrierHistory){
-        return Carrier.builder()
-                .id(carrierHistory.getId())
-                .carrierName(carrierHistory.getCarrierName())
-                .carrierDefName(carrierHistory.getCarrierDefName())
-                .carrierState(carrierHistory.getCarrierState())
-                .equipmentName(carrierHistory.getEquipmentName())
-                .portName(carrierHistory.getPortName())
-                .zoneName(carrierHistory.getZoneName())
-                .capacity(carrierHistory.getCapacity())
-                .cleanState(carrierHistory.getCleanState())
-                .transportState(carrierHistory.getTransportState())
-                .holdState(carrierHistory.getHoldState())
-                .reasonCode(carrierHistory.getReasonCode())
-                .useState(carrierHistory.getUseState())
-                .useCount(carrierHistory.getUseCount())
-                .useCountPerClean(carrierHistory.getUseCountPerClean())
-                .cleanCount(carrierHistory.getCleanCount())
-                .lastCleanTime(carrierHistory.getLastCleanTime())
-                .createTime(carrierHistory.getCreateTime())
-                .eventName(carrierHistory.getEventName())
-                .eventTime(carrierHistory.getEventTime())
-                .eventUser(carrierHistory.getEventUser())
-                .eventComment(carrierHistory.getEventComment())
-                .containerType(carrierHistory.getContainerType())
-                .build();
-    }
-
     public static Carrier create(CarrierCreateCommand command){
         return Carrier.builder()
+                .id(TsidUtils.nextId())
                 .carrierName(command.getCarrierName())
-                .carrierDefName(command.getCarrierDefId())
+                .carrierDefName(command.getCarrierDefName())
                 .carrierState(command.getCarrierState())
                 .equipmentName(command.getEquipmentName())
                 .portName(command.getPortName())
@@ -109,7 +74,35 @@ public class Carrier implements HasTransactionInfo {
                 .build();
     }
 
-    public void deassigned(CarrierDeassignCommand command){
+    public void change(CarrierChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        setCarrierDefName(ObjectUtils.isEmpty(command.getCarrierDefName()) ? getCarrierDefName() : command.getCarrierDefName());
+        setCarrierState( ObjectUtils.isEmpty(command.getCarrierState()) ? getCarrierState() : command.getCarrierState());
+        setEquipmentName( ObjectUtils.isEmpty(command.getEquipmentName()) ? getEquipmentName() : command.getEquipmentName());
+        setPortName( ObjectUtils.isEmpty(command.getPortName()) ? getPortName() : command.getPortName());
+        setZoneName( ObjectUtils.isEmpty(command.getZoneName()) ? getZoneName() : command.getZoneName());
+        setPositionTypeName( ObjectUtils.isEmpty(command.getPositionTypeName()) ? getPositionTypeName() : command.getPositionTypeName());
+        setPositionName( ObjectUtils.isEmpty(command.getPositionName()) ? getPositionName() : command.getPositionName());
+        setCapacity( ObjectUtils.isEmpty(command.getCapacity()) ? getCapacity() : command.getCapacity());
+        setCleanState( ObjectUtils.isEmpty(command.getCleanState()) ? getCleanState() : command.getCleanState());
+        setTransportState( ObjectUtils.isEmpty(command.getTransportState()) ? getTransportState() : command.getTransportState());
+        setTransportJobId( ObjectUtils.isEmpty(command.getTransportJobId()) ? getTransportJobId() : command.getTransportJobId());
+        setHoldState( ObjectUtils.isEmpty(command.getHoldState()) ? getHoldState() : command.getHoldState());
+        setReasonCode( ObjectUtils.isEmpty(command.getReasonCode()) ? getReasonCode() : command.getReasonCode());
+        setUseState( ObjectUtils.isEmpty(command.getUseState()) ? getUseState() : command.getUseState());
+        setUseCount( ObjectUtils.isEmpty(command.getUseCount()) ? getUseCount() : command.getUseCount());
+        setUseCountPerClean( ObjectUtils.isEmpty(command.getUseCountPerClean()) ? getUseCountPerClean() : command.getUseCountPerClean());
+        setCleanCount( ObjectUtils.isEmpty(command.getCleanCount()) ? getCleanCount() : command.getCleanCount());
+        setQuantity( ObjectUtils.isEmpty(command.getQuantity()) ? getQuantity() : command.getQuantity());
+        setGalQuantity( ObjectUtils.isEmpty(command.getGalQuantity()) ? getGalQuantity() : command.getGalQuantity());
+        setLastCleanTime( ObjectUtils.isEmpty(command.getLastCleanTime()) ? getLastCleanTime() : command.getLastCleanTime());
+        setCreateTime( ObjectUtils.isEmpty(command.getCreateTime()) ? getCreateTime() : command.getCreateTime());
+        setInboundTime( ObjectUtils.isEmpty(command.getInboundTime()) ? getInboundTime() : command.getInboundTime());
+        setOutboundTime( ObjectUtils.isEmpty(command.getOutboundTime()) ? getOutboundTime() : command.getOutboundTime());
+        setContainerType( ObjectUtils.isEmpty(command.getContainerType()) ? getContainerType() : command.getContainerType());
+    }
+
+    public void deAssigned(CarrierDeassignCommand command){
         this.apply(command.getTransactionInfo());
         setUseState(command.getUseState());
         setQuantity(command.getQuantity());

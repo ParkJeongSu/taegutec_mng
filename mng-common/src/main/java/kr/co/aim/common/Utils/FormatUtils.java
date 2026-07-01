@@ -8,7 +8,9 @@ import java.time.format.DateTimeFormatter;
 public class FormatUtils {
     // 17자리 혹은 18자리 포맷 (요청하신 소수점 4자리까지 고려 시 SSSS 사용)
     // yyyy(4)MM(2)dd(2)HH(2)mm(2)ss(2)SSS(3) = 17자리
-    private static final DateTimeFormatter ID_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+    public static final DateTimeFormatter ID_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS");
+    public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd");
+    public static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH");
 
     /**
      * 현재 시간 기반의 Transaction ID 생성

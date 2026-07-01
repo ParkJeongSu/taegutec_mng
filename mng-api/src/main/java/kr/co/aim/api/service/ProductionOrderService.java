@@ -35,7 +35,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 @Profile({"scheduler","web","pex","tex","simulator"})
-@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
+//@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class ProductionOrderService {
     private final CarrierService carrierService;
     private final ProductionOrderRepository productionOrderRepository;
@@ -51,9 +51,9 @@ public class ProductionOrderService {
                 "");
         String productionOrderType = "";
         if(context.getIdoc().getIdocTypId() == 12L){
-            productionOrderType = ProductionOrderType.INBOUND.getValue();
+            productionOrderType = ProductionOrderType.MATERIAL_INBOUND.getValue();
         }else if(context.getIdoc().getIdocTypId() == 13L){
-            productionOrderType = ProductionOrderType.UNPACK.getValue();
+            productionOrderType = ProductionOrderType.UNPACKING.getValue();
         }
         IdocPEntity idoc = context.getIdoc();
         H2OrderMPEntity master = context.getMaster();
@@ -216,11 +216,6 @@ public class ProductionOrderService {
         // 3. 통합 리스트 생성 및 변환 (Entity -> Domain)
         List<Carrier> totalList = new ArrayList<>();
 
-//        List<CarrierHistory> carrierHistoryList = carrierService.findByOrderIdAndOrderLineNumberAndEventName(orderId,orderLineNumber,eventName);
-//        List<Carrier> historyToCarrierList = carrierHistoryList.stream().map(Carrier::fromHistory).collect(Collectors.toList());
-        List<Carrier> carrierList = carrierService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
-
-        totalList.addAll(carrierList);
 //
 //        for(Carrier carrier  : historyToCarrierList) {
 //            totalList.add(carrier);

@@ -90,7 +90,7 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
                         h2TransEntity.cErrId.as("cErrId"),
                         h2TransEntity.cText1.as("cText1"),
                         h2TransEntity.cOrderLn.as("cOrderLn"),
-                        h2TransEntity.cGaId.as("cGaId"),
+                        h2TransEntity.cGalId.as("cGalId"),
                         h2TransEntity.cCoId.as("cCoId"),
                         h2TransEntity.cGrWgAct.as("cGrWgAct"),
                         h2TransEntity.cReqZone.as("cReqZone"),

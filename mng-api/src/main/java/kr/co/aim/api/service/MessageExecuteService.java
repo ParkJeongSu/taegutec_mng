@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
-import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
@@ -15,12 +14,12 @@ import kr.co.aim.common.payload.MaterialDeassignFromCarrier;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.*;
 import kr.co.aim.infra.persistence.mapper.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -28,6 +27,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,17 +45,22 @@ public class MessageExecuteService {
     private final CarrierService carrierService;
     private final EquipmentService equipmentService;
     private final PortService portService;
+    private final ProductionOrderService productionOrderService;
     private final TransportJobService transportJobService;
     private final IfEventQueueService ifEventQueueService;
 
     private final FactoryProcessStrategy factoryProcessStrategy;
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
 
+    private final LotCarrierMappingMapper lotCarrierMappingMapper;
+    private final LotMapper lotMapper;
     private final PortMapper portMapper;
     private final EquipmentMapper equipmentMapper;
     private final PortDefMapper portDefMapper;
     private final CarrierMapper carrierMapper;
     private final TransportJobMapper transportJobMapper;
+    private final LotService lotService;
+    private final LotCarrierMappingService lotCarrierMappingService;
 
     /**
      * 알람은 log 만 찍음
@@ -394,7 +399,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void carrierDataInstall(BaseMessage<CarrierDataInstalledBody> message) {
-        // TODO: Warehouse 입장에서 관리하는 Carrier 추가될때, 보고 이게 필요한지 고민..
     }
 
     /**
@@ -404,7 +408,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void carrierDataRemoved(BaseMessage<CarrierDataRemovedBody> message) {
-        // TODO: Warehouse 입장에서 관리하는 Carrier 삭제시 보고, 이게 필요할까..
     }
 
     /**
@@ -414,7 +417,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void carrierDataReport(BaseMessage<CarrierDataReportBody> message) {
-        // TODO: Warehouse 입장에서 관리하고 있는 CarrierList를 MNG로 보내기 이게 필요한지 고민..
     }
 
     /**
@@ -423,7 +425,7 @@ public class MessageExecuteService {
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
-    public void materialDeassignedFromCarrier(BaseMessage<MaterialDeassignedFromCarrierBody> message) throws Exception{
+    public void materialDeAssignedFromCarrier(BaseMessage<MaterialDeassignedFromCarrierBody> message) throws Exception{
         // TODO: Carrier가 설비에 투입 후에 보고 Lot과의 관계를 끊고 Carrier 의 상태를 Empty로 변경 확인
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
@@ -439,12 +441,12 @@ public class MessageExecuteService {
         carrier = optionalCarriers.get();
         CarrierDeassignCommand command = CarrierDeassignCommand.builder()
                 .transactionInfo(tx)
-                .quantity(0)
+                .quantity(BigDecimal.ZERO)
                 .carrierName(carrierName)
                 .capaState(CarrierCapaState.EMPTY.getValue())
                 .useState(CarrierUseState.AVAILABLE.getValue())
                 .build();
-        carrier.deassigned(command);
+        carrier.deAssigned(command);
         carrier = carrierService.save(carrier);
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
@@ -555,127 +557,10 @@ public class MessageExecuteService {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
-
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
 
-        BaseMessage<DestinationReplyBody> reply = null;
-
-        if( StringUtils.isBlank(transportJobName)){
-            Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
-            Carrier carrier;
-            if(optionalCarriers.isEmpty()){
-                reply = new BaseMessage<>();
-                reply.setMessageFrom(SystemName.MNG.getValue());
-                reply.setMessageOwner(SystemName.MNG.getValue());
-                reply.setMessageTo(SystemName.WCS.getValue());
-                reply.setEventTime(message.getEventTime());
-                reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
-                reply.setTransactionId(message.getTransactionId());
-                reply.setResultCode(ResultCode.NG.getValue());
-                reply.setResultMessage("No carrier job found");
-                DestinationReplyBody body = DestinationReplyBody.builder()
-                        .build();
-                reply.setBody(body);
-            }
-            else {
-                carrier = optionalCarriers.get();
-                List<String> transportJobStates = new ArrayList<>();
-                transportJobStates.add(TransportJobState.REQUESTED.getValue());
-                transportJobStates.add(TransportJobState.ACCEPTED.getValue());
-                transportJobStates.add(TransportJobState.STARTED.getValue());
-                List<TransportJob> transportJobList = transportJobService.findByCarrierNameAndTransportJobStateIn(carrierName, transportJobStates);
-                if(transportJobList.isEmpty()){
-                    reply = new BaseMessage<>();
-                    reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
-                    reply.setTransactionId(message.getTransactionId());
-                    reply.setResultCode(ResultCode.NG.getValue());
-                    reply.setResultMessage("No transport job found");
-                    reply.setMessageFrom(SystemName.MNG.getValue());
-                    reply.setMessageOwner(SystemName.MNG.getValue());
-                    reply.setMessageTo(SystemName.WCS.getValue());
-                    reply.setEventTime(message.getEventTime());
-                    DestinationReplyBody body = DestinationReplyBody.builder()
-                            .build();
-                    reply.setBody(body);
-                }
-                else if(transportJobList.size() == 1){
-                    TransportJob transportJob = null;
-                    transportJob =  transportJobList.get(0);
-                    reply = new BaseMessage<>();
-                    reply.setMessageFrom(SystemName.MNG.getValue());
-                    reply.setMessageOwner(SystemName.MNG.getValue());
-                    reply.setMessageTo(SystemName.WCS.getValue());
-                    reply.setEventTime(message.getEventTime());
-                    reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
-                    reply.setTransactionId(message.getTransactionId());
-                    reply.setResultCode(ResultCode.OK.getValue());
-                    reply.setResultMessage("");
-                    DestinationReplyBody body = DestinationReplyBody.builder()
-                            .transportJobName(transportJobName)
-                            .destinationEquipmentName(transportJob.getDestinationEquipmentName())
-                            .destinationZoneName(transportJob.getDestinationZoneName())
-                            .carrierName(transportJob.getCarrierName())
-                            .build();
-                    reply.setBody(body);
-                }
-                else{
-                    reply = new BaseMessage<>();
-                    reply.setMessageFrom(SystemName.MNG.getValue());
-                    reply.setMessageOwner(SystemName.MNG.getValue());
-                    reply.setMessageTo(SystemName.WCS.getValue());
-                    reply.setEventTime(message.getEventTime());
-                    reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
-                    reply.setTransactionId(message.getTransactionId());
-                    reply.setResultCode(ResultCode.NG.getValue());
-                    reply.setResultMessage("transport job found more 2");
-                    DestinationReplyBody body = DestinationReplyBody.builder()
-                            .build();
-                    reply.setBody(body);
-                }
-
-            }
-
-        }
-        else {
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-            TransportJob transportJob = null;
-            if(optionalTransportJob.isEmpty()){
-                reply = new BaseMessage<>();
-                reply.setMessageFrom(SystemName.MNG.getValue());
-                reply.setMessageOwner(SystemName.MNG.getValue());
-                reply.setMessageTo(SystemName.WCS.getValue());
-                reply.setEventTime(message.getEventTime());
-                reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
-                reply.setTransactionId(message.getTransactionId());
-                reply.setResultCode(ResultCode.NG.getValue());
-                reply.setResultMessage("No transport job found");
-                DestinationReplyBody body = DestinationReplyBody.builder()
-                        .transportJobName(transportJobName)
-                        .build();
-                reply.setBody(body);
-            }
-            else {
-                transportJob =  optionalTransportJob.get();
-                reply = new BaseMessage<>();
-                reply.setMessageFrom(SystemName.MNG.getValue());
-                reply.setMessageOwner(SystemName.MNG.getValue());
-                reply.setMessageTo(SystemName.WCS.getValue());
-                reply.setEventTime(message.getEventTime());
-                reply.setMessageName(MessageList.DESTINATION_REPLY.getMessageName());
-                reply.setTransactionId(message.getTransactionId());
-                reply.setResultCode(ResultCode.OK.getValue());
-                reply.setResultMessage("");
-                DestinationReplyBody body = DestinationReplyBody.builder()
-                        .transportJobName(transportJobName)
-                        .destinationEquipmentName(transportJob.getDestinationEquipmentName())
-                        .destinationZoneName(transportJob.getDestinationZoneName())
-                        .carrierName(transportJob.getCarrierName())
-                        .build();
-                reply.setBody(body);
-            }
-        }
-        return reply;
+        return null;
     }
 
     /**
@@ -692,57 +577,7 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
-
-        //TODO: POWDER , INSERT 로직 분리
-        // POWDER는 아래의 로직을 그대로 수행하면 되고
-        // INSERT는 PORT_DEF에서 오직 ROLE_TYPE이 INTERNAL 인 경우에만 변경
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-        String portType = message.getBody().getPortType();
-        String portTransportMode = message.getBody().getPortTransportMode();
-
-        Optional<Port> optionalPorts =
-                portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
-
-        if(optionalPorts.isEmpty()){
-            return null;
-        }
-
-        Port port = optionalPorts.get();
-        if(!StringUtils.equals(PortTransportState.READY_TO_LOAD.getValue(),port.getTransportState())){
-            TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-            LoadRequestCommand command = LoadRequestCommand
-                    .builder()
-                    .transactionInfo(tx)
-                    .build();
-            port.loadRequest(command);
-            port = portService.save(port);
-            PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
-            historyService.saveHistory(portHistoryEntity);
-        }
-
-        BaseMessage<CarrierDispatchRequestBody> reply = new BaseMessage<>();
-        reply.setTransactionId(message.getTransactionId());
-        reply.setMessageFrom(SystemName.MNG.getValue());
-        reply.setMessageOwner(SystemName.MNG.getValue());
-        reply.setMessageTo(SystemName.MNG.getValue());
-        reply.setEventTime(message.getEventTime());
-        reply.setResultMessage("");
-        reply.setResultCode(ResultCode.OK.getValue());
-        reply.setMessageName(MessageList.CARRIER_DISPATCH_REQUEST.getMessageName());
-
-        CarrierDispatchRequestBody body = CarrierDispatchRequestBody.builder()
-                .equipmentName(equipmentName)
-                .portName(portName)
-                .build();
-        reply.setBody(body);
-
-        return reply;
+        return factoryProcessStrategy.loadRequest(message);
     }
 
     public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message){
@@ -787,6 +622,7 @@ public class MessageExecuteService {
         String portTransportModeName = message.getBody().getPortTransportMode();
 
         BaseMessage<CarrierDestinationZoneRequestBody> wmsRequestMessage = zoneRequestBodyBaseMessage();
+
         Object wmsReply = rabbitTemplate.convertSendAndReceive(
                 RabbitConfig.EXCHANGE_WMS,
                 RabbitConfig.ROUTING_WMS,
@@ -837,7 +673,6 @@ public class MessageExecuteService {
         return null;
     }
     private BaseMessage<CarrierDestinationZoneRequestBody> zoneRequestBodyBaseMessage() {
-        // TODO: WMS 담당자와 메시지 스펙 협의
         return null;
     }
 
@@ -852,7 +687,7 @@ public class MessageExecuteService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
+    public BaseMessage<CarrierInfoDownloadSendBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
         return factoryProcessStrategy.loadCompleted(message);
     }
 
@@ -1032,11 +867,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobAborted(BaseMessage<ProcessJobAbortedBody> message) {
-        // TODO: Container 의 원자재를 설비에 넣다가 중단되고 설비의 투입된 Lot과 split 됨
-        // 이 경우 어떤식으로 보고가 오는지 확인...
-        // Container 에 있는게 신규 Lot 으로 만들어져야 할 것 같고
-        // 이때 어떤 naming rule 에 의해서 만들어질건지
-        // 그리고 wms나 gal 에는 보고를 할것같은데 어떤식으로 보고를 할건지.
     }
 
     /**
@@ -1046,7 +876,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobStarted(BaseMessage<ProcessJobStartedBody> message) {
-
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -1058,7 +887,63 @@ public class MessageExecuteService {
         // TODO: ProcessJobStarted 보고 후 wms에 보고 해야한다면 어떤식으로 할지 논의
     }
 
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<CarrierInfoDownloadSendBody> recipeReply(BaseMessage<RecipeReplyBody> message) {
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+        String equipmentName = message.getBody().getEquipmentName();
+        String portName = message.getBody().getPortName();
+        String carrierName = message.getBody().getCarrierName();
+        String orderId = message.getBody().getOrderId();
+        String orderLineNumber = message.getBody().getOrderLineNumber();
+        String mngKey = message.getBody().getTransactionId();
+        RecipeBody recipeBody = message.getBody().getRecipe();
 
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        if(optionalLotCarrierMapping.isEmpty()){
+            return null;
+        }
+        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
+        if(optionalLot.isEmpty()){
+            return null;
+        }
+        Lot lot = optionalLot.get();
+
+        // TODO:내일 아래거 수정
+        // 내일 저거 orderid 와 rrn 조회하고 gal requststate가 completed인게 하나면
+        // y이고 여러개면 n
+
+
+
+        BaseMessage<CarrierInfoDownloadSendBody> request = new BaseMessage<>();
+        request.setMessageName(MessageList.CARRIER_INFO_DOWNLOAD_SEND.getMessageName());
+        request.setTransactionId(message.getTransactionId());
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.EAS.getValue());
+        request.setEventTime(message.getEventTime());
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        CarrierInfoDownloadSendBody body = CarrierInfoDownloadSendBody
+                .builder()
+                .equipmentName(equipmentName)
+                .portName(portName)
+                .carrierName(carrierName)
+                .lotName(lot.getLotName())
+                .itemName(lot.getItemId())
+                .orderId(orderId)
+                .orderLineNumber(orderLineNumber)
+                .quantity(lotCarrierMapping.getQuantity().toString())
+                .totalQuantity(lot.getTotalQuantity().toString())
+                .mngKey(mngKey)
+                //.lastCarrierFlag()
+                .recipe(recipeBody)
+                .build();
+        request.setBody(body);
+        return request;
+    }
     /**
      * 설비에 투입 후 완료 보고
      *
@@ -1084,7 +969,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobDataReport(BaseMessage<ProcessJobDataReportBody> message) {
-        // TODO: 이걸 sv 데이터라고 하나...? 어째든 기록만 한다고 하는데.. 어떻게 테이블 구조 될지 문의
     }
 
     /**
@@ -1238,7 +1122,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void inventoryZoneDataReport(BaseMessage<InventoryZoneDataReport> message) {
-        // TODO: WMS <-> WCS 사이의 동기화 메시지 WMS 미팅후 확인
     }
 
     /**
@@ -1570,6 +1453,8 @@ public class MessageExecuteService {
         return reply;
     }
 
+
+
     /**
      * WMS 의 오더의 시작보고
      *
@@ -1577,24 +1462,64 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<OrderReleaseReplyBody> orderReleaseRequest(BaseMessage<OrderReleaseRequestBody> message) {
-        BaseMessage<OrderReleaseReplyBody> reply = new BaseMessage<>();
-        OrderReleaseReplyBody body =
-                OrderReleaseReplyBody
-                        .builder()
-                        .id(message.getBody().getId())
-                        .orderId(message.getBody().getOrderId())
-                        .build();
+        String messageName = message.getMessageName();
+        String transactionId = message.getTransactionId();
+        String messageFrom = message.getMessageFrom();
+        String messageOwner = message.getMessageOwner();
+        String messageTo = message.getMessageTo();
+        String eventTime = message.getEventTime();
+        String resultCode = message.getResultCode();
+        String resultMessage = message.getResultMessage();
 
-        reply.setEventTime(message.getEventTime());
-        reply.setMessageFrom(SystemName.MNG.getValue());
-        reply.setMessageName(MessageList.ORDER_RELEASE_REPLY.getMessageName());
-        reply.setMessageOwner(message.getMessageOwner());
-        reply.setMessageTo(message.getMessageFrom());
-        reply.setResultCode(ResultCode.OK.getValue());
-        reply.setResultMessage("");
-        reply.setTransactionId(message.getTransactionId());
-        reply.setBody(body);
-        return reply;
+        Long productionOrderId = message.getBody().getId();
+        String orderId = message.getBody().getOrderId();
+
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(productionOrderId);
+
+        // 🌟 [핵심 수정] 상대방에게 돌려줄 응답용 Body 객체를 먼저 생성합니다.
+        OrderReleaseReplyBody replyBody = OrderReleaseReplyBody.builder()
+                .id(productionOrderId)
+                .orderId(orderId)
+                .build();
+
+        // [검증 1] 데이터가 없는 경우 -> 비즈니스 NG 반환 (롤백 불필요)
+        if (optionalProductionOrder.isEmpty()) {
+            return createReplyMessage(message, ResultCode.NG, "Production Order를 찾을 수 없습니다.",replyBody);
+        }
+
+        ProductionOrder productionOrder = optionalProductionOrder.get();
+
+        // [검증 2] 타입이 일치하지 않는 경우 -> 비즈니스 NG 반환 (롤백 불필요)
+        if (!StringUtils.equals(ProductionOrderType.MATERIAL_INBOUND.getValue(), productionOrder.getProductionOrderType())) {
+            return createReplyMessage(message, ResultCode.NG, "올바르지 않은 오더 타입입니다.",replyBody);
+        }
+
+        // ----------------------------------------------------
+        // 실질적인 DB 상태 변경 로직 위치 (예: 오더 시작 상태 변경 등)
+        // ----------------------------------------------------
+        // 만약 이 아래 로직을 수행하다가 NullPointerException이나 DB 락 등의
+        // 예기치 못한 에러가 발생하면, 잡지 않고 던져지므로 트랜잭션은 자동으로 롤백됩니다.
+        TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(),resultMessage);
+        LotCreateCommand command
+                =
+                LotCreateCommand
+                        .builder()
+                        .transactionInfo(tx)
+                        .lotName(productionOrder.getLotName())
+                        .originalLotName(productionOrder.getLotName())
+                        .lotStatus(LotStatus.STOCK.getValue())
+                        .itemId(productionOrder.getItemName())
+                        .totalQuantity(productionOrder.getPlanQuantity())
+                        .holdState(HoldState.NOT_ON_HOLD.getValue())
+                        .reasonCode("")
+                        .build();
+        Lot lot = Lot.create(command);
+        lot = lotService.save(lot);
+        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
+        historyService.saveHistory(historyEntity);
+
+        // 모든 검증과 로직이 성공하면 OK 반환
+        return createReplyMessage(message, ResultCode.OK, "",replyBody);
     }
 
     /**
@@ -1606,22 +1531,181 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<MaterialAssignCarrierReplyBody> materialAssignCarrierRequest(BaseMessage<MaterialAssignCarrierRequestBody> message) {
-        BaseMessage<MaterialAssignCarrierReplyBody> reply = new BaseMessage<>();
-        MaterialAssignCarrierReplyBody body = new MaterialAssignCarrierReplyBody();
-        body.setId(message.getBody().getId());
+
+        String messageName = message.getMessageName();
+        String transactionId = message.getTransactionId();
+        String messageFrom = message.getMessageFrom();
+        String messageOwner = message.getMessageOwner();
+        String messageTo = message.getMessageTo();
+        String eventTime = message.getEventTime();
+        String resultCode = message.getResultCode();
+        String resultMessage = message.getResultMessage();
+
+        String carrierName = message.getBody().getCarrierName();
+        Long productionOrderId = message.getBody().getId();
+        String orderId = message.getBody().getOrderId();
+        List<Material> materialList = message.getBody().getMaterialList();
+
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(productionOrderId);
+
+        // 🌟 [핵심 수정] 상대방에게 돌려줄 응답용 Body 객체를 먼저 생성합니다.
+        MaterialAssignCarrierReplyBody replyBody =
+                MaterialAssignCarrierReplyBody
+                        .builder()
+                        .id(productionOrderId)
+                        .carrierName(carrierName)
+                        .orderId(orderId)
+                        .materialList(materialList)
+                        .build();
+
+        // [검증 1] 데이터가 없는 경우 -> 비즈니스 NG 반환 (롤백 불필요)
+        if (optionalProductionOrder.isEmpty()) {
+            return createReplyMessage(message, ResultCode.NG, "Production Order를 찾을 수 없습니다.",replyBody);
+        }
+
+        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+
+        if(materialList.isEmpty()){
+            return createReplyMessage(message,ResultCode.NG,"CarrierName 을 찾을수 없습니다.",replyBody);
+        }
+
+        Carrier carrier = optionalCarrier.get();
+
+        ProductionOrder productionOrder = optionalProductionOrder.get();
+        TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(),resultMessage);
+        for(Material material : materialList){
+            String materialName = material.getMaterialName();
+            String materialType = material.getMaterialType();
+            String quantityStr = material.getQuantity();
+            String item = material.getItem();
+            String lotName = material.getLotName();
+            BigDecimal quantity = null;
+
+            if (quantityStr != null && !quantityStr.trim().isEmpty()) {
+                try {
+                    quantity = new BigDecimal(quantityStr.trim());
+                } catch (NumberFormatException e) {
+                    // 로그를 남기거나 기본값(예: BigDecimal.ZERO)을 설정할 수 있습니다.
+                    quantity = BigDecimal.ZERO;
+                }
+            }
+
+            LotCarrierMappingCreateCommand command
+                    = LotCarrierMappingCreateCommand
+                    .builder()
+                    .transactionInfo(tx)
+                    .lotName(lotName)
+                    .carrierName(carrierName)
+                    .orderId(orderId)
+                    //.orderLineNumber()
+                    .productionOrderId(productionOrderId)
+                    .productionStatus(ProductionStatus.WAIT.getValue())
+                    .processStatus(ProcessStatus.WAIT.getValue())
+                    .quantity(quantity)
+                    .galQuantity(quantity)
+                    //.mngKey()
+                    //.jobStartTime()
+                    //.jobEndTime()
+                    //.mantiRequestState()
+                    //.mantiRequestTime()
+                    //.mantiReplyTime()
+                    //.rrnRequestState()
+                    //.rrnRequestTime()
+                    //.rrnReplyTime()
+                    //.holdState()
+                    //.reasonCode()
+                    .build();
+            LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
+            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            historyService.saveHistory(lotCarrierMappingHistoryEntity);
+
+            CarrierChangeCommand carrierChangeCommand
+                    =
+                    CarrierChangeCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .quantity(quantity)
+                            .galQuantity(quantity)
+                            .build();
+            carrier.change(carrierChangeCommand);
+            carrier = carrierService.save(carrier);
+            CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
+            historyService.saveHistory(carrierHistoryEntity);
+        }
+
+        return createReplyMessage(message, ResultCode.OK, "",replyBody);
+    }
+
+    /**
+     * 설비의 communicationState 를 보고 받음
+     * 1. 설비 데이터 조회
+     * 2. 설비의 상태 변경 < 이건 좀 고민
+     * 3. history 생성
+     * @param message 받은 메시지
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<TransportJobReplyByWMSBody> transportJobRequestByWMS(BaseMessage<TransportJobRequestByWMSBody> message) {
+
+        // 1. message parsing
+        // 2. WCS Message Request (TransportJobRequest)
+        // 3. WMS Message Return
+
+
+        BaseMessage<TransportJobReplyByWMSBody> reply = new BaseMessage<>();
+        TransportJobReplyByWMSBody body = new TransportJobReplyByWMSBody();
+
+        body.setTransportJobName(message.getBody().getTransportJobName());
         body.setCarrierName(message.getBody().getCarrierName());
+        body.setSourceEquipmentName(message.getBody().getSourceEquipmentName());
+        body.setSourceZoneName(message.getBody().getSourceZoneName());
+        body.setSourcePositionType(message.getBody().getSourcePositionType());
+        body.setSourcePositionName(message.getBody().getSourcePositionName());
+        body.setDestinationEquipmentName(message.getBody().getDestinationEquipmentName());
+        body.setDestinationZoneName(message.getBody().getDestinationZoneName());
+        body.setDestinationPositionType(message.getBody().getDestinationPositionType());
+        body.setDestinationPositionName(message.getBody().getDestinationPositionName());
+        body.setPriority(message.getBody().getPriority());
+        body.setCarrierType(message.getBody().getCarrierType());
         body.setOrderId(message.getBody().getOrderId());
-        body.setMaterialList(message.getBody().getMaterialList());
+        body.setOrderLineNumber(message.getBody().getOrderLineNumber());
 
         reply.setEventTime(message.getEventTime());
         reply.setMessageFrom(SystemName.MNG.getValue());
-        reply.setMessageName(MessageList.MATERIAL_ASSIGN_CARRIER_REPLY.getMessageName());
+        reply.setMessageName(MessageList.TRANSPORT_JOB_REPLY_BY_WMS.getMessageName());
         reply.setMessageOwner(message.getMessageOwner());
         reply.setMessageTo(message.getMessageFrom());
         reply.setResultCode(ResultCode.OK.getValue());
         reply.setResultMessage("");
         reply.setTransactionId(message.getTransactionId());
         reply.setBody(body);
+        return reply;
+    }
+
+
+    /**
+     * 응답 메시지 빌더 공통 메서드
+     */
+    private <T> BaseMessage<T> createReplyMessage(BaseMessage<?> message, ResultCode resultCode, String resultMessage,T replyBody) {
+        String messageName = message.getMessageName();
+        String replyMessageName = "";
+        if (messageName != null && messageName.endsWith("Request")) {
+            replyMessageName = messageName.replace("Request", "Reply");
+        } else if (messageName != null && messageName.contains("_REQUEST")) {
+            replyMessageName = messageName.replace("_REQUEST", "_REPLY");
+        }
+
+        BaseMessage<T> reply = new BaseMessage<>();
+        reply.setEventTime(message.getEventTime());
+        reply.setMessageFrom(SystemName.MNG.getValue());
+        reply.setMessageName(replyMessageName);
+        reply.setMessageOwner(message.getMessageOwner());
+        reply.setMessageTo(message.getMessageFrom());
+        reply.setResultCode(resultCode.getValue());
+        reply.setResultMessage(resultMessage);
+        reply.setTransactionId(message.getTransactionId());
+        reply.setBody(replyBody);
+
         return reply;
     }
 

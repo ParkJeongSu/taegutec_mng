@@ -12,12 +12,14 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 public class TransportOrder {
+
     private Long id;
     private String transportOrderId;
     private Long idocId;
     private String description;
     private String carrierName;
-    private String transportType; // I O R
+    private String virtualCarrierName;
+    private String transportType;
     private String transportStatus;
     private String lastTransactionCode;
     private String carrierType;
@@ -55,6 +57,7 @@ public class TransportOrder {
                         .idocId(command.getIdocId())
                         .description(command.getDescription())
                         .carrierName(command.getCarrierName())
+                        .virtualCarrierName(command.getVirtualCarrierName())
                         .transportType(command.getTransportType())
                         .transportStatus(command.getTransportStatus())
                         .lastTransactionCode(command.getLastTransactionCode())

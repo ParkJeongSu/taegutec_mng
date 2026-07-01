@@ -46,5 +46,7 @@ public interface PortRepository {
 
     void deleteAllByIdInBatch(List<Long>ids);
 
-//    Page<PortsResponseDto> findPortsWithConditions(PortsSearchConditionDto condition, Pageable pageable);
+    List<Port> findByTransportStateAndPortRoleType(String transportState,String portRoleType);
+    List<Port> findByTransportStateAndDetailPortTypeIn(String transportState,List<String> detailPortType);
+
 }

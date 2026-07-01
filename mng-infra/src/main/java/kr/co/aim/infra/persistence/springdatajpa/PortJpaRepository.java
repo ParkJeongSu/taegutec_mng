@@ -26,4 +26,22 @@ public interface PortJpaRepository extends JpaRepository<PortEntity, Long> {
     );
 
     List<PortEntity> findByTransportState(String transportState);
+
+    @Query("SELECT p FROM PortEntity p " +
+            "JOIN PortDefEntity pd ON p.equipmentName = pd.equipmentName AND p.portName = pd.portName " +
+            "WHERE p.transportState = :transportState " +
+            "AND pd.portRoleType = :portRoleType")
+    List<PortEntity> findByTransportStateAndPortRoleType(
+            @Param("transportState") String transportState,
+            @Param("portRoleType") String portRoleType
+    );
+
+    @Query("SELECT p FROM PortEntity p " +
+            "JOIN PortDefEntity pd ON p.equipmentName = pd.equipmentName AND p.portName = pd.portName " +
+            "WHERE p.transportState = :transportState " +
+            "AND pd.detailPortType IN :detailPortType")
+    List<PortEntity> findByTransportStateAndDetailPortTypeIn(
+            @Param("transportState") String transportState,
+            @Param("detailPortType") List<String> detailPortType
+    );
 }

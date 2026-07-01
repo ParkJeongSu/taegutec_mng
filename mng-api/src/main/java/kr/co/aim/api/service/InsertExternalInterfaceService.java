@@ -73,7 +73,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                 .cClient(IdocClient.MNG.getValue())
                 .cOrderId(vo.getMaster().getCOrderId())
                 .cOrderTy(vo.getMaster().getCOrderTy())
-                .cGaId(vo.getMaster().getCGalId())
+                .cGalId(vo.getMaster().getCGalId())
                 .cGalWhs(vo.getMaster().getCGalWhs())
                 .cCoId(vo.getCarrierName() != null ? vo.getCarrierName() : vo.getFirstDetail().getCCoId())
                 .cGrWgAct(vo.getWeight())
@@ -109,6 +109,11 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     }
 
     @Transactional(value = "db2TransactionManager")
+    public List<IdocEntity> selectByIdocTypIdsAndStateAndErrorCode(List<Long> idocTypIds, Integer state ,Integer errorCode) {
+        return idocJpaRepository.findByIdocTypIdsAndStateAndErrorCode(idocTypIds,state,errorCode);
+    }
+
+    @Transactional(value = "db2TransactionManager")
     public List<H2OrderMEntity> selectH2OrderMEntityByIdocId(Long idocId) {
         return h2OrderMJpaRepository.findByIdocId(idocId);
     }
@@ -122,8 +127,14 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     public void transferCompleted(Long idocId) {
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
+        idoc.setState(IdocState.COMPLETED.getValue());
         idoc.setErrorCode(IdocErrorCode.PROCESSED.getValue());
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
+
+        Integer currentCnt = idoc.getModCnt();
+        int baseCnt = (currentCnt == null) ? 0 : currentCnt;
+        idoc.setModCnt(baseCnt + 1);
+
         idocJpaRepository.save(idoc);
     }
 
@@ -169,7 +180,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .cClient(IdocClient.MNG.getValue())
                         .cOrderId(ifEventQueue.getOrderId())
                         .cOrderTy(dto.getOrderType())
-                        .cGaId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
+                        .cGalId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
                         .cGalWhs(dto.getGalWarehouse())
                         .cCoId(ifEventQueue.getCarrierName())
                         .cText1(virtualCarrierName)

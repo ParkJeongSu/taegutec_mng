@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
-@Table(name = "TRANSPORT_ORDER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
+@Table(name = "TRANSPORT_ORDER_HISTORY", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TransportOrderHistoryEntity implements IBaseHistoryEntity {
 
@@ -33,6 +33,9 @@ public class TransportOrderHistoryEntity implements IBaseHistoryEntity {
 
     @Column(name = "CARRIER_NAME")
     private String carrierName;
+
+    @Column(name = "VIRTUAL_CARRIER_NAME")
+    private String virtualCarrierName;
 
     @Column(name = "TRANSPORT_TYPE")
     private String transportType;

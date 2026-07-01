@@ -58,7 +58,7 @@ public class InsertSimulatorInterfaceService {
                 .cClient(IdocClient.MNG.getValue())
                 .cOrderId(vo.getMaster().getCOrderId())
                 .cOrderTy(vo.getMaster().getCOrderTy())
-                .cGaId(vo.getMaster().getCGalId())
+                .cGalId(vo.getMaster().getCGalId())
                 .cGalWhs(vo.getMaster().getCGalWhs())
                 .cCoId(vo.getCarrierName() != null ? vo.getCarrierName() : vo.getFirstDetail().getCCoId())
                 .cGrWgAct(vo.getWeight())

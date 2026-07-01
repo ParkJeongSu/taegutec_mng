@@ -25,6 +25,7 @@ public class ProductionOrderHistory implements IBaseHistoryEntity {
     private Long idocId;
     private Long h2OrderDpLineId;
     private String galKey;
+    private Long mngKey;
     private String productionOrderType;
     private String productionOrderState;
     private String reportState;

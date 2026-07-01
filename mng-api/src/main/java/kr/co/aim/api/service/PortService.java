@@ -11,9 +11,11 @@ import kr.co.aim.infra.persistence.mapper.PortDefMapper;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +36,7 @@ public class PortService {
      * port 의 사용 타입 변경시 보고
      * @param vo 받은 메시지
      */
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public void transportStateChanged(TransportStateChangedVo vo) {
         PortTransportStateChangedCommand portCommand =
                 PortTransportStateChangedCommand
@@ -50,39 +52,53 @@ public class PortService {
     }
 
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public List<Port> findByTransportState(String transportState) {
         return portRepository.findByTransportState(transportState);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     Optional<Port> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName){
         return portRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public Optional<Port> findPortByEquipmentNameAndPortName(String equipmentName,String portName) {
         return portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public Optional<PortDef> findPortDefByEquipmentNameAndPortName(String equipmentName,String portName) {
         return portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public Optional<PortDef> findByLocationId(String locationId) {
         return portDefRepository.findByLocationId(locationId);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public Port save(Port port) {
         return portRepository.save(port);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public PortDef save(PortDef portDef) {
         return portDefRepository.save(portDef);
+    }
+
+
+    @Transactional(value = "mssqlTransactionManager")
+    public List<Port> findByTransportStateAndPortRoleType(String transportState,String portRoleType){
+        return portRepository.findByTransportStateAndPortRoleType(transportState,portRoleType);
+    }
+    @Transactional(value = "mssqlTransactionManager")
+    public List<Port> findByTransportStateAndDetailPortTypeIn(String transportState,List<String> detailPortType)
+    {
+        if (ObjectUtils.isEmpty(detailPortType)) {
+            return new ArrayList<Port>();
+        }
+        return portRepository.findByTransportStateAndDetailPortTypeIn(transportState,detailPortType);
     }
 
 }

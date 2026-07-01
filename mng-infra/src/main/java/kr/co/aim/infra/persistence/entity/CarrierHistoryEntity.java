@@ -10,12 +10,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "M_CARRIER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
+@Table(name = "CARRIER_HISTORY", catalog = "NEXBEMNG", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class CarrierHistoryEntity implements IBaseHistoryEntity {
     @Id
@@ -25,7 +26,7 @@ public class CarrierHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "CARRIER_NAME")
     private String carrierName;
 
-    @Column(name = "CARRIER_DEF_Name")
+    @Column(name = "CARRIER_DEF_NAME")
     private String carrierDefName;
 
     @Column(name = "CARRIER_STATE")
@@ -76,41 +77,11 @@ public class CarrierHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "CLEAN_COUNT")
     private Integer cleanCount;
 
-    @Column(name = "LOT_NAME")
-    private String lotName;
-
-    @Column(name = "LOT_STATUS")
-    private String lotStatus;
-
-    @Column(name = "ORDER_ID")
-    private String orderId;
-
-    @Column(name = "ORDER_LINE_NUMBER")
-    private String orderLineNumber;
-
-    @Column(name = "ITEM_ID")
-    private String itemId;
-
     @Column(name = "QUANTITY")
-    private Integer quantity;
+    private BigDecimal quantity;
 
-    @Column(name = "LAST_IDOC_ID")
-    private String lastIdocId;
-
-    @Column(name = "INTERFACE_STATUS")
-    private String interfaceStatus;
-
-    @Column(name = "INTERFACE_REQUEST_TIME")
-    private LocalDateTime interfaceRequestTime;
-
-    @Column(name = "INTERFACE_REPLY_TIME")
-    private LocalDateTime interfaceReplyTime;
-
-    @Column(name = "EQUIPMENT_FLAG")
-    private String equipmentFlag;
-
-    @Column(name = "JOB_END_TIME")
-    private LocalDateTime jobEndTime;
+    @Column(name = "GAL_QUANTITY")
+    private BigDecimal galQuantity;
 
     @Column(name = "LAST_CLEAN_TIME")
     private LocalDateTime lastCleanTime;

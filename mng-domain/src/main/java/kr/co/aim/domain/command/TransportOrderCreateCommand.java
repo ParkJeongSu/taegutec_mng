@@ -17,6 +17,7 @@ public class TransportOrderCreateCommand {
     private final Long idocId;
     private final String description;
     private final String carrierName;
+    private final String virtualCarrierName;
     private final String transportType;
     private final String transportStatus;
     private final String lastTransactionCode;
@@ -41,4 +42,8 @@ public class TransportOrderCreateCommand {
     private final String createUser;
     private final String releaseUser;
     private final String completeUser;
+    private final String eventName;
+    private final LocalDateTime eventTime;
+    private final String eventUser;
+    private final String eventComment;
 }

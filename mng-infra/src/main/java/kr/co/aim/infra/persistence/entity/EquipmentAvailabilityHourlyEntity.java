@@ -1,10 +1,7 @@
 package kr.co.aim.infra.persistence.entity;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -17,8 +14,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class EquipmentAvailabilityHourlyEntity {
 
-    @EmbeddedId
-    private IdAvailabilityHourly id;
+    @Id
+    @Column(name = "ID")
+    private Long id;
+
+    @Column(name = "STAT_DATE", length = 10, nullable = false)
+    private String statDate;
+
+    @Column(name = "STAT_HOUR", length = 2, nullable = false)
+    private String statHour;
 
     @Column(name = "EQUIPMENT_NAME", length = 40, nullable = false)
     private String equipmentName;
@@ -41,23 +45,4 @@ public class EquipmentAvailabilityHourlyEntity {
     @Column(name = "CREATE_TIME")
     private LocalDateTime createTime;
 
-    public EquipmentAvailabilityHourlyEntity(IdAvailabilityHourly id, String equipmentName) {
-        this.id = id;
-        this.equipmentName = equipmentName;
-        this.runDurationSec = 0;
-        this.idleDurationSec = 0;
-        this.downDurationSec = 0;
-        this.pmDurationSec = 0;
-        this.alarmCount = 0;
-        this.createTime = LocalDateTime.now();
-    }
-
-    // 통계치 누적을 위한 편의 메서드
-    public void addDurations(int run, int idle, int down, int pm, int alarm) {
-        this.runDurationSec = (this.runDurationSec == null ? 0 : this.runDurationSec) + run;
-        this.idleDurationSec = (this.idleDurationSec == null ? 0 : this.idleDurationSec) + idle;
-        this.downDurationSec = (this.downDurationSec == null ? 0 : this.downDurationSec) + down;
-        this.pmDurationSec = (this.pmDurationSec == null ? 0 : this.pmDurationSec) + pm;
-        this.alarmCount = (this.alarmCount == null ? 0 : this.alarmCount) + alarm;
-    }
 }

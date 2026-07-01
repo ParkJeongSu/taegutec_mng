@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Getter
 @RequiredArgsConstructor
 @Builder
@@ -12,7 +14,7 @@ public class CarrierDeassignCommand {
     private final TransactionInfo transactionInfo;
     private final String carrierName;
     private final String useState;
-    private final Integer lotQuantity;
-    private final Integer quantity;
+    private final BigDecimal quantity;
+    private final BigDecimal galQuantity;
     private final String capaState;
 }

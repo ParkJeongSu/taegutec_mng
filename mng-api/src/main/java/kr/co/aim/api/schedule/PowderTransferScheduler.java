@@ -59,12 +59,14 @@ public class PowderTransferScheduler {
 
         // 2단계 h2orderMList와 h2orderDList를 조회해서 가져온다. (DB2 트랜잭션)
 
-        // 3단계 ProductionOrder 에 해당 데이터를 insert 한다. (MSSQL 트랜잭션)
+        // 3단계 ProductionOrder 에 해당 데이터를 생성 한다. (MSSQL 트랜잭션)
 
         // 4단계 정상적으로 MSSQL이 수행되었다면, Idoc의 errorCode와 dtimemode를 수정한다.
 
-        // 5단계 errorCode와 dtimemode를 수정하고,
-        // TODO : ORDER TYPE 에 따라서 EAS로 보낼지, WMS로 보낼지 판단
+        // 5단계 특정 메시지타입의 경우 해당 시스템으로 전송
+        // MATERIAL_ISSUE > WMS
+
+        // 6단계 errorCode와 dtimemode를 수정하고,
 
         List<IdocPEntity> idocEntities = powderExternalInterfaceService.findByStateAndErrorCode(10L,0L);
 
@@ -129,6 +131,46 @@ public class PowderTransferScheduler {
                     List<H2OrderDPEntity> h2OrderDEntities = powderExternalInterfaceService.selectH2OrderDEntityByIdocId(idocEntity.getLineId());
                     for(H2OrderDPEntity  h2OrderDPEntity : h2OrderDEntities){
                         String productionOrderType = "";
+                        if(idocEntity.getIdocTypId() == 12L){
+                            // 원자재 입고
+                            productionOrderType = ProductionOrderType.MATERIAL_INBOUND.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 11L){
+                            // 출하
+                            productionOrderType = ProductionOrderType.OUTBOUND.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 13L){
+                            // 해포
+                            productionOrderType = ProductionOrderType.UNPACKING.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 21L){
+                            // MATERIAL_ISSUE
+                            productionOrderType = ProductionOrderType.PRODUCTION_ISSUE.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 15L){
+                            // 조업
+                            productionOrderType = ProductionOrderType.PRODUCTION.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 17L){
+                            // RRN_REPLY
+                            productionOrderType = ProductionOrderType.RRN_REPLY.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 51L){
+                            // ENTER_TO_STOCK
+                            productionOrderType = ProductionOrderType.ENTER_TO_STOCK.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 31L){
+                            // PACKING_ISSUE
+                            productionOrderType = ProductionOrderType.PACKING_ISSUE.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 18L){
+                            // PACKING
+                            productionOrderType = ProductionOrderType.PACKING.getValue();
+                        }
+                        else if(idocEntity.getIdocTypId() == 50L){
+                            // CHANGE_RRN
+                            productionOrderType = ProductionOrderType.CHANGE_ROUTING.getValue();
+                        }
                         // Production Order 생성
                         ProductionOrderCreateCommand command =
                                 ProductionOrderCreateCommand
@@ -174,7 +216,7 @@ public class PowderTransferScheduler {
                         productionOrder = productionOrderService.createProductionOrder(productionOrder);
 
                         //필요한 경우 각 시스템에 order 전송
-                        if(StringUtils.equals("특정타입",productionOrderType)) {
+                        if(StringUtils.equals(ProductionOrderType.MATERIAL_INBOUND.getValue(),productionOrderType)) {
                             // 메시지 전송
                             String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
 
@@ -239,7 +281,6 @@ public class PowderTransferScheduler {
 
                 // 정상적으로 수행했기 때문에, errorCode (60 : processed)와 dtimemode를 수정
                 powderExternalInterfaceService.transferCompleted(idocEntity.getLineId());
-
 
             } catch (Exception e) {
                 // 만일 transfer 도중 문제가 생겼다면

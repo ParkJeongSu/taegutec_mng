@@ -1,6 +1,8 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.StatTimeUtils;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.StatRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +20,6 @@ import java.util.*;
 public class StatService {
     private final StatRepository statRepository;
     private final EquipmentService equipmentService;
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH");
 
     public void aggregateDailyStatistics(String statDate) {
         // 1. 설비 가동 시간 통계 산출 및 저장 (가장 까다로운 로직)
@@ -44,9 +45,9 @@ public class StatService {
         // 대상 정렬 데이터 조회 (설비명 순, 이벤트 시간 순)
         List<EquipmentHistory> histories = equipmentService.findEquipmentHistoryByPeriod(start, end);
 
-        // 메모리 상에서 호스트별, 시간대별 통계를 누적하기 위한 데이터 맵 구조
-        // Key: IdAvailabilityHourly (식별자 복합키 클래스)
-        Map<IdAvailabilityHourly, EquipmentAvailabilityHourly> aggregateMap = new HashMap<>();
+        // 메모리 상에서 설비별, 시간대별 통계를 누적하기 위한 데이터 맵 구조
+        // 단일 PK 구조이므로 Key는 "날짜_시간_설비명" 조합 문자열을 고유 키로 활용
+        Map<String, EquipmentAvailabilityHourly> aggregateMap = new HashMap<>();
 
         // 설비별 직전 이력을 추적하기 위한 캐싱 맵
         Map<String, EquipmentHistory> lastHistoryMap = new HashMap<>();
@@ -63,17 +64,18 @@ public class StatService {
 
                 // 종료(현재) 이벤트가 발생한 시점의 날짜와 시간(시) 추출
                 LocalDateTime eventTime = current.getEventTime();
-                String targetDate = eventTime.toLocalDate().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-                String targetHour = eventTime.format(TIME_FORMATTER);
+                String targetDate = eventTime.toLocalDate().format(FormatUtils.DATE_FORMATTER);
+                String targetHour = eventTime.format(FormatUtils.TIME_FORMATTER);
 
-                // 복합키 정체성 생성
-                IdAvailabilityHourly id = new IdAvailabilityHourly(targetDate, targetHour, current.getId());
+                // 메모리 집계를 위한 그룹 키 조합 (예: "20260629_13_EQP01")
+                String groupKey = targetDate + "_" + targetHour + "_" + eqpName;
 
-                // 기존 누적 구조가 없으면 신규 생성
-                EquipmentAvailabilityHourly stat = aggregateMap.get(id);
+                // 기존 누적 구조가 없으면 신규 생성 (이때 단일 PK인 TSID를 발급)
+                EquipmentAvailabilityHourly stat = aggregateMap.get(groupKey);
                 if (stat == null) {
-                    stat = new EquipmentAvailabilityHourly(id, eqpName);
-                    aggregateMap.put(id, stat);
+                    Long nextTsid = TsidUtils.nextId();
+                    stat = new EquipmentAvailabilityHourly(nextTsid, eqpName, eventTime);
+                    aggregateMap.put(groupKey, stat);
                 }
 
                 // 직전 상태(Previous State)가 무엇이었냐에 따라 현재 시간대에 전체 딜레이를 몰아줌

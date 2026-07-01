@@ -6,5 +6,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface CarrierHistoryJpaRepository extends JpaRepository<CarrierHistoryEntity, Long> {
-    List<CarrierHistoryEntity> findByOrderIdAndOrderLineNumberAndEventName(String orderId, String orderLineNumber,String eventName);
 }

@@ -1,9 +1,6 @@
 package kr.co.aim.infra.persistence.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,8 +13,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class TransportRouteDailyEntity {
 
-    @EmbeddedId
-    private IdTransportRouteDaily id;
+    @Id
+    @Column(name = "ID", nullable = false)
+    private Long id;
+
+    @Column(name = "STAT_DATE", length = 10, nullable = false)
+    private String statDate;
+
+    @Column(name = "SOURCE_EQUIPMENT_NAME", length = 40, nullable = false)
+    private String sourceEquipmentName;
+
+    @Column(name = "DESTINATION_EQUIPMENT_NAME", length = 40, nullable = false)
+    private String destinationEquipmentName;
 
     @Column(name = "TOTAL_COUNT")
     private Integer totalCount;

@@ -186,6 +186,7 @@ public class PowderSimulatorInterfaceService {
                         .carrierName(ctx.getCarrierName())
                         .mngKey(TsidUtils.nextId())
                         .orderId(ctx.getDetail().getCmoord().toString())
+                        .actQty(ctx.getActualQuantity())
                         .build();
         saveTransportProgress(vo);
     }
@@ -374,7 +375,7 @@ public class PowderSimulatorInterfaceService {
         H2TransReportVo vo =
                 H2TransReportVo
                         .builder()
-                        .status(GALProductionStatus.CHANGED_STOCK_PER_CONTAINER)
+                        .status(GALProductionStatus.STOCK_CHANGED)
                         .sourceIdoc(ctx.getIdoc())
                         .master(ctx.getMaster())
                         .detail(ctx.getDetail())

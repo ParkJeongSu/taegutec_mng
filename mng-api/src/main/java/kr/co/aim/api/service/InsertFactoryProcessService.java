@@ -5,7 +5,6 @@ import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
-import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
@@ -30,7 +29,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +44,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     private final ObjectMapper objectMapper;
 
     private final PortService portService;
+    private final PortDefService portDefService;
     private final PortMapper portMapper;
 
     private final TransportJobService transportJobService;
@@ -73,7 +72,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String portType =  message.getBody().getPortType();
         String portTransportMode =  message.getBody().getPortTransportMode();
 
-        // TODO: 비관적 lock 으로 변경 좀더 고민
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
         Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
         PortDef portDef = null;
@@ -254,11 +252,12 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 }
             }
             if(StringUtils.isNotEmpty(galWarehouse)){
-                // TODO: galWarehouse 의 역할 알아보기
-                // equipmentDef 에 galWarehouse 매핑 해서 타겟 창고명 조회
-
-                destinationEquipmentName = "";
+                destinationEquipmentName = galWarehouse;
             }
+            // transportOrder 를 REQUESTED 상태로 변경해서 다시 보내는 로직이 없도록 수정
+            transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
+            transportOrder = transportOrderService.save(transportOrder);
+
             TransportJobCreateCommand command =
                     TransportJobCreateCommand.builder()
                             .transportJobName(transportJobName)
@@ -281,9 +280,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .build();
 
             TransportJob transportJob = transportJobService.createTransportJob(command);
-
-            transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
-            transportOrder = transportOrderService.save(transportOrder);
             TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
             historyService.saveHistory(transportOrderHistoryEntity);
 
@@ -382,7 +378,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
      */
     @Override
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
+    public BaseMessage<CarrierInfoDownloadSendBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -793,5 +789,72 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 log.error("EventQueue enqueue error",e);
             }
         }
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
+
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        String equipmentName = message.getBody().getEquipmentName();
+        String portName = message.getBody().getPortName();
+        String carrierName = message.getBody().getCarrierName();
+        String portType = message.getBody().getPortType();
+        String portTransportMode = message.getBody().getPortTransportMode();
+
+        Optional<Port> optionalPorts =
+                portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
+
+        if(optionalPorts.isEmpty()){
+            return null;
+        }
+
+        Port port = optionalPorts.get();
+        if(!StringUtils.equals(PortTransportState.READY_TO_LOAD.getValue(),port.getTransportState())){
+            TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+            LoadRequestCommand command = LoadRequestCommand
+                    .builder()
+                    .transactionInfo(tx)
+                    .build();
+            port.loadRequest(command);
+            port = portService.save(port);
+            PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+            historyService.saveHistory(portHistoryEntity);
+        }
+
+        Optional<PortDef> optionalPortDef = portDefService.findByEquipmentNameAndPortName(equipmentName,portName);
+        if(optionalPortDef.isEmpty()){
+            return null;
+        }
+
+        PortDef  portDef = optionalPortDef.get();
+
+        if(
+                StringUtils.equals(portDef.getDetailPortType(),DetailPortType.CRANE_BOTH_PND.getValue())
+                || StringUtils.equals(portDef.getDetailPortType(),DetailPortType.CRANE_OUT_PND.getValue())
+
+        ){
+            BaseMessage<CarrierDispatchRequestBody> reply = new BaseMessage<>();
+            reply.setTransactionId(message.getTransactionId());
+            reply.setMessageFrom(SystemName.MNG.getValue());
+            reply.setMessageOwner(SystemName.MNG.getValue());
+            reply.setMessageTo(SystemName.MNG.getValue());
+            reply.setEventTime(message.getEventTime());
+            reply.setResultMessage("");
+            reply.setResultCode(ResultCode.OK.getValue());
+            reply.setMessageName(MessageList.CARRIER_DISPATCH_REQUEST.getMessageName());
+
+            CarrierDispatchRequestBody body = CarrierDispatchRequestBody.builder()
+                    .equipmentName(equipmentName)
+                    .portName(portName)
+                    .build();
+            reply.setBody(body);
+            return reply;
+        }
+
+        return null;
     }
 }

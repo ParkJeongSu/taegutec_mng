@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
-@Table(name = "H2TRANS")
+@Table(name = "H2TRANSI")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class H2TransEntity {
     @Id
@@ -65,8 +65,8 @@ public class H2TransEntity {
     @Column(name = "CORDERLN")
     private Long cOrderLn;
 
-    @Column(name = "CGAID")
-    private Long cGaId;
+    @Column(name = "CGALID")
+    private Long cGalId;
 
     @Column(name = "CGALWHS")
     private String cGalWhs;

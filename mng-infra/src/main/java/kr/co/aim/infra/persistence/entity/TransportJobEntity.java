@@ -24,11 +24,11 @@ public class TransportJobEntity {
     @Column(name = "TRANSPORT_JOB_NAME")
     private String transportJobName;
 
-    @Column(name = "CARRIER_NAME")
-    private String carrierName;
-
     @Column(name = "TRANSPORT_TYPE")
     private String transportType;
+
+    @Column(name = "CARRIER_NAME")
+    private String carrierName;
 
     @Column(name = "TRANSPORT_JOB_STATE")
     private String transportJobState;

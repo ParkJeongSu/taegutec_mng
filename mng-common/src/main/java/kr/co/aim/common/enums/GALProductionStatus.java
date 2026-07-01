@@ -11,6 +11,7 @@ public enum GALProductionStatus implements MetaDataEnum {
     RELEASE("6"),
     FIBC_ON_PALLET("10"),
     PALLET_LOAD_COMPLETED_TO_WAREHOUSE("13"),
+    STOCK_CHANGED("51"),
     CHANGED_STOCK_PER_CONTAINER("13"),
     UNPACK_STARTED("14"),
     UNPACK_ENDED("15"),

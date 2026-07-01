@@ -33,6 +33,9 @@ public class TransportOrderEntity {
     @Column(name = "CARRIER_NAME")
     private String carrierName;
 
+    @Column(name = "VIRTUAL_CARRIER_NAME")
+    private String virtualCarrierName;
+
     @Column(name = "TRANSPORT_TYPE")
     private String transportType;
 

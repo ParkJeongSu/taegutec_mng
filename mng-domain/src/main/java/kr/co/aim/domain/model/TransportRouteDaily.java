@@ -1,5 +1,7 @@
 package kr.co.aim.domain.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import lombok.*;
 
 
@@ -10,9 +12,10 @@ import lombok.*;
 @Builder
 @ToString
 public class TransportRouteDaily {
-
-
-    private IdTransportRouteDaily id;
+    private Long id;
+    private String statDate;
+    private String sourceEquipmentName;
+    private String destinationEquipmentName;
     private Integer totalCount;
     private Integer errorCount;
     private Integer avgAcquireTimeSec;

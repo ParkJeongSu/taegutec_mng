@@ -822,7 +822,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         }else{
             return ifEventQueueDtoList;
         }
-        if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+        if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())) {
             // Inbound Station Occupied case
             // 106 report
             eventType = GALTransportStatus.STATION_OCCUPIED.name();
@@ -831,7 +831,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderId = "";
             orderLineNumber = "";
             orderType = TransportOrderType.INBOUND.getValue();
-        } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
+        } else if (StringUtils.equals(DetailPortType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
             // 반송잡이 있으면 해당 반송잡으로 아래보고
             // outbound case
             // 108 Outbound Arrival At workStation report
@@ -868,7 +868,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderLineNumber = "";
             orderType = transportOrder.getTransportType();
         }
-        else if(StringUtils.equals(PortDetailType.OUT_OF_RACK.getValue(), portDef.getDetailPortType())){
+        else if(StringUtils.equals(DetailPortType.RACK_OUT_STAGE.getValue(), portDef.getDetailPortType())){
             // inbound case
             // outbound case
             // 109 Out Of Rack report
@@ -903,7 +903,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderLineNumber = "";
             orderType = transportOrder.getTransportType();
         }
-        else if(StringUtils.equals(PortDetailType.BOTH_OF_RACK.getValue(), portDef.getDetailPortType())){
+        else if(StringUtils.equals(DetailPortType.RACK_BOTH_STAGE.getValue(), portDef.getDetailPortType())){
             // inbound case
             // outbound case
             // 109 Out Of Rack report
@@ -1053,7 +1053,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         }else{
             return ifEventQueueDtoList;
         }
-        if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+        if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())) {
             // Inbound Workstation empty
             // 105 repot
             // transportJobName 은 존재
@@ -1129,6 +1129,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String errorText = "";
         // actualLocationId : Rack Location or location on conveyor on System
         String actualLocationId = vo.getActualRackLocationId();
+        String actualWorkStationId = "";
 
         if(optionalPortDef.isPresent()){
             portDef = optionalPortDef.get();
@@ -1136,7 +1137,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             return ifEventQueueDtoList;
         }
 
-        if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+        if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())) {
             // Inbound Station Occupied case
             // 106 report
             eventType = GALTransportStatus.STATION_OCCUPIED.name();
@@ -1145,8 +1146,9 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderId = "";
             orderLineNumber = "";
             orderType = TransportOrderType.INBOUND.getValue();
-
-        } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
+            actualLocationId = portDef.getLocationId();
+            actualWorkStationId = portDef.getWorkCenterName();
+        } else if (StringUtils.equals(DetailPortType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
             // 반송잡이 있으면 해당 반송잡으로 아래보고
             // outbound case
             // 108 Outbound Arrival At workStation report
@@ -1183,7 +1185,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderLineNumber = "";
             orderType = transportOrder.getTransportType();
         }
-        else if(StringUtils.equals(PortDetailType.OUT_OF_RACK.getValue(), portDef.getDetailPortType())){
+        else if(StringUtils.equals(DetailPortType.RACK_OUT_STAGE.getValue(), portDef.getDetailPortType())){
             // inbound case
             // outbound case
             // 109 Out Of Rack report
@@ -1218,7 +1220,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderLineNumber = "";
             orderType = transportOrder.getTransportType();
         }
-        else if(StringUtils.equals(PortDetailType.BOTH_OF_RACK.getValue(), portDef.getDetailPortType())){
+        else if(StringUtils.equals(DetailPortType.RACK_BOTH_STAGE.getValue(), portDef.getDetailPortType())){
             // inbound case
             // outbound case
             // 109 Out Of Rack report
@@ -1268,6 +1270,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 .actualWeight(vo.getActualWeight())
                 .actualZoneName(vo.getActualZoneName())
                 .actualLocationId(actualLocationId)
+                .actualWorkStationId(actualWorkStationId)
                 .build();
         ifEventQueueDtoList.add(dto);
 

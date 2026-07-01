@@ -1,6 +1,10 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.dto.PortDefSearchConditionDto;
+import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,17 +21,16 @@ public interface PortDefRepository {
      */
     List<PortDef> findAll();
 
-    /**
-     * ID로 사용자를 찾습니다.
-     * @param equipmentName EquipmentDef equipmentName
-     * @param portName EquipmentDef portName
-     * @return Optional<PortDef>
-     */
+    Optional<PortDef> findById(Long id);
+
     Optional<PortDef> findByEquipmentNameAndPortName(String equipmentName,String portName);
 
     PortDef save(PortDef portDef);
 
     Optional<PortDef> findByLocationId(String locationId);
 
-//    Page<PortDefResponseDto> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable);
+    Page<PortDef> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable);
+    void deleteAllByIdInBatch(List<Long> ids);
+
+    Optional<PortDef> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName);
 }

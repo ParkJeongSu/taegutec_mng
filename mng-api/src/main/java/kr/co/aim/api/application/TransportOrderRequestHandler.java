@@ -6,7 +6,6 @@ import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.format.TransportJobRequestBody;
-import kr.co.aim.common.format.TransportJobRequestListBody;
 import kr.co.aim.common.format.TransportOrderRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;

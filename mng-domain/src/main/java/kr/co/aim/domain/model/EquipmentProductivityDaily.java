@@ -2,6 +2,8 @@ package kr.co.aim.domain.model;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -9,13 +11,13 @@ import lombok.*;
 @Builder
 @ToString
 public class EquipmentProductivityDaily {
-
-
-    private IdProductivityDaily id;
+    private Long id;
+    private String statDate;
+    private String equipmentName;
     private Integer totalProcessedCount;
-    private Integer totalProcessedQuantity;
-    private Integer okProcessed;
-    private Integer ngProcessed;
+    private BigDecimal totalProcessedQuantity;
+    private BigDecimal okProcessed;
+    private BigDecimal ngProcessed;
     private Integer avgProcessedTime;
 
 }

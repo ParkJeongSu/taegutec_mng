@@ -54,6 +54,9 @@ public class ProductionOrderHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "GAL_KEY")
     private String galKey;
 
+    @Column(name = "MNG_KEY")
+    private Long mngKey;
+
     @Column(name = "PRODUCTION_ORDER_TYPE")
     private String productionOrderType;
 

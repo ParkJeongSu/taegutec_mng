@@ -3,6 +3,7 @@ package kr.co.aim.api.web.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Hidden;
 import kr.co.aim.api.dto.ProductionOrderSimulatorRequestDto;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;
 import kr.co.aim.common.enums.SystemName;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -132,6 +135,12 @@ public class MessageSendController {
 
         BaseMessage<OrderCreateRequestBody> request = new BaseMessage<>();
         OrderCreateRequestBody body = new OrderCreateRequestBody();
+        List<ProductionOrder> list = new ArrayList<>();
+        ProductionOrder order = new ProductionOrder();
+        order.setId(TsidUtils.nextId());
+        order.setOrderId("123");
+        list.add(order);
+        body.setOrderList(list);
 
         request.setEventTime(request.getEventTime());
         request.setMessageFrom(SystemName.MNG.getValue());
@@ -140,7 +149,7 @@ public class MessageSendController {
         request.setMessageTo(request.getMessageFrom());
         request.setResultCode(ResultCode.OK.getValue());
         request.setResultMessage("");
-        request.setTransactionId(request.getTransactionId());
+        request.setTransactionId(TsidUtils.nextId().toString());
         request.setBody(body);
 
         // 3. DTO 객체를 JSON 문자열로 직접 변환합니다.

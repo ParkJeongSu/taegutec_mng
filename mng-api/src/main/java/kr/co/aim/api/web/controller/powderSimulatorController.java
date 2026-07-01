@@ -4,6 +4,7 @@ import kr.co.aim.api.dto.ProductionOrderSimulatorRequestDto;
 import kr.co.aim.api.service.*;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.condition.ProductDefSearchCondition;
+import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.dto.powder.IdocH2TransResponseDto;
 import kr.co.aim.common.dto.powder.IdocOrderMasterResponseDto;
@@ -80,7 +81,7 @@ public class powderSimulatorController {
 
     @GetMapping("/part")
     public ResponseEntity<Page<ProductDef>> getPartList(
-            @ModelAttribute ProductDefSearchCondition condition,
+            @ModelAttribute ProductDefSearchConditionDto condition,
             @PageableDefault(page = 0, size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<ProductDef> productDefPage = productDefService.findProductDefByCondition(condition,pageable);

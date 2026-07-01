@@ -6,6 +6,7 @@ import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.SystemName;
+import kr.co.aim.common.format.CarrierInfoDownloadSendBody;
 import kr.co.aim.common.format.CarrierValidationReplyBody;
 import kr.co.aim.common.format.LoadCompletedBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -47,7 +48,7 @@ public class LoadCompleteHandler implements MessageHandler<String> {
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
         // 3. 만일 서비스 호출 후  메시지 생성
-        BaseMessage<CarrierValidationReplyBody> carrierValidationReplyBodyBaseMessage = messageExecuteService.loadCompleted(request);
+        BaseMessage<CarrierInfoDownloadSendBody> carrierValidationReplyBodyBaseMessage = messageExecuteService.loadCompleted(request);
 
         jsonUtils.writePrettyJson(carrierValidationReplyBodyBaseMessage);
 

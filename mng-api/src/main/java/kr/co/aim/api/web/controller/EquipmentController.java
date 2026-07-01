@@ -3,6 +3,7 @@ package kr.co.aim.api.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.dto.EquipmentGroupDashboard;
+import kr.co.aim.api.service.DashboardService;
 import kr.co.aim.api.service.EquipmentService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.EquipmentSearchCondition;
@@ -28,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class EquipmentController {
     private final EquipmentService equipmentService;
+    private final DashboardService dashboardService;
 
     @Operation(summary = "Equipment", description = "Equipment 조회")
     @GetMapping("")
@@ -46,7 +48,7 @@ public class EquipmentController {
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
     ) {
-        Page<EquipmentGroupDashboard> reuslt = equipmentService.getEquipmentDataForDashboard(pageable);
+        Page<EquipmentGroupDashboard> reuslt = dashboardService.getEquipmentDataForDashboard(pageable);
         return ResponseEntity.ok(reuslt);
     }
 

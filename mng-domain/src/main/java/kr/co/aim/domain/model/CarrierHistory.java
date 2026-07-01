@@ -1,10 +1,8 @@
 package kr.co.aim.domain.model;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import kr.co.aim.common.handler.IBaseHistoryEntity;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Setter
@@ -15,7 +13,7 @@ import java.time.LocalDateTime;
 public class CarrierHistory implements IBaseHistoryEntity {
     private Long id;
     private String carrierName;
-    private Long carrierDefName;
+    private String carrierDefName;
     private String carrierState;
     private String equipmentName;
     private String portName;
@@ -32,18 +30,8 @@ public class CarrierHistory implements IBaseHistoryEntity {
     private Integer useCount;
     private Integer useCountPerClean;
     private Integer cleanCount;
-    private String lotName;
-    private String lotStatus;
-    private String orderId;
-    private String orderLineNumber;
-    private String itemId;
-    private Integer quantity;
-    private String lastIdocId;
-    private String interfaceStatus;
-    private LocalDateTime interfaceRequestTime;
-    private LocalDateTime interfaceReplyTime;
-    private String equipmentFlag;
-    private LocalDateTime jobEndTime;
+    private BigDecimal quantity;
+    private BigDecimal galQuantity;
     private LocalDateTime lastCleanTime;
     private LocalDateTime createTime;
     private LocalDateTime inboundTime;

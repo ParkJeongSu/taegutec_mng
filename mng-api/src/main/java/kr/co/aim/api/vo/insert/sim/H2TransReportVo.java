@@ -1,9 +1,9 @@
 package kr.co.aim.api.vo.insert.sim;
 
+import kr.co.aim.common.enums.DetailPortType;
 import kr.co.aim.common.enums.GALTransportStatus;
 import kr.co.aim.common.enums.IdocDataCode;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.enums.PortDetailType;
 import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
@@ -58,12 +58,12 @@ public class H2TransReportVo {
 
     private static GALTransportStatus deriveStatus(String messageName, Port port, PortDef portDef) {
         if (StringUtils.equals(MessageList.LOAD_COMPLETE.getMessageName(), messageName)) {
-            if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+            if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())) {
                 // Inbound Station Occupied case
                 // 106 report
                 // 반송잡이 없음
                 return GALTransportStatus.STATION_OCCUPIED;
-            } else if (StringUtils.equals(PortDetailType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
+            } else if (StringUtils.equals(DetailPortType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
                 // 반송잡이 있으면 해당 반송잡으로 아래보고
                 // outbound case
                 // 108 Outbound Arrival At workStation report
@@ -72,7 +72,7 @@ public class H2TransReportVo {
                 // 가장 최신 변경된 transportOrder 으로 108,90 보고
             }
         } else if (StringUtils.equals(MessageList.UNLOAD_COMPLETE.getMessageName(), messageName)) {
-            if (StringUtils.equals(PortDetailType.INBOUND.getValue(), portDef.getDetailPortType())) {
+            if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())) {
                 // Inbound Workstation empty
                 // 105 repot
             }
@@ -82,10 +82,10 @@ public class H2TransReportVo {
         } else if (StringUtils.equals(MessageList.CARRIER_LOCATION_CHANGED.getMessageName(), messageName)) {
             // 이 경우는 TransportOrder가 있을수도 없을수도 있음
             // orderId가 있을수도 없을 수도 있다는 이야기
-            if (StringUtils.equals(PortDetailType.OUT_OF_RACK.getValue(), portDef.getDetailPortType())) {
+            if (StringUtils.equals(DetailPortType.RACK_OUT_STAGE.getValue(), portDef.getDetailPortType())) {
                 // Out of Rack
                 // 109 repot
-            } else if (StringUtils.equals(PortDetailType.TUNNEL.getValue(), portDef.getDetailPortType())) {
+            } else if (StringUtils.equals(DetailPortType.TUNNEL.getValue(), portDef.getDetailPortType())) {
                 // S/R Machine dropped container on tunnel conveyor
                 // 109 report
             }

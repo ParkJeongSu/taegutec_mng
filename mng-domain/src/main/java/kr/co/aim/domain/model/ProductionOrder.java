@@ -1,5 +1,7 @@
 package kr.co.aim.domain.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.domain.command.ProductionOrderCreateCommand;
 import lombok.*;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 @ToString
 @Builder
 public class ProductionOrder {
+
     private Long id;
     private String orderId;
     private String orderLineNumber;
@@ -25,6 +28,7 @@ public class ProductionOrder {
     private Long idocId;
     private Long h2OrderDpLineId;
     private String galKey;
+    private Long mngKey;
     private String productionOrderType;
     private String productionOrderState;
     private String reportState;

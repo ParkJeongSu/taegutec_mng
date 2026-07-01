@@ -7,6 +7,7 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.condition.ProductDefSearchCondition;
+import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.repository.ProductDefRepository;
 import kr.co.aim.infra.persistence.entity.ProductDefEntity;
@@ -101,7 +102,7 @@ public class ProductDefRepositoryImpl implements ProductDefRepository {
     }
 
     @Override
-    public Page<ProductDef> findProductDefByCondition(ProductDefSearchCondition condition, Pageable pageable) {
+    public Page<ProductDef> findProductDefWithConditions(ProductDefSearchConditionDto condition, Pageable pageable) {
         //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductDefEntity> query = queryFactory
                 .selectFrom(productDefEntity)

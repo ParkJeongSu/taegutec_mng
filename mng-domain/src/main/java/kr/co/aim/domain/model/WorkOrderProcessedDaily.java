@@ -2,6 +2,8 @@ package kr.co.aim.domain.model;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Setter
 @Getter
 @AllArgsConstructor
@@ -10,9 +12,10 @@ import lombok.*;
 @ToString
 public class WorkOrderProcessedDaily {
 
-    private IdWorkOrderProcessedDaily id;
+    private Long id;
+    private String statDate;
     private Integer totalProcessedCount;
     private Integer avgProcessedTime;
-    private Integer totalQuantity;
+    private BigDecimal totalQuantity;
 
 }

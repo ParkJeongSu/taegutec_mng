@@ -1,6 +1,8 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.condition.ProductDefSearchCondition;
+import kr.co.aim.common.dto.ProductDefSaveRequestDto;
+import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.record.TransactionInfo;
@@ -32,8 +34,17 @@ public class ProductDefService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public Optional<ProductDef> findById(Long id){
-        return productDefRepository.findById(id);
+    public ProductDef findById(Long id) {
+        Optional<ProductDef> optional = productDefRepository.findById(id);
+        if (optional.isEmpty()) {
+            throw new IllegalArgumentException("해당 제품 기준정보가 존재하지 않습니다. ID: " + id);
+        }
+        return optional.get();
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Page<ProductDef> findProductDefWithConditions(ProductDefSearchConditionDto condition, Pageable pageable) {
+        return productDefRepository.findProductDefWithConditions(condition, pageable);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -50,6 +61,55 @@ public class ProductDefService {
     public List<ProductDef> save(List<ProductDef> productDefList){
         return productDefRepository.save(productDefList);
     }
+
+    @Transactional
+    public ProductDef createProductDef(ProductDefSaveRequestDto dto) {
+        Optional<ProductDef> existing = productDefRepository.findByProductDefName(dto.getProductDefName());
+        if (existing.isPresent()) {
+            throw new IllegalArgumentException("이미 존재하는 Product Def Name입니다: " + dto.getProductDefName());
+        }
+        TransactionInfo tx = TransactionInfo.now(dto.getEventName(), dto.getEventUser(), dto.getEventComment());
+        ProductDefCreateCommand command = ProductDefCreateCommand.builder()
+                .transactionInfo(tx)
+                .productDefName(dto.getProductDefName())
+                .factoryName(dto.getFactoryName())
+                .description1(dto.getDescription1())
+                .description2(dto.getDescription2())
+                .ratio(dto.getRatio())
+                .defaultReceiveQuantity(dto.getDefaultReceiveQuantity())
+                .build();
+
+        return productDefRepository.save(ProductDef.create(command));
+    }
+
+    @Transactional
+    public void deleteProductDefs(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        productDefRepository.deleteAllByIdInBatch(ids);
+    }
+
+    @Transactional
+    public ProductDef updateProductDef(ProductDefSaveRequestDto dto) {
+        Optional<ProductDef> optional = productDefRepository.findById(dto.getId());
+        if (optional.isEmpty()) {
+            throw new IllegalArgumentException("수정할 대상 제품 기준정보가 없습니다. ID: " + dto.getId());
+        }
+
+        ProductDef productDef = optional.get();
+        TransactionInfo tx = TransactionInfo.now(dto.getEventName(), dto.getEventUser(), dto.getEventComment());
+        ProductDefUpdateCommand command = ProductDefUpdateCommand.builder()
+                .transactionInfo(tx)
+                .factoryName(dto.getFactoryName())
+                .description1(dto.getDescription1())
+                .description2(dto.getDescription2())
+                .ratio(dto.getRatio())
+                .defaultReceiveQuantity(dto.getDefaultReceiveQuantity())
+                .build();
+
+        productDef.update(command);
+        return productDefRepository.save(productDef);
+    }
+
 
     @Transactional(value = "mssqlTransactionManager")
     public ProductDef update(IdocH2PartMResponseDto dto, TransactionInfo tx){
@@ -71,13 +131,8 @@ public class ProductDefService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public void deleteAllByIdInBatch(List<Long>ids){
-        productDefRepository.deleteAllByIdInBatch(ids);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Page<ProductDef> findProductDefByCondition(ProductDefSearchCondition condition, Pageable pageable){
-        return productDefRepository.findProductDefByCondition(condition, pageable);
+    public Page<ProductDef> findProductDefByCondition(ProductDefSearchConditionDto condition, Pageable pageable){
+        return productDefRepository.findProductDefWithConditions(condition, pageable);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -126,6 +181,8 @@ public class ProductDefService {
 
         return productDef;
     }
+
+
 
 
 }

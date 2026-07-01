@@ -14,6 +14,7 @@ import java.util.List;
 @AllArgsConstructor
 public class IfEventQueueDto {
 
+    private String transportJobName;
     private String messageName;
     private String eventType;
     private String transactionCode;

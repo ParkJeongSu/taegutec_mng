@@ -3,6 +3,7 @@ package kr.co.aim.infra.persistence.adapter;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.StatTimeUtils;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.domain.model.EquipmentAvailabilityHourly;
 import kr.co.aim.domain.repository.StatRepository;
 import kr.co.aim.infra.persistence.entity.*;
@@ -11,6 +12,7 @@ import kr.co.aim.infra.persistence.springdatajpa.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,14 +66,18 @@ public class StatRepositoryImpl implements StatRepository {
         LocalDateTime startOfDay = StatTimeUtils.toStartDateTime(statDate);
         LocalDateTime endOfDay = StatTimeUtils.toEndDateTime(statDate);
 
+        // 💡 별칭(Alias) 지정을 위한 수량 경로 변수 선언
+        com.querydsl.core.types.dsl.NumberPath<java.math.BigDecimal> totalProcessedQtyAlias =
+                com.querydsl.core.types.dsl.Expressions.numberPath(java.math.BigDecimal.class, "totalProcessedQty");
+        com.querydsl.core.types.dsl.NumberPath<java.math.BigDecimal> scrappedQtyAlias =
+                com.querydsl.core.types.dsl.Expressions.numberPath(java.math.BigDecimal.class, "scrappedQty");
+
         List<Tuple> results = queryFactory
                 .select(
                         productionOrderHistoryEntity.equipmentName,
                         productionOrderHistoryEntity.count(), // TOTAL_PROCESSED_COUNT
-                        productionOrderHistoryEntity.endedQuantity.sum(), // TOTAL_PROCESSED_QUANTITY
-                        // 💡 실무 Tip: OK/NG 수량 집계 분기 조건 처리 (JPA Expressions 대신 전통적인 쿼리 기법)
-                        productionOrderHistoryEntity.endedQuantity.sum(), // 임시 적재 후 가공 혹은 쿼리 케이스별 집계 가능
-                        productionOrderHistoryEntity.scrappedQuantity.sum()
+                        productionOrderHistoryEntity.endedQuantity.sum().as(totalProcessedQtyAlias), // TOTAL_PROCESSED_QUANTITY
+                        productionOrderHistoryEntity.scrappedQuantity.sum().as(scrappedQtyAlias)
                 )
                 .from(productionOrderHistoryEntity)
                 .where(productionOrderHistoryEntity.completeTime.between(startOfDay, endOfDay))
@@ -82,12 +88,16 @@ public class StatRepositoryImpl implements StatRepository {
         for (Tuple tuple : results) {
             String eqpName = tuple.get(productionOrderHistoryEntity.equipmentName);
             Long totalCount = tuple.get(productionOrderHistoryEntity.count());
+            // 💡 위에서 선언한 Alias 변수를 key로 사용하여 정밀한 BigDecimal 수량 추출
+            java.math.BigDecimal totalProcessedQty = tuple.get(totalProcessedQtyAlias);
+            java.math.BigDecimal scrappedQty = tuple.get(scrappedQtyAlias);
 
-            IdProductivityDaily id = new IdProductivityDaily(statDate, eqpName);
             EquipmentProductivityDailyEntity entity = new EquipmentProductivityDailyEntity(
-                    id,
+                    TsidUtils.nextId(),
+                    statDate,
+                    eqpName,
                     totalCount != null ? totalCount.intValue() : 0,
-                    0, 0, 0, 0 // 정밀 비즈니스 수량 가공은 필요에 맞춰 추가 바인딩
+                    totalProcessedQty, totalProcessedQty, scrappedQty, 0 // 정밀 비즈니스 수량 가공은 필요에 맞춰 추가 바인딩
             );
             entities.add(entity);
         }
@@ -122,9 +132,9 @@ public class StatRepositoryImpl implements StatRepository {
             Long totalCount = tuple.get(transportJobHistoryEntity.count());
 
             if (srcName != null && destName != null) {
-                IdTransportRouteDaily id = new IdTransportRouteDaily(statDate, srcName, destName);
                 TransportRouteDailyEntity entity = new TransportRouteDailyEntity(
-                        id,
+                        TsidUtils.nextId(),
+                        statDate, srcName, destName,
                         totalCount != null ? totalCount.intValue() : 0,
                         0, 0, 0, 0, 0, 0, 0 // 시간 통계 바인딩
                 );
@@ -139,27 +149,29 @@ public class StatRepositoryImpl implements StatRepository {
      */
     @Override
     public void calculateAndSaveWorkOrderProcessed(String statDate) {
+        com.querydsl.core.types.dsl.NumberPath<java.math.BigDecimal> totalProcessedQtyAlias =
+                com.querydsl.core.types.dsl.Expressions.numberPath(java.math.BigDecimal.class, "totalProcessedQty");
         List<Tuple> results = queryFactory
                 .select(
                         equipmentProductivityDailyEntity.totalProcessedCount.sum(),
-                        equipmentProductivityDailyEntity.totalProcessedQuantity.sum()
+                        equipmentProductivityDailyEntity.totalProcessedQuantity.sum().as(totalProcessedQtyAlias)
                 )
                 .from(equipmentProductivityDailyEntity)
-                .where(equipmentProductivityDailyEntity.id.statDate.eq(statDate))
+                .where(equipmentProductivityDailyEntity.statDate.eq(statDate))
                 .fetch();
 
         if (!results.isEmpty()) {
             Tuple tuple = results.get(0);
             Integer sumCount = tuple.get(equipmentProductivityDailyEntity.totalProcessedCount.sum());
-            Integer sumQty = tuple.get(equipmentProductivityDailyEntity.totalProcessedQuantity.sum());
+            java.math.BigDecimal totalProcessedQty = tuple.get(totalProcessedQtyAlias);
 
             if (sumCount != null) {
-                IdWorkOrderProcessedDaily id = new IdWorkOrderProcessedDaily(statDate);
                 WorkOrderProcessedDailyEntity entity = new WorkOrderProcessedDailyEntity(
-                        id,
+                        TsidUtils.nextId(),
+                        statDate,
                         sumCount,
                         0, // 평균 처리 시간 가공
-                        sumQty != null ? sumQty : 0
+                        totalProcessedQty != null ? totalProcessedQty : BigDecimal.ZERO
                 );
                 workOrderProcessedDailyJpaRepository.save(entity);
             }

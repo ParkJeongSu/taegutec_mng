@@ -61,11 +61,13 @@ public class InsertTransferScheduler {
         // 5단계 errorCode와 dtimemode를 수정하고, tex로 transportJobRequest를 보낸다.
 
         List<Long> idocTypIds = new ArrayList<>();
+        Integer state = 10;
         Integer errorCode = 0;
         idocTypIds.add(IdocTypeId.INBOUND.getValue());
         idocTypIds.add(IdocTypeId.OUTBOUND.getValue());
         idocTypIds.add(IdocTypeId.RELOCATION.getValue());
-        List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndErrorCode(idocTypIds,errorCode);
+        //List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndErrorCode(idocTypIds,errorCode);
+        List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndStateAndErrorCode(idocTypIds,state,errorCode);
 
         if(CollectionUtils.isEmpty(idocEntities)){
             return;

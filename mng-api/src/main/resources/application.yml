@@ -3,7 +3,7 @@ server:
   servlet:
     context-path: /wcs-web
 factory:
-  type: powder # [ powder | insert ]
+  type: insert # [ powder | insert ]
 spring:
   application:
     name: mng
@@ -20,7 +20,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: simulator # scheduler,tex | pex | tex | simulator 등으로 설정 가능
+    active: scheduler,pex,tex # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
@@ -187,10 +187,10 @@ spring:
 #    port: 5672
 #    username: eosuser # eosuser
 #    password: eosuser
-    host: localhost #192.168.50.225 #localhost
+    host: 192.168.50.135 #192.168.50.225 #localhost #192.168.50.135
     port: 5672
-    username: admin # eosuser
-    password: admin
+    username: eosuser # eosuser , admin
+    password: eosuser
     dynamic: true
     listener:
       simple:

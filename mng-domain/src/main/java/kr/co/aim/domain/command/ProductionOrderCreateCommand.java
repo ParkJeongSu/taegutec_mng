@@ -24,6 +24,7 @@ public class ProductionOrderCreateCommand {
     private final Long idocId;
     private final Long h2OrderDpLineId;
     private final String galKey;
+    private final Long mngKey;
     private final String productionOrderType;
     private final String productionOrderState;
     private final String reportState;

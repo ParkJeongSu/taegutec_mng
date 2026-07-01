@@ -465,6 +465,7 @@ public class PowderSimulatorFacade {
                 .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
                 .orderId(ctx.getDetail().getCOrderId())
                 .status(GALProductionStatus.WHAT_IS_NEXT_RRN)
+                .actQty(dto.getActualQuantity())
                 .build();
         return productionOrderService.updateStatusProductionOrder(vo);
     }
@@ -534,7 +535,7 @@ public class PowderSimulatorFacade {
                 .actQty(ctx.getActualQuantity())
                 .h2OrderDpLineId(ctx.getProductionOrder().getH2OrderDpLineId())
                 .orderId(ctx.getDetail().getCOrderId())
-                .status(GALProductionStatus.CHANGED_STOCK_PER_CONTAINER)
+                .status(GALProductionStatus.STOCK_CHANGED)
                 .build();
         return productionOrderService.updateStatusProductionOrder(vo);
     }

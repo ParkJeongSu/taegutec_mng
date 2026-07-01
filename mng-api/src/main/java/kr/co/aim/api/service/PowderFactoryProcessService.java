@@ -11,6 +11,7 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
+import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
@@ -21,11 +22,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +53,9 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final TransportJobMapper transportJobMapper;
 
     private final CarrierSelectionService carrierSelectionService;
+    private final LotCarrierMappingService lotCarrierMappingService;
+
+    private final RabbitTemplate rabbitTemplate;
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
@@ -253,7 +259,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
      */
     @Override
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<CarrierValidationReplyBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
+    public BaseMessage<CarrierInfoDownloadSendBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
@@ -264,6 +270,10 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String carrierName = message.getBody().getCarrierName();
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
+
+        if(StringUtils.isEmpty(carrierName)){
+            return null;
+        }
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
         LoadCompletedCommand command = LoadCompletedCommand.builder()
@@ -290,53 +300,33 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
-        if(StringUtils.isNotBlank(carrierName)){
-            Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
-            if(optionalCarriers.isEmpty()){
-                return null;
-            }
-
-            Carrier carrier = optionalCarriers.get();
-            carrier.loadCompleted(command);
-            carrier = carrierService.save(carrier);
-            CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
-            historyService.saveHistory(carrierHistoryEntity);
-
-            if(StringUtils.equals(PortRoleType.WCS.getValue(),portDef.getPortRoleType())){
-                // RoleType 이 WCS 인 경우
-                // 연결된 port 정보에 CarrierName 기록
-                String connectedEquipmentName = portDef.getConnectedEquipmentName();
-                String connectedPortName = portDef.getConnectedPortName();
-                LoadCompletedCommand connectedPortCommand = LoadCompletedCommand.builder()
-                        .transactionInfo(tx)
-                        .carrierTransportState(CarrierTransportState.ON_PORT.getValue())
-                        .carrierName(carrierName)
-                        .equipmentName(connectedEquipmentName)
-                        .portName(connectedPortName)
-                        .build();
-
-                Optional<Port> optionalConnectedPort = portService.findPortByEquipmentNameAndPortName(connectedEquipmentName,connectedPortName);
-                if(optionalConnectedPort.isEmpty()){
-                    return null;
-                }
-                Port connectedPort = optionalConnectedPort.get();
-                connectedPort.loadCompleted(connectedPortCommand);
-                connectedPort = portService.save(connectedPort);
-                PortHistoryEntity connectedPortHistoryEntity = portMapper.toHistoryEntity(connectedPort);
-                historyService.saveHistory(connectedPortHistoryEntity);
-            }
+        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
+        if(optionalCarriers.isEmpty()){
+            return null;
         }
 
-        if(StringUtils.equals(PortRoleType.EAS.getValue(),portDef.getPortRoleType())){
-            // TODO: SystemName == EAS CarrierValidationReply 메시지 반환
-            // TODO: Manti 물어보는 로직 추가
-            // TODO: ReadytoProcess 에서 진행못하는 경우도 스케줄러 로직이 추가 되야함
-            // TODO: Manti가 60초 내에 응답을 주지 못하는 경우, 수동으로 수정할 수 있게, 어떤 컬럼값을 통해서 내려주기
-            // 현재 조회한 port에서 CarrierName 을 가져와서 Carrier ValidationReply 메시지 생성 후 반환
+        Carrier carrier = optionalCarriers.get();
+        carrier.loadCompleted(command);
+        carrier = carrierService.save(carrier);
+        CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
+        historyService.saveHistory(carrierHistoryEntity);
 
-            BaseMessage<CarrierValidationReplyBody> reply = new BaseMessage<>();
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        if(optionalLotCarrierMapping.isEmpty()){
+            return null;
+        }
+        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        lotCarrierMapping.loadCompleted(command);
+        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
 
-            reply.setMessageName(MessageList.CARRIER_VALIDATION_REPLY.getMessageName());
+        // OUTPUT PORT 의 경우 EMPTY CONTAINER 인걸 체크 하고, CarrierInfoDownLoadSend
+
+        // INPUT PORT 의 경우 MANTI 로 RECIPE Parameter 요청
+
+        if(StringUtils.equals(PortType.OUTPUT.getValue(),portDef.getPortType())){
+            BaseMessage<CarrierInfoDownloadSendBody> reply = new BaseMessage<>();
+
+            reply.setMessageName(MessageList.CARRIER_INFO_DOWNLOAD_SEND.getMessageName());
             reply.setTransactionId(message.getTransactionId());
             reply.setMessageFrom(SystemName.MNG.getValue());
             reply.setMessageOwner(SystemName.MNG.getValue());
@@ -345,17 +335,51 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             reply.setResultMessage("");
             reply.setResultCode(ResultCode.OK.getValue());
 
-            CarrierValidationReplyBody body = CarrierValidationReplyBody
+            RecipeBody recipeBody = new RecipeBody();
+            List<RecipeParameterListBody> recipeParameterListBodyList = new ArrayList<>();
+            recipeBody.setParameterList(recipeParameterListBodyList);
+
+            CarrierInfoDownloadSendBody body = CarrierInfoDownloadSendBody
                     .builder()
                     .equipmentName(equipmentName)
                     .portName(portName)
                     .carrierName(carrierName)
-                    .portTransportMode(portTransportMode)
+                    .recipe(recipeBody)
                     .build();
             reply.setBody(body);
             return reply;
-        }
+        }else if(StringUtils.equals(PortType.INPUT.getValue(),portDef.getPortType())){
 
+            BaseMessage<RecipeRequestBody> mantiRequestMessage = new BaseMessage<>();
+            mantiRequestMessage.setMessageName(MessageList.RECIPE_REQUEST.getMessageName());
+            mantiRequestMessage.setTransactionId(message.getTransactionId());
+            mantiRequestMessage.setMessageFrom(SystemName.MNG.getValue());
+            mantiRequestMessage.setMessageOwner(SystemName.MNG.getValue());
+            mantiRequestMessage.setMessageTo(SystemName.MANTI.getValue());
+            mantiRequestMessage.setEventTime(message.getEventTime());
+            mantiRequestMessage.setResultMessage("");
+            mantiRequestMessage.setResultCode(ResultCode.OK.getValue());
+            RecipeRequestBody body =
+                    RecipeRequestBody
+                            .builder()
+                            .equipmentName(equipmentName)
+                            .portName(portName)
+                            .carrierName(carrierName)
+                            .orderId(lotCarrierMapping.getOrderId())
+                            .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
+                            .transactionId(lotCarrierMapping.getMngKey().toString())
+                            .build();
+
+            mantiRequestMessage.setBody(body);
+
+            rabbitTemplate.convertAndSend(
+                    RabbitConfig.EXCHANGE_MANTI,
+                    RabbitConfig.ROUTING_MANTI,
+                    mantiRequestMessage
+            );
+
+            return null;
+        }
 
         return null;
     }
@@ -537,5 +561,60 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
         }
+    }
+
+    @Override
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
+        //TODO: POWDER , INSERT 로직 분리
+        // POWDER는 아래의 로직을 그대로 수행하면 되고
+        // INSERT는 PORT_DEF에서 오직 ROLE_TYPE이 INTERNAL 인 경우에만 변경
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+
+        String equipmentName = message.getBody().getEquipmentName();
+        String portName = message.getBody().getPortName();
+        String carrierName = message.getBody().getCarrierName();
+        String portType = message.getBody().getPortType();
+        String portTransportMode = message.getBody().getPortTransportMode();
+
+        Optional<Port> optionalPorts =
+                portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
+
+        if(optionalPorts.isEmpty()){
+            return null;
+        }
+
+        Port port = optionalPorts.get();
+        if(!StringUtils.equals(PortTransportState.READY_TO_LOAD.getValue(),port.getTransportState())){
+            TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+            LoadRequestCommand command = LoadRequestCommand
+                    .builder()
+                    .transactionInfo(tx)
+                    .build();
+            port.loadRequest(command);
+            port = portService.save(port);
+            PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+            historyService.saveHistory(portHistoryEntity);
+        }
+
+        BaseMessage<CarrierDispatchRequestBody> reply = new BaseMessage<>();
+        reply.setTransactionId(message.getTransactionId());
+        reply.setMessageFrom(SystemName.MNG.getValue());
+        reply.setMessageOwner(SystemName.MNG.getValue());
+        reply.setMessageTo(SystemName.MNG.getValue());
+        reply.setEventTime(message.getEventTime());
+        reply.setResultMessage("");
+        reply.setResultCode(ResultCode.OK.getValue());
+        reply.setMessageName(MessageList.CARRIER_DISPATCH_REQUEST.getMessageName());
+
+        CarrierDispatchRequestBody body = CarrierDispatchRequestBody.builder()
+                .equipmentName(equipmentName)
+                .portName(portName)
+                .build();
+        reply.setBody(body);
+
+        return reply;
     }
 }
