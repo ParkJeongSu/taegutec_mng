@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -28,7 +29,7 @@ public class H2TransResponseDto {
 
     private Integer modCnt;
 
-    private Long dataCode;
+    private String dataCode;
 
     private Long cTransTy;
 
@@ -46,13 +47,13 @@ public class H2TransResponseDto {
 
     private Long cOrderLn;
 
-    private Long cGaId;
+    private String cGaId;
 
     private String cGalWhs;
 
     private String cCoId;
 
-    private Long cGrWgAct;
+    private BigDecimal cGrWgAct;
 
     private String cReqZone;
 

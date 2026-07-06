@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Component
+//@Component
 @Slf4j
 @RequiredArgsConstructor
 @Profile({"scheduler"})
@@ -42,7 +42,7 @@ public class InsertUnLoadRequestScheduler {
      * 2) PEX로 LoadRequest 메시지 전송
      *
      * */
-    @Scheduled(fixedDelay = 60000) // 60초마다 실행
+    @Scheduled(fixedDelay = 5000) // 60초마다 실행
     @SchedulerLock(name = "unLoadRequest",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)

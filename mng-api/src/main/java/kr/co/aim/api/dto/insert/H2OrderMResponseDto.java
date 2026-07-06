@@ -27,9 +27,9 @@ public class H2OrderMResponseDto {
 
     private Integer modCnt;
 
-    private Long dataCode;
+    private String dataCode;
 
-    private Long bookCtrl;
+    private String bookCtrl;
 
     private String cClient;
 
@@ -47,7 +47,7 @@ public class H2OrderMResponseDto {
 
     private String cWcId;
 
-    private Long cGalId;
+    private String cGalId;
 
     private String cGalWhs;
 

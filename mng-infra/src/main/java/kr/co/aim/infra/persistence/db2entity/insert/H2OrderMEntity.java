@@ -38,10 +38,10 @@ public class H2OrderMEntity {
     private Integer modCnt;
 
     @Column(name = "DATACODE")
-    private Long dataCode;
+    private String dataCode;
 
     @Column(name = "BOOKCTRL")
-    private Long bookCtrl;
+    private String bookCtrl;
 
     @Column(name = "CCLIENT")
     private String cClient;
@@ -68,7 +68,7 @@ public class H2OrderMEntity {
     private String cWcId;
 
     @Column(name = "CGALID")
-    private Long cGalId;
+    private String cGalId;
 
     @Column(name = "CGALWHS")
     private String cGalWhs;
@@ -78,4 +78,12 @@ public class H2OrderMEntity {
 
     @Column(name = "CUSRNO")
     private String cUsrNo;
+
+    @Column(name = "PARSEGID")
+    private Integer parsegId;
+
+    @Column(name = "PARSEGNAM")
+    private String parsegName;
+
+
 }

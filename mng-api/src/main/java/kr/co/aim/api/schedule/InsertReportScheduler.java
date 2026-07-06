@@ -26,7 +26,7 @@ public class InsertReportScheduler {
     private final InsertExternalInterfaceService insertExternalInterfaceService;
     private final IfEventQueueService ifEventQueueService;
 
-    @Scheduled(fixedDelay = 600000) // 5초마다 실행
+    @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "insertReportH2Trans",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
@@ -64,6 +64,7 @@ public class InsertReportScheduler {
                             }
                         }
                     } catch (Exception e1){
+                        log.error("final report error", e1);
                         log.error("increase & reportFail id {} ",ifEventQueue.getId());
                     }
                 }

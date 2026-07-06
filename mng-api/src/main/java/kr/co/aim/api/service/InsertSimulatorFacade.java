@@ -312,7 +312,7 @@ public class InsertSimulatorFacade {
         H2TransReportVo vo = H2TransReportVo
                 .builder()
                 .orderId(orderId.toString())
-                .status(GALTransportStatus.SHORTAGE)
+                .status(GALTransportStatus.SHORTAGE_OUTBOUND)
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }

@@ -99,6 +99,17 @@ public class InsertTransferScheduler {
                 ){
                     H2OrderMEntity master = h2OrderMEntities.get(0);
                     H2OrderDEntity detail = h2OrderDEntities.get(0);
+
+                    String sourceZoneName = "";
+                    String destinationZoneName = "";
+                    if(StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.OUTBOUND.getValue())){
+                        sourceZoneName = detail.getCZone();
+                        destinationZoneName = "";
+                    }else if(StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.INBOUND.getValue())){
+                        sourceZoneName = "";
+                        destinationZoneName = detail.getCZone();
+                    }
+
                     TransportOrderCreateCommand command =
                             TransportOrderCreateCommand
                                     .builder()
@@ -116,8 +127,8 @@ public class InsertTransferScheduler {
                                     .galWarehouse(master.getCGalWhs())
                                     .locationId(master.getCLocId())
                                     .workStationId(master.getCWcId())
-                                    //.sourceZoneName() relocation 시 사용
-                                    .destinationZoneName(detail.getCZone())
+                                    .sourceZoneName(sourceZoneName)
+                                    .destinationZoneName(destinationZoneName)
                                     //.errorText()
                                     //.actualWeight()
                                     .requestedZoneName(detail.getCZone())

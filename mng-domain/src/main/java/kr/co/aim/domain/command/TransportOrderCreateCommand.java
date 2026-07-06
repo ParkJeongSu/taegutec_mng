@@ -23,7 +23,7 @@ public class TransportOrderCreateCommand {
     private final String lastTransactionCode;
     private final String carrierType;
     private final Integer priority;
-    private final Long galId; // cGalId only reply need
+    private final String galId; // cGalId only reply need
     private final String galWarehouse; // cGalWarehouse only reply need
     private final String locationId; // storage location Number 저장 위치 xxyyzz…
     private final String workStationId; //Inbound : 현재위치, Outbound : 타겟의 위치 Outbound 에서 목적지로 사용

@@ -44,6 +44,8 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
             @Param("errorCode") Integer errorCode
     );
 
-    @Query("SELECT COALESCE(MAX(i.lineId), 0) +1 FROM IdocEntity i")
+    @Query("SELECT COALESCE(MAX(i.lineId), 0) +1 FROM IdocEntity i " +
+            "WHERE i.lineId BETWEEN 1 AND 499999999"
+    )
     Long findMaxLineId();
 }

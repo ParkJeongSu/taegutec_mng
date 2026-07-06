@@ -6,6 +6,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -39,7 +40,7 @@ public class H2TransEntity {
     private Integer modCnt;
 
     @Column(name = "DATACODE")
-    private Long dataCode;
+    private String dataCode;
 
     @Column(name = "CTRANSTY")
     private Long cTransTy;
@@ -66,7 +67,7 @@ public class H2TransEntity {
     private Long cOrderLn;
 
     @Column(name = "CGALID")
-    private Long cGalId;
+    private String cGalId;
 
     @Column(name = "CGALWHS")
     private String cGalWhs;
@@ -75,7 +76,7 @@ public class H2TransEntity {
     private String cCoId;
 
     @Column(name = "CGRWGACT")
-    private Long cGrWgAct;
+    private BigDecimal cGrWgAct;
 
     @Column(name = "CREQZONE")
     private String cReqZone;
@@ -91,4 +92,16 @@ public class H2TransEntity {
 
     @Column(name = "CWCID")
     private String cWcId;
+
+    @Column(name = "CGEOCL")
+    private String cGeoCl;
+
+    @Column(name = "CUSRID")
+    private String cUsrId;
+
+    @Column(name = "PARSEGID")
+    private Integer parsegId;
+
+    @Column(name = "PARSEGNAM")
+    private String parsegName;
 }

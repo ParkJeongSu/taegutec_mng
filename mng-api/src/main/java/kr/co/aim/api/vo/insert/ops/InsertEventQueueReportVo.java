@@ -36,4 +36,7 @@ public class InsertEventQueueReportVo {
     // WCS : WCS 내부에서 Relocation 등으로 시작한 반송
     private final String requestSource;
 
+    private String resultCode;
+    private String resultMessage;
+
 }

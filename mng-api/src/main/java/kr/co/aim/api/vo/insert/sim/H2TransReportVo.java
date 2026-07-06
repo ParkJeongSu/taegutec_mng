@@ -12,6 +12,7 @@ import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
@@ -39,7 +40,7 @@ public class H2TransReportVo {
     private final IdocDataCode idocDataCode;
 
     // 측정 무게
-    private final Long weight;
+    private final BigDecimal weight;
 
     // 3. 예외 처리 정보
     private final String errorText;

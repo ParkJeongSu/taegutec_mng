@@ -38,7 +38,7 @@ public class H2OrderDEntity {
     private Integer modCnt;
 
     @Column(name = "DATACODE")
-    private Long dataCode;
+    private String dataCode;
 
     @Column(name = "CCLIENT", length = 30)
     private String cClient;
@@ -63,4 +63,10 @@ public class H2OrderDEntity {
 
     @Column(name = "CDRIVINGPROFILE", length = 30)
     private String cDrivingProfile;
+
+    @Column(name = "PARSEGID")
+    private Integer parsegId;
+
+    @Column(name = "PARSEGNAM")
+    private String parsegName;
 }

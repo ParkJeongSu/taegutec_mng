@@ -312,7 +312,7 @@ public class InsertSimulatorInterfaceService {
     @Transactional(value = "db2TransactionManager")
     public void shortageOutbound(TransportOrderContext ctx) {
         H2TransReportVo vo = H2TransReportVo.builder()
-                .status(GALTransportStatus.SHORTAGE)
+                .status(GALTransportStatus.SHORTAGE_OUTBOUND)
                 .sourceIdoc(ctx.getIdoc())
                 .master(ctx.getMaster())
                 .details(ctx.getDetails())
@@ -389,7 +389,8 @@ public class InsertSimulatorInterfaceService {
                 H2TransEntity.builder()
                         .lineId(h2TransJpaRepository.findMaxLineId() + 1)
                         .idocId(idocEntity.getLineId())
-                        .dtimeCre(localDateTime).dataCode(10L)
+                        .dtimeCre(localDateTime)
+                        .dataCode("10")
                         .cTransTy(Long.parseLong(GALTransportStatus.STATION_OCCUPIED.getValue()))
                         .cClient("999")
                         .cCoId(vo.getCarrierName())

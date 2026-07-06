@@ -117,9 +117,9 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                     .transportJobState(TransportJobState.REQUESTED.getValue())
                                     .carrierType(carrierType)
                                     .travelProfile(travelProfile)
-                                    //.sourceEquipmentName()
+                                    .sourceEquipmentName(transportOrder.getGalWarehouse())
                                     //.sourcePortName()
-                                    //.sourceZoneName()
+                                    .sourceZoneName(transportOrder.getSourceZoneName())
                                     //.sourcePositionTypeName()
                                     //.sourcePositionName()
                                     .destinationEquipmentName(port.getEquipmentName())
@@ -268,6 +268,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .travelProfile(travelProfile)
                             .sourceEquipmentName(sourceEquipmentName)
                             .sourcePortName(sourcePortName)
+                            .sourceZoneName(sourceZoneName)
                             .sourcePositionTypeName(sourcePositionTypeName)
                             .sourcePositionName(sourcePositionName)
                             .destinationEquipmentName(destinationEquipmentName)
@@ -549,11 +550,15 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
         String actualWeight = message.getBody().getActualWeight();
         String actualZoneName = message.getBody().getDestinationZoneName();
+        String destinationEquipmentName = message.getBody().getDestinationEquipmentName();
+        String destinationPositionName = message.getBody().getDestinationPositionName();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
 
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
+            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+            Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
                     TransportJobUpdateCommand
@@ -574,8 +579,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         .builder()
                         .transportJobName(transportJob.getTransportJobName())
                         .messageName(messageName)
-//                            .port()
-//                            .portDef()
+                        .optionalPort(optionalPort)
+                        .optionalPortDef(optionalPortDef)
                         .carrierName(carrierName)
                         .actualZoneName(actualZoneName)
                         .actualWeight(actualWeight)
@@ -598,21 +603,31 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
+        String resultCode = message.getResultCode();
+        String resultMessage = message.getResultMessage();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
-        // 비관적 Lock 으로 조회시 문제 발생
-        //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
+        String sourceEquipmentName = message.getBody().getSourceEquipmentName();
+        String sourcePortName = message.getBody().getSourcePositionName();
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
 
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
+            String transportJobState = "";
+            if(StringUtils.equals(resultCode,ResultCode.OK.getValue())){
+                transportJobState = TransportJobState.ACCEPTED.getValue();
+            }else{
+                transportJobState = TransportJobState.REJECTED.getValue();
+            }
             TransportJobUpdateCommand command =
                     TransportJobUpdateCommand
                             .builder()
-                            .transportJobState(TransportJobState.ACCEPTED.getValue())
+                            .transportJobState(transportJobState)
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
@@ -626,13 +641,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         .builder()
                         .transportJobName(transportJob.getTransportJobName())
                         .messageName(messageName)
-//                            .port()
-//                            .portDef()
+                        .optionalPort(optionalPort)
+                        .optionalPortDef(optionalPortDef)
                         .carrierName(carrierName)
-//                            .actualZoneName()
-//                            .actualWeight()
-//                            .actualRackLocationId()
-//                            .errorTexts()
+                        .resultCode(resultCode)
+                        .resultMessage(resultMessage)
                         .tx(tx)
                         .build();
                 factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);

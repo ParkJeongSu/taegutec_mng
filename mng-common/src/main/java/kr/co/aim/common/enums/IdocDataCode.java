@@ -7,7 +7,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum IdocDataCode implements MetaDataEnum {
-    INBOUND(20L),
-    ELSE(40L);
-    private final Long value;
+    DATA_CODE01("01"),
+    INBOUND("20"),
+    ELSE("40");
+    private final String value;
 }

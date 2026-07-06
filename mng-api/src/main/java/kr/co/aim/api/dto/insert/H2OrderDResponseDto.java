@@ -27,7 +27,7 @@ public class H2OrderDResponseDto {
 
     private Integer modCnt;
 
-    private Long dataCode;
+    private String dataCode;
 
     private String cClient;
 

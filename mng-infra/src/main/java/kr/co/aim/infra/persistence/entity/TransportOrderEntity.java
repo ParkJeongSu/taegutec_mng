@@ -52,7 +52,7 @@ public class TransportOrderEntity {
     private Integer priority;
 
     @Column(name = "GAL_ID")
-    private Long galId; // cGalId only reply need
+    private String galId; // cGalId only reply need
 
     @Column(name = "GAL_WAREHOUSE")
     private String galWarehouse; // cGalWarehouse only reply need

@@ -24,7 +24,7 @@ public class TransportOrder {
     private String lastTransactionCode;
     private String carrierType;
     private Integer priority;
-    private Long galId; // cGalId only reply need
+    private String galId; // cGalId only reply need
     private String galWarehouse; // cGalWarehouse only reply need
     private String locationId; // storage location Number 저장 위치 xxyyzz…
     private String workStationId; //Inbound : 현재위치, Outbound : 타겟의 위치 Outbound 에서 목적지로 사용

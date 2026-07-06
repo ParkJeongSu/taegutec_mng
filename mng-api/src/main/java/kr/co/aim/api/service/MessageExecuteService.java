@@ -309,6 +309,10 @@ public class MessageExecuteService {
         String actualWeight = message.getBody().getActualWeight();
         String carrierType = message.getBody().getCarrierType();
 
+        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+
+
         TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
         // insert EventQueue
         try{
@@ -317,8 +321,8 @@ public class MessageExecuteService {
                     .builder()
                     .transportJobName(transportJobName)
                     .messageName(messageName)
-                    //.optionalPort(optionalPort)
-                    //.optionalPortDef(optionalPortDef)
+                    .optionalPort(optionalPort)
+                    .optionalPortDef(optionalPortDef)
                     .carrierName(carrierName)
                     .virtualCarrierName(virtualCarrierName)
                     .actualZoneName(currentZoneName)
@@ -516,17 +520,7 @@ public class MessageExecuteService {
         TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), message.getResultMessage());
 
         Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
-        PortDef portDef;
-        if(optionalPortDef.isEmpty()){
-            return;
-        }
-        portDef = optionalPortDef.get();
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName, portName);
-        Port port;
-        if(optionalPort.isEmpty()){
-            return;
-        }
-        port = optionalPort.get();
 
         // insert EventQueue
         try{

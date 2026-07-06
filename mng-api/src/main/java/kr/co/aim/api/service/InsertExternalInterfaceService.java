@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -56,9 +57,12 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         return IdocEntity.builder()
                 .lineId(idocJpaRepository.findMaxLineId())
                 .idocTypId(IdocTypeId.CONFIRMATION.getValue())
+                .state(IdocState.INITIAL.getValue())
+                .errorCode(IdocErrorCode.INIT.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
                 .dtimeCre(now)
+                .modCnt(0)
                 .build();
     }
 
@@ -156,9 +160,15 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         try {
             dto = objectMapper.readValue(ifEventQueue.getPayload(),IfEventQueueDto.class);
         } catch (Exception e) {
+            log.error("IfEventQueue 페이로드 역직렬화 중 에러 발생. payload: {}", ifEventQueue.getPayload(), e);
             throw new RuntimeException(e);
         }
         String virtualCarrierName = dto.getVirtualCarrierName();
+        BigDecimal actualWeight = null;
+
+        if (dto.getActualWeight() != null && !dto.getActualWeight().trim().isEmpty()) {
+            actualWeight = new BigDecimal(dto.getActualWeight());
+        }
 
         LocalDateTime now = null;
 
@@ -167,7 +177,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         now = LocalDateTime.now().withNano(0);
 
         IdocEntity newIdoc = buildBaseIdoc(now);
-        idocJpaRepository.save(newIdoc);
+        newIdoc = idocJpaRepository.save(newIdoc);
 
         H2TransEntity h2TransEntity =
                 H2TransEntity
@@ -175,20 +185,23 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .lineId(h2TransJpaRepository.findMaxLineId())
                         .idocId(newIdoc.getLineId())
                         .dtimeCre(now)
-                        //.dataCode()
+                        .usrMod(SystemName.MNG.getValue())
+                        .pgmMod(SystemName.MNG.getValue())
+                        .modCnt(0)
+                        .dataCode(IdocDataCode.DATA_CODE01.getValue())
                         .cTransTy( Long.parseLong(dto.getTransactionCode()))
                         .cClient(IdocClient.MNG.getValue())
                         .cOrderId(ifEventQueue.getOrderId())
                         .cOrderTy(dto.getOrderType())
-                        .cGalId(StringUtils.isNotBlank(dto.getGalId()) ? Long.parseLong(dto.getGalId()) : 0L)
+                        .cGalId(StringUtils.isNotBlank(dto.getGalId()) ? dto.getGalId() : "")
                         .cGalWhs(dto.getGalWarehouse())
                         .cCoId(ifEventQueue.getCarrierName())
                         .cText1(virtualCarrierName)
-                        // .cGrWgAct(dto.getActualWeight()) // TODO: 실제 어떤 DataType 으로 넣을지 고민, 아마도 소숫점자리까지 계산
+                        .cGrWgAct(actualWeight)
                         .cReqZone(dto.getRequestedZoneName())
                         .cZone(dto.getActualZoneName())
                         .cLocId(dto.getActualLocationId())
-                        //.cErrDsc() // n개의 보고
+                        .cErrDsc(dto.getErrorText()) // n개의 보고
                         .cWcId(dto.getActualWorkStationId())
                         .build();
         h2TransJpaRepository.save(h2TransEntity);
