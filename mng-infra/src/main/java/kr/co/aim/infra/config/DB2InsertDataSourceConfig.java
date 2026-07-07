@@ -29,7 +29,7 @@ import java.util.Map;
         entityManagerFactoryRef = "db2EntityManagerFactory", // 2. 사용할 EntityManagerFactory 지정
         transactionManagerRef = "db2TransactionManager"      // 3. 사용할 TransactionManager 지정
 )
-@Profile({"scheduler","simulator","web"})
+@Profile({"scheduler","simulator","web","tex","pex"})
 public class DB2InsertDataSourceConfig {
 
     @Value("${spring.datasource.db2.schema-name}")
@@ -45,7 +45,7 @@ public class DB2InsertDataSourceConfig {
 
     @Bean(name = "db2DataSource")
     @ConfigurationProperties(prefix = "spring.datasource.db2")
-    @Profile({"scheduler","simulator","web"})
+    @Profile({"scheduler","simulator","web","tex","pex"})
     public DataSource db2DataSource() {
         // HikariDataSource 타입으로 명시적 생성하여 빌드합니다.
         HikariDataSource dataSource = DataSourceBuilder.create().type(HikariDataSource.class).build();
@@ -55,7 +55,7 @@ public class DB2InsertDataSourceConfig {
     }
 
     @Bean(name = "db2EntityManagerFactory")
-    @Profile({"scheduler","simulator","web"})
+    @Profile({"scheduler","simulator","web","tex","pex"})
     public LocalContainerEntityManagerFactoryBean db2EntityManagerFactory(
             EntityManagerFactoryBuilder builder,
             @Qualifier("db2DataSource") DataSource dataSource) {
@@ -77,14 +77,14 @@ public class DB2InsertDataSourceConfig {
     }
 
     @Bean(name = "db2TransactionManager")
-    @Profile({"scheduler","simulator","web"})
+    @Profile({"scheduler","simulator","web","tex","pex"})
     public PlatformTransactionManager db2TransactionManager(
             @Qualifier("db2EntityManagerFactory") LocalContainerEntityManagerFactoryBean entityManagerFactory) {
         return new JpaTransactionManager(entityManagerFactory.getObject());
     }
 
     @Bean(name = "db2JdbcTemplate")
-    @Profile({"scheduler","simulator","web"})
+    @Profile({"scheduler","simulator","web","tex","pex"})
     public JdbcTemplate db2JdbcTemplate(@Qualifier("db2DataSource")DataSource db2DataSource) {
         return new JdbcTemplate(db2DataSource);
     }

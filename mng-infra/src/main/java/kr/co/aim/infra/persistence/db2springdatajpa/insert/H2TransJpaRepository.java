@@ -29,4 +29,16 @@ public interface H2TransJpaRepository extends JpaRepository<H2TransEntity, Long>
             "WHERE h.lineId BETWEEN 1 AND 499999999"
     )
     Long findMaxLineId();
+
+    @Query("SELECT COUNT(h) > 0 FROM H2TransEntity h WHERE h.lineId = 1")
+    boolean existsByLineIdOne();
+
+    // 2. 존재하는 데이터들의 바로 다음 빈틈 중 가장 작은 값 탐색
+    @Query("SELECT COALESCE(MIN(h.lineId), 0) + 1 FROM H2TransEntity h " +
+            "WHERE h.lineId BETWEEN 1 AND 499999998 " +
+            "AND NOT EXISTS (" +
+            "    SELECT 1 FROM H2TransEntity sub " +
+            "    WHERE sub.lineId = h.lineId + 1" +
+            ")")
+    Long findMinAvailableLineIdAfterOne();
 }

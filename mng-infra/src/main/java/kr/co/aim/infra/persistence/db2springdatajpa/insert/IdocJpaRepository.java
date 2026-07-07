@@ -48,4 +48,16 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
             "WHERE i.lineId BETWEEN 1 AND 499999999"
     )
     Long findMaxLineId();
+
+    @Query("SELECT COUNT(i) > 0 FROM IdocEntity i WHERE i.lineId = 1")
+    boolean existsByLineIdOne();
+
+    // 2. 존재하는 데이터들의 바로 다음 빈틈 중 가장 작은 값 탐색
+    @Query("SELECT COALESCE(MIN(i.lineId), 0) + 1 FROM IdocEntity i " +
+            "WHERE i.lineId BETWEEN 1 AND 499999998 " +
+            "AND NOT EXISTS (" +
+            "    SELECT 1 FROM IdocEntity sub " +
+            "    WHERE sub.lineId = i.lineId + 1" +
+            ")")
+    Long findMinAvailableLineIdAfterOne();
 }
