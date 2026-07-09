@@ -7,6 +7,7 @@ import kr.co.aim.api.service.DashboardService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Profile("web")
 @ResponseAnnotation
-@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class DashBoardV1Controller {
     private final DashboardService dashboardService;
 

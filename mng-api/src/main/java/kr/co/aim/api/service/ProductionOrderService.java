@@ -35,7 +35,6 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Slf4j
 @Profile({"scheduler","web","pex","tex","simulator"})
-//@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class ProductionOrderService {
     private final CarrierService carrierService;
     private final ProductionOrderRepository productionOrderRepository;

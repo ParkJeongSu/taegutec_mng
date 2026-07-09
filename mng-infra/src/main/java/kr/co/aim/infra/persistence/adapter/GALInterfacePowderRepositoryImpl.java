@@ -16,6 +16,7 @@ import kr.co.aim.domain.model.GALPartResponse;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

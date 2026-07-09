@@ -13,6 +13,7 @@ import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
 import kr.co.aim.domain.repository.EquipmentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -29,7 +30,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
-@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class DashboardService {
 
     private final ProductionOrderService productionOrderService;

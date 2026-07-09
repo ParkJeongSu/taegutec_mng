@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 
@@ -61,7 +62,8 @@ public class H2OrderDEntity {
     @Column(name = "CZONE", length = 30)
     private String cZone;
 
-    @Column(name = "CDRIVINGPROFILE", length = 30)
+    //@Column(name = "CDRIVINGPROFILE", length = 30)
+    @jakarta.persistence.Transient
     private String cDrivingProfile;
 
     @Column(name = "PARSEGID")

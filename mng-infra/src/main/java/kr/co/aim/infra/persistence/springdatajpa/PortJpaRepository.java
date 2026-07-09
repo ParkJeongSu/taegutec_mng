@@ -27,6 +27,18 @@ public interface PortJpaRepository extends JpaRepository<PortEntity, Long> {
 
     List<PortEntity> findByTransportState(String transportState);
 
+
+    @Query(value = "SELECT * FROM (" +
+            "  SELECT p.*, " +
+            "         ROW_NUMBER() OVER (PARTITION BY pd.WORK_CENTER_NAME ORDER BY p.EVENT_TIME ASC) as rn " +
+            "  FROM NEXBEMNG.dbo.PORT p " +
+            "  JOIN NEXBEDEF.dbo.PORT_DEF pd ON p.EQUIPMENT_NAME = pd.EQUIPMENT_NAME AND p.PORT_NAME = pd.PORT_NAME " +
+            "  WHERE p.TRANSPORT_STATE = :transportState" +
+            ") sub " +
+            "WHERE sub.rn = 1", nativeQuery = true)
+    List<PortEntity> findEarliestPortPerWorkCenter(@Param("transportState") String transportState);
+
+
     @Query("SELECT p FROM PortEntity p " +
             "JOIN PortDefEntity pd ON p.equipmentName = pd.equipmentName AND p.portName = pd.portName " +
             "WHERE p.transportState = :transportState " +

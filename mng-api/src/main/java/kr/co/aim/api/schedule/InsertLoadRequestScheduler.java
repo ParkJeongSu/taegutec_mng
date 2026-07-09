@@ -47,6 +47,9 @@ public class InsertLoadRequestScheduler {
     public void insertLoadRequestScheduler() {
 
         List<Port> portList = portService.findByTransportState(PortTransportState.READY_TO_LOAD.getValue());
+        //TODO: 워크센터별로 하나씩 READY_TO_LOAD 인 PORT 조회해서 보내기 아래의 detail port Type도 확인해보기
+        //List<Port> portList = portService.findEarliestPortPerWorkCenter(PortTransportState.READY_TO_LOAD.getValue());
+
         //List<String> detailPortTypes = new ArrayList<>();
         //detailPortTypes.add(DetailPortType.CRANE_OUT_PND.getValue());
         //detailPortTypes.add(DetailPortType.CRANE_BOTH_PND.getValue());

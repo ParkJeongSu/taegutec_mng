@@ -2,7 +2,6 @@ package kr.co.aim.infra.persistence.mapper;
 
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.model.ProductionOrderHistory;
-import kr.co.aim.infra.persistence.entity.ProductionOrderEntity;
 import kr.co.aim.infra.persistence.entity.ProductionOrderHistoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

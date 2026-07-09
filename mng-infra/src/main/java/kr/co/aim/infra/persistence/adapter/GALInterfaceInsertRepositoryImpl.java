@@ -3,6 +3,7 @@ package kr.co.aim.infra.persistence.adapter;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -13,8 +14,9 @@ import kr.co.aim.domain.model.GALDetailInterfaceResponse;
 import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
-import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
@@ -30,6 +32,7 @@ import static kr.co.aim.infra.persistence.db2entity.insert.QIdocEntity.idocEntit
 import static kr.co.aim.infra.persistence.db2entity.insert.QH2OrderMEntity.h2OrderMEntity;
 import static kr.co.aim.infra.persistence.db2entity.insert.QH2OrderDEntity.h2OrderDEntity;
 import static kr.co.aim.infra.persistence.db2entity.insert.QH2TransEntity.h2TransEntity;
+
 
 
 @Repository
@@ -99,8 +102,8 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
                         // Powder 전용 필드들은 매핑하지 않음 (자동으로 null 처리됨)
                 ))
                 .from(idocEntity)
-                .leftJoin(h2OrderMEntity)
-                .leftJoin(h2TransEntity)
+                .leftJoin(h2OrderMEntity).on(idocEntity.lineId.eq(h2OrderMEntity.idocId))
+                .leftJoin(h2TransEntity).on(idocEntity.lineId.eq(h2TransEntity.idocId))
                 .where(
                         // (WHERE 조건이 있다면 여기에 추가)
                 );
@@ -124,8 +127,8 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
             Long count = queryFactory
                     .select(idocEntity.lineId.countDistinct())
                     .from(idocEntity)
-                    .leftJoin(h2OrderMEntity)
-                    .leftJoin(h2TransEntity)
+                    .leftJoin(h2OrderMEntity).on(idocEntity.lineId.eq(h2OrderMEntity.idocId))
+                    .leftJoin(h2TransEntity).on(idocEntity.lineId.eq(h2TransEntity.idocId))
                     .where(
                     )
                     .fetchOne();
@@ -161,11 +164,11 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
                         h2OrderDEntity.cCoId.as("cCoId"),
                         h2OrderDEntity.cCoTy.as("cCoTy"),
                         h2OrderDEntity.cZone.as("cZone"),
-                        h2OrderDEntity.cDrivingProfile.as("cDrivingProfile")
+                        h2OrderDEntity.cZone.as("cDrivingProfile")
                 ))
                 .from(h2OrderDEntity)
                 .where(
-
+                        IdocIdEqualForDetail(condition.getIdocId())
                 );
 
         // 2. 정렬 및 페이징 적용
@@ -183,7 +186,9 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
             Long count = queryFactory
                     .select(h2OrderDEntity.lineId.count())
                     .from(h2OrderDEntity)
-                    .where()
+                    .where(
+                            IdocIdEqualForDetail(condition.getIdocId())
+                    )
                     .fetchOne();
             total = (count != null) ? count : 0L;
         } else {
@@ -236,5 +241,17 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
             orders.add(new OrderSpecifier(Order.DESC, h2OrderDEntity.lineId));
         }
         return orders.toArray(new OrderSpecifier[0]);
+    }
+
+
+    // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
+
+
+    private BooleanExpression IdocIdEqualForH2orderM(Long idocId) {
+        return ObjectUtils.isNotEmpty(idocId) ? h2OrderMEntity.idocId.eq(idocId) : null;
+    }
+
+    private BooleanExpression IdocIdEqualForDetail(Long idocId) {
+        return ObjectUtils.isNotEmpty(idocId) ? h2OrderDEntity.idocId.eq(idocId) : null;
     }
 }

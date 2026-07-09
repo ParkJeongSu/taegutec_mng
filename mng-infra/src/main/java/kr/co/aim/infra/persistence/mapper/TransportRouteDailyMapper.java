@@ -1,8 +1,6 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.domain.model.EquipmentProductivityDaily;
 import kr.co.aim.domain.model.TransportRouteDaily;
-import kr.co.aim.infra.persistence.entity.EquipmentProductivityDailyEntity;
 import kr.co.aim.infra.persistence.entity.TransportRouteDailyEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

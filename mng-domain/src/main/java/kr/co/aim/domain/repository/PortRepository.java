@@ -1,6 +1,7 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.domain.model.Port;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +44,8 @@ public interface PortRepository {
     Optional<Port> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName);
 
     List<Port> findByTransportState(String transportState);
+
+    List<Port> findEarliestPortPerWorkCenter(String transportState);
 
     void deleteAllByIdInBatch(List<Long>ids);
 

@@ -549,6 +549,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String eventType = "";
         String transactionCode ="";
         String carrierName = vo.getCarrierName(); // 어떠한 경우에도 공백이 없음
+        String galId = "";
         String idocId = "";
         String orderId = "";
         String orderLineNumber = "";
@@ -578,6 +579,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         orderId = transportOrder.getTransportOrderId();
                         orderLineNumber = "";
                         orderType = transportOrder.getTransportType();
+                        galId = transportOrder.getGalId();
                     }else if(StringUtils.equals(TransportOrderType.INBOUND.getValue(), transportOrder.getTransportType())){
                         // TODO : 만일 UNLOAD COMPLETED 에서 신호를 못주면 STARTED에서 WORKSTATION_EMPTY 보고
                         /*
@@ -619,6 +621,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 .transactionCode(transactionCode)
                 .carrierName(carrierName)
                 .idocId(idocId)
+                .galId(galId)
                 .orderId(orderId)
                 .orderLineNumber(orderLineNumber)
                 .orderType(orderType)
@@ -955,6 +958,34 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                                 .actualLocationId(actualLocationId)
                                 .build();
                         ifEventQueueDtoList.add(dto);
+
+                        eventType = GALTransportStatus.ORDER_DONE_INBOUND.name();
+                        transactionCode = GALTransportStatus.ORDER_DONE_INBOUND.getValue();
+                        idocId = transportOrder.getIdocId().toString();
+                        orderId = transportOrder.getTransportOrderId();
+                        orderLineNumber = "";
+                        orderType = transportOrder.getTransportType();
+                        requestZoneName = transportOrder.getRequestedZoneName();
+                        galId = transportOrder.getGalId();
+                        IfEventQueueDto dto2 = IfEventQueueDto
+                                .builder()
+                                .transportJobName(transportJobName)
+                                .messageName(messageName)
+                                .eventType(eventType)
+                                .transactionCode(transactionCode)
+                                .carrierName(carrierName)
+                                .idocId(idocId)
+                                .galId(galId)
+                                .orderId(orderId)
+                                .orderLineNumber(orderLineNumber)
+                                .orderType(orderType)
+                                .errorText(errorText)
+                                .actualWeight(vo.getActualWeight())
+                                .requestedZoneName(requestZoneName)
+                                .actualZoneName(vo.getActualZoneName())
+                                .actualLocationId(actualLocationId)
+                                .build();
+                        ifEventQueueDtoList.add(dto2);
                     }
                     else if(StringUtils.equals(TransportOrderType.RELOCATION.getValue(), transportOrder.getTransportType())){
                         eventType = GALTransportStatus.ARRIVED_AT_RACK.name();
@@ -984,6 +1015,34 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                                 .actualLocationId(actualLocationId)
                                 .build();
                         ifEventQueueDtoList.add(dto);
+
+                        eventType = GALTransportStatus.ORDER_DONE_RELOCATION.name();
+                        transactionCode = GALTransportStatus.ORDER_DONE_RELOCATION.getValue();
+                        idocId = transportOrder.getIdocId().toString();
+                        orderId = transportOrder.getTransportOrderId();
+                        orderLineNumber = "";
+                        galId = transportOrder.getGalId();
+                        orderType = transportOrder.getTransportType();
+                        requestZoneName = transportOrder.getRequestedZoneName();
+                        IfEventQueueDto dto2 = IfEventQueueDto
+                                .builder()
+                                .transportJobName(transportJobName)
+                                .messageName(messageName)
+                                .eventType(eventType)
+                                .transactionCode(transactionCode)
+                                .carrierName(carrierName)
+                                .idocId(idocId)
+                                .galId(galId)
+                                .orderId(orderId)
+                                .orderLineNumber(orderLineNumber)
+                                .orderType(orderType)
+                                .errorText(errorText)
+                                .actualWeight(vo.getActualWeight())
+                                .requestedZoneName(requestZoneName)
+                                .actualZoneName(vo.getActualZoneName())
+                                .actualLocationId(actualLocationId)
+                                .build();
+                        ifEventQueueDtoList.add(dto2);
                     }
                     else{
                         throw new RuntimeException("TransportOrderType Error");
@@ -1459,6 +1518,26 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             orderType = TransportOrderType.INBOUND.getValue();
             actualLocationId = portDef.getLocationId();
             actualWorkStationId = portDef.getWorkCenterName();
+
+            IfEventQueueDto dto = IfEventQueueDto
+                    .builder()
+                    .transportJobName(transportJobName)
+                    .messageName(messageName)
+                    .eventType(eventType)
+                    .transactionCode(transactionCode)
+                    .carrierName(carrierName)
+                    .idocId(idocId)
+                    .galId(galId)
+                    .orderId(orderId)
+                    .orderLineNumber(orderLineNumber)
+                    .orderType(orderType)
+                    .errorText(errorText)
+                    .actualWeight(vo.getActualWeight())
+                    .actualZoneName(vo.getActualZoneName())
+                    .actualLocationId(actualLocationId)
+                    .actualWorkStationId(actualWorkStationId)
+                    .build();
+            ifEventQueueDtoList.add(dto);
         } else if (StringUtils.equals(DetailPortType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
             // 반송잡이 있으면 해당 반송잡으로 아래보고
             // outbound case
@@ -1489,15 +1568,69 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 }
                 transportOrder = transportOrders.get(0);
             }
-            eventType = GALTransportStatus.ARRIVED_AT_WORK_STATION.name();
-            transactionCode = GALTransportStatus.ARRIVED_AT_WORK_STATION.getValue();
-            idocId = transportOrder.getIdocId().toString();
-            orderId = transportOrder.getTransportOrderId();
-            orderLineNumber = "";
-            orderType = transportOrder.getTransportType();
-            galId = transportOrder.getGalId();
-            actualLocationId = portDef.getLocationId();
-            actualWorkStationId = portDef.getWorkCenterName();
+
+            if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(), transportOrder.getTransportType())){
+                eventType = GALTransportStatus.ARRIVED_AT_WORK_STATION.name();
+                transactionCode = GALTransportStatus.ARRIVED_AT_WORK_STATION.getValue();
+                idocId = transportOrder.getIdocId().toString();
+                orderId = transportOrder.getTransportOrderId();
+                orderLineNumber = "";
+                orderType = transportOrder.getTransportType();
+                galId = transportOrder.getGalId();
+                actualLocationId = portDef.getLocationId();
+                actualWorkStationId = portDef.getWorkCenterName();
+
+                IfEventQueueDto dto = IfEventQueueDto
+                        .builder()
+                        .transportJobName(transportJobName)
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .galId(galId)
+                        .orderId(orderId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(errorText)
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZoneName())
+                        .actualLocationId(actualLocationId)
+                        .actualWorkStationId(actualWorkStationId)
+                        .build();
+                ifEventQueueDtoList.add(dto);
+
+                eventType = GALTransportStatus.ORDER_DONE_OUTBOUND.name();
+                transactionCode = GALTransportStatus.ORDER_DONE_OUTBOUND.getValue();
+                idocId = transportOrder.getIdocId().toString();
+                orderId = transportOrder.getTransportOrderId();
+                orderLineNumber = "";
+                orderType = transportOrder.getTransportType();
+                galId = transportOrder.getGalId();
+                actualLocationId = portDef.getLocationId();
+                actualWorkStationId = portDef.getWorkCenterName();
+
+                IfEventQueueDto dto2 = IfEventQueueDto
+                        .builder()
+                        .transportJobName(transportJobName)
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .galId(galId)
+                        .orderId(orderId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(errorText)
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZoneName())
+                        .actualLocationId(actualLocationId)
+                        .actualWorkStationId(actualWorkStationId)
+                        .build();
+                ifEventQueueDtoList.add(dto2);
+
+            }
         }
         else if(StringUtils.equals(DetailPortType.RACK_OUT_STAGE.getValue(), portDef.getDetailPortType())){
             // inbound case
@@ -1536,6 +1669,26 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             galId = transportOrder.getGalId();
             actualLocationId = portDef.getLocationId();
             actualWorkStationId = portDef.getWorkCenterName();
+
+            IfEventQueueDto dto = IfEventQueueDto
+                    .builder()
+                    .transportJobName(transportJobName)
+                    .messageName(messageName)
+                    .eventType(eventType)
+                    .transactionCode(transactionCode)
+                    .carrierName(carrierName)
+                    .idocId(idocId)
+                    .galId(galId)
+                    .orderId(orderId)
+                    .orderLineNumber(orderLineNumber)
+                    .orderType(orderType)
+                    .errorText(errorText)
+                    .actualWeight(vo.getActualWeight())
+                    .actualZoneName(vo.getActualZoneName())
+                    .actualLocationId(actualLocationId)
+                    .actualWorkStationId(actualWorkStationId)
+                    .build();
+            ifEventQueueDtoList.add(dto);
         }
         else if(StringUtils.equals(DetailPortType.RACK_BOTH_STAGE.getValue(), portDef.getDetailPortType())){
             // inbound case
@@ -1574,6 +1727,26 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             galId = transportOrder.getGalId();
             actualLocationId = portDef.getLocationId();
             actualWorkStationId = portDef.getWorkCenterName();
+
+            IfEventQueueDto dto = IfEventQueueDto
+                    .builder()
+                    .transportJobName(transportJobName)
+                    .messageName(messageName)
+                    .eventType(eventType)
+                    .transactionCode(transactionCode)
+                    .carrierName(carrierName)
+                    .idocId(idocId)
+                    .galId(galId)
+                    .orderId(orderId)
+                    .orderLineNumber(orderLineNumber)
+                    .orderType(orderType)
+                    .errorText(errorText)
+                    .actualWeight(vo.getActualWeight())
+                    .actualZoneName(vo.getActualZoneName())
+                    .actualLocationId(actualLocationId)
+                    .actualWorkStationId(actualWorkStationId)
+                    .build();
+            ifEventQueueDtoList.add(dto);
         }
         else if(StringUtils.equals(DetailPortType.RACK_IN_STAGE.getValue(), portDef.getDetailPortType())){
             return null;
@@ -1581,26 +1754,6 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         else{
             return null;
         }
-
-        IfEventQueueDto dto = IfEventQueueDto
-                .builder()
-                .transportJobName(transportJobName)
-                .messageName(messageName)
-                .eventType(eventType)
-                .transactionCode(transactionCode)
-                .carrierName(carrierName)
-                .idocId(idocId)
-                .galId(galId)
-                .orderId(orderId)
-                .orderLineNumber(orderLineNumber)
-                .orderType(orderType)
-                .errorText(errorText)
-                .actualWeight(vo.getActualWeight())
-                .actualZoneName(vo.getActualZoneName())
-                .actualLocationId(actualLocationId)
-                .actualWorkStationId(actualWorkStationId)
-                .build();
-        ifEventQueueDtoList.add(dto);
 
         return  ifEventQueueDtoList;
     }

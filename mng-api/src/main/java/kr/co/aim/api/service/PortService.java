@@ -58,6 +58,11 @@ public class PortService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
+    public List<Port> findEarliestPortPerWorkCenter(String transportState){
+        return portRepository.findEarliestPortPerWorkCenter(transportState);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
     Optional<Port> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName){
         return portRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
     }

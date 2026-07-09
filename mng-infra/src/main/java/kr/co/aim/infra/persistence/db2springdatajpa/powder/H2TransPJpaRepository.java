@@ -1,6 +1,7 @@
 package kr.co.aim.infra.persistence.db2springdatajpa.powder;
 
 import kr.co.aim.infra.persistence.db2entity.powder.H2TransPEntity;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
