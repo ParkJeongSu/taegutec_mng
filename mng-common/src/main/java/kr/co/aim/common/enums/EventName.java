@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 public enum EventName implements MetaDataEnum {
     CREATED("CREATED"),
     REMOVED("REMOVED"),
+    TRANSFER("TRANSFER"),
     UPDATED("UPDATED");
 
     private final String value;

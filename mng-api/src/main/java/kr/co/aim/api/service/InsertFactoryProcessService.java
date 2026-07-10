@@ -425,11 +425,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     .optionalPort(optionalPorts)
                     .optionalPortDef(optionalPortDef)
                     .carrierName(carrierName)
-//                    .actualZoneName()
                     .actualWeight(actualWeight)
-//                    .actualRackLocationId()
-//                    .errorTexts()
-//                    .jobType(jobType)
                     .tx(tx)
                     .build();
             factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
@@ -551,14 +547,20 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String actualWeight = message.getBody().getActualWeight();
         String actualZoneName = message.getBody().getDestinationZoneName();
         String destinationEquipmentName = message.getBody().getDestinationEquipmentName();
+        String destinationPositionTypeName = message.getBody().getDestinationPositionTypeName();
         String destinationPositionName = message.getBody().getDestinationPositionName();
 
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        Optional<Port> optionalPort = Optional.empty();
+        Optional<PortDef> optionalPortDef = Optional.empty();
 
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
-            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
-            Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+            if(StringUtils.equals(destinationPositionTypeName,PositionTypeName.PORT.getValue())){
+                optionalPort = portService.findPortByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+                optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+            }
+
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
                     TransportJobUpdateCommand
@@ -584,8 +586,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         .carrierName(carrierName)
                         .actualZoneName(actualZoneName)
                         .actualWeight(actualWeight)
-//                            .actualRackLocationId()
-//                            .errorTexts()
+                        .actualRackLocationId(destinationPositionName)
                         .tx(tx)
                         .build();
                 factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);

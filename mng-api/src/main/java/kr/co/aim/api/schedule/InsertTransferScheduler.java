@@ -88,102 +88,23 @@ public class InsertTransferScheduler {
 
                 // create TransportOrder
                 TransportOrder transportOrder = null;
-                TransactionInfo transactionInfo = TransactionInfo.now(
-                        "Transfer",
-                        SystemName.MNG.getValue(),
-                        "");
+                TransactionInfo transactionInfo = TransactionInfo.now(EventName.TRANSFER.getValue(), SystemName.MNG.getValue(), "");
+                H2OrderMEntity master = h2OrderMEntities.get(0);
 
                 if(
-                        StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.OUTBOUND.getValue())
-                         || StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.INBOUND.getValue())
+                        StringUtils.equals(master.getCOrderTy() , TransportOrderType.OUTBOUND.getValue())
+                         || StringUtils.equals(master.getCOrderTy() , TransportOrderType.INBOUND.getValue())
                 ){
-                    H2OrderMEntity master = h2OrderMEntities.get(0);
+
                     H2OrderDEntity detail = h2OrderDEntities.get(0);
 
-                    String sourceZoneName = "";
-                    String destinationZoneName = "";
-                    if(StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.OUTBOUND.getValue())){
-                        sourceZoneName = detail.getCZone();
-                        destinationZoneName = "";
-                    }else if(StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.INBOUND.getValue())){
-                        sourceZoneName = "";
-                        destinationZoneName = detail.getCZone();
-                    }
-
-                    TransportOrderCreateCommand command =
-                            TransportOrderCreateCommand
-                                    .builder()
-                                    .transactionInfo(transactionInfo)
-                                    .transportOrderId(master.getCOrderId())
-                                    .idocId(idocEntity.getLineId())
-                                    .description("")
-                                    .carrierName(detail.getCCoId())
-                                    .transportType(master.getCOrderTy())
-                                    .transportStatus(TransportOrderStatus.CREATED.getValue())
-                                    .lastTransactionCode("")
-                                    .carrierType(detail.getCCoTy())
-                                    .priority(master.getCOrderPrio())
-                                    .galId(master.getCGalId())
-                                    .galWarehouse(master.getCGalWhs())
-                                    .locationId(master.getCLocId())
-                                    .workStationId(master.getCWcId())
-                                    .sourceZoneName(sourceZoneName)
-                                    .destinationZoneName(destinationZoneName)
-                                    //.errorText()
-                                    //.actualWeight()
-                                    .requestedZoneName(detail.getCZone())
-                                    //.actualZoneName()
-                                    //.actualLocationId()
-                                    .travelProfile(detail.getCDrivingProfile())
-                                    .createTime(transactionInfo.eventTime())
-                                    //.releaseTime()
-                                    //.completeTime()
-                                    //.retrievalTime(master.getCDtPick())
-                                    .createUser(SystemName.GAL.getValue())
-                                    //.releaseUser()
-                                    //.completeUser()
-                                    .build();
-                    transportOrder = TransportOrder.create(command);
+                    transportOrder = createTransportOrderForIAndO(transactionInfo,idocEntity,master,detail);
                 }
-                else if(StringUtils.equals(h2OrderMEntities.get(0).getCOrderTy() , TransportOrderType.RELOCATION.getValue())){
-                    H2OrderMEntity master = h2OrderMEntities.get(0);
+                else if(StringUtils.equals(master.getCOrderTy() , TransportOrderType.RELOCATION.getValue())){
                     H2OrderDEntity source = h2OrderDEntities.get(0);
                     H2OrderDEntity target = h2OrderDEntities.get(1);
 
-                    TransportOrderCreateCommand command =
-                            TransportOrderCreateCommand
-                                    .builder()
-                                    .transactionInfo(transactionInfo)
-                                    .transportOrderId(master.getCOrderId())
-                                    .idocId(idocEntity.getLineId())
-                                    .description("")
-                                    .carrierName(source.getCCoId())
-                                    .transportType(master.getCOrderTy())
-                                    .transportStatus(TransportOrderStatus.CREATED.getValue())
-                                    .lastTransactionCode("")
-                                    .carrierType(source.getCCoTy())
-                                    .priority(master.getCOrderPrio())
-                                    .galId(master.getCGalId())
-                                    .galWarehouse(master.getCGalWhs())
-                                    .locationId(master.getCLocId())
-                                    .workStationId(master.getCWcId())
-                                    .sourceZoneName(source.getCZone()) //relocation 시 사용
-                                    .destinationZoneName(target.getCZone())
-                                    //.errorText()
-                                    //.actualWeight()
-                                    .requestedZoneName(target.getCZone())
-                                    //.actualZoneName()
-                                    //.actualLocationId()
-                                    //.drivingProfile() // carrier 가 가지고 있는 profile사용
-                                    .createTime(transactionInfo.eventTime())
-                                    //.releaseTime()
-                                    //.completeTime()
-                                    //.retrievalTime(master.getCDtPick())
-                                    .createUser(SystemName.GAL.getValue())
-                                    //.releaseUser()
-                                    //.completeUser()
-                                    .build();
-                    transportOrder = TransportOrder.create(command);
+                    transportOrder = createTransportOrderForR(transactionInfo,idocEntity,master,source,target);
                 }
 
                 // transportOrder 객체 생성
@@ -195,43 +116,149 @@ public class InsertTransferScheduler {
                 // insert transportOrder (MSSQL 트랜잭션)
                 transportOrder = transportOrderService.createTransportOrder(transportOrder);
 
+                // TODO: ACCEPTED 로직 추가 아직 미완성
+                //transportOrder = transportOrderService.acceptTransportOrder(transportOrder);
+
                 // 정상적으로 수행했기 때문에, errorCode (60 : processed)와 dtimemode를 수정
                 insertExternalInterfaceService.transferCompleted(idocEntity.getLineId());
 
-                if(IdocTypeId.INBOUND.getValue().equals( idocEntity.getIdocTypId() )
-                        || IdocTypeId.RELOCATION.getValue().equals( idocEntity.getIdocTypId() )) {
-                    // 메시지 전송
-                    String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
-
-                    BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
-                    request.setMessageFrom(SystemName.MNG.getValue());
-                    request.setMessageOwner(SystemName.MNG.getValue());
-                    request.setMessageTo(SystemName.MNG.getValue());
-                    request.setEventTime(transactionId);
-                    request.setResultMessage("");
-                    request.setResultCode(ResultCode.OK.getValue());
-                    request.setTransactionId(transactionId);
-                    request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
-                    TransportOrderRequestBody body =
-                            TransportOrderRequestBody
-                                    .builder()
-                                    .id(transportOrder.getId())
-                                    .build();
-
-                    request.setBody(body);
-                    jsonUtils.writePrettyJson(request);
-
-                    // 5. String 으로 변환된 메시지 reply
-                    rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
-                    log.info("Send Completed");
+                // 메시지 전송
+                if(
+                        StringUtils.equals(master.getCOrderTy() , TransportOrderType.INBOUND.getValue())
+                        || StringUtils.equals(master.getCOrderTy() , TransportOrderType.RELOCATION.getValue())
+                ) {
+                    sendTransportOrderRequest(transactionInfo,transportOrder);
                 }
             } catch (Exception e) {
                 // 만일 transfer 도중 문제가 생겼다면
                 // errorcode 99 dtimemode를 수정
                 insertExternalInterfaceService.transferFail(idocEntity.getLineId());
+                log.error("❌ [GAL ORDER 수신 에러] idocId : {} 원인: {}", idocEntity.getLineId(),e.getMessage(), e);
             }
         }
 
+    }
+
+    private void sendTransportOrderRequest(TransactionInfo transactionInfo,TransportOrder transportOrder){
+        // 메시지 전송
+        String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
+
+        BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.MNG.getValue());
+        request.setEventTime(transactionId);
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setTransactionId(transactionId);
+        request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
+        TransportOrderRequestBody body =
+                TransportOrderRequestBody
+                        .builder()
+                        .id(transportOrder.getId())
+                        .build();
+
+        request.setBody(body);
+        jsonUtils.writePrettyJson(request);
+
+        // 5. String 으로 변환된 메시지 reply
+        rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
+        log.info("Send Completed");
+    }
+
+    private TransportOrder createTransportOrderForIAndO(
+            TransactionInfo transactionInfo, IdocEntity idocEntity,H2OrderMEntity master, H2OrderDEntity detail
+    )
+    {
+        TransportOrder transportOrder = null;
+        String sourceZoneName = "";
+        String destinationZoneName = "";
+        if(StringUtils.equals(master.getCOrderTy() , TransportOrderType.OUTBOUND.getValue())){
+            sourceZoneName = detail.getCZone();
+            destinationZoneName = "";
+        }else if(StringUtils.equals(master.getCOrderTy() , TransportOrderType.INBOUND.getValue())){
+            sourceZoneName = "";
+            destinationZoneName = detail.getCZone();
+        }
+
+        TransportOrderCreateCommand command =
+                TransportOrderCreateCommand
+                        .builder()
+                        .transactionInfo(transactionInfo)
+                        .transportOrderId(master.getCOrderId())
+                        .idocId(idocEntity.getLineId())
+                        .description("")
+                        .carrierName(detail.getCCoId())
+                        .transportType(master.getCOrderTy())
+                        .transportStatus(TransportOrderStatus.CREATED.getValue())
+                        .lastTransactionCode("")
+                        .carrierType(detail.getCCoTy())
+                        .priority(master.getCOrderPrio())
+                        .galId(master.getCGalId())
+                        .galWarehouse(master.getCGalWhs())
+                        .locationId(master.getCLocId())
+                        .workStationId(master.getCWcId())
+                        .sourceZoneName(sourceZoneName)
+                        .destinationZoneName(destinationZoneName)
+                        //.errorText()
+                        //.actualWeight()
+                        .requestedZoneName(detail.getCZone())
+                        //.actualZoneName()
+                        //.actualLocationId()
+                        .travelProfile(detail.getCDrivingProfile())
+                        .createTime(transactionInfo.eventTime())
+                        //.releaseTime()
+                        //.completeTime()
+                        //.retrievalTime(master.getCDtPick())
+                        .createUser(SystemName.GAL.getValue())
+                        //.releaseUser()
+                        //.completeUser()
+                        .build();
+         transportOrder = TransportOrder.create(command);
+         return transportOrder;
+    }
+
+    private TransportOrder createTransportOrderForR(
+            TransactionInfo transactionInfo, IdocEntity idocEntity,H2OrderMEntity master, H2OrderDEntity source, H2OrderDEntity target
+    ) {
+        TransportOrder transportOrder = null;
+
+        TransportOrderCreateCommand command =
+                TransportOrderCreateCommand
+                        .builder()
+                        .transactionInfo(transactionInfo)
+                        .transportOrderId(master.getCOrderId())
+                        .idocId(idocEntity.getLineId())
+                        .description("")
+                        .carrierName(source.getCCoId())
+                        .transportType(master.getCOrderTy())
+                        .transportStatus(TransportOrderStatus.CREATED.getValue())
+                        .lastTransactionCode("")
+                        .carrierType(source.getCCoTy())
+                        .priority(master.getCOrderPrio())
+                        .galId(master.getCGalId())
+                        .galWarehouse(master.getCGalWhs())
+                        .locationId(master.getCLocId())
+                        .workStationId(master.getCWcId())
+                        .sourceZoneName(source.getCZone()) //relocation 시 사용
+                        .destinationZoneName(target.getCZone())
+                        //.errorText()
+                        //.actualWeight()
+                        .requestedZoneName(target.getCZone())
+                        //.actualZoneName()
+                        //.actualLocationId()
+                        //.drivingProfile() // carrier 가 가지고 있는 profile사용
+                        .createTime(transactionInfo.eventTime())
+                        //.releaseTime()
+                        //.completeTime()
+                        //.retrievalTime(master.getCDtPick())
+                        .createUser(SystemName.GAL.getValue())
+                        //.releaseUser()
+                        //.completeUser()
+                        .build();
+        transportOrder = TransportOrder.create(command);
+
+        return transportOrder;
     }
 
 

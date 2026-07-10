@@ -5,7 +5,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
-import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 
@@ -29,10 +28,10 @@ public class H2OrderDEntity {
     @Column(name = "DTIMEMOD")
     private LocalDateTime dtimeMod;
 
-    @Column(name = "USRMOD", length = 30)
+    @Column(name = "USRMOD")
     private String usrMod;
 
-    @Column(name = "PGMMOD", length = 30)
+    @Column(name = "PGMMOD")
     private String pgmMod;
 
     @Column(name = "MODCNT")
@@ -41,29 +40,29 @@ public class H2OrderDEntity {
     @Column(name = "DATACODE")
     private String dataCode;
 
-    @Column(name = "CCLIENT", length = 30)
+    @Column(name = "CCLIENT")
     private String cClient;
 
-    @Column(name = "CORDERID", length = 30)
+    @Column(name = "CORDERID")
     private String cOrderId;
 
-    @Column(name = "CORDERTY", length = 30)
+    @Column(name = "CORDERTY")
     private String cOrderTy;
 
     @Column(name = "CORDERLN")
     private Long cOrderLn;
 
-    @Column(name = "CCOID", length = 30)
+    @Column(name = "CCOID")
     private String cCoId;
 
-    @Column(name = "CCOTY", length = 30)
+    @Column(name = "CCOTY")
     private String cCoTy;
 
-    @Column(name = "CZONE", length = 30)
+    @Column(name = "CZONE")
     private String cZone;
 
-    //@Column(name = "CDRIVINGPROFILE", length = 30)
-    @jakarta.persistence.Transient
+    @Column(name = "CDRIVINGPROFILE")
+//    @jakarta.persistence.Transient
     private String cDrivingProfile;
 
     @Column(name = "PARSEGID")

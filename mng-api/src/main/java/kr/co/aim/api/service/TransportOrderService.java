@@ -39,7 +39,7 @@ public class TransportOrderService {
 
     public TransportOrder createBaseBuilder(TransportOrderContext context) {
         TransactionInfo transactionInfo = TransactionInfo.now(
-                "Transfer",
+                EventName.TRANSFER.getValue(),
                 SystemName.MNG.getValue(),
                 "");
         IdocEntity idoc = context.getIdoc();
@@ -84,6 +84,26 @@ public class TransportOrderService {
 
     @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
     public TransportOrder createTransportOrder(TransportOrder transportOrder) {
+        TransportOrder savedTransportOrder = transportOrderRepository.save(transportOrder);
+        TransportOrderHistoryEntity historyEntity = transportOrderMapper.toHistoryEntity(savedTransportOrder);
+        historyService.saveHistory(historyEntity);
+        return savedTransportOrder;
+    }
+
+    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
+    public TransportOrder acceptTransportOrder(TransportOrder transportOrder) {
+
+        TransactionInfo transactionInfo = TransactionInfo.now(TransportOrderStatus.ACCEPTED.getValue(), SystemName.MNG.getValue(), "");
+
+        // validation
+
+
+        // validation pass
+        transportOrder.setTransportStatus(TransportOrderStatus.ACCEPTED.getValue());
+        transportOrder.setEventTime(transactionInfo.eventTime());
+        transportOrder.setEventName(transactionInfo.eventName());
+        transportOrder.setEventUser(transactionInfo.eventUser());
+
         TransportOrder savedTransportOrder = transportOrderRepository.save(transportOrder);
         TransportOrderHistoryEntity historyEntity = transportOrderMapper.toHistoryEntity(savedTransportOrder);
         historyService.saveHistory(historyEntity);

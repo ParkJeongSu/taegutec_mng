@@ -74,7 +74,7 @@ public class PowderTransferScheduler {
             return;
         }
         TransactionInfo transactionInfo = TransactionInfo.now(
-                "Transfer",
+                EventName.TRANSFER.getValue(),
                 SystemName.MNG.getValue(),
                 "");
         for(IdocPEntity idocEntity : idocEntities){

@@ -4,6 +4,7 @@ import kr.co.aim.common.condition.ProductDefSearchCondition;
 import kr.co.aim.common.dto.ProductDefSaveRequestDto;
 import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
+import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProductDefCreateCommand;
@@ -144,7 +145,7 @@ public class ProductDefService {
     public ProductDef save(H2PartMPEntity h2PartMPEntity){
         ProductDef  productDef = null;
         Optional<ProductDef> optionalProductDef = findByH2PartMPEntity(h2PartMPEntity.getCPartId());
-        TransactionInfo tx =TransactionInfo.now("Transfer", SystemName.GAL.getValue(), "");
+        TransactionInfo tx =TransactionInfo.now(EventName.TRANSFER.getValue(), SystemName.GAL.getValue(), "");
         if(optionalProductDef.isEmpty()){
             // 생성 케이스
             ProductDefCreateCommand command =

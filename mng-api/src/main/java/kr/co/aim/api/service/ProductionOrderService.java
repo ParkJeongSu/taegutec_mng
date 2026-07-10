@@ -45,7 +45,7 @@ public class ProductionOrderService {
 
     public ProductionOrder createBaseBuilder(ProductionOrderContext context) {
         TransactionInfo transactionInfo = TransactionInfo.now(
-                "Transfer",
+                EventName.TRANSFER.getValue(),
                 SystemName.MNG.getValue(),
                 "");
         String productionOrderType = "";
