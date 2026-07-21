@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 public enum DetailPortType implements MetaDataEnum {
     RACK_OUT_STAGE("RACK_OUT_STAGE"),
     WORKSTATION("WORKSTATION"),
+    HORSESHOE_WORKSTATION("HORSESHOE_WORKSTATION"),
     INBOUND("INBOUND"),
     RACK_IN_STAGE("RACK_IN_STAGE"),
     TUNNEL("TUNNEL"),

@@ -33,4 +33,10 @@ public interface PortDefRepository {
     void deleteAllByIdInBatch(List<Long> ids);
 
     Optional<PortDef> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName);
+
+    List<PortDef> findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
+            String workCenterName,
+            List<String> detailPortTypes,
+            List<String> portTypes
+    );
 }

@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface PortDefJpaRepository extends JpaRepository<PortDefEntity, Long> {
@@ -32,6 +33,12 @@ public interface PortDefJpaRepository extends JpaRepository<PortDefEntity, Long>
     Optional<PortDefEntity> findWithLockByEquipmentNameAndPortName(
             @Param("equipmentName") String equipmentName,
             @Param("portName") String portName
+    );
+
+    List<PortDefEntity> findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
+            String workCenterName,
+            List<String> detailPortTypes,
+            List<String> portTypes
     );
 
 }

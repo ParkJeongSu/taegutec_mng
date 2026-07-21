@@ -15,7 +15,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TransportJobJpaRepository extends JpaRepository<TransportJobEntity, Long> {
+
     Optional<TransportJobEntity> findByTransportJobName(String transportJobName);
+
+    Optional<TransportJobEntity> findByOrderId(String orderId);
+
     // destinationEquipmentName 과 transportJobState(여러 개)로 조회
     List<TransportJobEntity> findByDestinationEquipmentNameAndDestinationPortNameAndTransportJobStateIn(
             String destinationEquipmentName,

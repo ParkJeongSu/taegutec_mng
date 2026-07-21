@@ -293,6 +293,10 @@ public class MessageExecuteService {
         factoryProcessStrategy.carrierLocationChanged(message);
     }
 
+    public void eventQueueReport(BaseMessage<EventQueueReportBody> message) {
+        factoryProcessStrategy.eventQueueReport(message);
+    }
+
     @Transactional(value = "mssqlTransactionManager")
     public void carrierScanned(BaseMessage<CarrierScannedBody> message) {
         String messageName = message.getMessageName();
@@ -532,10 +536,6 @@ public class MessageExecuteService {
                     .optionalPort(optionalPort)
                     .optionalPortDef(optionalPortDef)
                     .carrierName(carrierName)
-//                    .actualZoneName()
-//                    .actualWeight()
-//                    .actualRackLocationId()
-//                    .errorTexts()
                     .tx(tx)
                     .build();
             factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
@@ -584,6 +584,11 @@ public class MessageExecuteService {
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
         return factoryProcessStrategy.transportOrderRequest(message);
     }
+
+    public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message){
+        return factoryProcessStrategy.transportOrderValidationRequest(message);
+    }
+
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> destinationDispatchRequest(BaseMessage<DestinationDispatchRequestBody> message){
         // powder Logic
@@ -1167,6 +1172,11 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobReply(BaseMessage<TransportJobReplyBody> message) {
         factoryProcessStrategy.transportJobReply(message);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public void transportJobValidationReply(BaseMessage<TransportJobValidationReplyBody> message) {
+        factoryProcessStrategy.transportJobValidationReply(message);
     }
 
     /**

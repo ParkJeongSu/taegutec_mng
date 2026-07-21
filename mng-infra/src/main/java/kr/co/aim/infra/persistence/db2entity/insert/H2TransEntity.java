@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 @AllArgsConstructor
-@Table(name = "H2TRANSI")
+@Table(name = "H2TRANS")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class H2TransEntity {
     @Id

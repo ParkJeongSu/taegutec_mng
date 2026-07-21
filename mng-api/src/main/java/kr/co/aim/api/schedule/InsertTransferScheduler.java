@@ -42,7 +42,7 @@ public class InsertTransferScheduler {
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
+    @Scheduled(fixedDelay = 3000) // 5초마다 실행
     @SchedulerLock(name = "insertOrderDB2ToMSSQL",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
@@ -66,12 +66,13 @@ public class InsertTransferScheduler {
         idocTypIds.add(IdocTypeId.INBOUND.getValue());
         idocTypIds.add(IdocTypeId.OUTBOUND.getValue());
         idocTypIds.add(IdocTypeId.RELOCATION.getValue());
-        //List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndErrorCode(idocTypIds,errorCode);
+
         List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndStateAndErrorCode(idocTypIds,state,errorCode);
 
         if(CollectionUtils.isEmpty(idocEntities)){
             return;
         }
+
         for(IdocEntity idocEntity : idocEntities){
             try {
                 List<H2OrderMEntity> h2OrderMEntities = insertExternalInterfaceService.selectH2OrderMEntityByIdocId(idocEntity.getLineId());
@@ -92,15 +93,15 @@ public class InsertTransferScheduler {
                 H2OrderMEntity master = h2OrderMEntities.get(0);
 
                 if(
-                        StringUtils.equals(master.getCOrderTy() , TransportOrderType.OUTBOUND.getValue())
-                         || StringUtils.equals(master.getCOrderTy() , TransportOrderType.INBOUND.getValue())
+                        StringUtils.equals( StringUtils.trimToEmpty(master.getCOrderTy())  , TransportOrderType.OUTBOUND.getValue())
+                         || StringUtils.equals(StringUtils.trimToEmpty (master.getCOrderTy()) , TransportOrderType.INBOUND.getValue())
                 ){
 
                     H2OrderDEntity detail = h2OrderDEntities.get(0);
 
                     transportOrder = createTransportOrderForIAndO(transactionInfo,idocEntity,master,detail);
                 }
-                else if(StringUtils.equals(master.getCOrderTy() , TransportOrderType.RELOCATION.getValue())){
+                else if(StringUtils.equals(StringUtils.trimToEmpty(master.getCOrderTy()) , TransportOrderType.RELOCATION.getValue())){
                     H2OrderDEntity source = h2OrderDEntities.get(0);
                     H2OrderDEntity target = h2OrderDEntities.get(1);
 
@@ -124,10 +125,17 @@ public class InsertTransferScheduler {
 
                 // 메시지 전송
                 if(
-                        StringUtils.equals(master.getCOrderTy() , TransportOrderType.INBOUND.getValue())
-                        || StringUtils.equals(master.getCOrderTy() , TransportOrderType.RELOCATION.getValue())
+                        StringUtils.equals( StringUtils.trimToEmpty(master.getCOrderTy())  , TransportOrderType.INBOUND.getValue())
+                        || StringUtils.equals(StringUtils.trimToEmpty(master.getCOrderTy()) , TransportOrderType.RELOCATION.getValue())
                 ) {
                     sendTransportOrderRequest(transactionInfo,transportOrder);
+                }
+                else if(
+                        StringUtils.equals(StringUtils.trimToEmpty(master.getCOrderTy()) , TransportOrderType.OUTBOUND.getValue())
+                ){
+                    // send To TEX
+                    // TransportJobValidationRequest
+                    sendTransportJobValidationRequest(transactionInfo,transportOrder);
                 }
             } catch (Exception e) {
                 // 만일 transfer 도중 문제가 생겼다면
@@ -166,6 +174,33 @@ public class InsertTransferScheduler {
         log.info("Send Completed");
     }
 
+    private void sendTransportJobValidationRequest(TransactionInfo transactionInfo,TransportOrder transportOrder){
+        // 메시지 전송
+        String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
+
+        BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.MNG.getValue());
+        request.setEventTime(transactionId);
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setTransactionId(transactionId);
+        request.setMessageName(MessageList.TRANSPORT_ORDER_VALIDATION_REQUEST.getMessageName());
+        TransportOrderRequestBody body =
+                TransportOrderRequestBody
+                        .builder()
+                        .id(transportOrder.getId())
+                        .build();
+
+        request.setBody(body);
+        jsonUtils.writePrettyJson(request);
+
+        // 5. String 으로 변환된 메시지 reply
+        rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
+        log.info("Send Completed");
+    }
+
     private TransportOrder createTransportOrderForIAndO(
             TransactionInfo transactionInfo, IdocEntity idocEntity,H2OrderMEntity master, H2OrderDEntity detail
     )
@@ -173,39 +208,39 @@ public class InsertTransferScheduler {
         TransportOrder transportOrder = null;
         String sourceZoneName = "";
         String destinationZoneName = "";
-        if(StringUtils.equals(master.getCOrderTy() , TransportOrderType.OUTBOUND.getValue())){
-            sourceZoneName = detail.getCZone();
+        if(StringUtils.equals( StringUtils.trimToEmpty(master.getCOrderTy())  , TransportOrderType.OUTBOUND.getValue())){
+            sourceZoneName = StringUtils.trimToEmpty(detail.getCZone());
             destinationZoneName = "";
-        }else if(StringUtils.equals(master.getCOrderTy() , TransportOrderType.INBOUND.getValue())){
+        }else if(StringUtils.equals( StringUtils.trimToEmpty(master.getCOrderTy())  , TransportOrderType.INBOUND.getValue())){
             sourceZoneName = "";
-            destinationZoneName = detail.getCZone();
+            destinationZoneName = StringUtils.trimToEmpty(detail.getCZone());
         }
 
         TransportOrderCreateCommand command =
                 TransportOrderCreateCommand
                         .builder()
                         .transactionInfo(transactionInfo)
-                        .transportOrderId(master.getCOrderId())
+                        .transportOrderId(StringUtils.trimToEmpty(master.getCOrderId()))
                         .idocId(idocEntity.getLineId())
                         .description("")
-                        .carrierName(detail.getCCoId())
-                        .transportType(master.getCOrderTy())
+                        .carrierName(StringUtils.trimToEmpty(detail.getCCoId()))
+                        .transportType( StringUtils.trimToEmpty(master.getCOrderTy()) )
                         .transportStatus(TransportOrderStatus.CREATED.getValue())
                         .lastTransactionCode("")
-                        .carrierType(detail.getCCoTy())
+                        .carrierType(StringUtils.trimToEmpty(detail.getCCoTy()))
                         .priority(master.getCOrderPrio())
-                        .galId(master.getCGalId())
-                        .galWarehouse(master.getCGalWhs())
-                        .locationId(master.getCLocId())
-                        .workStationId(master.getCWcId())
+                        .galId(StringUtils.trimToEmpty(master.getCGalId()))
+                        .galWarehouse(StringUtils.trimToEmpty(master.getCGalWhs()))
+                        .locationId(StringUtils.trimToEmpty(master.getCLocId()))
+                        .workStationId(StringUtils.trimToEmpty(master.getCWcId()))
                         .sourceZoneName(sourceZoneName)
                         .destinationZoneName(destinationZoneName)
                         //.errorText()
                         //.actualWeight()
-                        .requestedZoneName(detail.getCZone())
+                        .requestedZoneName(StringUtils.trimToEmpty(detail.getCZone()))
                         //.actualZoneName()
                         //.actualLocationId()
-                        .travelProfile(detail.getCDrivingProfile())
+                        .travelProfile(StringUtils.trimToEmpty(detail.getCDrivingProfile()))
                         .createTime(transactionInfo.eventTime())
                         //.releaseTime()
                         //.completeTime()
@@ -227,24 +262,24 @@ public class InsertTransferScheduler {
                 TransportOrderCreateCommand
                         .builder()
                         .transactionInfo(transactionInfo)
-                        .transportOrderId(master.getCOrderId())
+                        .transportOrderId(StringUtils.trimToEmpty(master.getCOrderId()))
                         .idocId(idocEntity.getLineId())
                         .description("")
-                        .carrierName(source.getCCoId())
-                        .transportType(master.getCOrderTy())
+                        .carrierName(StringUtils.trimToEmpty(source.getCCoId()))
+                        .transportType(StringUtils.trimToEmpty(master.getCOrderTy()))
                         .transportStatus(TransportOrderStatus.CREATED.getValue())
                         .lastTransactionCode("")
-                        .carrierType(source.getCCoTy())
+                        .carrierType(StringUtils.trimToEmpty(source.getCCoTy()))
                         .priority(master.getCOrderPrio())
-                        .galId(master.getCGalId())
-                        .galWarehouse(master.getCGalWhs())
-                        .locationId(master.getCLocId())
-                        .workStationId(master.getCWcId())
-                        .sourceZoneName(source.getCZone()) //relocation 시 사용
-                        .destinationZoneName(target.getCZone())
+                        .galId(StringUtils.trimToEmpty(master.getCGalId()))
+                        .galWarehouse(StringUtils.trimToEmpty(master.getCGalWhs()))
+                        .locationId(StringUtils.trimToEmpty(master.getCLocId()))
+                        .workStationId(StringUtils.trimToEmpty(master.getCWcId()))
+                        .sourceZoneName(StringUtils.trimToEmpty(source.getCZone())) //relocation 시 사용
+                        .destinationZoneName(StringUtils.trimToEmpty(target.getCZone()))
                         //.errorText()
                         //.actualWeight()
-                        .requestedZoneName(target.getCZone())
+                        .requestedZoneName(StringUtils.trimToEmpty(target.getCZone()))
                         //.actualZoneName()
                         //.actualLocationId()
                         //.drivingProfile() // carrier 가 가지고 있는 profile사용

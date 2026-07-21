@@ -45,7 +45,13 @@ public interface PortRepository {
 
     List<Port> findByTransportState(String transportState);
 
-    List<Port> findEarliestPortPerWorkCenter(String transportState);
+    List<Port> findPortsWithEarliestTransportOrder(
+            String transportState,
+            String transportType,
+            String transportStatus
+    );
+
+    List<Port> findEarliestPortPerWorkCenter(String transportState,List<String> detailPortType);
 
     void deleteAllByIdInBatch(List<Long>ids);
 

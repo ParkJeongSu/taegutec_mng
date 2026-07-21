@@ -20,7 +20,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: web,pex,tex # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
+    active: pex,tex # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;

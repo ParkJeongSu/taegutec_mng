@@ -32,7 +32,7 @@ public class TransportJobService {
     private final HistoryService historyService;
     private final TransportJobMapper transportJobMapper;
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
     public List<TransportJob> findActiveTransportJobs(String equipmentName,String portName) {
         List<String> transportJobStateList = new ArrayList<>();
         transportJobStateList.add(TransportJobState.REQUESTED.getValue());
@@ -50,7 +50,7 @@ public class TransportJobService {
     /**
      * 요청한 반송잡이 첫시작되는 시점 보고
      */
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public List<TransportJob> createTransportJob(CreateTransportJobVo createTransportJobVo) {
         List<TransportJob> transportJobList = new ArrayList<>();
         for(TransportJobCreateCommand command : createTransportJobVo.getTransportJobCreateCommandList()){
@@ -64,7 +64,7 @@ public class TransportJobService {
         return  transportJobList;
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public TransportJob createTransportJob(TransportJobCreateCommand command){
         TransportJob transportJob = TransportJob.create(command);
         transportJob = transportJobRepository.save(transportJob);
@@ -125,42 +125,69 @@ public class TransportJobService {
                 .build();
     }
 
-    @Transactional
+    public TransportJobValidationRequestBody createTransportJobValidationMessage(TransportJob transportJob) {
+
+        return TransportJobValidationRequestBody.builder()
+                .transportJobName(transportJob.getTransportJobName())
+                .transportType(transportJob.getTransportType())
+                .carrierName(transportJob.getCarrierName())
+                .carrierType(transportJob.getCarrierType())
+                .sourceEquipmentName(transportJob.getSourceEquipmentName())
+                .sourceZoneName(transportJob.getSourceZoneName())
+                .sourcePositionType(transportJob.getSourcePositionTypeName())
+                .sourcePositionName(transportJob.getSourcePositionName())
+                .destinationEquipmentName(transportJob.getDestinationEquipmentName())
+                .destinationZoneName(transportJob.getDestinationZoneName())
+                .destinationPositionType(transportJob.getDestinationPositionTypeName())
+                .destinationPositionName(transportJob.getDestinationPositionName())
+                .priority(transportJob.getPriority() == null ? "" : transportJob.getPriority().toString())
+                .orderId(transportJob.getOrderId())
+                .requestSource(transportJob.getRequestSource())
+                .travelProfile(transportJob.getTravelProfile())
+                .build();
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
     public Optional<TransportJob> findByTransportJobName(String transportJobName) {
         return transportJobRepository.findByTransportJobName(transportJobName);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public List<TransportJob> findByCarrierNameAndTransportJobStateIn(String carrierName, List<String> transportJobStates) {
         return transportJobRepository.findByCarrierNameAndTransportJobStateIn(carrierName, transportJobStates);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public TransportJob save(TransportJob transportJob) {
         return transportJobRepository.save(transportJob);
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     Optional<TransportJob> findWithLockByTransportJobName(String transportJobName){
         return transportJobRepository.findWithLockByTransportJobName(transportJobName);
     }
-    @Transactional(readOnly = true)
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
     public Page<TransportJobHistory> findTransportJobHistoryByCondition(TransportJobHistorySearchCondition condition, Pageable pageable){
         return transportJobRepository.findTransportJobHistoryByCondition(condition, pageable);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
     public List<TransportJob> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime){
         return transportJobRepository.findByCreateTimeBetween(startDateTime,endDateTime);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(value = "mssqlTransactionManager",readOnly = true)
     public List<TransportJob> findByCreateTimeBetweenAndTransportJobState(
             LocalDateTime startDateTime,
             LocalDateTime endDateTime,
             String transportJobState
     ){
         return transportJobRepository.findByCreateTimeBetweenAndTransportJobState(startDateTime,endDateTime,transportJobState);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Optional<TransportJob> findByOrderId(String orderId){
+        return transportJobRepository.findByOrderId(orderId);
     }
 
 }

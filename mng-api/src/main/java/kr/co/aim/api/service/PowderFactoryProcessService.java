@@ -617,4 +617,19 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         return reply;
     }
+
+    @Override
+    public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message) {
+        return null;
+    }
+
+    @Override
+    public void transportJobValidationReply(BaseMessage<TransportJobValidationReplyBody> message) {
+
+    }
+
+    @Override
+    public void eventQueueReport(BaseMessage<EventQueueReportBody> message) {
+
+    }
 }

@@ -15,9 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
 public class PortDefEntity {
 
-    //@EmbeddedId
-    //private PortDefId id; // 복합키 클래스를 ID로 사용
-
     @Id
     @Column(name="ID")
     private Long id;

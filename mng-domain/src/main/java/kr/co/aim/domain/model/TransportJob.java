@@ -3,6 +3,7 @@ import jakarta.persistence.Column;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
+import kr.co.aim.domain.command.TransportJobStartRequestCommand;
 import kr.co.aim.domain.command.TransportJobUpdateCommand;
 import lombok.*;
 import org.apache.commons.lang3.ObjectUtils;
@@ -109,6 +110,21 @@ public class TransportJob implements HasTransactionInfo {
         this.setArrivedTime(ObjectUtils.isNotEmpty(command.getArrivedTime())?command.getArrivedTime():getArrivedTime());
         this.setReasonCode(StringUtils.isNotBlank(command.getReasonCode())?command.getReasonCode():getReasonCode());
         this.setOrderId(StringUtils.isNotBlank(command.getOrderId())?command.getOrderId():getOrderId());
+    }
+
+    public void startRequestTransportJob(TransportJobStartRequestCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportJobState(StringUtils.isNotBlank(command.getTransportJobState())?command.getTransportJobState():getTransportJobState());
+        this.setSourceEquipmentName(StringUtils.isNotBlank(command.getSourceEquipmentName())?command.getSourceEquipmentName():getSourceEquipmentName());
+        this.setSourcePortName(StringUtils.isNotBlank(command.getSourcePortName())?command.getSourcePortName():getSourcePortName());
+        this.setSourceZoneName(StringUtils.isNotBlank(command.getSourceZoneName())?command.getSourceZoneName():getSourceZoneName());
+        this.setSourcePositionTypeName(StringUtils.isNotBlank(command.getSourcePositionTypeName())?command.getSourcePositionTypeName():getSourcePositionTypeName());
+        this.setSourcePositionName(StringUtils.isNotBlank(command.getSourcePositionName())?command.getSourcePositionName():getSourcePositionName());
+        this.setDestinationEquipmentName(StringUtils.isNotBlank(command.getDestinationEquipmentName())?command.getDestinationEquipmentName():getDestinationEquipmentName());
+        this.setDestinationPortName(StringUtils.isNotBlank(command.getDestinationPortName())?command.getDestinationPortName():getDestinationPortName());
+        this.setDestinationZoneName(StringUtils.isNotBlank(command.getDestinationZoneName())?command.getDestinationZoneName():getDestinationZoneName());
+        this.setDestinationPositionTypeName(StringUtils.isNotBlank(command.getDestinationPositionTypeName())?command.getDestinationPositionTypeName():getDestinationPositionTypeName());
+        this.setDestinationPositionName(StringUtils.isNotBlank(command.getDestinationPositionName())?command.getDestinationPositionName():getDestinationPositionName());
     }
 
     public void changeDestination(TransportJobUpdateCommand command){

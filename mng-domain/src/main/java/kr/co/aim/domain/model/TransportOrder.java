@@ -1,5 +1,7 @@
 package kr.co.aim.domain.model;
 import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.common.handler.HasTransactionInfo;
+import kr.co.aim.domain.command.TransportOrderAcceptCommand;
 import kr.co.aim.domain.command.TransportOrderCreateCommand;
 import lombok.*;
 
@@ -11,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @Builder
-public class TransportOrder {
+public class TransportOrder implements HasTransactionInfo {
 
     private Long id;
     private String transportOrderId;
@@ -87,6 +89,11 @@ public class TransportOrder {
                         .eventUser(command.getTransactionInfo().eventUser())
                         .eventComment(command.getTransactionInfo().eventComment())
                         .build();
+    }
+
+    public void accept(TransportOrderAcceptCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(command.getTransportStatus());
     }
 
 }

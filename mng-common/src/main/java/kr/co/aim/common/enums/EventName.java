@@ -10,6 +10,7 @@ public enum EventName implements MetaDataEnum {
     CREATED("CREATED"),
     REMOVED("REMOVED"),
     TRANSFER("TRANSFER"),
+    AUTO_TRANSPORT("AUTO_TRANSPORT"),
     UPDATED("UPDATED");
 
     private final String value;

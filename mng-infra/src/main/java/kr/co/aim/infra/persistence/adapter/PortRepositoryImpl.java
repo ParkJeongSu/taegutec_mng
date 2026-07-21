@@ -7,6 +7,7 @@ import kr.co.aim.infra.persistence.entity.PortEntity;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import kr.co.aim.infra.persistence.springdatajpa.PortJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -63,8 +64,13 @@ public class PortRepositoryImpl implements PortRepository {
     }
 
     @Override
-    public List<Port> findEarliestPortPerWorkCenter(String transportState) {
-        return portJpaRepository.findEarliestPortPerWorkCenter(transportState).stream().map(portMapper::toDomain).collect(Collectors.toList());
+    public List<Port> findPortsWithEarliestTransportOrder(String transportState, String transportType, String transportStatus) {
+        return portJpaRepository.findPortsWithEarliestTransportOrder(transportState,transportType,transportStatus).stream().map(portMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Port> findEarliestPortPerWorkCenter(String transportState,List<String> detailPortType) {
+        return portJpaRepository.findEarliestPortPerWorkCenter(transportState,detailPortType).stream().map(portMapper::toDomain).collect(Collectors.toList());
     }
 
     @Override

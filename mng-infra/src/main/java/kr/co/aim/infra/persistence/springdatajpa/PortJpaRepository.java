@@ -27,16 +27,43 @@ public interface PortJpaRepository extends JpaRepository<PortEntity, Long> {
 
     List<PortEntity> findByTransportState(String transportState);
 
+    @Query("SELECT p FROM PortEntity p " +
+            "JOIN PortDefEntity pd ON p.equipmentName = pd.equipmentName AND p.portName = pd.portName " +
+            "JOIN TransportOrderEntity to ON pd.workCenterName = to.workStationId " +
+            "WHERE p.transportState = :transportState " +
+            "AND to.transportType = :transportType " +
+            "AND to.transportStatus = :transportStatus " +
+            "AND to.createTime = (" +
+            "    SELECT MIN(subTo.createTime) " +
+            "    FROM TransportOrderEntity subTo " +
+            "    WHERE subTo.workStationId = pd.workCenterName " +
+            "      AND subTo.transportType = :transportType " +
+            "      AND subTo.transportStatus = :transportStatus" +
+            ") " +
+            "AND p.eventTime = (" +
+            "    SELECT MIN(subP.eventTime) " +
+            "    FROM PortEntity subP " +
+            "    JOIN PortDefEntity subPd ON subP.equipmentName = subPd.equipmentName AND subP.portName = subPd.portName " +
+            "    WHERE subPd.workCenterName = pd.workCenterName " +
+            "      AND subP.transportState = :transportState" +
+            ")")
+    List<PortEntity> findPortsWithEarliestTransportOrder(
+            @Param("transportState") String transportState,
+            @Param("transportType") String transportType,
+            @Param("transportStatus") String transportStatus
+    );
+
 
     @Query(value = "SELECT * FROM (" +
             "  SELECT p.*, " +
             "         ROW_NUMBER() OVER (PARTITION BY pd.WORK_CENTER_NAME ORDER BY p.EVENT_TIME ASC) as rn " +
             "  FROM NEXBEMNG.dbo.PORT p " +
             "  JOIN NEXBEDEF.dbo.PORT_DEF pd ON p.EQUIPMENT_NAME = pd.EQUIPMENT_NAME AND p.PORT_NAME = pd.PORT_NAME " +
-            "  WHERE p.TRANSPORT_STATE = :transportState" +
+            "  WHERE p.TRANSPORT_STATE = :transportState " +
+            "  AND pd.DETAIL_PORT_TYPE IN (:detailPortType) " +
             ") sub " +
             "WHERE sub.rn = 1", nativeQuery = true)
-    List<PortEntity> findEarliestPortPerWorkCenter(@Param("transportState") String transportState);
+    List<PortEntity> findEarliestPortPerWorkCenter(@Param("transportState") String transportState, @Param("detailPortType") List<String> detailPortType);
 
 
     @Query("SELECT p FROM PortEntity p " +

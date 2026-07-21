@@ -58,8 +58,17 @@ public class PortService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public List<Port> findEarliestPortPerWorkCenter(String transportState){
-        return portRepository.findEarliestPortPerWorkCenter(transportState);
+    public List<Port> findPortsWithEarliestTransportOrder(
+            String transportState,
+            String transportType,
+            String transportStatus
+    ){
+        return portRepository.findPortsWithEarliestTransportOrder(transportState,transportType,transportStatus);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public List<Port> findEarliestPortPerWorkCenter(String transportState,List<String> detailPortType){
+        return portRepository.findEarliestPortPerWorkCenter(transportState,detailPortType);
     }
 
     @Transactional(value = "mssqlTransactionManager")

@@ -1,18 +1,28 @@
 package kr.co.aim.api.schedule;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.IfEventQueueService;
 import kr.co.aim.api.service.InsertExternalInterfaceService;
+import kr.co.aim.api.service.PortService;
+import kr.co.aim.common.Utils.FormatUtils;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.*;
+import kr.co.aim.common.format.EventQueueReportBody;
+import kr.co.aim.common.format.LoadRequestBody;
+import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.IfEventQueue;
+import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.collections4.CollectionUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,18 +36,19 @@ public class InsertReportScheduler {
     private final InsertExternalInterfaceService insertExternalInterfaceService;
     private final IfEventQueueService ifEventQueueService;
 
+    private final RabbitTemplate rabbitTemplate;
+    private final JsonUtils jsonUtils;
+
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
     @SchedulerLock(name = "insertReportH2Trans",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
     public void insertReportH2Trans() {
-        // 1단계 : EventLog 조회 MSSQL 트랜잭션 Ready 상태 조회 비관적 lock 으로 조회
+
+        // 1단계 : EventLog 조회 MSSQL 트랜잭션 Ready 상태 조회후 PROCESSING 상태로 변경
 
         // 2단계 : try catch for문
-        // EventLog 마다 DB2 report
-        // 정상적으로 성공하면, EventLog 를 Success 로 변경
-        // catch 문으로 빠지고, 재시도 횟수 증가 재시도 횟수가 3미만이면, Ready 상태로 변경
-        // catch 문으로 빠지고, 재시도 횟수 증가 재시도 횟수가 3초과하면, Fail 상태로 변경
+        // tex로 rabbitMQ 메시지 전송
 
         // 1단계 EventQueue 조회
         // 조회 후 바로 Processing 상태로 변경
@@ -45,7 +56,51 @@ public class InsertReportScheduler {
 
         if(CollectionUtils.isNotEmpty(ifEventQueues)){
             for(IfEventQueue ifEventQueue : ifEventQueues){
-                try {
+                sendMessageToTEX(ifEventQueue);
+            }
+        }
+    }
+
+    private void sendMessageToTEX(IfEventQueue ifEventQueue){
+        String transactionId = FormatUtils.generateTransactionId();
+        BaseMessage<EventQueueReportBody> request = new BaseMessage<>();
+
+        request.setMessageName(MessageList.INSERT_EVENT_QUEUE_REPORT.getMessageName());
+        request.setTransactionId(transactionId);
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.MNG.getValue());
+        request.setEventTime(transactionId);
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+
+        EventQueueReportBody body =
+                EventQueueReportBody
+                        .builder()
+                        .id(ifEventQueue.getId())
+                        .eventType(ifEventQueue.getEventType())
+                        .payload(ifEventQueue.getPayload())
+                        .ifStatus(ifEventQueue.getIfStatus())
+                        .carrierName(ifEventQueue.getCarrierName())
+                        .idocId(ifEventQueue.getIdocId())
+                        .orderId(ifEventQueue.getOrderId())
+                        .orderLineNumber(ifEventQueue.getOrderLineNumber())
+                        .retryCNT(ifEventQueue.getRetryCNT())
+                        .errMSG(ifEventQueue.getErrMSG())
+                        .createTime(ifEventQueue.getCreateTime())
+                        .updateTime(ifEventQueue.getUpdateTime())
+                        .build();
+        request.setBody(body);
+
+        jsonUtils.writePrettyJson(request);
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EXCHANGE_TEX,
+                RabbitConfig.ROUTING_TEX,
+                request );
+    }
+
+    /*
+    * try {
                     // DB2 H2transReport
                     insertExternalInterfaceService.reportH2trans(ifEventQueue);
                     // ifEventQueue 상태를 Success 로 변경
@@ -68,8 +123,8 @@ public class InsertReportScheduler {
                         log.error("increase & reportFail id {} ",ifEventQueue.getId());
                     }
                 }
-            }
-        }
-    }
+    *
+    * */
+
 
 }

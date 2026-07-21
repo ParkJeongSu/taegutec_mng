@@ -36,7 +36,8 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
     @Query("SELECT i FROM IdocEntity i " +
             "WHERE i.idocTypId IN :idocTypIds " +
             "AND i.state = :state " +
-            "AND i.errorCode = :errorCode "
+            "AND i.errorCode = :errorCode " +
+            "ORDER BY i.dtimeCre ASC"
     )
     List<IdocEntity> findByIdocTypIdsAndStateAndErrorCode(
             @Param("idocTypIds") List<Long> idocTypIds,

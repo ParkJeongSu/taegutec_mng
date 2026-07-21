@@ -121,4 +121,13 @@ public class PortDefService {
         if (ids == null || ids.isEmpty()) return;
         portDefRepository.deleteAllByIdInBatch(ids);
     }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public List<PortDef> findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
+            String workCenterName,
+            List<String> detailPortTypes,
+            List<String> portTypes
+    ){
+        return portDefRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(workCenterName,detailPortTypes,portTypes);
+    }
 }

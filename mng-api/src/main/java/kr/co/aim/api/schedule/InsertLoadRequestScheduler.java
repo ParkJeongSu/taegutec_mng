@@ -46,14 +46,11 @@ public class InsertLoadRequestScheduler {
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
     public void insertLoadRequestScheduler() {
 
-        List<Port> portList = portService.findByTransportState(PortTransportState.READY_TO_LOAD.getValue());
-        //TODO: 워크센터별로 하나씩 READY_TO_LOAD 인 PORT 조회해서 보내기 아래의 detail port Type도 확인해보기
-        //List<Port> portList = portService.findEarliestPortPerWorkCenter(PortTransportState.READY_TO_LOAD.getValue());
+        List<String> detailPortTypes = new ArrayList<>();
+        detailPortTypes.add(DetailPortType.CRANE_OUT_PND.getValue());
+        detailPortTypes.add(DetailPortType.CRANE_BOTH_PND.getValue());
+        List<Port> portList = portService.findEarliestPortPerWorkCenter(PortTransportState.READY_TO_LOAD.getValue(),detailPortTypes);
 
-        //List<String> detailPortTypes = new ArrayList<>();
-        //detailPortTypes.add(DetailPortType.CRANE_OUT_PND.getValue());
-        //detailPortTypes.add(DetailPortType.CRANE_BOTH_PND.getValue());
-        //List<Port> portList = portService.findByTransportStateAndDetailPortTypeIn(PortTransportState.READY_TO_LOAD.getValue(),detailPortTypes);
         if(CollectionUtils.isNotEmpty(portList)){
             for(Port port : portList){
                 String transactionId = FormatUtils.generateTransactionId();

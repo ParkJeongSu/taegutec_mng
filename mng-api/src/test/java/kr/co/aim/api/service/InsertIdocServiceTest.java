@@ -11,46 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(properties = "factory.type=insert")
 @Transactional // 테스트 완료 후 DB를 자동으로
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // 롤백하여 기존 데이터에 영향을 주지 않음
 //@ActiveProfiles({"tex"}) // 환경에 맞는 프로파일 설정 (로컬 LUW 연결용)
 //@Disabled

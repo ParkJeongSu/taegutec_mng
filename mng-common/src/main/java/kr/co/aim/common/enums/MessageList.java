@@ -39,6 +39,9 @@ public enum MessageList {
     PORT_TYPE_CHANGED("PortTypeChanged"),
     PORT_USE_TYPE_CHANGED("PortUseTypeChanged"),
     PORT_STATE_CHANGED("PortStateChanged"),
+    TRANSPORT_ORDER_VALIDATION_REQUEST("TransportJobValidationRequest"),
+    TRANSPORT_JOB_VALIDATION_REQUEST("TransportJobValidationRequest"),
+    TRANSPORT_JOB_VALIDATION_REPLY("TransportJobValidationReply"),
     TRANSPORT_JOB_REQUEST_BY_WMS("TransportJobRequestByWMS"),
     TRANSPORT_JOB_REPLY_BY_WMS("TransportJobReplyByWMS"),
     TRANSPORT_JOB_REQUEST("TransportJobRequest"),
@@ -80,6 +83,8 @@ public enum MessageList {
     PROCESS_JOB_DATA_REPORT("ProcessJobDataReport"),
     PROCESS_JOB_ENDED("ProcessJobEnded"),
     MATERIAL_ASSIGNED_TO_CARRIER("MaterialAssignedToCarrier"),
+    INSERT_EVENT_QUEUE_REPORT("InsertEventQueueReport"),
+    POWDER_EVENT_QUEUE_REPORT("PowderEventQueueReport"),
     WHAT_NEXT("WhatNext"),
     WHERE_NEXT("WhereNext");
 

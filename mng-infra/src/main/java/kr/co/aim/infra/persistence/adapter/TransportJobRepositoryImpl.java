@@ -159,6 +159,11 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
         return transportJobJpaRepository.findByCreateTimeBetweenAndTransportJobState(startDateTime,endDateTime,transportJobState).stream().map(transportJobMapper::toDomain).collect(Collectors.toList());
     }
 
+    @Override
+    public Optional<TransportJob> findByOrderId(String orderId) {
+        return transportJobJpaRepository.findByOrderId(orderId).map(transportJobMapper::toDomain);
+    }
+
     /**
      * Pageable의 Sort 객체를 Querydsl의 OrderSpecifier 배열로 변환합니다.
      */

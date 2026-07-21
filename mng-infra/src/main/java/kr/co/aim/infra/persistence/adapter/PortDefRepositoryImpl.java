@@ -115,6 +115,11 @@ public class PortDefRepositoryImpl implements PortDefRepository {
         return portDefJpaRepository.findWithLockByEquipmentNameAndPortName(equipmentName, portName).map(portDefMapper::toDomain);
     }
 
+    @Override
+    public List<PortDef> findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(String workCenterName, List<String> detailPortTypes, List<String> portTypes) {
+        return portDefJpaRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(workCenterName,detailPortTypes,portTypes).stream().map(portDefMapper::toDomain).collect(Collectors.toList());
+    }
+
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
         if (sort.isSorted()) {

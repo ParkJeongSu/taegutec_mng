@@ -39,7 +39,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","web"})
+@Profile({"scheduler","pex","tex","web"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertExternalInterfaceService implements FactoryGALInterfaceStrategy {
 
@@ -62,6 +62,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
                 .dtimeCre(now)
+                .dtimeMod(now)
                 .modCnt(0)
                 .build();
     }
@@ -185,6 +186,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .lineId(h2TransJpaRepository.findMaxLineId())
                         .idocId(newIdoc.getLineId())
                         .dtimeCre(now)
+                        .dtimeMod(now)
                         .usrMod(SystemName.MNG.getValue())
                         .pgmMod(SystemName.MNG.getValue())
                         .modCnt(0)

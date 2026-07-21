@@ -69,4 +69,6 @@ public interface TransportJobRepository {
             LocalDateTime endDateTime,
             String transportJobState
     );
+
+    Optional<TransportJob> findByOrderId(String orderId);
 }
