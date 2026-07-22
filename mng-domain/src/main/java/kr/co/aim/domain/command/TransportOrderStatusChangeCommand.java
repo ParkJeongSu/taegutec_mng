@@ -5,12 +5,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @RequiredArgsConstructor
 @Builder
-public class TransportOrderAcceptCommand {
+public class TransportOrderStatusChangeCommand {
     private final TransactionInfo transactionInfo;
     private final Long id;
     private final String transportOrderId;

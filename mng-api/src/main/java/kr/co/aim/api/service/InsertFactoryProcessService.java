@@ -552,6 +552,22 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
+            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            if(optionalTransportOrder.isPresent()){
+                TransportOrder transportOrder = optionalTransportOrder.get();
+
+                TransportOrderStatusChangeCommand completedCommand =
+                        TransportOrderStatusChangeCommand
+                                .builder()
+                                .transactionInfo(tx)
+                                .transportStatus(TransportOrderStatus.COMPLETED.getValue())
+                                .build();
+                transportOrder.completed(completedCommand);
+                transportOrder = transportOrderService.save(transportOrder);
+                TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+                historyService.saveHistory(transportOrderHistoryEntity);
+            }
+
             // insert EventQueue
             try{
                 InsertEventQueueReportVo insertEventQueueReportVo
@@ -617,8 +633,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
             if(optionalTransportOrder.isPresent()){
                 TransportOrder transportOrder = optionalTransportOrder.get();
-                TransportOrderAcceptCommand acceptCommand =
-                        TransportOrderAcceptCommand
+                TransportOrderStatusChangeCommand acceptCommand =
+                        TransportOrderStatusChangeCommand
                                 .builder()
                                 .transactionInfo(tx)
                                 .transportStatus(TransportOrderStatus.ACCEPTED.getValue())
@@ -1035,8 +1051,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
             if(optionalTransportOrder.isPresent()){
                 TransportOrder transportOrder = optionalTransportOrder.get();
-                TransportOrderAcceptCommand acceptCommand =
-                        TransportOrderAcceptCommand
+                TransportOrderStatusChangeCommand acceptCommand =
+                        TransportOrderStatusChangeCommand
                                 .builder()
                                 .transactionInfo(tx)
                                 .transportStatus(TransportOrderStatus.ACCEPTED.getValue())

@@ -595,16 +595,6 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         galId = transportOrder.getGalId();
                         actualWorkStationId = transportOrder.getWorkStationId();
                     }else if(StringUtils.equals(TransportOrderType.INBOUND.getValue(), transportOrder.getTransportType())){
-                        // TODO : 만일 UNLOAD COMPLETED 에서 신호를 못주면 STARTED에서 WORKSTATION_EMPTY 보고
-                        /*
-                        transportOrder = optionalTransportOrder.get();
-                        eventType = GALTransportStatus.WORKSTATION_EMPTY.name();
-                        transactionCode = GALTransportStatus.WORKSTATION_EMPTY.getValue();
-                        idocId = transportOrder.getIdocId().toString();
-                        orderId = transportOrder.getTransportOrderId();
-                        orderLineNumber = "";
-                        orderType = transportOrder.getTransportType();
-                        */
                         return null;
                     }
                     else if(StringUtils.equals(TransportOrderType.RELOCATION.getValue(), transportOrder.getTransportType())){

@@ -117,9 +117,6 @@ public class InsertTransferScheduler {
                 // insert transportOrder (MSSQL 트랜잭션)
                 transportOrder = transportOrderService.createTransportOrder(transportOrder);
 
-                // TODO: ACCEPTED 로직 추가 아직 미완성
-                //transportOrder = transportOrderService.acceptTransportOrder(transportOrder);
-
                 // 정상적으로 수행했기 때문에, errorCode (60 : processed)와 dtimemode를 수정
                 insertExternalInterfaceService.transferCompleted(idocEntity.getLineId());
 

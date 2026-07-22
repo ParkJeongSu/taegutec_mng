@@ -2,6 +2,7 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.common.dto.EquipmentGroupDefSaveRequestDto;
 import kr.co.aim.common.dto.EquipmentGroupDefSearchConditionDto;
+import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.EquipmentGroupDefCreateCommand;
 import kr.co.aim.domain.command.EquipmentGroupDefUpdateCommand;
@@ -27,7 +28,7 @@ public class EquipmentGroupDefService {
         if (existing.isPresent()) {
             throw new IllegalArgumentException("이미 존재하는 Equipment Group Name입니다: " + dto.getEquipmentGroupName());
         }
-        TransactionInfo tx = TransactionInfo.now(dto.getEventName(), dto.getEventUser(), dto.getEventComment());
+        TransactionInfo tx = TransactionInfo.now(EventName.CREATED.getValue(), dto.getEventUser(), dto.getEventComment());
         EquipmentGroupDefCreateCommand command = EquipmentGroupDefCreateCommand.builder()
                 .transactionInfo(tx)
                 .equipmentGroupName(dto.getEquipmentGroupName())
@@ -61,7 +62,7 @@ public class EquipmentGroupDefService {
         }
 
         EquipmentGroupDef groupDef = optional.get();
-        TransactionInfo tx = TransactionInfo.now(dto.getEventName(), dto.getEventUser(), dto.getEventComment());
+        TransactionInfo tx = TransactionInfo.now(EventName.UPDATED.getValue(), dto.getEventUser(), dto.getEventComment());
         EquipmentGroupDefUpdateCommand command = EquipmentGroupDefUpdateCommand.builder()
                 .transactionInfo(tx)
                 .description(dto.getDescription())

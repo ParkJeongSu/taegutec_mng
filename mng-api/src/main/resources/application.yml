@@ -44,6 +44,8 @@ spring:
         idle-timeout: 600000
         max-lifetime: 1800000
         leak-detection-threshold: 2000   # ← ms 단위
+        connection-test-query: SELECT 1  # 풀에서 커넥션을 가져올 때 유효성 검사
+        validation-timeout: 3000         # 검사 타임아웃 (3초)
     db2:
       jdbc-url: jdbc:db2://localhost:50000/testdb:currentSchema=AIMTESTTK; # 실제 DB2 URL로 변경해주세요
       schema-name: AIMTESTTK # Db2용 스키마 (운영 환경에서는 라이브러리명)

@@ -171,11 +171,11 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
             actualWeight = new BigDecimal(dto.getActualWeight());
         }
 
-        LocalDateTime now = null;
+        //LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = ifEventQueue.getCreateTime();
 
         // 단 하나의 report 만 하면 되는 경우
         // 이 경우는 단순히 ifEventQueue 의 값에서 h2Trans로 report 하면 된다.
-        now = LocalDateTime.now().withNano(0);
 
         IdocEntity newIdoc = buildBaseIdoc(now);
         newIdoc = idocJpaRepository.save(newIdoc);

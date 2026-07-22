@@ -1,7 +1,7 @@
 package kr.co.aim.domain.model;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.handler.HasTransactionInfo;
-import kr.co.aim.domain.command.TransportOrderAcceptCommand;
+import kr.co.aim.domain.command.TransportOrderStatusChangeCommand;
 import kr.co.aim.domain.command.TransportOrderCreateCommand;
 import lombok.*;
 
@@ -91,7 +91,27 @@ public class TransportOrder implements HasTransactionInfo {
                         .build();
     }
 
-    public void accept(TransportOrderAcceptCommand command){
+    public void requested(TransportOrderStatusChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(command.getTransportStatus());
+    }
+
+    public void accept(TransportOrderStatusChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(command.getTransportStatus());
+    }
+
+    public void started(TransportOrderStatusChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(command.getTransportStatus());
+    }
+
+    public void completed(TransportOrderStatusChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(command.getTransportStatus());
+    }
+
+    public void rejected(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
         this.setTransportStatus(command.getTransportStatus());
     }
