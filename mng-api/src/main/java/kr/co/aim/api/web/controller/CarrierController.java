@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.CarrierService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.*;
+import kr.co.aim.common.dto.CarrierLotSearchResultDto;
 import kr.co.aim.domain.model.Carrier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,5 +39,17 @@ public class CarrierController {
         Page<Carrier> reuslt = carrierService.findCarrierByCondition(condition,pageable);
         return ResponseEntity.ok(reuslt);
     }
+
+    @Operation(summary = "Carrier-Lot", description = "Carrier Lot 종합 조회")
+    @GetMapping("/with-lot")
+    public ResponseEntity<Page<CarrierLotSearchResultDto>> getProductionOrder(
+            CarrierLotSearchCondition condition,
+            @org.springdoc.core.annotations.ParameterObject
+            Pageable pageable
+    ) {
+        Page<CarrierLotSearchResultDto> reuslt = carrierService.findCarrierLotByCondition(condition,pageable);
+        return ResponseEntity.ok(reuslt);
+    }
+
 
 }

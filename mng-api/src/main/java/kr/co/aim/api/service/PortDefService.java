@@ -1,12 +1,14 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.dto.PortDefSaveRequestDto;
-import kr.co.aim.common.dto.PortDefSearchConditionDto;
+import kr.co.aim.common.condition.PortDefSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.PortDefCreateCommand;
 import kr.co.aim.domain.command.PortDefUpdateCommand;
 import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.domain.repository.PortDefRepository;
+import kr.co.aim.infra.persistence.entity.PortDefHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.PortDefMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,10 +28,17 @@ import lombok.extern.slf4j.Slf4j;
 public class PortDefService {
 
     private final PortDefRepository portDefRepository;
+    private final PortDefMapper portDefMapper;
+    private final HistoryService historyService;
 
     @Transactional(value = "mssqlTransactionManager")
     public Optional<PortDef> findByEquipmentNameAndPortName(String equipmentName,String portName){
         return  portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public PortDef save(PortDef portDef) {
+        return portDefRepository.save(portDef);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -65,13 +74,25 @@ public class PortDefService {
                 .checkOutUser(dto.getCheckOutUser())
                 .dataState(dto.getDataState())
                 .build();
-
-        return portDefRepository.save(PortDef.create(command));
+        PortDef portDef = portDefRepository.save(PortDef.create(command));
+        PortDefHistoryEntity historyEntity = portDefMapper.toHistoryEntity(portDef);
+        historyService.saveHistory(historyEntity);
+        return portDef;
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public Page<PortDef> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable) {
+    public Page<PortDef> findPortDefWithConditions(PortDefSearchCondition condition, Pageable pageable) {
         return portDefRepository.findPortDefWithConditions(condition, pageable);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Optional<PortDef> findPortDefByEquipmentNameAndPortName(String equipmentName,String portName) {
+        return portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Optional<PortDef> findByLocationId(String locationId) {
+        return portDefRepository.findByLocationId(locationId);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -113,7 +134,10 @@ public class PortDefService {
                 .build();
 
         portDef.update(command);
-        return portDefRepository.save(portDef);
+        portDef = portDefRepository.save(portDef);
+        PortDefHistoryEntity historyEntity = portDefMapper.toHistoryEntity(portDef);
+        historyService.saveHistory(historyEntity);
+        return portDef;
     }
 
     @Transactional(value = "mssqlTransactionManager")

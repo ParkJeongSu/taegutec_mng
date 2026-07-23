@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.PortDefSearchConditionDto;
+import kr.co.aim.common.condition.PortDefSearchCondition;
 import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.domain.repository.PortDefRepository;
 import kr.co.aim.infra.persistence.entity.PortDefEntity;
@@ -69,12 +69,24 @@ public class PortDefRepositoryImpl implements PortDefRepository {
     }
 
     @Override
-    public Page<PortDef> findPortDefWithConditions(PortDefSearchConditionDto condition, Pageable pageable) {
+    public Page<PortDef> findPortDefWithConditions(PortDefSearchCondition condition, Pageable pageable) {
         JPAQuery<PortDefEntity> query = queryFactory
                 .selectFrom(portDefEntity)
                 .where(
                         equipmentNameContains(condition.getEquipmentName()),
-                        portNameContains(condition.getPortName())
+                        portNameContains(condition.getPortName()),
+                        factoryNameContains(condition.getFactoryName()),
+                        portNumberEq(condition.getPortNumber()),
+                        descriptionContains(condition.getDescription()),
+                        transportModeContains(condition.getTransportMode()),
+                        portTypeContains(condition.getPortType()),
+                        detailPortTypeContains(condition.getDetailPortType()),
+                        portUseTypeContains(condition.getPortUseType()),
+                        portRoleTypeContains(condition.getPortRoleType()),
+                        workCenterNameContains(condition.getWorkCenterName()),
+                        locationIdContains(condition.getLocationId()),
+                        connectedEquipmentNameContains(condition.getConnectedEquipmentName()),
+                        connectedPortNameContains(condition.getConnectedPortName())
                 );
 
         query.orderBy(getOrderSpecifiers(pageable.getSort()));
@@ -94,7 +106,19 @@ public class PortDefRepositoryImpl implements PortDefRepository {
                     .from(portDefEntity)
                     .where(
                             equipmentNameContains(condition.getEquipmentName()),
-                            portNameContains(condition.getPortName())
+                            portNameContains(condition.getPortName()),
+                            factoryNameContains(condition.getFactoryName()),
+                            portNumberEq(condition.getPortNumber()),
+                            descriptionContains(condition.getDescription()),
+                            transportModeContains(condition.getTransportMode()),
+                            portTypeContains(condition.getPortType()),
+                            detailPortTypeContains(condition.getDetailPortType()),
+                            portUseTypeContains(condition.getPortUseType()),
+                            portRoleTypeContains(condition.getPortRoleType()),
+                            workCenterNameContains(condition.getWorkCenterName()),
+                            locationIdContains(condition.getLocationId()),
+                            connectedEquipmentNameContains(condition.getConnectedEquipmentName()),
+                            connectedPortNameContains(condition.getConnectedPortName())
                     )
                     .fetchOne();
             total = (count != null) ? count : 0L;
@@ -141,6 +165,54 @@ public class PortDefRepositoryImpl implements PortDefRepository {
 
     private BooleanExpression portNameContains(String name) {
         return StringUtils.hasText(name) ? portDefEntity.portName.contains(name) : null;
+    }
+
+    private BooleanExpression factoryNameContains(String factoryName) {
+        return StringUtils.hasText(factoryName) ? portDefEntity.factoryName.contains(factoryName) : null;
+    }
+
+    private BooleanExpression portNumberEq(Integer portNumber) {
+        return portNumber != null ? portDefEntity.portNumber.eq(portNumber) : null;
+    }
+
+    private BooleanExpression descriptionContains(String description) {
+        return StringUtils.hasText(description) ? portDefEntity.description.contains(description) : null;
+    }
+
+    private BooleanExpression transportModeContains(String transportMode) {
+        return StringUtils.hasText(transportMode) ? portDefEntity.transportMode.contains(transportMode) : null;
+    }
+
+    private BooleanExpression portTypeContains(String portType) {
+        return StringUtils.hasText(portType) ? portDefEntity.portType.contains(portType) : null;
+    }
+
+    private BooleanExpression detailPortTypeContains(String detailPortType) {
+        return StringUtils.hasText(detailPortType) ? portDefEntity.detailPortType.contains(detailPortType) : null;
+    }
+
+    private BooleanExpression portUseTypeContains(String portUseType) {
+        return StringUtils.hasText(portUseType) ? portDefEntity.portUseType.contains(portUseType) : null;
+    }
+
+    private BooleanExpression portRoleTypeContains(String portRoleType) {
+        return StringUtils.hasText(portRoleType) ? portDefEntity.portRoleType.contains(portRoleType) : null;
+    }
+
+    private BooleanExpression workCenterNameContains(String workCenterName) {
+        return StringUtils.hasText(workCenterName) ? portDefEntity.workCenterName.contains(workCenterName) : null;
+    }
+
+    private BooleanExpression locationIdContains(String locationId) {
+        return StringUtils.hasText(locationId) ? portDefEntity.locationId.contains(locationId) : null;
+    }
+
+    private BooleanExpression connectedEquipmentNameContains(String connectedEquipmentName) {
+        return StringUtils.hasText(connectedEquipmentName) ? portDefEntity.connectedEquipmentName.contains(connectedEquipmentName) : null;
+    }
+
+    private BooleanExpression connectedPortNameContains(String connectedPortName) {
+        return StringUtils.hasText(connectedPortName) ? portDefEntity.connectedPortName.contains(connectedPortName) : null;
     }
 
 

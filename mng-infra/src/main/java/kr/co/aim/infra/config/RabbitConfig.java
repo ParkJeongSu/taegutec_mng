@@ -23,8 +23,8 @@ import java.util.Map;
 public class RabbitConfig {
 
     // --- Public Static 상수 (외부 참조용) ---
-    public static String EXCHANGE_PEX;    // rpc.exchange
-    public static String EXCHANGE_TEX;    // rpc.exchange
+    public static String EXCHANGE_PEX;
+    public static String EXCHANGE_TEX;
     public static String EXCHANGE_EAS;
     public static String EXCHANGE_WMS;
     public static String EXCHANGE_WCS;
@@ -97,60 +97,29 @@ public class RabbitConfig {
         return admin;
     }
 
-    // --- Queue & Exchange Beans ---
-    //@Bean public Queue deadLetterQueue() { return new Queue(QUEUE_DEAD, true); }
-    //@Bean public DirectExchange deadLetterExchange() { return new DirectExchange(EXCHANGE_DEAD); }
-    //@Bean Binding deadLetterBinding() { return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(ROUTING_DEAD); }
-
-    // 공통 Argument 생성 메서드 (람다 대신 사용)
-    private Map<String, Object> dlqArgs() {
+    private Map<String, Object> queueArgs() {
         Map<String, Object> args = new HashMap<>();
         args.put(DLX_KEY, EXCHANGE_DEAD);
         args.put(DLK_KEY, ROUTING_DEAD);
+        args.put("x-message-ttl", 600000); // 10분 (600,000ms)
         return args;
     }
 
-    // 1. TTL 설정을 담은 Argument 생성
-    private Map<String, Object> ttlArgs() {
-        Map<String, Object> args = new HashMap<>();
-        // 예: 60,0000ms = 10분 동안 처리 안 되면 삭제
-        args.put("x-message-ttl", 600000);
-        return args;
-    }
-
-    @Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false); }
-    @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false); }
-    @Bean public Queue texQueueSync() { return new Queue(QUEUE_TEX_SYNC, true, false, false); }
-
-    // TODO: 추후 고민 ttl 설정
-    //@Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false,ttlArgs()); }
-    //@Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false,ttlArgs()); }
-
-    //@Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false, dlqArgs()); }
-    //@Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false, dlqArgs()); }
-    //@Bean public Queue easQueue() { return new Queue(QUEUE_EAS, true, false, false, dlqArgs()); }
-    @Bean public Queue wmsQueue() { return new Queue(QUEUE_WMS, true, false, false); }
-    @Bean public Queue wmsQueueSync() { return new Queue(QUEUE_WMS_SYNC, true, false, false); }
-    //@Bean public Queue wcsQueue() { return new Queue(QUEUE_WCS, true, false, false, dlqArgs()); }
-    //@Bean public Queue mantiQueue() { return new Queue(QUEUE_MANTI, true, false, false, dlqArgs()); }
-
+    @Bean public Queue pexQueue() { return new Queue(QUEUE_PEX, true, false, false,queueArgs()); }
+    @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false,queueArgs()); }
+    @Bean public Queue texQueueSync() { return new Queue(QUEUE_TEX_SYNC, true, false, false,queueArgs()); }
+    @Bean public Queue deadLetterQueue() { return new Queue(QUEUE_DEAD, true); }
     // Exchanges
-    @Bean public DirectExchange pexExchange() { return new DirectExchange(EXCHANGE_PEX); } // rpc.exchange
-    @Bean public DirectExchange texExchange() { return new DirectExchange(EXCHANGE_TEX); } // rpc.exchange
-    //@Bean public DirectExchange easExchange() { return new DirectExchange(EXCHANGE_EAS); }
-    @Bean public DirectExchange wmsExchange() { return new DirectExchange(EXCHANGE_WMS); }
-    //@Bean public DirectExchange wcsExchange() { return new DirectExchange(EXCHANGE_WCS); }
-    //@Bean public DirectExchange mantiExchange() { return new DirectExchange(EXCHANGE_MANTI); }
+    @Bean public DirectExchange pexExchange() { return new DirectExchange(EXCHANGE_PEX); }
+    @Bean public DirectExchange texExchange() { return new DirectExchange(EXCHANGE_TEX); }
+    @Bean public DirectExchange texSyncExchange() { return new DirectExchange(EXCHANGE_TEX); }
+    @Bean public DirectExchange deadLetterExchange() { return new DirectExchange(EXCHANGE_DEAD); }
 
     // Bindings
     @Bean Binding pexBinding() { return BindingBuilder.bind(pexQueue()).to(pexExchange()).with(ROUTING_PEX); }
     @Bean Binding texBinding() { return BindingBuilder.bind(texQueue()).to(texExchange()).with(ROUTING_TEX); }
-    @Bean Binding texSyncBinding() { return BindingBuilder.bind(texQueueSync()).to(texExchange()).with(ROUTING_TEX_SYNC); }
-    //@Bean Binding easBinding() { return BindingBuilder.bind(easQueue()).to(easExchange()).with(ROUTING_EAS); }
-    @Bean Binding wmsBinding() { return BindingBuilder.bind(wmsQueue()).to(wmsExchange()).with(ROUTING_WMS); }
-    @Bean Binding wmsSyncBinding() { return BindingBuilder.bind(wmsQueueSync()).to(wmsExchange()).with(ROUTING_WMS_SYNC); }
-    //@Bean Binding wcsBinding() { return BindingBuilder.bind(wcsQueue()).to(wcsExchange()).with(ROUTING_WCS); }
-    //@Bean Binding mantiBinding() { return BindingBuilder.bind(mantiQueue()).to(mantiExchange()).with(ROUTING_MANTI); }
+    @Bean Binding texSyncBinding() { return BindingBuilder.bind(texQueueSync()).to(texSyncExchange()).with(ROUTING_TEX_SYNC); }
+    @Bean Binding deadLetterBinding() { return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(ROUTING_DEAD); }
 
     // --- Template & Converter ---
     @Bean

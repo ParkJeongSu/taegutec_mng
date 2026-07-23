@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.ProductDefService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
+import kr.co.aim.common.condition.ProductDefSearchCondition;
 import kr.co.aim.common.dto.ProductDefSaveRequestDto;
-import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.domain.model.ProductDef;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -35,7 +35,7 @@ public class ProductDefController {
     @Operation(summary = "Product Def 목록 조회")
     @GetMapping("")
     public ResponseEntity<Page<ProductDef>> getProductDefs(
-            ProductDefSearchConditionDto condition,
+            ProductDefSearchCondition condition,
             @ParameterObject Pageable pageable
     ) {
         Page<ProductDef> result = productDefService.findProductDefWithConditions(condition, pageable);

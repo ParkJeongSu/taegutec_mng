@@ -24,7 +24,6 @@
 		<module>mng-domain</module>
 		<module>mng-infra</module>
 		<module>mng-common</module>
-<!--        <module>mng-framework</module>-->
     </modules>
 
 	<properties>

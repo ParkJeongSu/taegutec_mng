@@ -1,4 +1,4 @@
-package kr.co.aim.common.dto;
+package kr.co.aim.common.condition;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class EquipmentGroupDefSearchConditionDto {
+public class EquipmentGroupDefSearchCondition {
     private Long id;
     private String equipmentGroupName;
     private String description;

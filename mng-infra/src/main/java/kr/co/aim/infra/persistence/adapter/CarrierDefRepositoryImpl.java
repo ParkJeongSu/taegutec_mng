@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.CarrierDefSearchConditionDto;
+import kr.co.aim.common.condition.CarrierDefSearchCondition;
 import kr.co.aim.domain.model.CarrierDef;
 import kr.co.aim.domain.repository.CarrierDefRepository;
 import kr.co.aim.infra.persistence.entity.CarrierDefEntity;
@@ -83,13 +83,22 @@ public class CarrierDefRepositoryImpl implements CarrierDefRepository {
     }
 
     @Override
-    public Page<CarrierDef> findCarrierDefWithConditions(CarrierDefSearchConditionDto condition, Pageable pageable) {
-        //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
+    public Page<CarrierDef> findCarrierDefWithConditions(CarrierDefSearchCondition condition, Pageable pageable) {
+        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<CarrierDefEntity> query = queryFactory
                 .selectFrom(carrierDefEntity)
                 .where(
-                        // (WHERE 조건이 있다면 여기에 추가)
-                        carrierDefNameContains(condition.getCarrierDefName())
+                        carrierDefNameContains(condition.getCarrierDefName()),
+                        factoryNameContains(condition.getFactoryName()),
+                        descriptionContains(condition.getDescription()),
+                        carrierTypeContains(condition.getCarrierType()),
+                        carrierDetailTypeContains(condition.getCarrierDetailType()),
+                        defaultCapacityEq(condition.getDefaultCapacity()),
+                        useCountLimitEq(condition.getUseCountLimit()),
+                        useDurationLimitEq(condition.getUseDurationLimit()),
+                        countLimitPerCleanEq(condition.getCountLimitPerClean()),
+                        durationLimitPerCleanEq(condition.getDurationLimitPerClean()),
+                        cleanCountLimitEq(condition.getCleanCountLimit())
                 );
 
         // 2. 정렬 적용
@@ -114,8 +123,17 @@ public class CarrierDefRepositoryImpl implements CarrierDefRepository {
                     .select(carrierDefEntity.count())
                     .from(carrierDefEntity)
                     .where(
-                            // (WHERE 조건이 있다면 여기에 추가)
-                            carrierDefNameContains(condition.getCarrierDefName())
+                            carrierDefNameContains(condition.getCarrierDefName()),
+                            factoryNameContains(condition.getFactoryName()),
+                            descriptionContains(condition.getDescription()),
+                            carrierTypeContains(condition.getCarrierType()),
+                            carrierDetailTypeContains(condition.getCarrierDetailType()),
+                            defaultCapacityEq(condition.getDefaultCapacity()),
+                            useCountLimitEq(condition.getUseCountLimit()),
+                            useDurationLimitEq(condition.getUseDurationLimit()),
+                            countLimitPerCleanEq(condition.getCountLimitPerClean()),
+                            durationLimitPerCleanEq(condition.getDurationLimitPerClean()),
+                            cleanCountLimitEq(condition.getCleanCountLimit())
                     )
                     .fetchOne();
 
@@ -159,8 +177,47 @@ public class CarrierDefRepositoryImpl implements CarrierDefRepository {
 
     // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
 
-
     private BooleanExpression carrierDefNameContains(String carrierDefName) {
         return StringUtils.hasText(carrierDefName) ? carrierDefEntity.carrierDefName.contains(carrierDefName) : null;
+    }
+
+    private BooleanExpression factoryNameContains(String factoryName) {
+        return StringUtils.hasText(factoryName) ? carrierDefEntity.factoryName.contains(factoryName) : null;
+    }
+
+    private BooleanExpression descriptionContains(String description) {
+        return StringUtils.hasText(description) ? carrierDefEntity.description.contains(description) : null;
+    }
+
+    private BooleanExpression carrierTypeContains(String carrierType) {
+        return StringUtils.hasText(carrierType) ? carrierDefEntity.carrierType.contains(carrierType) : null;
+    }
+
+    private BooleanExpression carrierDetailTypeContains(String carrierDetailType) {
+        return StringUtils.hasText(carrierDetailType) ? carrierDefEntity.carrierDetailType.contains(carrierDetailType) : null;
+    }
+
+    private BooleanExpression defaultCapacityEq(Integer defaultCapacity) {
+        return defaultCapacity != null ? carrierDefEntity.defaultCapacity.eq(defaultCapacity) : null;
+    }
+
+    private BooleanExpression useCountLimitEq(Integer useCountLimit) {
+        return useCountLimit != null ? carrierDefEntity.useCountLimit.eq(useCountLimit) : null;
+    }
+
+    private BooleanExpression useDurationLimitEq(Integer useDurationLimit) {
+        return useDurationLimit != null ? carrierDefEntity.useDurationLimit.eq(useDurationLimit) : null;
+    }
+
+    private BooleanExpression countLimitPerCleanEq(Integer countLimitPerClean) {
+        return countLimitPerClean != null ? carrierDefEntity.countLimitPerClean.eq(countLimitPerClean) : null;
+    }
+
+    private BooleanExpression durationLimitPerCleanEq(Integer durationLimitPerClean) {
+        return durationLimitPerClean != null ? carrierDefEntity.durationLimitPerClean.eq(durationLimitPerClean) : null;
+    }
+
+    private BooleanExpression cleanCountLimitEq(Integer cleanCountLimit) {
+        return cleanCountLimit != null ? carrierDefEntity.cleanCountLimit.eq(cleanCountLimit) : null;
     }
 }

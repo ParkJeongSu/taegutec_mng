@@ -1,13 +1,15 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.dto.EquipmentGroupDefSaveRequestDto;
-import kr.co.aim.common.dto.EquipmentGroupDefSearchConditionDto;
+import kr.co.aim.common.condition.EquipmentGroupDefSearchCondition;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.EquipmentGroupDefCreateCommand;
 import kr.co.aim.domain.command.EquipmentGroupDefUpdateCommand;
 import kr.co.aim.domain.model.EquipmentGroupDef;
 import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
+import kr.co.aim.infra.persistence.entity.EquipmentGroupDefHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.EquipmentGroupDefMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,6 +23,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EquipmentGroupDefService {
     private final EquipmentGroupDefRepository equipmentGroupDefRepository;
+    private final EquipmentGroupDefMapper equipmentGroupDefMapper;
+    private final HistoryService historyService;
 
     @Transactional
     public EquipmentGroupDef createEquipmentGroupDef(EquipmentGroupDefSaveRequestDto dto) {
@@ -39,10 +43,13 @@ public class EquipmentGroupDefService {
                 .dataState(dto.getDataState())
                 .build();
 
-        return equipmentGroupDefRepository.save(EquipmentGroupDef.create(command));
+        EquipmentGroupDef equipmentGroupDef = equipmentGroupDefRepository.save(EquipmentGroupDef.create(command));
+        EquipmentGroupDefHistoryEntity historyEntity = equipmentGroupDefMapper.toHistoryEntity(equipmentGroupDef);
+        historyService.saveHistory(historyEntity);
+        return equipmentGroupDef;
     }
 
-    public Page<EquipmentGroupDef> findEquipmentGroupDefWithConditions(EquipmentGroupDefSearchConditionDto condition, Pageable pageable) {
+    public Page<EquipmentGroupDef> findEquipmentGroupDefWithConditions(EquipmentGroupDefSearchCondition condition, Pageable pageable) {
         return equipmentGroupDefRepository.findEquipmentGroupDefWithConditions(condition, pageable);
     }
 
@@ -61,7 +68,7 @@ public class EquipmentGroupDefService {
             throw new IllegalArgumentException("수정할 대상 설비그룹 기준정보가 없습니다. ID: " + dto.getId());
         }
 
-        EquipmentGroupDef groupDef = optional.get();
+        EquipmentGroupDef equipmentGroupDef = optional.get();
         TransactionInfo tx = TransactionInfo.now(EventName.UPDATED.getValue(), dto.getEventUser(), dto.getEventComment());
         EquipmentGroupDefUpdateCommand command = EquipmentGroupDefUpdateCommand.builder()
                 .transactionInfo(tx)
@@ -72,8 +79,11 @@ public class EquipmentGroupDefService {
                 .dataState(dto.getDataState())
                 .build();
 
-        groupDef.update(command);
-        return equipmentGroupDefRepository.save(groupDef);
+        equipmentGroupDef.update(command);
+        equipmentGroupDef = equipmentGroupDefRepository.save(equipmentGroupDef);
+        EquipmentGroupDefHistoryEntity historyEntity = equipmentGroupDefMapper.toHistoryEntity(equipmentGroupDef);
+        historyService.saveHistory(historyEntity);
+        return equipmentGroupDef;
     }
 
     @Transactional

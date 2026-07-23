@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.EquipmentGroupDefSearchConditionDto;
+import kr.co.aim.common.condition.EquipmentGroupDefSearchCondition;
 import kr.co.aim.domain.model.EquipmentGroupDef;
 import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
 import kr.co.aim.infra.persistence.entity.EquipmentGroupDefEntity;
@@ -68,7 +68,7 @@ public class EquipmentGroupDefDefRepositoryImpl implements EquipmentGroupDefRepo
     }
 
     @Override
-    public Page<EquipmentGroupDef> findEquipmentGroupDefWithConditions(EquipmentGroupDefSearchConditionDto condition, Pageable pageable) {
+    public Page<EquipmentGroupDef> findEquipmentGroupDefWithConditions(EquipmentGroupDefSearchCondition condition, Pageable pageable) {
         JPAQuery<EquipmentGroupDefEntity> query = queryFactory
                 .selectFrom(equipmentGroupDefEntity)
                 .where(equipmentGroupNameContains(condition.getEquipmentGroupName()));

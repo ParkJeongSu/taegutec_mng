@@ -1,10 +1,13 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.common.condition.LotSearchCondition;
 import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.LotHistory;
 import kr.co.aim.domain.repository.LotRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,8 +33,12 @@ public class LotService {
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public Optional<Lot> findById(Long id) {
-        return lotRepository.findById(id);
+    public Lot findById(Long id) {
+        Optional<Lot> optional = lotRepository.findById(id);
+        if (optional.isEmpty()) {
+            throw new IllegalArgumentException("해당 Lot 기준정보가 존재하지 않습니다. ID: " + id);
+        }
+        return optional.get();
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
@@ -39,8 +46,14 @@ public class LotService {
         return lotRepository.findByLotName(lotName);
     }
 
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<Lot> findLotWithConditions(LotSearchCondition condition, Pageable pageable) {
+        return lotRepository.findLotWithConditions(condition, pageable);
+    }
+
     @Transactional(value = "mssqlTransactionManager")
     public void deleteAllByIdInBatch(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
         lotRepository.deleteAllByIdInBatch(ids);
     }
 

@@ -1,12 +1,14 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.dto.CarrierDefSaveRequestDto;
-import kr.co.aim.common.dto.CarrierDefSearchConditionDto;
+import kr.co.aim.common.condition.CarrierDefSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.CarrierDefCreateCommand;
 import kr.co.aim.domain.command.CarrierDefUpdateCommand;
 import kr.co.aim.domain.model.CarrierDef;
 import kr.co.aim.domain.repository.CarrierDefRepository;
+import kr.co.aim.infra.persistence.entity.CarrierDefHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.CarrierDefMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -22,6 +24,8 @@ import java.util.Optional;
 @Slf4j
 public class CarrierDefService {
     private final CarrierDefRepository carrierDefRepository;
+    private final HistoryService historyService;
+    private final CarrierDefMapper carrierDefMapper;
 
     // [Create] 기준정보 등록
     @Transactional
@@ -58,12 +62,14 @@ public class CarrierDefService {
                         .build();
 
         CarrierDef carrierDef = CarrierDef.create(command);
-
-        return carrierDefRepository.save(carrierDef);
+        carrierDef = carrierDefRepository.save(carrierDef);
+        CarrierDefHistoryEntity historyEntity = carrierDefMapper.toHistoryEntity(carrierDef);
+        historyService.saveHistory(historyEntity);
+        return carrierDef;
     }
 
     // [Read] Querydsl 동적 조건 페이징 조회
-    public Page<CarrierDef> findCarrierDefWithConditions(CarrierDefSearchConditionDto condition, Pageable pageable) {
+    public Page<CarrierDef> findCarrierDefWithConditions(CarrierDefSearchCondition condition, Pageable pageable) {
         return carrierDefRepository.findCarrierDefWithConditions(condition, pageable);
     }
 
@@ -109,8 +115,10 @@ public class CarrierDefService {
                         .build();
 
         carrierDef.update(command);
-
-        return carrierDefRepository.save(carrierDef);
+        carrierDef = carrierDefRepository.save(carrierDef);
+        CarrierDefHistoryEntity historyEntity = carrierDefMapper.toHistoryEntity(carrierDef);
+        historyService.saveHistory(historyEntity);
+        return carrierDef;
     }
 
     // [Delete] 배치 벌크 삭제 처리

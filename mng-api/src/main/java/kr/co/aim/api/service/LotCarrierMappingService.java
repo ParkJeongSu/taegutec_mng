@@ -1,10 +1,13 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.common.condition.LotCarrierMappingSearchCondition;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.LotCarrierMappingHistory;
 import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,8 +33,12 @@ public class LotCarrierMappingService {
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public Optional<LotCarrierMapping> findById(Long id) {
-        return lotCarrierMappingRepository.findById(id);
+    public LotCarrierMapping findById(Long id) {
+        Optional<LotCarrierMapping> optional = lotCarrierMappingRepository.findById(id);
+        if (optional.isEmpty()) {
+            throw new IllegalArgumentException("해당 Lot Carrier Mapping 정보가 존재하지 않습니다. ID: " + id);
+        }
+        return optional.get();
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
@@ -54,8 +61,14 @@ public class LotCarrierMappingService {
         return lotCarrierMappingRepository.findByMngKey(mngKey);
     }
 
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<LotCarrierMapping> findLotCarrierMappingWithConditions(LotCarrierMappingSearchCondition condition, Pageable pageable) {
+        return lotCarrierMappingRepository.findLotCarrierMappingWithConditions(condition, pageable);
+    }
+
     @Transactional(value = "mssqlTransactionManager")
     public void deleteAllByIdInBatch(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
         lotCarrierMappingRepository.deleteAllByIdInBatch(ids);
     }
 

@@ -3,15 +3,21 @@ package kr.co.aim.api.service;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.StatTimeUtils;
 import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.common.condition.EquipmentAvailabilityHourlySearchCondition;
+import kr.co.aim.common.condition.EquipmentProductivityDailySearchCondition;
+import kr.co.aim.common.condition.TransportRouteDailySearchCondition;
+import kr.co.aim.common.condition.WorkOrderProcessedDailySearchCondition;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.StatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -105,5 +111,27 @@ public class StatService {
         if (!resultList.isEmpty()) {
             statRepository.saveAvailabilityAll(resultList);
         }
+    }
+
+    // == 통계 조회 API 메서드 ==
+
+    @Transactional(readOnly = true)
+    public Page<EquipmentAvailabilityHourly> findAvailabilityWithConditions(EquipmentAvailabilityHourlySearchCondition condition, Pageable pageable) {
+        return statRepository.findAvailabilityWithConditions(condition, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EquipmentProductivityDaily> findProductivityWithConditions(EquipmentProductivityDailySearchCondition condition, Pageable pageable) {
+        return statRepository.findProductivityWithConditions(condition, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<TransportRouteDaily> findTransportRouteWithConditions(TransportRouteDailySearchCondition condition, Pageable pageable) {
+        return statRepository.findTransportRouteWithConditions(condition, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<WorkOrderProcessedDaily> findWorkOrderProcessedWithConditions(WorkOrderProcessedDailySearchCondition condition, Pageable pageable) {
+        return statRepository.findWorkOrderProcessedWithConditions(condition, pageable);
     }
 }

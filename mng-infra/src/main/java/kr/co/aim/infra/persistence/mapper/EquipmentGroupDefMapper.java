@@ -1,8 +1,12 @@
 package kr.co.aim.infra.persistence.mapper;
 
 import kr.co.aim.domain.model.EquipmentGroupDef;
+import kr.co.aim.domain.model.Port;
 import kr.co.aim.infra.persistence.entity.EquipmentGroupDefEntity;
+import kr.co.aim.infra.persistence.entity.EquipmentGroupDefHistoryEntity;
+import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "spring",
@@ -14,5 +18,8 @@ public interface EquipmentGroupDefMapper {
     EquipmentGroupDef toDomain(EquipmentGroupDefEntity entity);
 
     EquipmentGroupDefEntity toEntity(EquipmentGroupDef domain);
+
+    @Mapping(target = "id", expression = "java(TsidUtils.nextId())") // [3] 자바 코드 호출!
+    EquipmentGroupDefHistoryEntity toHistoryEntity(EquipmentGroupDef domain);
 
 }

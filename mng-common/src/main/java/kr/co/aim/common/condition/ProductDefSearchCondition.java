@@ -11,16 +11,12 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor//(access = AccessLevel.PROTECTED) // JPA Entity 등을 위한 기본 생성자
 public class ProductDefSearchCondition {
-    private Long id;
     private String productDefName;
     private String factoryName;
     private String description1;
     private String description2;
     private BigDecimal ratio;
     private BigDecimal defaultReceiveQuantity;
-    private String eventName;
-    private LocalDateTime eventTime;
-    private String eventUser;
-    private String eventComment;
+
 
 }

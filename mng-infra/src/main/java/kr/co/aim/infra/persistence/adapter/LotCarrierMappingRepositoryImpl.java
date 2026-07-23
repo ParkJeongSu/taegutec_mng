@@ -1,6 +1,12 @@
 package kr.co.aim.infra.persistence.adapter;
 
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import kr.co.aim.common.condition.LotCarrierMappingSearchCondition;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.LotCarrierMappingHistory;
 import kr.co.aim.domain.repository.LotCarrierMappingRepository;
@@ -9,7 +15,12 @@ import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import kr.co.aim.infra.persistence.springdatajpa.LotCarrierMappingJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -105,4 +116,95 @@ public class LotCarrierMappingRepositoryImpl implements LotCarrierMappingReposit
         }
         return domains;
     }
+
+    @Override
+    public Page<LotCarrierMapping> findLotCarrierMappingWithConditions(LotCarrierMappingSearchCondition condition, Pageable pageable) {
+        JPAQuery<LotCarrierMappingEntity> query = queryFactory
+                .selectFrom(lotCarrierMappingEntity)
+                .where(
+                        lotNameContains(condition.getLotName()),
+                        carrierNameContains(condition.getCarrierName()),
+                        orderIdContains(condition.getOrderId()),
+                        orderLineNumberContains(condition.getOrderLineNumber()),
+                        mngKeyEq(condition.getMngKey()),
+                        mantiRequestStateContains(condition.getMantiRequestState())
+                );
+
+        query.orderBy(getOrderSpecifiers(pageable.getSort()));
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<LotCarrierMappingEntity> content = query.fetch();
+        List<LotCarrierMapping> converted = content.stream().map(mapper::toDomain).collect(Collectors.toList());
+
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(lotCarrierMappingEntity.count())
+                    .from(lotCarrierMappingEntity)
+                    .where(
+                            lotNameContains(condition.getLotName()),
+                            carrierNameContains(condition.getCarrierName()),
+                            orderIdContains(condition.getOrderId()),
+                            orderLineNumberContains(condition.getOrderLineNumber()),
+                            mngKeyEq(condition.getMngKey()),
+                            mantiRequestStateContains(condition.getMantiRequestState())
+                    )
+                    .fetchOne();
+
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(converted, pageable, total);
+    }
+
+    private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        if (sort.isSorted()) {
+            for (Sort.Order order : sort) {
+                Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+                PathBuilder pathBuilder = new PathBuilder<>(lotCarrierMappingEntity.getType(), lotCarrierMappingEntity.getMetadata());
+                orders.add(new OrderSpecifier(direction, pathBuilder.get(order.getProperty())));
+            }
+        }
+        if (orders.isEmpty()) {
+            orders.add(new OrderSpecifier(Order.DESC, lotCarrierMappingEntity.id));
+        }
+        return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
+
+    private BooleanExpression lotNameContains(String lotName) {
+        return StringUtils.hasText(lotName) ? lotCarrierMappingEntity.lotName.contains(lotName) : null;
+    }
+
+    private BooleanExpression carrierNameContains(String carrierName) {
+        return StringUtils.hasText(carrierName) ? lotCarrierMappingEntity.carrierName.contains(carrierName) : null;
+    }
+
+    private BooleanExpression orderIdContains(String orderId) {
+        return StringUtils.hasText(orderId) ? lotCarrierMappingEntity.orderId.contains(orderId) : null;
+    }
+
+    private BooleanExpression orderLineNumberContains(String orderLineNumber) {
+        return StringUtils.hasText(orderLineNumber) ? lotCarrierMappingEntity.orderLineNumber.contains(orderLineNumber) : null;
+    }
+
+    private BooleanExpression mngKeyEq(Long mngKey) {
+        return mngKey != null ? lotCarrierMappingEntity.mngKey.eq(mngKey) : null;
+    }
+
+    private BooleanExpression mantiRequestStateContains(String mantiRequestState) {
+        return StringUtils.hasText(mantiRequestState) ? lotCarrierMappingEntity.mantiRequestState.contains(mantiRequestState) : null;
+    }
+
+
+
+
 }

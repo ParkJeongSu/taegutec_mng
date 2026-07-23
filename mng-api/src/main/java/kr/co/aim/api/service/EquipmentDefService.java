@@ -1,12 +1,14 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.dto.EquipmentDefSaveRequestDto;
-import kr.co.aim.common.dto.EquipmentDefSearchConditionDto;
+import kr.co.aim.common.condition.EquipmentDefSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.EquipmentDefCreateCommand;
 import kr.co.aim.domain.command.EquipmentDefUpdateCommand;
 import kr.co.aim.domain.model.EquipmentDef;
 import kr.co.aim.domain.repository.EquipmentDefRepository;
+import kr.co.aim.infra.persistence.entity.EquipmentDefHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.EquipmentDefMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +26,8 @@ import java.util.Optional;
 public class EquipmentDefService {
 
     private final EquipmentDefRepository equipmentDefRepository;
+    private final EquipmentDefMapper equipmentDefMapper;
+    private final HistoryService historyService;
 
     @Transactional
     public EquipmentDef createEquipmentDef(EquipmentDefSaveRequestDto dto) {
@@ -53,11 +57,13 @@ public class EquipmentDefService {
                 .dataState(dto.getDataState())
                 .localNo(dto.getLocalNo())
                 .build();
-
-        return equipmentDefRepository.save(EquipmentDef.create(command));
+        EquipmentDef equipmentDef = equipmentDefRepository.save(EquipmentDef.create(command));
+        EquipmentDefHistoryEntity historyEntity = equipmentDefMapper.toHistoryEntity(equipmentDef);
+        historyService.saveHistory(historyEntity);
+        return equipmentDef;
     }
 
-    public Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchConditionDto condition, Pageable pageable) {
+    public Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchCondition condition, Pageable pageable) {
         return equipmentDefRepository.findEquipmentDefWithConditions(condition, pageable);
     }
 
@@ -100,7 +106,10 @@ public class EquipmentDefService {
                 .build();
 
         equipmentDef.update(command);
-        return equipmentDefRepository.save(equipmentDef);
+        equipmentDef = equipmentDefRepository.save(equipmentDef);
+        EquipmentDefHistoryEntity historyEntity = equipmentDefMapper.toHistoryEntity(equipmentDef);
+        historyService.saveHistory(historyEntity);
+        return equipmentDef;
     }
 
     @Transactional

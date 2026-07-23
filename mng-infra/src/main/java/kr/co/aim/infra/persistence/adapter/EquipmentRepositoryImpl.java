@@ -74,12 +74,24 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
 
     @Override
     public Page<Equipment> findEquipmentByCondition(EquipmentSearchCondition condition, Pageable pageable) {
-        //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
+        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<EquipmentEntity> query = queryFactory
                 .selectFrom(equipmentEntity)
                 .where(
-                        // (WHERE 조건이 있다면 여기에 추가)
-                        equipmentNameContains(condition.getEquipmentName())
+                        equipmentNameContains(condition.getEquipmentName()),
+                        parentEquipmentIdEq(condition.getParentEquipmentId()),
+                        equipmentLevelContains(condition.getEquipmentLevel()),
+                        equipmentStateContains(condition.getEquipmentState()),
+                        communicationStateContains(condition.getCommunicationState()),
+                        loadingCountEq(condition.getLoadingCount()),
+                        processCountEq(condition.getProcessCount()),
+                        recipeNameContains(condition.getRecipeName()),
+                        holdStateContains(condition.getHoldState()),
+                        reasonCodeContains(condition.getReasonCode()),
+                        resourceStateContains(condition.getResourceState()),
+                        operationModeContains(condition.getOperationMode()),
+                        messageServiceAddressContains(condition.getMessageServiceAddress()),
+                        productionOrderIdEq(condition.getProductionOrderId())
                 );
 
         // 2. 정렬 적용
@@ -104,8 +116,20 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
                     .select(equipmentEntity.count())
                     .from(equipmentEntity)
                     .where(
-                            // (WHERE 조건이 있다면 여기에 추가)
-                            equipmentNameContains(condition.getEquipmentName())
+                            equipmentNameContains(condition.getEquipmentName()),
+                            parentEquipmentIdEq(condition.getParentEquipmentId()),
+                            equipmentLevelContains(condition.getEquipmentLevel()),
+                            equipmentStateContains(condition.getEquipmentState()),
+                            communicationStateContains(condition.getCommunicationState()),
+                            loadingCountEq(condition.getLoadingCount()),
+                            processCountEq(condition.getProcessCount()),
+                            recipeNameContains(condition.getRecipeName()),
+                            holdStateContains(condition.getHoldState()),
+                            reasonCodeContains(condition.getReasonCode()),
+                            resourceStateContains(condition.getResourceState()),
+                            operationModeContains(condition.getOperationMode()),
+                            messageServiceAddressContains(condition.getMessageServiceAddress()),
+                            productionOrderIdEq(condition.getProductionOrderId())
                     )
                     .fetchOne();
 
@@ -172,7 +196,60 @@ public class EquipmentRepositoryImpl implements EquipmentRepository {
 
 
     // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
+
     private BooleanExpression equipmentNameContains(String equipmentName) {
         return StringUtils.hasText(equipmentName) ? equipmentEntity.equipmentName.contains(equipmentName) : null;
+    }
+
+    private BooleanExpression parentEquipmentIdEq(Long parentEquipmentId) {
+        return parentEquipmentId != null ? equipmentEntity.parentEquipmentId.eq(parentEquipmentId) : null;
+    }
+
+    private BooleanExpression equipmentLevelContains(String equipmentLevel) {
+        return StringUtils.hasText(equipmentLevel) ? equipmentEntity.equipmentLevel.contains(equipmentLevel) : null;
+    }
+
+    private BooleanExpression equipmentStateContains(String equipmentState) {
+        return StringUtils.hasText(equipmentState) ? equipmentEntity.equipmentState.contains(equipmentState) : null;
+    }
+
+    private BooleanExpression communicationStateContains(String communicationState) {
+        return StringUtils.hasText(communicationState) ? equipmentEntity.communicationState.contains(communicationState) : null;
+    }
+
+    private BooleanExpression loadingCountEq(Integer loadingCount) {
+        return loadingCount != null ? equipmentEntity.loadingCount.eq(loadingCount) : null;
+    }
+
+    private BooleanExpression processCountEq(Integer processCount) {
+        return processCount != null ? equipmentEntity.processCount.eq(processCount) : null;
+    }
+
+    private BooleanExpression recipeNameContains(String recipeName) {
+        return StringUtils.hasText(recipeName) ? equipmentEntity.recipeName.contains(recipeName) : null;
+    }
+
+    private BooleanExpression holdStateContains(String holdState) {
+        return StringUtils.hasText(holdState) ? equipmentEntity.holdState.contains(holdState) : null;
+    }
+
+    private BooleanExpression reasonCodeContains(String reasonCode) {
+        return StringUtils.hasText(reasonCode) ? equipmentEntity.reasonCode.contains(reasonCode) : null;
+    }
+
+    private BooleanExpression resourceStateContains(String resourceState) {
+        return StringUtils.hasText(resourceState) ? equipmentEntity.resourceState.contains(resourceState) : null;
+    }
+
+    private BooleanExpression operationModeContains(String operationMode) {
+        return StringUtils.hasText(operationMode) ? equipmentEntity.operationMode.contains(operationMode) : null;
+    }
+
+    private BooleanExpression messageServiceAddressContains(String messageServiceAddress) {
+        return StringUtils.hasText(messageServiceAddress) ? equipmentEntity.messageServiceAddress.contains(messageServiceAddress) : null;
+    }
+
+    private BooleanExpression productionOrderIdEq(Long productionOrderId) {
+        return productionOrderId != null ? equipmentEntity.productionOrderId.eq(productionOrderId) : null;
     }
 }

@@ -45,6 +45,7 @@ public class MessageExecuteService {
     private final CarrierService carrierService;
     private final EquipmentService equipmentService;
     private final PortService portService;
+    private final PortDefService portDefService;
     private final ProductionOrderService productionOrderService;
     private final TransportJobService transportJobService;
     private final IfEventQueueService ifEventQueueService;
@@ -223,7 +224,7 @@ public class MessageExecuteService {
             }
             Port port = optionalPorts.get();
 
-            Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(port.getEquipmentName(),port.getPortName());
+            Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(port.getEquipmentName(),port.getPortName());
             if(optionalPortDef.isEmpty()){
                 throw new EntityNotFoundException(PortDef.class,equipmentName + "_" +portName);
             }
@@ -313,11 +314,24 @@ public class MessageExecuteService {
         String actualWeight = message.getBody().getActualWeight();
         String carrierType = message.getBody().getCarrierType();
 
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
-        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
-
-
         TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
+        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+
+        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+            transportJob = transportJobService.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+        }
+
         // insert EventQueue
         try{
             InsertEventQueueReportVo insertEventQueueReportVo
@@ -332,7 +346,6 @@ public class MessageExecuteService {
                     .actualZoneName(currentZoneName)
                     .actualWeight(actualWeight)
                     .actualRackLocationId(currentPositionName)
-//                    .errorTexts()
                     .tx(tx)
                     .build();
             factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
@@ -523,7 +536,7 @@ public class MessageExecuteService {
         }
         TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), message.getResultMessage());
 
-        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName, portName);
 
         // insert EventQueue
@@ -830,7 +843,7 @@ public class MessageExecuteService {
         }
         Port port = optionalPorts.get();
 
-        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPortDef.isEmpty()){
             return;
         }

@@ -1,7 +1,9 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.common.condition.CarrierLotSearchCondition;
 import kr.co.aim.common.condition.CarrierSearchCondition;
+import kr.co.aim.common.dto.CarrierLotSearchResultDto;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.domain.model.*;
@@ -32,6 +34,11 @@ public class CarrierService {
     @Transactional(value = "mssqlTransactionManager")
     public Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition,Pageable pageable){
         return carrierRepository.findCarrierByCondition(condition,pageable);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Page<CarrierLotSearchResultDto> findCarrierLotByCondition(CarrierLotSearchCondition condition, Pageable pageable){
+        return carrierRepository.findCarrierLotByCondition(condition,pageable);
     }
 
     @Transactional(value = "mssqlTransactionManager")

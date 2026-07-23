@@ -1,7 +1,6 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.condition.ProductDefSearchCondition;
-import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.domain.model.ProductDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,5 +21,5 @@ public interface ProductDefRepository {
     ProductDef save(ProductDef productDef);
     List<ProductDef> save(List<ProductDef> productDefList);
     void deleteAllByIdInBatch(List<Long>ids);
-    Page<ProductDef> findProductDefWithConditions(ProductDefSearchConditionDto condition, Pageable pageable);
+    Page<ProductDef> findProductDefWithConditions(ProductDefSearchCondition condition, Pageable pageable);
 }

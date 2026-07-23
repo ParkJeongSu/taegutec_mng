@@ -1,11 +1,13 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
-import kr.co.aim.common.enums.*;
+import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
+import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.enums.EventName;
+import kr.co.aim.common.enums.SystemName;
+import kr.co.aim.common.enums.TransportOrderStatus;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.TransportOrderCreateCommand;
-import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
@@ -15,25 +17,21 @@ import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.sl.draw.geom.GuideIf;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
-
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","simulator","tex","pex"})
-//@ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class TransportOrderService {
-    private final TransportOrderRepository  transportOrderRepository;
+
+    private final TransportOrderRepository transportOrderRepository;
     private final TransportOrderMapper transportOrderMapper;
     private final HistoryService historyService;
 
@@ -62,27 +60,18 @@ public class TransportOrderService {
                         .galWarehouse(master.getCGalWhs())
                         .locationId(master.getCLocId())
                         .workStationId(master.getCWcId())
-                        .sourceZoneName(context.isRelocation() ? details.get(0).getCZone() : details.get(1).getCZone()) //relocation 시 사용
+                        .sourceZoneName(context.isRelocation() ? details.get(0).getCZone() : details.get(1).getCZone())
                         .destinationZoneName(context.isRelocation() ? details.get(1).getCZone() : details.get(0).getCZone())
-                        //.errorText()
-                        //.actualWeight()
                         .requestedZoneName(context.isRelocation() ? details.get(1).getCZone() : details.get(0).getCZone())
-                        //.actualZoneName()
-                        //.actualLocationId()
                         .travelProfile(details.get(0).getCDrivingProfile())
                         .createTime(transactionInfo.eventTime())
-                        //.releaseTime()
-                        //.completeTime()
-                        //.retrievalTime(master.getCDtPick())
                         .createUser(SystemName.GAL.getValue())
-                        //.releaseUser()
-                        //.completeUser()
                         .build();
 
         return TransportOrder.create(command);
     }
 
-    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
+    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public TransportOrder createTransportOrder(TransportOrder transportOrder) {
         TransportOrder savedTransportOrder = transportOrderRepository.save(transportOrder);
         TransportOrderHistoryEntity historyEntity = transportOrderMapper.toHistoryEntity(savedTransportOrder);
@@ -90,15 +79,10 @@ public class TransportOrderService {
         return savedTransportOrder;
     }
 
-    @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
+    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public TransportOrder acceptTransportOrder(TransportOrder transportOrder) {
-
         TransactionInfo transactionInfo = TransactionInfo.now(TransportOrderStatus.ACCEPTED.getValue(), SystemName.MNG.getValue(), "");
 
-        // validation
-
-
-        // validation pass
         transportOrder.setTransportStatus(TransportOrderStatus.ACCEPTED.getValue());
         transportOrder.setEventTime(transactionInfo.eventTime());
         transportOrder.setEventName(transactionInfo.eventName());
@@ -123,16 +107,25 @@ public class TransportOrderService {
     public TransportOrder updateStatusTransportOrder(H2TransReportVo vo) {
         log.info("updateStatusTransportOrder");
         Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(vo.getOrderId());
-        if(optionalTransportOrder.isEmpty()){
+        if (optionalTransportOrder.isEmpty()) {
             throw new RuntimeException("TransportOrder를 찾을 수 없습니다. (요청 ID: " + vo.getOrderId() + ")");
         }
 
         TransportOrder transportOrder = optionalTransportOrder.get();
-        transportOrder.setTransportStatus( vo.getStatus().name());
+        transportOrder.setTransportStatus(vo.getStatus().name());
         TransportOrder savedTransportOrder = transportOrderRepository.save(transportOrder);
         TransportOrderHistoryEntity historyEntity = transportOrderMapper.toHistoryEntity(savedTransportOrder);
         historyService.saveHistory(historyEntity);
         return savedTransportOrder;
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public TransportOrder findById(Long id) {
+        Optional<TransportOrder> optional = transportOrderRepository.findById(id);
+        if (optional.isEmpty()) {
+            throw new IllegalArgumentException("해당 Transport Order 정보가 존재하지 않습니다. ID: " + id);
+        }
+        return optional.get();
     }
 
     @Transactional("mssqlTransactionManager")
@@ -147,30 +140,26 @@ public class TransportOrderService {
 
     @Transactional("mssqlTransactionManager")
     public List<TransportOrder> findByTransportTypeInAndTransportStatus(List<String> types, String status) {
-        return transportOrderRepository.findByTransportTypeInAndTransportStatus(types,status);
+        return transportOrderRepository.findByTransportTypeInAndTransportStatus(types, status);
     }
 
     @Transactional("mssqlTransactionManager")
-    public List<TransportOrder> findOutboundOrderForTransportRequest(
-            String transportType,
-            String transportStatus,
-            String workStationId
-    ){
-        return transportOrderRepository.findOutboundOrderForTransportRequest(transportType,transportStatus,workStationId);
+    public List<TransportOrder> findOutboundOrderForTransportRequest(String transportType, String transportStatus, String workStationId) {
+        return transportOrderRepository.findOutboundOrderForTransportRequest(transportType, transportStatus, workStationId);
     }
 
     @Transactional("mssqlTransactionManager")
     public List<TransportOrder> findTransportOrderByCondition(String carrierName, String transportType, List<String> transportStatus) {
-        return transportOrderRepository.findTransportOrderByCondition(
-                carrierName,
-                transportType,
-                transportStatus
-        );
+        return transportOrderRepository.findTransportOrderByCondition(carrierName, transportType, transportStatus);
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable) {
+        return transportOrderRepository.findTransportOrderWithConditions(condition, pageable);
     }
 
     @Transactional("mssqlTransactionManager")
     public TransportOrder save(TransportOrder transportOrder) {
         return transportOrderRepository.save(transportOrder);
     }
-
 }

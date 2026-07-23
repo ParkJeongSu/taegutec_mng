@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import kr.co.aim.common.handler.IBaseHistoryEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Table(name = "EQUIPMENT_DEF", catalog = "NEXBEDEF", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA를 위한 기본 생성자
-public class EquipmentDefHistoryEntity {
+public class EquipmentDefHistoryEntity implements IBaseHistoryEntity {
 
     @Id
     @Column(name = "ID")

@@ -2,7 +2,6 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.common.condition.ProductDefSearchCondition;
 import kr.co.aim.common.dto.ProductDefSaveRequestDto;
-import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.SystemName;
@@ -12,6 +11,8 @@ import kr.co.aim.domain.command.ProductDefUpdateCommand;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.repository.ProductDefRepository;
 import kr.co.aim.infra.persistence.db2entity.powder.H2PartMPEntity;
+import kr.co.aim.infra.persistence.entity.ProductDefHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.ProductDefMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -28,6 +29,8 @@ import java.util.Optional;
 public class ProductDefService {
 
     private final ProductDefRepository productDefRepository;
+    private final HistoryService historyService;
+    private final ProductDefMapper productDefMapper;
 
     @Transactional(value = "mssqlTransactionManager")
     public List<ProductDef> findAll(){
@@ -44,7 +47,7 @@ public class ProductDefService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public Page<ProductDef> findProductDefWithConditions(ProductDefSearchConditionDto condition, Pageable pageable) {
+    public Page<ProductDef> findProductDefWithConditions(ProductDefSearchCondition condition, Pageable pageable) {
         return productDefRepository.findProductDefWithConditions(condition, pageable);
     }
 
@@ -79,8 +82,11 @@ public class ProductDefService {
                 .ratio(dto.getRatio())
                 .defaultReceiveQuantity(dto.getDefaultReceiveQuantity())
                 .build();
-
-        return productDefRepository.save(ProductDef.create(command));
+        ProductDef productDef = ProductDef.create(command);
+        productDef = productDefRepository.save(productDef);
+        ProductDefHistoryEntity historyEntity = productDefMapper.toHistoryEntity(productDef);
+        historyService.saveHistory(historyEntity);
+        return productDef;
     }
 
     @Transactional
@@ -108,7 +114,10 @@ public class ProductDefService {
                 .build();
 
         productDef.update(command);
-        return productDefRepository.save(productDef);
+        productDef = productDefRepository.save(productDef);
+        ProductDefHistoryEntity historyEntity = productDefMapper.toHistoryEntity(productDef);
+        historyService.saveHistory(historyEntity);
+        return productDef;
     }
 
 
@@ -131,10 +140,7 @@ public class ProductDefService {
         return productDefRepository.save(productDef);
     }
 
-    @Transactional(value = "mssqlTransactionManager")
-    public Page<ProductDef> findProductDefByCondition(ProductDefSearchConditionDto condition, Pageable pageable){
-        return productDefRepository.findProductDefWithConditions(condition, pageable);
-    }
+
 
     @Transactional(value = "mssqlTransactionManager")
     public Optional<ProductDef> findByH2PartMPEntity(H2PartMPEntity h2PartMPEntity){

@@ -1,6 +1,9 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.TransportOrderSearchCondition;
 import kr.co.aim.domain.model.TransportOrder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,7 +38,6 @@ public interface TransportOrderRepository {
             String workStationId
     );
 
-
-
+    Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable);
 
 }

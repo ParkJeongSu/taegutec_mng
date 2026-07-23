@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.dto.CarrierDefSearchConditionDto;
+import kr.co.aim.common.condition.CarrierDefSearchCondition;
 import kr.co.aim.domain.model.CarrierDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,7 +37,7 @@ public interface CarrierDefRepository {
 
     CarrierDef save(CarrierDef carrierDef);
 
-    Page<CarrierDef> findCarrierDefWithConditions(CarrierDefSearchConditionDto condition, Pageable pageable);
+    Page<CarrierDef> findCarrierDefWithConditions(CarrierDefSearchCondition condition, Pageable pageable);
 
     void deleteAllByIdInBatch(List<Long>ids);
 }

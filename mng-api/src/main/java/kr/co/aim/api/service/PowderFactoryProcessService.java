@@ -42,6 +42,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final HistoryService historyService;
 
     private final PortMapper portMapper;
+    private final PortDefService portDefService;
     private final PortService portService;
 
     private final CarrierService carrierService;
@@ -70,7 +71,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
 
-        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
         Optional<Port> optionalPorts =  portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
         Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
         Optional<EquipmentDef> optionalEquipmentDef = equipmentService.findEquipmentDefByEquipmentName(equipmentName);
@@ -284,7 +285,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                 .portName(portName)
                 .build();
 
-        Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPortDef.isEmpty()){
             return null;
         }
@@ -461,7 +462,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
             Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
-            Optional<PortDef> optionalPortDef = portService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
 
         }
     }

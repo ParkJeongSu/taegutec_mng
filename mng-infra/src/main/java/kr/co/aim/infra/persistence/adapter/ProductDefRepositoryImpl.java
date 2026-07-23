@@ -7,7 +7,6 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.condition.ProductDefSearchCondition;
-import kr.co.aim.common.dto.ProductDefSearchConditionDto;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.repository.ProductDefRepository;
 import kr.co.aim.infra.persistence.entity.ProductDefEntity;
@@ -23,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -102,13 +102,17 @@ public class ProductDefRepositoryImpl implements ProductDefRepository {
     }
 
     @Override
-    public Page<ProductDef> findProductDefWithConditions(ProductDefSearchConditionDto condition, Pageable pageable) {
-        //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
+    public Page<ProductDef> findProductDefWithConditions(ProductDefSearchCondition condition, Pageable pageable) {
+        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductDefEntity> query = queryFactory
                 .selectFrom(productDefEntity)
                 .where(
-                        // (WHERE 조건이 있다면 여기에 추가)
-                        productDefNameContains(condition.getProductDefName())
+                        productDefNameContains(condition.getProductDefName()),
+                        factoryNameContains(condition.getFactoryName()),
+                        description1Contains(condition.getDescription1()),
+                        description2Contains(condition.getDescription2()),
+                        ratioEq(condition.getRatio()),
+                        defaultReceiveQuantityEq(condition.getDefaultReceiveQuantity())
                 );
 
         // 2. 정렬 적용
@@ -133,8 +137,12 @@ public class ProductDefRepositoryImpl implements ProductDefRepository {
                     .select(productDefEntity.count())
                     .from(productDefEntity)
                     .where(
-                            // (WHERE 조건이 있다면 여기에 추가)
-                            productDefNameContains(condition.getProductDefName())
+                            productDefNameContains(condition.getProductDefName()),
+                            factoryNameContains(condition.getFactoryName()),
+                            description1Contains(condition.getDescription1()),
+                            description2Contains(condition.getDescription2()),
+                            ratioEq(condition.getRatio()),
+                            defaultReceiveQuantityEq(condition.getDefaultReceiveQuantity())
                     )
                     .fetchOne();
 
@@ -180,5 +188,25 @@ public class ProductDefRepositoryImpl implements ProductDefRepository {
 
     private BooleanExpression productDefNameContains(String productDefName) {
         return StringUtils.hasText(productDefName) ? productDefEntity.productDefName.contains(productDefName) : null;
+    }
+
+    private BooleanExpression factoryNameContains(String factoryName) {
+        return StringUtils.hasText(factoryName) ? productDefEntity.factoryName.contains(factoryName) : null;
+    }
+
+    private BooleanExpression description1Contains(String description1) {
+        return StringUtils.hasText(description1) ? productDefEntity.description1.contains(description1) : null;
+    }
+
+    private BooleanExpression description2Contains(String description2) {
+        return StringUtils.hasText(description2) ? productDefEntity.description2.contains(description2) : null;
+    }
+
+    private BooleanExpression ratioEq(BigDecimal ratio) {
+        return ratio != null ? productDefEntity.ratio.eq(ratio) : null;
+    }
+
+    private BooleanExpression defaultReceiveQuantityEq(BigDecimal defaultReceiveQuantity) {
+        return defaultReceiveQuantity != null ? productDefEntity.defaultReceiveQuantity.eq(defaultReceiveQuantity) : null;
     }
 }

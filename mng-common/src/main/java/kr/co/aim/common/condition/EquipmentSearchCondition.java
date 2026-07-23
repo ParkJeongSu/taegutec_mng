@@ -10,7 +10,6 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor//(access = AccessLevel.PROTECTED) // JPA Entity 등을 위한 기본 생성자
 public class EquipmentSearchCondition {
-    private Long id;
     private String equipmentName;
     private Long parentEquipmentId;
     private String equipmentLevel;
@@ -24,10 +23,6 @@ public class EquipmentSearchCondition {
     private String resourceState;
     private String operationMode;
     private String messageServiceAddress;
-    private String eventName;
-    private LocalDateTime eventTime;
-    private String eventUser;
-    private String eventComment;
     private Long productionOrderId;
 
 }

@@ -54,17 +54,6 @@ public class ProductionOrderController {
         return ResponseEntity.ok(reuslt);
     }
 
-    @Operation(summary = "Carrier", description = "Carrier Info 조회 by orderId,orderLineNumber")
-    @GetMapping("/carriers")
-    public ResponseEntity<Page<Carrier>> getCarrier(
-            CarrierSearchByProductionOrder condition,
-            @org.springdoc.core.annotations.ParameterObject
-            Pageable pageable
-    ) {
-        Page<Carrier> reuslt = productionOrderService.findCarrierByCondition(condition,pageable);
-        return ResponseEntity.ok(reuslt);
-    }
-
     @Operation(summary = "order history", description = "order history 조회")
     @GetMapping("/history")
     public ResponseEntity<Page<ProductionOrderHistory>> getHistory(

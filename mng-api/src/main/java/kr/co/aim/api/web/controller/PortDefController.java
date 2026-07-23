@@ -5,11 +5,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.PortDefService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.dto.PortDefSaveRequestDto;
-import kr.co.aim.common.dto.PortDefSearchConditionDto;
+import kr.co.aim.common.condition.PortDefSearchCondition;
 import kr.co.aim.domain.model.PortDef;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -27,7 +26,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Profile("web")
 @ResponseAnnotation
-@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class PortDefController {
 
     private final PortDefService portDefService;
@@ -35,7 +33,7 @@ public class PortDefController {
     @Operation(summary = "Port Def 목록 조회")
     @GetMapping("")
     public ResponseEntity<Page<PortDef>> getPortDefs(
-            PortDefSearchConditionDto condition,
+            PortDefSearchCondition condition,
             @ParameterObject Pageable pageable
     ) {
         Page<PortDef> result = portDefService.findPortDefWithConditions(condition, pageable);

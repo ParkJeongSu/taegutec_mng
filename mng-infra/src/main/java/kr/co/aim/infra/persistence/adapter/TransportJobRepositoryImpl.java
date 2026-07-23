@@ -31,11 +31,6 @@ import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QTransportJobHistoryEntity.transportJobHistoryEntity;
 
-/**
- * UserRepository의 JPA 기반 구현체.
- * 실제 DB 작업은 Spring Data JPA가 제공하는 JpaRepository에 위임합니다.
- */
-
 @Repository
 @RequiredArgsConstructor
 public class TransportJobRepositoryImpl implements TransportJobRepository {
@@ -103,12 +98,36 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
 
     @Override
     public Page<TransportJobHistory> findTransportJobHistoryByCondition(TransportJobHistorySearchCondition condition, Pageable pageable) {
-        //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
+        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<TransportJobHistoryEntity> query = queryFactory
                 .selectFrom(transportJobHistoryEntity)
                 .where(
-                        // (WHERE 조건이 있다면 여기에 추가)
-                        carrierNameContains(condition.getCarrierName())
+                        transportJobNameContains(condition.getTransportJobName()),
+                        carrierNameContains(condition.getCarrierName()),
+                        transportTypeContains(condition.getTransportType()),
+                        transportJobStateContains(condition.getTransportJobState()),
+                        carrierTypeContains(condition.getCarrierType()),
+                        travelProfileContains(condition.getTravelProfile()),
+                        sourceEquipmentNameContains(condition.getSourceEquipmentName()),
+                        sourcePortNameContains(condition.getSourcePortName()),
+                        sourceZoneNameContains(condition.getSourceZoneName()),
+                        sourcePositionTypeNameContains(condition.getSourcePositionTypeName()),
+                        sourcePositionNameContains(condition.getSourcePositionName()),
+                        destinationEquipmentNameContains(condition.getDestinationEquipmentName()),
+                        destinationPortNameContains(condition.getDestinationPortName()),
+                        destinationZoneNameContains(condition.getDestinationZoneName()),
+                        destinationPositionTypeNameContains(condition.getDestinationPositionTypeName()),
+                        destinationPositionNameContains(condition.getDestinationPositionName()),
+                        priorityEq(condition.getPriority()),
+                        errorCodeContains(condition.getErrorCode()),
+                        errorTextContains(condition.getErrorText()),
+                        requestSourceContains(condition.getRequestSource()),
+                        createTimeEq(condition.getCreateTime()),
+                        departedTimeEq(condition.getDepartedTime()),
+                        arrivedTimeEq(condition.getArrivedTime()),
+                        reasonCodeContains(condition.getReasonCode()),
+                        orderIdContains(condition.getOrderId()),
+                        eventTimeBetween(condition.getFromEventTime(), condition.getToEventTime())
                 );
 
         // 2. 정렬 적용
@@ -133,8 +152,32 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
                     .select(transportJobHistoryEntity.count())
                     .from(transportJobHistoryEntity)
                     .where(
-                            // (WHERE 조건이 있다면 여기에 추가)
-                            carrierNameContains(condition.getCarrierName())
+                            transportJobNameContains(condition.getTransportJobName()),
+                            carrierNameContains(condition.getCarrierName()),
+                            transportTypeContains(condition.getTransportType()),
+                            transportJobStateContains(condition.getTransportJobState()),
+                            carrierTypeContains(condition.getCarrierType()),
+                            travelProfileContains(condition.getTravelProfile()),
+                            sourceEquipmentNameContains(condition.getSourceEquipmentName()),
+                            sourcePortNameContains(condition.getSourcePortName()),
+                            sourceZoneNameContains(condition.getSourceZoneName()),
+                            sourcePositionTypeNameContains(condition.getSourcePositionTypeName()),
+                            sourcePositionNameContains(condition.getSourcePositionName()),
+                            destinationEquipmentNameContains(condition.getDestinationEquipmentName()),
+                            destinationPortNameContains(condition.getDestinationPortName()),
+                            destinationZoneNameContains(condition.getDestinationZoneName()),
+                            destinationPositionTypeNameContains(condition.getDestinationPositionTypeName()),
+                            destinationPositionNameContains(condition.getDestinationPositionName()),
+                            priorityEq(condition.getPriority()),
+                            errorCodeContains(condition.getErrorCode()),
+                            errorTextContains(condition.getErrorText()),
+                            requestSourceContains(condition.getRequestSource()),
+                            createTimeEq(condition.getCreateTime()),
+                            departedTimeEq(condition.getDepartedTime()),
+                            arrivedTimeEq(condition.getArrivedTime()),
+                            reasonCodeContains(condition.getReasonCode()),
+                            orderIdContains(condition.getOrderId()),
+                            eventTimeBetween(condition.getFromEventTime(), condition.getToEventTime())
                     )
                     .fetchOne();
 
@@ -196,7 +239,118 @@ public class TransportJobRepositoryImpl implements TransportJobRepository {
         return orders.toArray(new OrderSpecifier[0]);
     }
 
+    // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
+
+    private BooleanExpression transportJobNameContains(String transportJobName) {
+        return StringUtils.hasText(transportJobName) ? transportJobHistoryEntity.transportJobName.contains(transportJobName) : null;
+    }
+
     private BooleanExpression carrierNameContains(String carrierName) {
         return StringUtils.hasText(carrierName) ? transportJobHistoryEntity.carrierName.contains(carrierName) : null;
+    }
+
+    private BooleanExpression transportTypeContains(String transportType) {
+        return StringUtils.hasText(transportType) ? transportJobHistoryEntity.transportType.contains(transportType) : null;
+    }
+
+    private BooleanExpression transportJobStateContains(String transportJobState) {
+        return StringUtils.hasText(transportJobState) ? transportJobHistoryEntity.transportJobState.contains(transportJobState) : null;
+    }
+
+    private BooleanExpression carrierTypeContains(String carrierType) {
+        return StringUtils.hasText(carrierType) ? transportJobHistoryEntity.carrierType.contains(carrierType) : null;
+    }
+
+    private BooleanExpression travelProfileContains(String travelProfile) {
+        return StringUtils.hasText(travelProfile) ? transportJobHistoryEntity.travelProfile.contains(travelProfile) : null;
+    }
+
+    private BooleanExpression sourceEquipmentNameContains(String sourceEquipmentName) {
+        return StringUtils.hasText(sourceEquipmentName) ? transportJobHistoryEntity.sourceEquipmentName.contains(sourceEquipmentName) : null;
+    }
+
+    private BooleanExpression sourcePortNameContains(String sourcePortName) {
+        return StringUtils.hasText(sourcePortName) ? transportJobHistoryEntity.sourcePortName.contains(sourcePortName) : null;
+    }
+
+    private BooleanExpression sourceZoneNameContains(String sourceZoneName) {
+        return StringUtils.hasText(sourceZoneName) ? transportJobHistoryEntity.sourceZoneName.contains(sourceZoneName) : null;
+    }
+
+    private BooleanExpression sourcePositionTypeNameContains(String sourcePositionTypeName) {
+        return StringUtils.hasText(sourcePositionTypeName) ? transportJobHistoryEntity.sourcePositionTypeName.contains(sourcePositionTypeName) : null;
+    }
+
+    private BooleanExpression sourcePositionNameContains(String sourcePositionName) {
+        return StringUtils.hasText(sourcePositionName) ? transportJobHistoryEntity.sourcePositionName.contains(sourcePositionName) : null;
+    }
+
+    private BooleanExpression destinationEquipmentNameContains(String destinationEquipmentName) {
+        return StringUtils.hasText(destinationEquipmentName) ? transportJobHistoryEntity.destinationEquipmentName.contains(destinationEquipmentName) : null;
+    }
+
+    private BooleanExpression destinationPortNameContains(String destinationPortName) {
+        return StringUtils.hasText(destinationPortName) ? transportJobHistoryEntity.destinationPortName.contains(destinationPortName) : null;
+    }
+
+    private BooleanExpression destinationZoneNameContains(String destinationZoneName) {
+        return StringUtils.hasText(destinationZoneName) ? transportJobHistoryEntity.destinationZoneName.contains(destinationZoneName) : null;
+    }
+
+    private BooleanExpression destinationPositionTypeNameContains(String destinationPositionTypeName) {
+        return StringUtils.hasText(destinationPositionTypeName) ? transportJobHistoryEntity.destinationPositionTypeName.contains(destinationPositionTypeName) : null;
+    }
+
+    private BooleanExpression destinationPositionNameContains(String destinationPositionName) {
+        return StringUtils.hasText(destinationPositionName) ? transportJobHistoryEntity.destinationPositionName.contains(destinationPositionName) : null;
+    }
+
+    private BooleanExpression priorityEq(Integer priority) {
+        return priority != null ? transportJobHistoryEntity.priority.eq(priority) : null;
+    }
+
+    private BooleanExpression errorCodeContains(String errorCode) {
+        return StringUtils.hasText(errorCode) ? transportJobHistoryEntity.errorCode.contains(errorCode) : null;
+    }
+
+    private BooleanExpression errorTextContains(String errorText) {
+        return StringUtils.hasText(errorText) ? transportJobHistoryEntity.errorText.contains(errorText) : null;
+    }
+
+    private BooleanExpression requestSourceContains(String requestSource) {
+        return StringUtils.hasText(requestSource) ? transportJobHistoryEntity.requestSource.contains(requestSource) : null;
+    }
+
+    private BooleanExpression createTimeEq(LocalDateTime createTime) {
+        return createTime != null ? transportJobHistoryEntity.createTime.eq(createTime) : null;
+    }
+
+    private BooleanExpression departedTimeEq(LocalDateTime departedTime) {
+        return departedTime != null ? transportJobHistoryEntity.departedTime.eq(departedTime) : null;
+    }
+
+    private BooleanExpression arrivedTimeEq(LocalDateTime arrivedTime) {
+        return arrivedTime != null ? transportJobHistoryEntity.arrivedTime.eq(arrivedTime) : null;
+    }
+
+    private BooleanExpression reasonCodeContains(String reasonCode) {
+        return StringUtils.hasText(reasonCode) ? transportJobHistoryEntity.reasonCode.contains(reasonCode) : null;
+    }
+
+    private BooleanExpression orderIdContains(String orderId) {
+        return StringUtils.hasText(orderId) ? transportJobHistoryEntity.orderId.contains(orderId) : null;
+    }
+
+    private BooleanExpression eventTimeBetween(LocalDateTime fromEventTime, LocalDateTime toEventTime) {
+        if (fromEventTime != null && toEventTime != null) {
+            return transportJobHistoryEntity.eventTime.between(fromEventTime, toEventTime);
+        }
+        if (fromEventTime != null) {
+            return transportJobHistoryEntity.eventTime.goe(fromEventTime);
+        }
+        if (toEventTime != null) {
+            return transportJobHistoryEntity.eventTime.loe(toEventTime);
+        }
+        return null;
     }
 }

@@ -29,7 +29,6 @@ import org.springframework.web.bind.annotation.RestController;
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class EquipmentController {
     private final EquipmentService equipmentService;
-    private final DashboardService dashboardService;
 
     @Operation(summary = "Equipment", description = "Equipment 조회")
     @GetMapping("")
@@ -39,16 +38,6 @@ public class EquipmentController {
             Pageable pageable
     ) {
         Page<Equipment> reuslt = equipmentService.findEquipmentByCondition(condition, pageable);
-        return ResponseEntity.ok(reuslt);
-    }
-
-    @Operation(summary = "Equipment Dashboard", description = "Equipment Dashboard 조회")
-    @GetMapping("/dashboard")
-    public ResponseEntity<Page<EquipmentGroupDashboard>> getEquipmentGroupForDashboard(
-            @org.springdoc.core.annotations.ParameterObject
-            Pageable pageable
-    ) {
-        Page<EquipmentGroupDashboard> reuslt = dashboardService.getEquipmentDataForDashboard(pageable);
         return ResponseEntity.ok(reuslt);
     }
 

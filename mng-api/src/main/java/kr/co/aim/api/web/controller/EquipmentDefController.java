@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.EquipmentDefService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.dto.EquipmentDefSaveRequestDto;
-import kr.co.aim.common.dto.EquipmentDefSearchConditionDto;
+import kr.co.aim.common.condition.EquipmentDefSearchCondition;
 import kr.co.aim.domain.model.EquipmentDef;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -35,7 +35,7 @@ public class EquipmentDefController {
     @Operation(summary = "Equipment Def 목록 조회")
     @GetMapping("")
     public ResponseEntity<Page<EquipmentDef>> getEquipmentDefs(
-            EquipmentDefSearchConditionDto condition,
+            EquipmentDefSearchCondition condition,
             @ParameterObject Pageable pageable
     ) {
         Page<EquipmentDef> result = equipmentDefService.findEquipmentDefWithConditions(condition, pageable);

@@ -1,7 +1,9 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.CarrierLotSearchCondition;
 import kr.co.aim.common.condition.CarrierSearchCondition;
 import kr.co.aim.common.condition.ProductionOrderHistorySearchCondition;
+import kr.co.aim.common.dto.CarrierLotSearchResultDto;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.CarrierHistory;
 import kr.co.aim.domain.model.ProductionOrderHistory;
@@ -58,4 +60,6 @@ public interface CarrierRepository {
     );
 
     Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition, Pageable pageable);
+
+    Page<CarrierLotSearchResultDto> findCarrierLotByCondition(CarrierLotSearchCondition condition, Pageable pageable);
 }

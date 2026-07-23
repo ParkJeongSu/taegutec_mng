@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.dto.EquipmentDefSearchConditionDto;
+import kr.co.aim.common.condition.EquipmentDefSearchCondition;
 import kr.co.aim.domain.model.EquipmentDef;
 import kr.co.aim.domain.repository.EquipmentDefRepository;
 import kr.co.aim.infra.persistence.entity.EquipmentDefEntity;
@@ -64,7 +64,7 @@ public class EquipmentDefRepositoryImpl implements EquipmentDefRepository {
     }
 
     @Override
-    public Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchConditionDto condition, Pageable pageable) {
+    public Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchCondition condition, Pageable pageable) {
         JPAQuery<EquipmentDefEntity> query = queryFactory
                 .selectFrom(equipmentDefEntity)
                 .where(equipmentNameContains(condition.getEquipmentName()));

@@ -1,7 +1,10 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.LotSearchCondition;
 import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.LotHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,4 +17,5 @@ public interface LotRepository {
     Lot save(Lot lot);
     void deleteAllByIdInBatch(List<Long> ids);
     List<LotHistory> findLotHistoryByPeriod(LocalDateTime start, LocalDateTime end);
+    Page<Lot> findLotWithConditions(LotSearchCondition condition, Pageable pageable);
 }

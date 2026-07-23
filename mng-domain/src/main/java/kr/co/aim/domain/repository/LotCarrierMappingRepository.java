@@ -1,7 +1,10 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.LotCarrierMappingSearchCondition;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.LotCarrierMappingHistory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,4 +24,5 @@ public interface LotCarrierMappingRepository {
             String mantiRequestState,
             LocalDateTime thresholdTime
     );
+    Page<LotCarrierMapping> findLotCarrierMappingWithConditions(LotCarrierMappingSearchCondition condition, Pageable pageable);
 }

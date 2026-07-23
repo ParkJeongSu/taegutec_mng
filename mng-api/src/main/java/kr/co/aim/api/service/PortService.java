@@ -82,25 +82,9 @@ public class PortService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public Optional<PortDef> findPortDefByEquipmentNameAndPortName(String equipmentName,String portName) {
-        return portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<PortDef> findByLocationId(String locationId) {
-        return portDefRepository.findByLocationId(locationId);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
     public Port save(Port port) {
         return portRepository.save(port);
     }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public PortDef save(PortDef portDef) {
-        return portDefRepository.save(portDef);
-    }
-
 
     @Transactional(value = "mssqlTransactionManager")
     public List<Port> findByTransportStateAndPortRoleType(String transportState,String portRoleType){

@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.CarrierDefService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.dto.CarrierDefSaveRequestDto;
-import kr.co.aim.common.dto.CarrierDefSearchConditionDto;
+import kr.co.aim.common.condition.CarrierDefSearchCondition;
 import kr.co.aim.domain.model.CarrierDef;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,7 +38,7 @@ public class CarrierDefController {
     @Operation(summary = "Carrier Def 목록 조회", description = "동적 조건 및 페이징 처리를 통한 Carrier 기준정보 조회")
     @GetMapping("")
     public ResponseEntity<Page<CarrierDef>> getCarrierDefs(
-            CarrierDefSearchConditionDto condition,
+            CarrierDefSearchCondition condition,
             @ParameterObject Pageable pageable
     ) {
         Page<CarrierDef> result = carrierDefService.findCarrierDefWithConditions(condition, pageable);

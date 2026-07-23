@@ -9,8 +9,10 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@NoArgsConstructor//(access = AccessLevel.PROTECTED) // JPA Entity 등을 위한 기본 생성자
-public class CarrierSearchCondition {
+@NoArgsConstructor
+public class CarrierLotSearchCondition {
+
+    // === CARRIER Conditions ===
     private String carrierName;
     private String carrierDefName;
     private String carrierState;
@@ -23,18 +25,38 @@ public class CarrierSearchCondition {
     private String cleanState;
     private String transportState;
     private String transportJobId;
-    private String holdState;
-    private String reasonCode;
+    private String carrierHoldState;
+    private String carrierReasonCode;
     private String useState;
     private Integer useCount;
     private Integer useCountPerClean;
     private Integer cleanCount;
-    private BigDecimal quantity;
+    private BigDecimal carrierQuantity;
     private BigDecimal galQuantity;
     private LocalDateTime lastCleanTime;
-    private LocalDateTime createTime;
+    private LocalDateTime carrierCreateTime;
     private LocalDateTime inboundTime;
     private LocalDateTime outboundTime;
     private String containerType;
 
+    // === LOT_CARRIER_MAPPING Conditions ===
+    private String orderId;
+    private String orderLineNumber;
+    private Long productionOrderId;
+    private String productionStatus;
+    private String processStatus;
+    private Long mngKey;
+    private String mantiRequestState;
+    private String rrnRequestState;
+    private String mappingHoldState;
+    private String mappingReasonCode;
+
+    // === LOT Conditions ===
+    private String lotName;
+    private String originalLotName;
+    private String lotStatus;
+    private String itemId;
+    private BigDecimal totalQuantity;
+    private String lotHoldState;
+    private String lotReasonCode;
 }

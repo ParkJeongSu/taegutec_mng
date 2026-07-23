@@ -36,11 +36,8 @@ import java.util.Optional;
 @Slf4j
 @Profile({"scheduler","web","pex","tex","simulator"})
 public class ProductionOrderService {
-    private final CarrierService carrierService;
     private final ProductionOrderRepository productionOrderRepository;
     private final ProductionOrderMapper productionOrderMapper;
-
-
     private final HistoryService historyService;
 
     public ProductionOrder createBaseBuilder(ProductionOrderContext context) {
@@ -203,24 +200,6 @@ public class ProductionOrderService {
     @Transactional(readOnly = true)
     public Page<ProductionOrderHistory> findProductionOrderHistoryByCondition(ProductionOrderHistorySearchCondition condition, Pageable pageable) {
         return productionOrderRepository.findProductionOrderHistoryByCondition(condition,pageable);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Carrier> findCarrierByCondition(CarrierSearchByProductionOrder condition, Pageable pageable) {
-
-        String orderId = condition.getOrderId();
-        String orderLineNumber = condition.getOrderLineNumber();
-        String eventName = "A"; // TODO : 쏟아 부은 EVENT_NAME으로 변경
-
-        // 3. 통합 리스트 생성 및 변환 (Entity -> Domain)
-        List<Carrier> totalList = new ArrayList<>();
-
-//
-//        for(Carrier carrier  : historyToCarrierList) {
-//            totalList.add(carrier);
-//        }
-
-        return new PageImpl<>(totalList, pageable, totalList.size());
     }
 
     @Transactional(readOnly = true)

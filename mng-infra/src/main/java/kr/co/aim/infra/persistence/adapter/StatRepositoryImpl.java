@@ -1,30 +1,47 @@
 package kr.co.aim.infra.persistence.adapter;
 
 import com.querydsl.core.Tuple;
+import com.querydsl.core.types.Order;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import kr.co.aim.common.Utils.QueryDslUtils;
 import kr.co.aim.common.Utils.StatTimeUtils;
 import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.common.condition.EquipmentAvailabilityHourlySearchCondition;
+import kr.co.aim.common.condition.EquipmentProductivityDailySearchCondition;
+import kr.co.aim.common.condition.TransportRouteDailySearchCondition;
+import kr.co.aim.common.condition.WorkOrderProcessedDailySearchCondition;
 import kr.co.aim.domain.model.EquipmentAvailabilityHourly;
+import kr.co.aim.domain.model.EquipmentProductivityDaily;
+import kr.co.aim.domain.model.TransportRouteDaily;
+import kr.co.aim.domain.model.WorkOrderProcessedDaily;
 import kr.co.aim.domain.repository.StatRepository;
 import kr.co.aim.infra.persistence.entity.*;
 import kr.co.aim.infra.persistence.mapper.*;
 import kr.co.aim.infra.persistence.springdatajpa.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static kr.co.aim.infra.persistence.entity.QEquipmentAvailabilityHourlyEntity.equipmentAvailabilityHourlyEntity;
 import static kr.co.aim.infra.persistence.entity.QEquipmentProductivityDailyEntity.equipmentProductivityDailyEntity;
 import static kr.co.aim.infra.persistence.entity.QProductionOrderHistoryEntity.productionOrderHistoryEntity;
 import static kr.co.aim.infra.persistence.entity.QTransportJobHistoryEntity.transportJobHistoryEntity;
-
-/**
- * UserRepository의 JPA 기반 구현체.
- * 실제 DB 작업은 Spring Data JPA가 제공하는 JpaRepository에 위임합니다.
- */
+import static kr.co.aim.infra.persistence.entity.QTransportRouteDailyEntity.transportRouteDailyEntity;
+import static kr.co.aim.infra.persistence.entity.QWorkOrderProcessedDailyEntity.workOrderProcessedDailyEntity;
 
 @Repository
 @RequiredArgsConstructor
@@ -32,19 +49,15 @@ public class StatRepositoryImpl implements StatRepository {
 
     private final EquipmentAvailabilityHourlyJpaRepository equipmentAvailabilityHourlyJpaRepository;
     private final EquipmentProductivityDailyJpaRepository equipmentProductivityDailyJpaRepository;
-    private final TransportRouteDailyJpaRepository  transportRouteDailyJpaRepository;
+    private final TransportRouteDailyJpaRepository transportRouteDailyJpaRepository;
     private final WorkOrderProcessedDailyJpaRepository workOrderProcessedDailyJpaRepository;
 
-    private final EquipmentAvailabilityHourlyMapper  equipmentAvailabilityHourlyMapper;
-    private final EquipmentProductivityDailyMapper   equipmentProductivityDailyMapper;
+    private final EquipmentAvailabilityHourlyMapper equipmentAvailabilityHourlyMapper;
+    private final EquipmentProductivityDailyMapper equipmentProductivityDailyMapper;
     private final TransportRouteDailyMapper transportRouteDailyMapper;
-    private final WorkOrderProcessedDailyMapper  workOrderProcessedDailyMapper;
+    private final WorkOrderProcessedDailyMapper workOrderProcessedDailyMapper;
 
-    private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
-
-    /**
-     * 1) 설비 가동 시간 통계 저장 (자바 가공 리스트 일괄 저장)
-     */
+    private final JPAQueryFactory queryFactory;
 
     @Override
     public void saveAvailabilityAll(List<EquipmentAvailabilityHourly> list) {
@@ -55,18 +68,11 @@ public class StatRepositoryImpl implements StatRepository {
         equipmentAvailabilityHourlyJpaRepository.saveAll(entities);
     }
 
-    /**
-     * 2) STAT_EQP_PRODUCTIVITY_DAILY 집계
-     * PRODUCTION_ORDER_HISTORY를 Group By 연산하여 대량 Insert/Upsert 형태로 처리합니다.
-     */
     @Override
     public void calculateAndSaveProductivity(String statDate) {
-        // Querydsl을 사용하여 특정 날짜에 종료(COMPLETE_TIME)된 데이터를 설비별로 집계조회
-        // 타겟팅 포맷팅 기법을 사용하여 쿼리 조건 생성
         LocalDateTime startOfDay = StatTimeUtils.toStartDateTime(statDate);
         LocalDateTime endOfDay = StatTimeUtils.toEndDateTime(statDate);
 
-        // 💡 별칭(Alias) 지정을 위한 수량 경로 변수 선언
         com.querydsl.core.types.dsl.NumberPath<java.math.BigDecimal> totalProcessedQtyAlias =
                 com.querydsl.core.types.dsl.Expressions.numberPath(java.math.BigDecimal.class, "totalProcessedQty");
         com.querydsl.core.types.dsl.NumberPath<java.math.BigDecimal> scrappedQtyAlias =
@@ -75,20 +81,19 @@ public class StatRepositoryImpl implements StatRepository {
         List<Tuple> results = queryFactory
                 .select(
                         productionOrderHistoryEntity.equipmentName,
-                        productionOrderHistoryEntity.count(), // TOTAL_PROCESSED_COUNT
-                        productionOrderHistoryEntity.endedQuantity.sum().as(totalProcessedQtyAlias), // TOTAL_PROCESSED_QUANTITY
+                        productionOrderHistoryEntity.count(),
+                        productionOrderHistoryEntity.endedQuantity.sum().as(totalProcessedQtyAlias),
                         productionOrderHistoryEntity.scrappedQuantity.sum().as(scrappedQtyAlias)
                 )
                 .from(productionOrderHistoryEntity)
                 .where(productionOrderHistoryEntity.completeTime.between(startOfDay, endOfDay))
-                .groupBy( productionOrderHistoryEntity.equipmentName)
+                .groupBy(productionOrderHistoryEntity.equipmentName)
                 .fetch();
 
         List<EquipmentProductivityDailyEntity> entities = new ArrayList<>();
         for (Tuple tuple : results) {
             String eqpName = tuple.get(productionOrderHistoryEntity.equipmentName);
             Long totalCount = tuple.get(productionOrderHistoryEntity.count());
-            // 💡 위에서 선언한 Alias 변수를 key로 사용하여 정밀한 BigDecimal 수량 추출
             java.math.BigDecimal totalProcessedQty = tuple.get(totalProcessedQtyAlias);
             java.math.BigDecimal scrappedQty = tuple.get(scrappedQtyAlias);
 
@@ -97,17 +102,13 @@ public class StatRepositoryImpl implements StatRepository {
                     statDate,
                     eqpName,
                     totalCount != null ? totalCount.intValue() : 0,
-                    totalProcessedQty, totalProcessedQty, scrappedQty, 0 // 정밀 비즈니스 수량 가공은 필요에 맞춰 추가 바인딩
+                    totalProcessedQty, totalProcessedQty, scrappedQty, 0
             );
             entities.add(entity);
         }
         equipmentProductivityDailyJpaRepository.saveAll(entities);
     }
 
-    /**
-     * 3) STAT_TRANSPORT_ROUTE_DAILY 집계
-     * TRANSPORT_JOB_HISTORY 기준 반송 경로 통계 산출
-     */
     @Override
     public void calculateAndSaveTransportRoute(String statDate) {
         LocalDateTime startOfDay = StatTimeUtils.toStartDateTime(statDate);
@@ -118,7 +119,6 @@ public class StatRepositoryImpl implements StatRepository {
                         transportJobHistoryEntity.sourceEquipmentName,
                         transportJobHistoryEntity.destinationEquipmentName,
                         transportJobHistoryEntity.count()
-                        // AVG, MAX 등의 시간 차이 연산(ARRIVED_TIME - CREATE_TIME)은 DB 함수 또는 이력 분석을 기반으로 SELECT 절에 추가 가능합니다.
                 )
                 .from(transportJobHistoryEntity)
                 .where(transportJobHistoryEntity.eventTime.between(startOfDay, endOfDay))
@@ -136,17 +136,14 @@ public class StatRepositoryImpl implements StatRepository {
                         TsidUtils.nextId(),
                         statDate, srcName, destName,
                         totalCount != null ? totalCount.intValue() : 0,
-                        0, 0, 0, 0, 0, 0, 0 // 시간 통계 바인딩
+                        0, 0, 0, 0, 0, 0, 0
                 );
                 entities.add(entity);
             }
         }
         transportRouteDailyJpaRepository.saveAll(entities);
     }
-    /**
-     * 4) STAT_WORK_ORDER_PROCESSED_DAILY 집계
-     * 상위 단에서 설계한 대로 대용량 HISTORY 대신 앞서 정산된 [STAT_EQP_PRODUCTIVITY_DAILY]를 롤업(Roll-up)하여 연산 효율 극대화
-     */
+
     @Override
     public void calculateAndSaveWorkOrderProcessed(String statDate) {
         com.querydsl.core.types.dsl.NumberPath<java.math.BigDecimal> totalProcessedQtyAlias =
@@ -170,11 +167,275 @@ public class StatRepositoryImpl implements StatRepository {
                         TsidUtils.nextId(),
                         statDate,
                         sumCount,
-                        0, // 평균 처리 시간 가공
+                        0,
                         totalProcessedQty != null ? totalProcessedQty : BigDecimal.ZERO
                 );
                 workOrderProcessedDailyJpaRepository.save(entity);
             }
         }
+    }
+
+    // == 1) EquipmentAvailabilityHourly 조회 ==
+    @Override
+    public Page<EquipmentAvailabilityHourly> findAvailabilityWithConditions(EquipmentAvailabilityHourlySearchCondition condition, Pageable pageable) {
+        JPAQuery<EquipmentAvailabilityHourlyEntity> query = queryFactory
+                .selectFrom(equipmentAvailabilityHourlyEntity)
+                .where(
+                        availabilityStatDateEq(condition.getStatDate()),
+                        availabilityStatHourEq(condition.getStatHour()),
+                        availabilityEquipmentNameContains(condition.getEquipmentName())
+                );
+
+        query.orderBy(getAvailabilityOrderSpecifiers(pageable.getSort()));
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<EquipmentAvailabilityHourlyEntity> content = query.fetch();
+        List<EquipmentAvailabilityHourly> converted = content.stream().map(equipmentAvailabilityHourlyMapper::toDomain).collect(Collectors.toList());
+
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(equipmentAvailabilityHourlyEntity.count())
+                    .from(equipmentAvailabilityHourlyEntity)
+                    .where(
+                            availabilityStatDateEq(condition.getStatDate()),
+                            availabilityStatHourEq(condition.getStatHour()),
+                            availabilityEquipmentNameContains(condition.getEquipmentName())
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(converted, pageable, total);
+    }
+
+    // == 2) EquipmentProductivityDaily 조회 ==
+    @Override
+    public Page<EquipmentProductivityDaily> findProductivityWithConditions(EquipmentProductivityDailySearchCondition condition, Pageable pageable) {
+        JPAQuery<EquipmentProductivityDailyEntity> query = queryFactory
+                .selectFrom(equipmentProductivityDailyEntity)
+                .where(
+                        productivityStatDateEq(condition.getStatDate()),
+                        productivityEquipmentNameContains(condition.getEquipmentName())
+                );
+
+        query.orderBy(getProductivityOrderSpecifiers(pageable.getSort()));
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<EquipmentProductivityDailyEntity> content = query.fetch();
+        List<EquipmentProductivityDaily> converted = content.stream().map(equipmentProductivityDailyMapper::toDomain).collect(Collectors.toList());
+
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(equipmentProductivityDailyEntity.count())
+                    .from(equipmentProductivityDailyEntity)
+                    .where(
+                            productivityStatDateEq(condition.getStatDate()),
+                            productivityEquipmentNameContains(condition.getEquipmentName())
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(converted, pageable, total);
+    }
+
+    // == 3) TransportRouteDaily 조회 ==
+    @Override
+    public Page<TransportRouteDaily> findTransportRouteWithConditions(TransportRouteDailySearchCondition condition, Pageable pageable) {
+        JPAQuery<TransportRouteDailyEntity> query = queryFactory
+                .selectFrom(transportRouteDailyEntity)
+                .where(
+                        transportRouteStatDateEq(condition.getStatDate()),
+                        sourceEquipmentNameContains(condition.getSourceEquipmentName()),
+                        destinationEquipmentNameContains(condition.getDestinationEquipmentName())
+                );
+
+        query.orderBy(getTransportRouteOrderSpecifiers(pageable.getSort()));
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<TransportRouteDailyEntity> content = query.fetch();
+        List<TransportRouteDaily> converted = content.stream().map(transportRouteDailyMapper::toDomain).collect(Collectors.toList());
+
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(transportRouteDailyEntity.count())
+                    .from(transportRouteDailyEntity)
+                    .where(
+                            transportRouteStatDateEq(condition.getStatDate()),
+                            sourceEquipmentNameContains(condition.getSourceEquipmentName()),
+                            destinationEquipmentNameContains(condition.getDestinationEquipmentName())
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(converted, pageable, total);
+    }
+
+    // == 4) WorkOrderProcessedDaily 조회 ==
+    @Override
+    public Page<WorkOrderProcessedDaily> findWorkOrderProcessedWithConditions(WorkOrderProcessedDailySearchCondition condition, Pageable pageable) {
+        JPAQuery<WorkOrderProcessedDailyEntity> query = queryFactory
+                .selectFrom(workOrderProcessedDailyEntity)
+                .where(
+                        workOrderStatDateEq(condition.getStatDate())
+                );
+
+        query.orderBy(getWorkOrderOrderSpecifiers(pageable.getSort()));
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<WorkOrderProcessedDailyEntity> content = query.fetch();
+        List<WorkOrderProcessedDaily> converted = content.stream().map(workOrderProcessedDailyMapper::toDomain).collect(Collectors.toList());
+
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(workOrderProcessedDailyEntity.count())
+                    .from(workOrderProcessedDailyEntity)
+                    .where(
+                            workOrderStatDateEq(condition.getStatDate())
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(converted, pageable, total);
+    }
+
+    // == BooleanExpressions ==
+    private BooleanExpression availabilityStatDateEq(String statDate) {
+        return StringUtils.hasText(statDate) ? equipmentAvailabilityHourlyEntity.statDate.eq(statDate) : null;
+    }
+
+    private BooleanExpression availabilityStatHourEq(String statHour) {
+        return StringUtils.hasText(statHour) ? equipmentAvailabilityHourlyEntity.statHour.eq(statHour) : null;
+    }
+
+    private BooleanExpression availabilityEquipmentNameContains(String equipmentName) {
+        return StringUtils.hasText(equipmentName) ? equipmentAvailabilityHourlyEntity.equipmentName.contains(equipmentName) : null;
+    }
+
+    private BooleanExpression productivityStatDateEq(String statDate) {
+        return StringUtils.hasText(statDate) ? equipmentProductivityDailyEntity.statDate.eq(statDate) : null;
+    }
+
+    private BooleanExpression productivityEquipmentNameContains(String equipmentName) {
+        return StringUtils.hasText(equipmentName) ? equipmentProductivityDailyEntity.equipmentName.contains(equipmentName) : null;
+    }
+
+    private BooleanExpression transportRouteStatDateEq(String statDate) {
+        return StringUtils.hasText(statDate) ? transportRouteDailyEntity.statDate.eq(statDate) : null;
+    }
+
+    private BooleanExpression sourceEquipmentNameContains(String sourceEquipmentName) {
+        return StringUtils.hasText(sourceEquipmentName) ? transportRouteDailyEntity.sourceEquipmentName.contains(sourceEquipmentName) : null;
+    }
+
+    private BooleanExpression destinationEquipmentNameContains(String destinationEquipmentName) {
+        return StringUtils.hasText(destinationEquipmentName) ? transportRouteDailyEntity.destinationEquipmentName.contains(destinationEquipmentName) : null;
+    }
+
+    private BooleanExpression workOrderStatDateEq(String statDate) {
+        return StringUtils.hasText(statDate) ? workOrderProcessedDailyEntity.statDate.eq(statDate) : null;
+    }
+
+    // == OrderSpecifiers ==
+    private OrderSpecifier<?>[] getAvailabilityOrderSpecifiers(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        if (sort != null && sort.isSorted()) {
+            for (Sort.Order order : sort) {
+                String property = order.getProperty();
+                if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
+                    Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+                    PathBuilder pathBuilder = new PathBuilder<>(equipmentAvailabilityHourlyEntity.getType(), equipmentAvailabilityHourlyEntity.getMetadata());
+                    orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
+                }
+            }
+        }
+        if (orders.isEmpty()) {
+            orders.add(new OrderSpecifier(Order.DESC, equipmentAvailabilityHourlyEntity.id));
+        }
+        return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    private OrderSpecifier<?>[] getProductivityOrderSpecifiers(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        if (sort != null && sort.isSorted()) {
+            for (Sort.Order order : sort) {
+                String property = order.getProperty();
+                if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
+                    Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+                    PathBuilder pathBuilder = new PathBuilder<>(equipmentProductivityDailyEntity.getType(), equipmentProductivityDailyEntity.getMetadata());
+                    orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
+                }
+            }
+        }
+        if (orders.isEmpty()) {
+            orders.add(new OrderSpecifier(Order.DESC, equipmentProductivityDailyEntity.id));
+        }
+        return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    private OrderSpecifier<?>[] getTransportRouteOrderSpecifiers(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        if (sort != null && sort.isSorted()) {
+            for (Sort.Order order : sort) {
+                String property = order.getProperty();
+                if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
+                    Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+                    PathBuilder pathBuilder = new PathBuilder<>(transportRouteDailyEntity.getType(), transportRouteDailyEntity.getMetadata());
+                    orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
+                }
+            }
+        }
+        if (orders.isEmpty()) {
+            orders.add(new OrderSpecifier(Order.DESC, transportRouteDailyEntity.id));
+        }
+        return orders.toArray(new OrderSpecifier[0]);
+    }
+
+    private OrderSpecifier<?>[] getWorkOrderOrderSpecifiers(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        if (sort != null && sort.isSorted()) {
+            for (Sort.Order order : sort) {
+                String property = order.getProperty();
+                if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
+                    Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+                    PathBuilder pathBuilder = new PathBuilder<>(workOrderProcessedDailyEntity.getType(), workOrderProcessedDailyEntity.getMetadata());
+                    orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
+                }
+            }
+        }
+        if (orders.isEmpty()) {
+            orders.add(new OrderSpecifier(Order.DESC, workOrderProcessedDailyEntity.id));
+        }
+        return orders.toArray(new OrderSpecifier[0]);
     }
 }
