@@ -68,7 +68,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             List<IfEventQueueDto> ifEventQueueDtoList = createEventQueueDto(reportVo);
             if(CollectionUtils.isNotEmpty(ifEventQueueDtoList)){
                 for(IfEventQueueDto  dto : ifEventQueueDtoList){
-                    TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "");
+                    TransactionInfo tx = TransactionInfo.now(EventName.SAVE_INTERFACE_EVENT_LOG.getValue(),SystemName.MNG.getValue(), "");
                     // DTO 객체를 JSON 문자열로 직접 변환합니다.
                     String jsonPayload = "";
                     try {

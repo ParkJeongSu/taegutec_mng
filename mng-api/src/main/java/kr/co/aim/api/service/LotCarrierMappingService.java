@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,7 +33,7 @@ public class LotCarrierMappingService {
         return lotCarrierMappingRepository.findAll();
     }
 
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    @Transactional(value = "mssqlTransactionManager")
     public LotCarrierMapping findById(Long id) {
         Optional<LotCarrierMapping> optional = lotCarrierMappingRepository.findById(id);
         if (optional.isEmpty()) {
@@ -54,6 +55,20 @@ public class LotCarrierMappingService {
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public List<LotCarrierMapping> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber) {
         return lotCarrierMappingRepository.findByOrderIdAndOrderLineNumber(orderId, orderLineNumber);
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public List<LotCarrierMapping> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus){
+        if (productionStatus == null || productionStatus.isEmpty()) {
+            // 빈 리스트 전달 시 쿼리 미수행 또는 별도 처리
+            return Collections.emptyList();
+        }
+
+        return lotCarrierMappingRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+                orderId,
+                orderLineNumber,
+                productionStatus
+        );
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)

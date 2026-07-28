@@ -20,6 +20,7 @@ public class ProductDefHistory implements IBaseHistoryEntity {
     private String description2;
     private BigDecimal ratio;
     private BigDecimal defaultReceiveQuantity;
+    private BigDecimal toleranceVal;
     private String eventName;
     private LocalDateTime eventTime;
     private String eventUser;

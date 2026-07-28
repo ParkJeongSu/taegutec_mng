@@ -41,6 +41,9 @@ public class ProductDefHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "DEFAULT_RECEIVE_QUANTITY")
     private BigDecimal defaultReceiveQuantity;
 
+    @Column(name = "TOLERANCE_VAL")
+    private BigDecimal toleranceVal;
+
     @Column(name = "EVENT_NAME")
     private String eventName;
 

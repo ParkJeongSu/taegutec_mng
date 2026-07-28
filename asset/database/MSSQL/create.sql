@@ -1,1132 +1,751 @@
 create sql
 
-CREATE TABLE EQUIPMENT_GROUP
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_GROUP_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+-- DEF
+CREATE DATABASE NEXBEDEF;
 
-CREATE TABLE EQUIPMENT_GROUP_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_GROUP_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+USE NEXBEDEF;
 
-CREATE TABLE EQUIPMENT_DEF
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- EQUIPMENT_TYPE varchar(40),
- EQUIPMENT_GROUP_ID bigint,
- DETAIL_EQUIPMENT_TYPE varchar(40),
- STATE_MODEL varchar(40),
- VENDOR_ID varchar(40),
- MODEL_ID varchar(40),
- PROCESS_CAPACITY int,
- LOADING_CAPACITY int,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100),
- CONTAINER_TYPE varchar(40)
- );
+CREATE TABLE CARRIER_DEF (
+                             ID                             bigint               NOT NULL,
+                             CARRIER_DEF_NAME               varchar(40)          NULL,
+                             FACTORY_NAME                   varchar(40)          NOT NULL,
+                             DESCRIPTION                    varchar(400)         NULL,
+                             CARRIER_TYPE                   varchar(40)          NULL,
+                             CARRIER_DETAIL_TYPE            varchar(40)          NULL,
+                             DEFAULT_CAPACITY               int                  NULL,
+                             USE_COUNT_LIMIT                int                  NULL,
+                             USE_DURATION_LIMIT             int                  NULL,
+                             COUNT_LIMIT_PER_CLEAN          int                  NULL,
+                             DURATION_LIMIT_PER_CLEAN       int                  NULL,
+                             CLEAN_COUNT_LIMIT              int                  NULL,
+                             CHECK_OUT_STATE                varchar(40)          NULL,
+                             CHECK_OUT_TIME                 datetime2            NULL,
+                             CHECK_OUT_USER                 varchar(40)          NULL,
+                             DATA_STATE                     varchar(40)          NULL,
+                             EVENT_NAME                     varchar(40)          NULL,
+                             EVENT_TIME                     datetime2            NULL,
+                             EVENT_USER                     varchar(40)          NULL,
+                             EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE EQUIPMENT_DEF_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- EQUIPMENT_TYPE varchar(40),
- EQUIPMENT_GROUP_ID bigint,
- DETAIL_EQUIPMENT_TYPE varchar(40),
- STATE_MODEL varchar(40),
- VENDOR_ID varchar(40),
- MODEL_ID varchar(40),
- PROCESS_CAPACITY int,
- LOADING_CAPACITY int,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100),
- CONTAINER_TYPE varchar(40)
- );
+CREATE TABLE CARRIER_DEF_HISTORY (
+                                     ID                             bigint               NOT NULL,
+                                     CARRIER_DEF_NAME               varchar(40)          NULL,
+                                     FACTORY_NAME                   varchar(40)          NOT NULL,
+                                     DESCRIPTION                    varchar(400)         NULL,
+                                     CARRIER_TYPE                   varchar(40)          NULL,
+                                     CARRIER_DETAIL_TYPE            varchar(40)          NULL,
+                                     DEFAULT_CAPACITY               int                  NULL,
+                                     USE_COUNT_LIMIT                int                  NULL,
+                                     USE_DURATION_LIMIT             int                  NULL,
+                                     COUNT_LIMIT_PER_CLEAN          int                  NULL,
+                                     DURATION_LIMIT_PER_CLEAN       int                  NULL,
+                                     CLEAN_COUNT_LIMIT              int                  NULL,
+                                     CHECK_OUT_STATE                varchar(40)          NULL,
+                                     CHECK_OUT_TIME                 datetime2            NULL,
+                                     CHECK_OUT_USER                 varchar(40)          NULL,
+                                     DATA_STATE                     varchar(40)          NULL,
+                                     EVENT_NAME                     varchar(40)          NULL,
+                                     EVENT_TIME                     datetime2            NULL,
+                                     EVENT_USER                     varchar(40)          NULL,
+                                     EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE EQUIPMENTS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_NAME varchar(40) NOT NULL,
- EQUIPMENT_DEF_ID bigint NOT NULL,
- PARENT_EQUIPMENT_ID bigint,
- EQUIPMENT_LEVEL varchar(40),
- EQUIPMENT_STATE varchar(40),
- COMMUNICATION_STATE varchar(40),
- PROCESS_COUNT int,
- RECIPE_NAME varchar(40),
- DEFAULT_STOCKER_ID varchar(40),
- DEFAULT_ZONE_ID varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- RESOURCE_STATE varchar(40),
- OPERATION_MODE varchar(40),
- MESSAGE_SERVICE_ADDRESS varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE EQUIPMENT_DEF (
+                               ID                             bigint               NOT NULL,
+                               EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                               FACTORY_NAME                   varchar(40)          NOT NULL,
+                               DESCRIPTION                    varchar(400)         NULL,
+                               EQUIPMENT_TYPE                 varchar(40)          NULL,
+                               EQUIPMENT_GROUP_NAME           varchar(32)          NULL,
+                               DETAIL_EQUIPMENT_TYPE          varchar(40)          NULL,
+                               VENDOR_ID                      varchar(40)          NULL,
+                               MODEL_ID                       varchar(40)          NULL,
+                               PROCESS_CAPACITY               int                  NULL,
+                               CONTAINER_TYPE                 varchar(40)          NULL,
+                               PLC_TYPE                       varchar(40)          NULL,
+                               ROUTE_KEY                      varchar(40)          NULL,
+                               SERVER_NAME                    varchar(40)          NULL,
+                               CHECK_OUT_STATE                varchar(40)          NULL,
+                               CHECK_OUT_TIME                 datetime2            NULL,
+                               CHECK_OUT_USER                 varchar(40)          NULL,
+                               DATA_STATE                     varchar(40)          NULL,
+                               LOCAL_NO                       int                  NOT NULL,
+                               EVENT_NAME                     varchar(40)          NULL,
+                               EVENT_TIME                     datetime2            NULL,
+                               EVENT_USER                     varchar(40)          NULL,
+                               EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE EQUIPMENTS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_NAME varchar(40) NOT NULL,
- EQUIPMENT_DEF_ID bigint NOT NULL,
- PARENT_EQUIPMENT_ID bigint,
- EQUIPMENT_LEVEL varchar(40),
- EQUIPMENT_STATE varchar(40),
- COMMUNICATION_STATE varchar(40),
- PROCESS_COUNT int,
- RECIPE_NAME varchar(40),
- DEFAULT_STOCKER_ID varchar(40),
- DEFAULT_ZONE_ID varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- RESOURCE_STATE varchar(40),
- OPERATION_MODE varchar(40),
- MESSAGE_SERVICE_ADDRESS varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE EQUIPMENT_DEF_HISTORY (
+                                       ID                             bigint               NOT NULL,
+                                       EQUIPMENT_NAME                 varchar(30)          NOT NULL,
+                                       FACTORY_NAME                   varchar(40)          NOT NULL,
+                                       DESCRIPTION                    varchar(400)         NULL,
+                                       EQUIPMENT_TYPE                 varchar(40)          NULL,
+                                       EQUIPMENT_GROUP_NAME           varchar(40)          NULL,
+                                       DETAIL_EQUIPMENT_TYPE          varchar(40)          NULL,
+                                       VENDOR_ID                      varchar(40)          NULL,
+                                       MODEL_ID                       varchar(40)          NULL,
+                                       PROCESS_CAPACITY               int                  NULL,
+                                       CONTAINER_TYPE                 varchar(40)          NULL,
+                                       PLC_TYPE                       varchar(40)          NULL,
+                                       ROUTE_KEY                      varchar(40)          NULL,
+                                       SERVER_NAME                    varchar(40)          NULL,
+                                       CHECK_OUT_STATE                int                  NOT NULL,
+                                       CHECK_OUT_TIME                 varchar(40)          NULL,
+                                       CHECK_OUT_USER                 datetime2            NOT NULL,
+                                       DATA_STATE                     varchar(40)          NULL,
+                                       LOCAL_NO                       int                  NOT NULL,
+                                       EVENT_NAME                     varchar(40)          NULL,
+                                       EVENT_TIME                     datetime2            NULL,
+                                       EVENT_USER                     varchar(40)          NULL,
+                                       EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE PORT_DEF
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- PORT_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- PORT_TYPE varchar(40),
- PORT_USE_TYPE varchar(40),
- USE_CARRIER_DEF_ID bigint,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE EQUIPMENT_GROUP_DEF (
+                                     ID                             bigint               NOT NULL,
+                                     EQUIPMENT_GROUP_NAME           varchar(40)          NOT NULL,
+                                     DESCRIPTION                    varchar(400)         NULL,
+                                     CHECK_OUT_STATE                varchar(40)          NULL,
+                                     CHECK_OUT_TIME                 datetime2            NULL,
+                                     CHECK_OUT_USER                 varchar(40)          NULL,
+                                     DATA_STATE                     varchar(40)          NULL,
+                                     EVENT_NAME                     varchar(40)          NULL,
+                                     EVENT_TIME                     datetime2            NULL,
+                                     EVENT_USER                     varchar(40)          NULL,
+                                     EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE PORT_DEF_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- PORT_DEF_NAME varchar(40),
- DESCRIPTION varchar(400),
- PORT_TYPE varchar(40),
- PORT_USE_TYPE varchar(40),
- USE_CARRIER_DEF_ID bigint,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE EQUIPMENT_GROUP__DEF_HISTORY (
+                                              ID                             bigint               NOT NULL,
+                                              EQUIPMENT_GROUP_NAME           varchar(40)          NOT NULL,
+                                              DESCRIPTION                    varchar(400)         NULL,
+                                              CHECK_OUT_STATE                varchar(40)          NULL,
+                                              CHECK_OUT_TIME                 datetime2            NULL,
+                                              CHECK_OUT_USER                 varchar(40)          NULL,
+                                              DATA_STATE                     varchar(40)          NULL,
+                                              EVENT_NAME                     varchar(40)          NULL,
+                                              EVENT_TIME                     datetime2            NOT NULL,
+                                              EVENT_USER                     varchar(40)          NULL,
+                                              EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE PORTS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_NAME varchar(40) NOT NULL,
- PORT_NAME varchar(40) NOT NULL,
- PORT_DEF_ID bigint NOT NULL,
- DESCRIPTION varchar(400),
- CONNECTED_STOCKER varchar(40),
- TRANSPORT_MODE varchar(40),
- PORT_STATE varchar(40),
- RESOURCE_STATE varchar(40),
- TRANSPORT_STATE varchar(40),
- CARRIER_NAME varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE PORT_DEF (
+                          ID                             bigint               NOT NULL,
+                          EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                          PORT_NAME                      varchar(40)          NOT NULL,
+                          FACTORY_NAME                   varchar(40)          NOT NULL,
+                          PORT_NUMBER                    int                  NULL,
+                          DESCRIPTION                    varchar(400)         NULL,
+                          TRANSPORT_MODE                 varchar(40)          NULL,
+                          PORT_TYPE                      varchar(40)          NULL,
+                          DETAIL_PORT_TYPE               varchar(40)          NULL,
+                          PORT_USE_TYPE                  varchar(40)          NULL,
+                          PORT_ROLE_TYPE                 varchar(40)          NULL,
+                          WORK_CENTER_NAME               varchar(40)          NULL,
+                          LOCATION_ID                    varchar(40)          NULL,
+                          CONNECTED_EQUIPMENT_NAME       varchar(40)          NULL,
+                          CONNECTED_PORT_NAME            varchar(40)          NULL,
+                          LOAD_REQUEST_YN                varchar(5)           NULL,
+                          UNLOAD_REQUEST_YN              varchar(5)           NULL,
+                          CHECK_OUT_STATE                varchar(40)          NULL,
+                          CHECK_OUT_TIME                 datetime2            NULL,
+                          CHECK_OUT_USER                 varchar(40)          NULL,
+                          DATA_STATE                     varchar(40)          NULL,
+                          EVENT_NAME                     varchar(40)          NULL,
+                          EVENT_TIME                     datetime2            NULL,
+                          EVENT_USER                     varchar(40)          NULL,
+                          EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE PORTS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- EQUIPMENT_ID varchar(40) NOT NULL,
- PORT_NAME varchar(40) NOT NULL,
- PORT_DEF_ID bigint NOT NULL,
- DESCRIPTION varchar(400),
- CONNECTED_STOCKER varchar(40),
- TRANSPORT_MODE varchar(40),
- PORT_STATE varchar(40),
- RESOURCE_STATE varchar(40),
- TRANSPORT_STATE varchar(40),
- CARRIER_NAME varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE PORT_DEF_HISTORY (
+                                  ID                             bigint               NOT NULL,
+                                  EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                                  PORT_NAME                      varchar(40)          NOT NULL,
+                                  FACTORY_NAME                   varchar(40)          NOT NULL,
+                                  PORT_NUMBER                    int                  NULL,
+                                  DESCRIPTION                    varchar(400)         NULL,
+                                  TRANSPORT_MODE                 varchar(40)          NULL,
+                                  PORT_TYPE                      varchar(40)          NULL,
+                                  DETAIL_PORT_TYPE               varchar(40)          NULL,
+                                  PORT_USE_TYPE                  varchar(40)          NULL,
+                                  PORT_ROLE_TYPE                 varchar(40)          NULL,
+                                  WORK_CENTER_NAME               varchar(40)          NULL,
+                                  LOCATION_ID                    varchar(40)          NULL,
+                                  CONNECTED_EQUIPMENT_NAME       varchar(40)          NULL,
+                                  CONNECTED_PORT_NAME            varchar(40)          NULL,
+                                  LOAD_REQUEST_YN                varchar(5)           NULL,
+                                  UNLOAD_REQUEST_YN              varchar(5)           NULL,
+                                  CHECK_OUT_STATE                varchar(40)          NULL,
+                                  CHECK_OUT_TIME                 datetime2            NULL,
+                                  CHECK_OUT_USER                 varchar(40)          NULL,
+                                  DATA_STATE                     varchar(40)          NULL,
+                                  EVENT_NAME                     varchar(40)          NULL,
+                                  EVENT_TIME                     datetime2            NULL,
+                                  EVENT_USER                     varchar(40)          NULL,
+                                  EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE CARRIER_DEF
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- CARRIER_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- CARRIER_TYPE varchar(40),
- CARRIER_DETAIL_TYPE varchar(40),
- DEFAULT_CAPACITY int,
- USE_COUNT_LIMIT int,
- USE_DURATION_LIMIT int,
- COUNT_LIMIT_PER_CLEAN int,
- DURATION_LIMIT_PER_CLEAN int,
- CLEAN_COUNT_LIMIT int,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE PRODUCT_DEF (
+                             ID                             bigint               NOT NULL,
+                             PRODUCT_DEF_NAME               varchar(40)          NULL,
+                             FACTORY_NAME                   varchar(40)          NOT NULL,
+                             DESCRIPTION1                   varchar(100)         NULL,
+                             DESCRIPTION2                   varchar(100)         NULL,
+                             RATIO                          NUMERIC(15 , 4)      NULL,
+                             DEFAULT_RECEIVE_QUANTITY       NUMERIC(15 , 3)      NULL,
+                             TOLERANCE_VAL                  NUMERIC(15 , 4)      NULL,
+                             EVENT_NAME                     varchar(40)          NULL,
+                             EVENT_TIME                     datetime2            NULL,
+                             EVENT_USER                     varchar(40)          NULL,
+                             EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE CARRIER_DEF_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- CARRIER_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- CARRIER_TYPE varchar(40),
- CARRIER_DETAIL_TYPE varchar(40),
- DEFAULT_CAPACITY int,
- USE_COUNT_LIMIT int,
- USE_DURATION_LIMIT int,
- COUNT_LIMIT_PER_CLEAN int,
- DURATION_LIMIT_PER_CLEAN int,
- CLEAN_COUNT_LIMIT int,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE PRODUCT_DEF_HISTORY (
+                                     ID                             bigint               NOT NULL,
+                                     PRODUCT_DEF_NAME               varchar(40)          NULL,
+                                     FACTORY_NAME                   varchar(40)          NOT NULL,
+                                     DESCRIPTION1                   varchar(100)         NULL,
+                                     DESCRIPTION2                   varchar(100)         NULL,
+                                     RATIO                          NUMERIC(15 , 4)      NULL,
+                                     DEFAULT_RECEIVE_QUANTITY       NUMERIC(15 , 3)      NULL,
+                                     TOLERANCE_VAL                  NUMERIC(15 , 4)      NULL,
+                                     EVENT_NAME                     varchar(40)          NULL,
+                                     EVENT_TIME                     datetime2            NULL,
+                                     EVENT_USER                     varchar(40)          NULL,
+                                     EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE CARRIERS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- CARRIER_NAME varchar(40) NOT NULL,
- CARRIER_DEF_ID bigint,
- CARRIER_STATE varchar(40),
- EQUIPMENT_NAME varchar(40),
- PORT_NAME varchar(40),
- ZONE_NAME varchar(40),
- SHELF_NAME varchar(40),
- CAPACITY int,
- CLEAN_STATE varchar(40),
- TRANSPORT_STATE varchar(40),
- RESERVED_OBJECT_ID varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- USE_STATE varchar(40),
- USE_COUNT int,
- USE_COUNT_PER_CLEAN int,
- CLEAN_COUNT int,
- LOT_QUANTITY int,
- CAPA_STATE varchar(40),
- LAST_CLEAN_TIME datetime2,
- CREATE_TIME datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100),
- CONTAINER_TYPE varchar(40)
- );
+-- DEF
 
-CREATE TABLE CARRIERS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- CARRIER_NAME varchar(40) NOT NULL,
- CARRIER_DEF_ID bigint,
- CARRIER_STATE varchar(40),
- EQUIPMENT_NAME varchar(40),
- PORT_NAME varchar(40),
- ZONE_NAME varchar(40),
- SHELF_NAME varchar(40),
- CAPACITY int,
- CLEAN_STATE varchar(40),
- TRANSPORT_STATE varchar(40),
- RESERVED_OBJECT_ID varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- USE_STATE varchar(40),
- USE_COUNT int,
- USE_COUNT_PER_CLEAN int,
- CLEAN_COUNT int,
- LOT_QUANTITY int,
- CAPA_STATE varchar(40),
- LAST_CLEAN_TIME datetime2,
- CREATE_TIME datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100),
- CONTAINER_TYPE varchar(40)
- );
+-- MNG
+CREATE DATABASE NEXBEMNG;
 
-CREATE TABLE LOTS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- LOT_NAME varchar(40) NOT NULL,
- PRODUCTION_TYPE varchar(40),
- LOT_STATE varchar(40),
- PROCESS_STATE varchar(40),
- PRODUCT_DEF_ID varchar(40),
- PROCESS_SPEC_ID varchar(40),
- PROCESS_SPEC_VERSION varchar(40),
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- WORK_ORDER_ID varchar(40),
- EQUIPMENT_NAME varchar(40),
- PORT_NAME varchar(40),
- RECIPE_NAME varchar(40),
- CARRIER_ID bigint,
- PRIORITY int,
- LOT_GRADE varchar(40),
- PRODUCTION_DETAIL_TYPE varchar(40),
- PLAN_START_DATE datetime2,
- PLAN_DUE_DATE datetime2,
- CREATE_TIME datetime2,
- RELEASE_TIME datetime2,
- SHIP_TIME datetime2,
- TRACK_IN_TIME datetime2,
- TRACK_OUT_TIME datetime2,
- OPERATION_MOVE_TIME datetime2,
- QUANTITY int,
- OLD_QUANTITY int,
- HOLD_STATE varchar(40),
- REWORK_STATE varchar(40),
- REWORK_COUNT int,
- ORIGINAL_PROCESS_SPEC_ID varchar(40),
- ORIGINAL_PROCESS_SPEC_VERSION varchar(40),
- RETURN_PROCESS_FLOW_ID varchar(40),
- RETURN_PROCESS_OPERATION_ID varchar(40),
- REASON_CODE varchar(40),
- OWNER_CODE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+use NEXBEMNG;
 
-CREATE TABLE LOTS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- LOT_NAME varchar(40) NOT NULL,
- PRODUCTION_TYPE varchar(40),
- LOT_STATE varchar(40),
- PROCESS_STATE varchar(40),
- PRODUCT_DEF_ID varchar(40),
- PROCESS_SPEC_ID varchar(40),
- PROCESS_SPEC_VERSION varchar(40),
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- WORK_ORDER_ID varchar(40),
- EQUIPMENT_NAME varchar(40),
- PORT_NAME varchar(40),
- RECIPE_NAME varchar(40),
- CARRIER_ID bigint,
- PRIORITY int,
- LOT_GRADE varchar(40),
- PRODUCTION_DETAIL_TYPE varchar(40),
- PLAN_START_DATE datetime2,
- PLAN_DUE_DATE datetime2,
- CREATE_TIME datetime2,
- RELEASE_TIME datetime2,
- SHIP_TIME datetime2,
- TRACK_IN_TIME datetime2,
- TRACK_OUT_TIME datetime2,
- OPERATION_MOVE_TIME datetime2,
- QUANTITY int,
- OLD_QUANTITY int,
- HOLD_STATE varchar(40),
- REWORK_STATE varchar(40),
- REWORK_COUNT int,
- ORIGINAL_PROCESS_SPEC_ID varchar(40),
- ORIGINAL_PROCESS_SPEC_VERSION varchar(40),
- RETURN_PROCESS_FLOW_ID varchar(40),
- RETURN_PROCESS_OPERATION_ID varchar(40),
- REASON_CODE varchar(40),
- OWNER_CODE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE shedlock(name VARCHAR(64) NOT NULL, lock_until datetime2 NOT NULL,
+                      locked_at datetime2 NOT NULL, locked_by VARCHAR(255) NOT NULL, PRIMARY KEY (name));
 
-CREATE TABLE PRODUCT_DEF
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- PRODUCT_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- PRODUCTION_TYPE varchar(40),
- PRODUCTION_DETAIL_TYPE varchar(40),
- PRODUCT_TYPE varchar(40),
- PRODUCT_SUB_TYPE varchar(40),
- QUANTITY int,
- SUB_QUANTITY int,
- ESTIMATED_CYCLE_TIME int,
- X_COUNT int,
- Y_COUNT int,
- SECTION_NAME varchar(40),
- TECH_NAME varchar(40),
- DENSITY varchar(40),
- GENERATION varchar(40),
- ORGANIZATION varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE CARRIER (
+                         ID                             bigint               NOT NULL,
+                         CARRIER_NAME                   varchar(40)          NOT NULL,
+                         CARRIER_DEF_NAME               bigint               NULL,
+                         CARRIER_STATE                  varchar(40)          NULL,
+                         EQUIPMENT_NAME                 varchar(40)          NULL,
+                         PORT_NAME                      varchar(40)          NULL,
+                         ZONE_NAME                      varchar(40)          NULL,
+                         POSITION_TYPE_NAME             varchar(40)          NULL,
+                         POSITION_NAME                  varchar(40)          NULL,
+                         CAPACITY                       int                  NULL,
+                         CLEAN_STATE                    varchar(40)          NULL,
+                         TRANSPORT_STATE                varchar(40)          NULL,
+                         TRANSPORT_JOB_ID               bigint               NULL,
+                         HOLD_STATE                     varchar(40)          NULL,
+                         REASON_CODE                    varchar(40)          NULL,
+                         USE_STATE                      varchar(40)          NULL,
+                         USE_COUNT                      int                  NULL,
+                         USE_COUNT_PER_CLEAN            int                  NULL,
+                         CLEAN_COUNT                    int                  NULL,
+                         QUANTITY                       NUMERIC(15 , 3)      NULL,
+                         GAL_QUANTITY                   NUMERIC(15 , 3)      NULL,
+                         LAST_CLEAN_TIME                datetime2            NULL,
+                         CREATE_TIME                    datetime2            NULL,
+                         INBOUND_TIME                   datetime2            NULL,
+                         OUTBOUND_TIME                  datetime2            NULL,
+                         CONTAINER_TYPE                 varchar(40)          NULL,
+                         EVENT_NAME                     varchar(40)          NULL,
+                         EVENT_TIME                     datetime2            NULL,
+                         EVENT_USER                     varchar(40)          NULL,
+                         EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE PRODUCT_DEF_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- PRODUCT_DEF_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- PRODUCTION_TYPE varchar(40),
- PRODUCTION_DETAIL_TYPE varchar(40),
- PRODUCT_TYPE varchar(40),
- PRODUCT_SUB_TYPE varchar(40),
- QUANTITY int,
- SUB_QUANTITY int,
- ESTIMATED_CYCLE_TIME int,
- X_COUNT int,
- Y_COUNT int,
- SECTION_NAME varchar(40),
- TECH_NAME varchar(40),
- DENSITY varchar(40),
- GENERATION varchar(40),
- ORGANIZATION varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE CARRIER_HISTORY (
+                                 ID                             bigint               NOT NULL,
+                                 CARRIER_NAME                   varchar(40)          NOT NULL,
+                                 CARRIER_DEF_NAME               bigint               NULL,
+                                 CARRIER_STATE                  varchar(40)          NULL,
+                                 EQUIPMENT_NAME                 varchar(40)          NULL,
+                                 PORT_NAME                      varchar(40)          NULL,
+                                 ZONE_NAME                      varchar(40)          NULL,
+                                 POSITION_TYPE_NAME             varchar(40)          NULL,
+                                 POSITION_NAME                  varchar(40)          NULL,
+                                 CAPACITY                       int                  NULL,
+                                 CLEAN_STATE                    varchar(40)          NULL,
+                                 TRANSPORT_STATE                varchar(40)          NULL,
+                                 TRANSPORT_JOB_ID               bigint               NULL,
+                                 HOLD_STATE                     varchar(40)          NULL,
+                                 REASON_CODE                    varchar(40)          NULL,
+                                 USE_STATE                      varchar(40)          NULL,
+                                 USE_COUNT                      int                  NULL,
+                                 USE_COUNT_PER_CLEAN            int                  NULL,
+                                 CLEAN_COUNT                    int                  NULL,
+                                 QUANTITY                       NUMERIC(15 , 3)      NULL,
+                                 GAL_QUANTITY                   NUMERIC(15 , 3)      NULL,
+                                 LAST_CLEAN_TIME                datetime2            NULL,
+                                 CREATE_TIME                    datetime2            NULL,
+                                 INBOUND_TIME                   datetime2            NULL,
+                                 OUTBOUND_TIME                  datetime2            NULL,
+                                 CONTAINER_TYPE                 varchar(40)          NULL,
+                                 EVENT_NAME                     varchar(40)          NULL,
+                                 EVENT_TIME                     datetime2            NULL,
+                                 EVENT_USER                     varchar(40)          NULL,
+                                 EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE TRANSPORT_JOB
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- TRANSPORT_JOB_NAME varchar(60) NOT NULL,
- TRANSPORT_JOB_STATE varchar(60),
- SOURCE_EQUIPMENT_NAME varchar(40),
- SOURCE_PORT_NAME varchar(40),
- SOURCE_ZONE_NAME varchar(40),
- SOURCE_SHELF_NAME varchar(40),
- DESTINATION_EQUIPMENT_NAME varchar(40),
- DESTINATION_PORT_NAME varchar(40),
- DESTINATION_ZONE_NAME varchar(40),
- DESTINATION_SHELF_NAME varchar(40),
- PRIORITY int,
- ERROR_CODE varchar(40),
- ERROR_TEXT varchar(250),
- REQUEST_TYPE varchar(40),
- CREATE_TIME datetime2,
- REASON_CODE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(250)
- );
+CREATE TABLE EQUIPMENT (
+                           ID                             bigint               NOT NULL,
+                           EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                           PARENT_EQUIPMENT_ID            bigint               NULL,
+                           EQUIPMENT_LEVEL                varchar(40)          NULL,
+                           EQUIPMENT_STATE                varchar(40)          NULL,
+                           COMMUNICATION_STATE            varchar(40)          NULL,
+                           LOADING_COUNT                  NUMERIC(15 , 3)      NULL,
+                           PROCESS_COUNT                  NUMERIC(15 , 3)      NULL,
+                           RECIPE_NAME                    varchar(40)          NULL,
+                           HOLD_STATE                     varchar(40)          NULL,
+                           REASON_CODE                    varchar(40)          NULL,
+                           RESOURCE_STATE                 varchar(40)          NULL,
+                           OPERATION_MODE                 varchar(40)          NULL,
+                           MESSAGE_SERVICE_ADDRESS        varchar(40)          NULL,
+                           EVENT_NAME                     varchar(40)          NULL,
+                           EVENT_TIME                     datetime2            NULL,
+                           EVENT_USER                     varchar(40)          NULL,
+                           EVENT_COMMENT                  varchar(100)         NULL,
+                           PRODUCTION_ORDER_ID            bigint               NULL
+);
 
-CREATE TABLE TRANSPORT_JOB_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- TRANSPORT_JOB_NAME varchar(60) NOT NULL,
- TRANSPORT_JOB_STATE varchar(60),
- SOURCE_EQUIPMENT_NAME varchar(40),
- SOURCE_PORT_NAME varchar(40),
- SOURCE_ZONE_NAME varchar(40),
- SOURCE_SHELF_NAME varchar(40),
- DESTINATION_EQUIPMENT_NAME varchar(40),
- DESTINATION_PORT_NAME varchar(40),
- DESTINATION_ZONE_NAME varchar(40),
- DESTINATION_SHELF_NAME varchar(40),
- PRIORITY int,
- ERROR_CODE varchar(40),
- ERROR_TEXT varchar(250),
- REQUEST_TYPE varchar(40),
- CREATE_TIME datetime2,
- REASON_CODE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(250)
- );
+CREATE TABLE EQUIPMENT_HISTORY (
+                                   ID                             bigint               NOT NULL,
+                                   EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                                   PARENT_EQUIPMENT_ID            bigint               NULL,
+                                   EQUIPMENT_LEVEL                varchar(40)          NULL,
+                                   EQUIPMENT_STATE                varchar(40)          NULL,
+                                   COMMUNICATION_STATE            varchar(40)          NULL,
+                                   LOADING_COUNT                  NUMERIC(15 , 3)      NULL,
+                                   PROCESS_COUNT                  NUMERIC(15 , 3)      NULL,
+                                   RECIPE_NAME                    varchar(40)          NULL,
+                                   HOLD_STATE                     varchar(40)          NULL,
+                                   REASON_CODE                    varchar(40)          NULL,
+                                   RESOURCE_STATE                 varchar(40)          NULL,
+                                   OPERATION_MODE                 varchar(40)          NULL,
+                                   MESSAGE_SERVICE_ADDRESS        varchar(40)          NULL,
+                                   EVENT_NAME                     varchar(40)          NULL,
+                                   EVENT_TIME                     datetime2            NULL,
+                                   EVENT_USER                     varchar(40)          NULL,
+                                   EVENT_COMMENT                  varchar(100)         NULL,
+                                   PRODUCTION_ORDER_ID            bigint               NULL
+);
 
-CREATE TABLE TRANSPORT_JOB_DETAIL
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- TRANSPORT_JOB_DETAIL_NAME varchar(40) NOT NULL,
- TRANSPORT_JOB_ID bigint NOT NULL,
- TRANSPORT_JOB_DETAIL_STATE varchar(40) NOT NULL,
- CARRIER_ID varchar(40),
- SOURCE_EQUIPMENT_NAME varchar(40),
- SOURCE_PORT_NAME varchar(40),
- SOURCE_ZONE_NAME varchar(40),
- SOURCE_SHELF_NAME varchar(40),
- DESTINATION_EQUIPMENT_NAME varchar(40),
- DESTINATION_PORT_NAME varchar(40),
- DESTINATION_ZONE_NAME varchar(40),
- DESTINATION_SHELF_NAME varchar(40),
- CURRENT_EQUIPMENT_NAME varchar(40),
- CURRENT_PORT_NAME varchar(40),
- CURRENT_ZONE_NAME varchar(40),
- CURRENT_SHELF_NAME varchar(40),
- STEP_ORDER int NOT NULL,
- STEP_PHASE int NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(250)
- );
+CREATE TABLE IF_EVENT_QUEUE (
+                                ID                             bigint               NOT NULL,
+                                EVENT_TYPE                     varchar(40)          NULL,
+                                PAYLOAD                        varchar(4000)        NULL,
+                                IF_STATUS                      varchar(40)          NULL,
+                                CARRIER_NAME                   varchar(40)          NULL,
+                                IDOC_ID                        bigint               NULL,
+                                ORDER_ID                       varchar(40)          NULL,
+                                ORDER_LINE_NUMBER              varchar(40)          NULL,
+                                RETRY_CNT                      int                  NULL,
+                                ERR_MSG                        varchar(400)         NULL,
+                                CREATE_TIME                    datetime2            NULL,
+                                UPDATE_TIME                    datetime2            NULL
+);
 
-CREATE TABLE TRANSPORT_JOB_DETAIL_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- TRANSPORT_JOB_DETAIL_NAME varchar(40) NOT NULL,
- TRANSPORT_JOB_ID bigint NOT NULL,
- TRANSPORT_JOB_DETAIL_STATE varchar(40) NOT NULL,
- CARRIER_ID varchar(40),
- SOURCE_EQUIPMENT_NAME varchar(40),
- SOURCE_PORT_NAME varchar(40),
- SOURCE_ZONE_NAME varchar(40),
- SOURCE_SHELF_NAME varchar(40),
- DESTINATION_EQUIPMENT_NAME varchar(40),
- DESTINATION_PORT_NAME varchar(40),
- DESTINATION_ZONE_NAME varchar(40),
- DESTINATION_SHELF_NAME varchar(40),
- CURRENT_EQUIPMENT_NAME varchar(40),
- CURRENT_PORT_NAME varchar(40),
- CURRENT_ZONE_NAME varchar(40),
- CURRENT_SHELF_NAME varchar(40),
- STEP_ORDER int NOT NULL,
- STEP_PHASE int NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(250)
- );
+CREATE TABLE LOT (
+                     ID                             bigint               NOT NULL,
+                     LOT_NAME                       varchar(40)          NULL,
+                     ORIGINAL_LOT_NAME              varchar(40)          NULL,
+                     LOT_STATUS                     varchar(40)          NULL,
+                     ITEM_ID                        varchar(40)          NULL,
+                     TOTAL_QUANTITY                 NUMERIC(15 , 3)      NULL,
+                     HOLD_STATE                     varchar(40)          NULL,
+                     REASON_CODE                    varchar(40)          NULL,
+                     EVENT_NAME                     varchar(40)          NULL,
+                     EVENT_TIME                     datetime2            NULL,
+                     EVENT_USER                     varchar(40)          NULL,
+                     EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE WORK_ORDER
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(40),
- VENDOR_NAME varchar(40),
- PRODUCT_DEF_ID bigint,
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- WORK_ORDER_STATE varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- EQUIPMENT_NAME varchar(40),
- PLAN_QUANTITY int,
- CREATED_QUANTITY int,
- RELEASED_QUANTITY int,
- FINISHED_QUANTITY int,
- SCRAPPED_QUANTITY int,
- WORK_ORDER_COUNT int,
- CREATE_TIME datetime2,
- RELEASE_TIME datetime2,
- COMPLETE_TIME datetime2,
- CREATE_USER varchar(40),
- RELEASE_USER varchar(40),
- COMPLETE_USER varchar(40),
- DUE_DATE datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE LOT_CARRIER_MAPPING (
+                                     ID                             bigint               NOT NULL,
+                                     LOT_NAME                       varchar(40)          NULL,
+                                     CARRIER_NAME                   varchar(40)          NULL,
+                                     ORDER_ID                       varchar(40)          NULL,
+                                     ORDER_LINE_NUMBER              varchar(40)          NULL,
+                                     PRODUCTION_ORDER_ID            bigint               NULL,
+                                     SEQ                            int                  NULL,
+                                     PRODUCTION_STATUS              varchar(40)          NULL,
+                                     PROCESS_STATUS                 varchar(40)          NULL,
+                                     QUANTITY                       NUMERIC(15 , 3)      NULL,
+                                     GAL_QUANTITY                   NUMERIC(15 , 3)      NULL,
+                                     MNG_KEY                        bigint               NULL,
+                                     VALIDATION_TIME                datetime2            NULL,
+                                     JOB_START_TIME                 datetime2            NULL,
+                                     JOB_END_TIME                   datetime2            NULL,
+                                     MANTI_REQUEST_STATE            varchar(40)          NULL,
+                                     MANTI_REQUEST_TIME             datetime2            NULL,
+                                     MANTI_REPLY_TIME               datetime2            NULL,
+                                     RRN_REQUEST_STATE              varchar(40)          NULL,
+                                     RRN_REQUEST_TIME               datetime2            NULL,
+                                     RRN_REPLY_TIME                 datetime2            NULL,
+                                     NEXT_EQUIPMENT_NAME            varchar(40)          NULL,
+                                     HOLD_STATE                     varchar(40)          NULL,
+                                     REASON_CODE                    varchar(40)          NULL,
+                                     EVENT_NAME                     varchar(40)          NULL,
+                                     EVENT_TIME                     datetime2            NULL,
+                                     EVENT_USER                     varchar(40)          NULL,
+                                     EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE WORK_ORDER_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(40),
- VENDOR_NAME varchar(40),
- PRODUCT_DEF_ID bigint,
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- WORK_ORDER_STATE varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- EQUIPMENT_NAME varchar(40),
- PLAN_QUANTITY int,
- CREATED_QUANTITY int,
- RELEASED_QUANTITY int,
- FINISHED_QUANTITY int,
- SCRAPPED_QUANTITY int,
- WORK_ORDER_COUNT int,
- CREATE_TIME datetime2,
- RELEASE_TIME datetime2,
- COMPLETE_TIME datetime2,
- CREATE_USER varchar(40),
- RELEASE_USER varchar(40),
- COMPLETE_USER varchar(40),
- DUE_DATE datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE LOT_CARRIER_MAPPING_HISTORY (
+                                             ID                             bigint               NOT NULL,
+                                             LOT_NAME                       varchar(40)          NULL,
+                                             CARRIER_NAME                   varchar(40)          NULL,
+                                             ORDER_ID                       varchar(40)          NULL,
+                                             ORDER_LINE_NUMBER              varchar(40)          NULL,
+                                             PRODUCTION_ORDER_ID            bigint               NULL,
+                                             SEQ                            int                  NULL,
+                                             PRODUCTION_STATUS              varchar(40)          NULL,
+                                             PROCESS_STATUS                 varchar(40)          NULL,
+                                             QUANTITY                       NUMERIC(15 , 3)      NULL,
+                                             GAL_QUANTITY                   NUMERIC(15 , 3)      NULL,
+                                             MNG_KEY                        bigint               NULL,
+                                             VALIDATION_TIME                datetime2            NULL,
+                                             JOB_START_TIME                 datetime2            NULL,
+                                             JOB_END_TIME                   datetime2            NULL,
+                                             MANTI_REQUEST_STATE            varchar(40)          NULL,
+                                             MANTI_REQUEST_TIME             datetime2            NULL,
+                                             MANTI_REPLY_TIME               datetime2            NULL,
+                                             RRN_REQUEST_STATE              varchar(40)          NULL,
+                                             RRN_REQUEST_TIME               datetime2            NULL,
+                                             RRN_REPLY_TIME                 datetime2            NULL,
+                                             NEXT_EQUIPMENT_NAME            varchar(40)          NULL,
+                                             HOLD_STATE                     varchar(40)          NULL,
+                                             REASON_CODE                    varchar(40)          NULL,
+                                             EVENT_NAME                     varchar(40)          NULL,
+                                             EVENT_TIME                     datetime2            NULL,
+                                             EVENT_USER                     varchar(40)          NULL,
+                                             EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE IF_WORK_ORDER
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40),
- DESCRIPTION varchar(40),
- VENDOR_NAME varchar(40),
- PRODUCT_DEF_ID varchar(40),
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- EQUIPMENT_NAME varchar(40),
- PLAN_QUANTITY int,
- IF_STATE varchar(40),
- CREATE_TIME datetime2,
- DUE_DATE datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE LOT_HISTORY (
+                             ID                             bigint               NOT NULL,
+                             LOT_NAME                       varchar(40)          NULL,
+                             ORIGINAL_LOT_NAME              varchar(40)          NULL,
+                             LOT_STATUS                     varchar(40)          NULL,
+                             ITEM_ID                        varchar(40)          NULL,
+                             TOTAL_QUANTITY                 NUMERIC(15 , 3)      NULL,
+                             HOLD_STATE                     varchar(40)          NULL,
+                             REASON_CODE                    varchar(40)          NULL,
+                             EVENT_NAME                     varchar(40)          NULL,
+                             EVENT_TIME                     datetime2            NULL,
+                             EVENT_USER                     varchar(40)          NULL,
+                             EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE IF_WMS_REQUEST_CARRIER
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- PROCESS_OPERATION_ID varchar(40) NOT NULL,
- PLAN_QUANTITY int NOT NULL,
- IF_STATE varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE PORT (
+                      ID                             bigint               NOT NULL,
+                      EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                      PORT_NAME                      varchar(40)          NOT NULL,
+                      PORT_TYPE                      varchar(40)          NULL,
+                      DESCRIPTION                    varchar(400)         NULL,
+                      CONNECTED_STOCKER              varchar(40)          NULL,
+                      TRANSPORT_MODE                 varchar(40)          NULL,
+                      PORT_STATE                     varchar(40)          NULL,
+                      RESOURCE_STATE                 varchar(40)          NULL,
+                      TRANSPORT_STATE                varchar(40)          NULL,
+                      CARRIER_NAME                   varchar(40)          NULL,
+                      TRANSPORT_JOB_ID               bigint               NULL,
+                      EVENT_NAME                     varchar(40)          NULL,
+                      EVENT_TIME                     datetime2            NULL,
+                      EVENT_USER                     varchar(40)          NULL,
+                      EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE IF_WMS_REQUEST_CARRIER_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- PROCESS_OPERATION_ID varchar(40) NOT NULL,
- PLAN_QUANTITY int NOT NULL,
- IF_STATE varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE PORT_HISTORY (
+                              ID                             bigint               NOT NULL,
+                              EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                              PORT_NAME                      varchar(40)          NOT NULL,
+                              PORT_TYPE                      varchar(40)          NULL,
+                              DESCRIPTION                    varchar(400)         NULL,
+                              CONNECTED_STOCKER              varchar(40)          NULL,
+                              TRANSPORT_MODE                 varchar(40)          NULL,
+                              PORT_STATE                     varchar(40)          NULL,
+                              RESOURCE_STATE                 varchar(40)          NULL,
+                              TRANSPORT_STATE                varchar(40)          NULL,
+                              CARRIER_NAME                   varchar(40)          NULL,
+                              TRANSPORT_JOB_ID               bigint               NULL,
+                              EVENT_NAME                     varchar(40)          NULL,
+                              EVENT_TIME                     datetime2            NOT NULL,
+                              EVENT_USER                     varchar(40)          NULL,
+                              EVENT_COMMENT                  varchar(100)         NULL
+);
 
-CREATE TABLE IF_WMS_RECEIVE_CARRIER
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- PROCESS_OPERATION_ID varchar(40) NOT NULL,
- PLAN_QUANTITY int NOT NULL,
- CARRIER_NAME varchar(40) NOT NULL,
- IF_STATE varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE PRODUCTION_ORDER (
+                                  ID                             bigint               NOT NULL,
+                                  ORDER_ID                       varchar(40)          NOT NULL,
+                                  ORDER_LINE_NUMBER              varchar(40)          NULL,
+                                  LOT_NAME                       varchar(40)          NULL,
+                                  DESCRIPTION                    varchar(40)          NULL,
+                                  ITEM_NAME                      varchar(40)          NULL,
+                                  RECIPE_NAME                    varchar(40)          NULL,
+                                  CARRIER_NAME                   varchar(40)          NULL,
+                                  IDOC_ID                        bigint               NULL,
+                                  H2_ORDER_DP_LINE_ID            bigint               NULL,
+                                  H2_TRANSP_LINE_ID              bigint               NULL,
+                                  GAL_KEY                        varchar(40)          NULL,
+                                  MNG_KEY                        bigint               NULL,
+                                  PRODUCTION_ORDER_TYPE          varchar(40)          NULL,
+                                  PRODUCTION_ORDER_STATE         varchar(40)          NULL,
+                                  REPORT_STATE                   varchar(40)          NULL,
+                                  HOLD_STATE                     varchar(40)          NULL,
+                                  REASON_CODE                    varchar(40)          NULL,
+                                  EQUIPMENT_NAME                 varchar(40)          NULL,
+                                  PLAN_QUANTITY                  NUMERIC(15 , 3)      NULL,
+                                  RELEASED_QUANTITY              NUMERIC(15 , 3)      NULL,
+                                  STARTED_QUANTITY               NUMERIC(15 , 3)      NULL,
+                                  ENDED_QUANTITY                 NUMERIC(15 , 3)      NULL,
+                                  SCRAPPED_QUANTITY              NUMERIC(15 , 3)      NULL,
+                                  CREATE_TIME                    datetime2            NULL,
+                                  RELEASE_TIME                   datetime2            NULL,
+                                  COMPLETE_TIME                  datetime2            NULL,
+                                  VALIDATION_TIME                datetime2            NULL,
+                                  CREATE_USER                    varchar(40)          NULL,
+                                  RELEASE_USER                   varchar(40)          NULL,
+                                  COMPLETE_USER                  varchar(40)          NULL,
+                                  DUE_DATE                       datetime2            NULL,
+                                  EVENT_NAME                     varchar(40)          NULL,
+                                  EVENT_TIME                     datetime2            NULL,
+                                  EVENT_USER                     varchar(40)          NULL,
+                                  EVENT_COMMENT                  varchar(40)          NULL
+);
 
-CREATE TABLE IF_WMS_RECEIVE_CARRIER_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- PROCESS_OPERATION_ID varchar(40) NOT NULL,
- PLAN_QUANTITY int NOT NULL,
- CARRIER_NAME varchar(40) NOT NULL,
- IF_STATE varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(40)
- );
+CREATE TABLE PRODUCTION_ORDER_HISTORY (
+                                          ID                             bigint               NOT NULL,
+                                          ORDER_ID                       varchar(40)          NOT NULL,
+                                          ORDER_LINE_NUMBER              varchar(40)          NULL,
+                                          LOT_NAME                       varchar(40)          NULL,
+                                          DESCRIPTION                    varchar(40)          NULL,
+                                          ITEM_NAME                      varchar(40)          NULL,
+                                          RECIPE_NAME                    varchar(40)          NULL,
+                                          CARRIER_NAME                   varchar(40)          NULL,
+                                          IDOC_ID                        bigint               NULL,
+                                          H2_ORDER_DP_LINE_ID            bigint               NULL,
+                                          H2_TRANSP_LINE_ID              bigint               NULL,
+                                          GAL_KEY                        varchar(40)          NULL,
+                                          MNG_KEY                        bigint               NULL,
+                                          PRODUCTION_ORDER_TYPE          varchar(40)          NULL,
+                                          PRODUCTION_ORDER_STATE         varchar(40)          NULL,
+                                          REPORT_STATE                   varchar(40)          NULL,
+                                          HOLD_STATE                     varchar(40)          NULL,
+                                          REASON_CODE                    varchar(40)          NULL,
+                                          EQUIPMENT_NAME                 varchar(40)          NULL,
+                                          PLAN_QUANTITY                  NUMERIC(15 , 3)      NULL,
+                                          RELEASED_QUANTITY              NUMERIC(15 , 3)      NULL,
+                                          STARTED_QUANTITY               NUMERIC(15 , 3)      NULL,
+                                          ENDED_QUANTITY                 NUMERIC(15 , 3)      NULL,
+                                          SCRAPPED_QUANTITY              NUMERIC(15 , 3)      NULL,
+                                          CREATE_TIME                    datetime2            NULL,
+                                          RELEASE_TIME                   datetime2            NULL,
+                                          COMPLETE_TIME                  datetime2            NULL,
+                                          VALIDATION_TIME                datetime2            NULL,
+                                          CREATE_USER                    varchar(40)          NULL,
+                                          RELEASE_USER                   varchar(40)          NULL,
+                                          COMPLETE_USER                  varchar(40)          NULL,
+                                          DUE_DATE                       datetime2            NULL,
+                                          EVENT_NAME                     varchar(40)          NULL,
+                                          EVENT_TIME                     datetime2            NULL,
+                                          EVENT_USER                     varchar(40)          NULL,
+                                          EVENT_COMMENT                  varchar(40)          NULL
+);
 
-CREATE TABLE TASK_ORDER
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- TASK_ORDER_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- VENDOR_ID varchar(40),
- PRODUCT_DEF_ID varchar(40),
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- TASK_ORDER_STATE varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- EQUIPMENT_NAME varchar(40),
- PLAN_QUANTITY bigint,
- CREATED_QUANTITY bigint,
- RELEASED_QUANTITY bigint,
- FINISHED_QUANTITY bigint,
- SCRAPPED_QUANTITY bigint,
- PRODUCTION_ORDER_ID varchar(40),
- LOT_NAME bigint,
- CREATE_TIME datetime2,
- RELEASE_TIME datetime2,
- COMPLETE_TIME datetime2,
- CREATE_USER varchar(40),
- RELEASE_USER varchar(40),
- COMPLETE_USER varchar(40),
- DUE_DATE datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE STAT_EQP_AVAILABILITY_HOURLY (
+                                              ID                             bigint               NOT NULL,
+                                              STAT_DATE                      varchar(10)          NOT NULL,
+                                              STAT_HOUR                      varchar(2)           NOT NULL,
+                                              EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                                              RUN_DURATION_SEC               int                  NULL,
+                                              IDLE_DURATION_SEC              int                  NULL,
+                                              DOWN_DURATION_SEC              int                  NULL,
+                                              PM_DURATION_SEC                int                  NULL,
+                                              ALARM_COUNT                    int                  NULL,
+                                              CREATE_TIME                    datetime2            NULL
+);
 
-CREATE TABLE TASK_ORDER_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- WORK_ORDER_NAME varchar(40) NOT NULL,
- DESCRIPTION varchar(400),
- VENDOR_ID varchar(40),
- PRODUCT_DEF_ID varchar(40),
- PROCESS_FLOW_ID varchar(40),
- PROCESS_OPERATION_ID varchar(40),
- WORK_ORDER_STATE varchar(40),
- HOLD_STATE varchar(40),
- REASON_CODE varchar(40),
- EQUIPMENT_NAME varchar(40),
- PLAN_QUANTITY bigint,
- CREATED_QUANTITY bigint,
- RELEASED_QUANTITY bigint,
- FINISHED_QUANTITY bigint,
- SCRAPPED_QUANTITY bigint,
- PRODUCTION_ORDER_ID varchar(40),
- LOT_NAME bigint,
- CREATE_TIME datetime2,
- RELEASE_TIME datetime2,
- COMPLETE_TIME datetime2,
- CREATE_USER varchar(40),
- RELEASE_USER varchar(40),
- COMPLETE_USER varchar(40),
- DUE_DATE datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE STAT_EQP_PRODUCTIVITY_DAILY (
+                                             ID                             bigint               NOT NULL,
+                                             STAT_DATE                      varchar(10)          NOT NULL,
+                                             EQUIPMENT_NAME                 varchar(40)          NOT NULL,
+                                             TOTAL_PROCESSED_COUNT          int                  NULL,
+                                             TOTAL_PROCESSED_QUANTITY       NUMERIC(15 , 3)      NULL,
+                                             OK_PROCESSED                   NUMERIC(15 , 3)      NULL,
+                                             NG_PROCESSED                   NUMERIC(15 , 3)      NULL,
+                                             AVG_PROCESSED_TIME             int                  NULL
+);
 
-CREATE TABLE ALARM_DEF
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_DEF_NAME varchar(40),
- ALARM_TYPE varchar(40),
- DESCRIPTION varchar(40),
- ALARM_LEVEL varchar(40),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE STAT_TRANSPORT_ROUTE_DAILY (
+                                            ID                             bigint               NOT NULL,
+                                            STAT_DATE                      varchar(10)          NOT NULL,
+                                            SOURCE_EQUIPMENT_NAME          varchar(40)          NOT NULL,
+                                            DESTINATION_EQUIPMENT_NAME     varchar(40)          NOT NULL,
+                                            TOTAL_COUNT                    int                  NULL,
+                                            ERROR_COUNT                    int                  NULL,
+                                            AVG_ACQUIRE_TIME_SEC           int                  NULL,
+                                            MAX_ACQUIRE_TIME_SEC           int                  NULL,
+                                            AVG_TRANSFER_TIME_SEC          int                  NULL,
+                                            MAX_TRANSFER_TIME_SEC          int                  NULL,
+                                            AVG_CYCLE_TIME_SEC             int                  NULL,
+                                            MAX_CYCLE_TIME_SEC             int                  NULL
+);
 
-CREATE TABLE ALARM_DEF_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_DEF_NAME varchar(40),
- ALARM_TYPE varchar(40),
- DESCRIPTION varchar(40),
- ALARM_LEVEL varchar(40),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE STAT_WORK_ORDER_PROCESSED_DAILY (
+                                                 ID                             bigint               NOT NULL,
+                                                 STAT_DATE                      varchar(10)          NOT NULL,
+                                                 TOTAL_PROCESSED_COUNT          int                  NULL,
+                                                 AVG_PROCESSED_TIME             int                  NULL,
+                                                 TOTAL_QUANTITY                 NUMERIC(15 , 3)      NULL
+);
 
-CREATE TABLE ALARM
-(
- ID bigint  PRIMARY KEY ,
- ALARM_DEF_ID bigint NOT NULL,
- EQUIPMENT_NAME varchar(40) NOT NULL,
- ALARM_STATE varchar(40),
- CREATE_TIME datetime2,
- CLEAR_TIME datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
+CREATE TABLE TRANSPORT_JOB (
+                               ID                             bigint               NOT NULL,
+                               TRANSPORT_JOB_NAME             varchar(40)          NOT NULL,
+                               TRANSPORT_TYPE                 varchar(40)          NOT NULL,
+                               CARRIER_NAME                   varchar(40)          NOT NULL,
+                               TRANSPORT_JOB_STATE            varchar(40)          NULL,
+                               CARRIER_TYPE                   varchar(40)          NULL,
+                               TRAVEL_PROFILE                 varchar(40)          NULL,
+                               SOURCE_EQUIPMENT_NAME          varchar(40)          NULL,
+                               SOURCE_PORT_NAME               varchar(40)          NULL,
+                               SOURCE_ZONE_NAME               varchar(40)          NULL,
+                               SOURCE_POSITION_TYPE_NAME      varchar(40)          NULL,
+                               SOURCE_POSITION_NAME           varchar(40)          NULL,
+                               DESTINATION_EQUIPMENT_NAME     varchar(40)          NULL,
+                               DESTINATION_PORT_NAME          varchar(40)          NULL,
+                               DESTINATION_ZONE_NAME          varchar(40)          NULL,
+                               DESTINATION_POSITION_TYPE_NAME varchar(40)          NULL,
+                               DESTINATION_POSITION_NAME      varchar(40)          NULL,
+                               PRIORITY                       int                  NULL,
+                               ERROR_CODE                     varchar(40)          NULL,
+                               ERROR_TEXT                     varchar(250)         NULL,
+                               REQUEST_SOURCE                 varchar(40)          NULL,
+                               CREATE_TIME                    datetime2            NULL,
+                               DEPARTED_TIME                  datetime2            NULL,
+                               ARRIVED_TIME                   datetime2            NULL,
+                               REASON_CODE                    varchar(40)          NULL,
+                               EVENT_NAME                     varchar(40)          NULL,
+                               EVENT_TIME                     datetime2            NULL,
+                               EVENT_USER                     varchar(40)          NULL,
+                               EVENT_COMMENT                  varchar(250)         NULL,
+                               ORDER_ID                       varchar(40)          NULL
+);
 
-CREATE TABLE ALARM_HISTORY
-(
- ID bigint  PRIMARY KEY ,
- ALARM_DEF_ID bigint NOT NULL,
- EQUIPMENT_NAME varchar(40) NOT NULL,
- ALARM_STATE varchar(40),
- CREATE_TIME datetime2,
- CLEAR_TIME datetime2,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_ACTION
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_ACTION_NAME varchar(40) NOT NULL,
- ACTION_TYPE varchar(40) NOT NULL,
- ALARM_DEF_ID bigint NOT NULL,
- DESCRIPTION varchar(40),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_ACTION_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_ACTION_NAME varchar(40) NOT NULL,
- ACTION_TYPE varchar(40) NOT NULL,
- ALARM_DEF_ID bigint NOT NULL,
- DESCRIPTION varchar(40),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_ACTION_USER_GROUP
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- USER_GROUP_NAME varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_ACTION_USER_GROUP_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- USER_GROUP_NAME varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_ACTION_USER_GROUP_USERS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_ACTION_USER_GROUP_ID bigint NOT NULL,
- USER_ID varchar(40) NOT NULL,
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_ACTION_USER_GROUP_USERS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_ACTION_USER_GROUP_ID bigint NOT NULL,
- USER_ID varchar(40) NOT NULL,
- EVENT varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_MAIL_ACTION_DETAIL
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_ACTION_ID bigint NOT NULL,
- ALARM_ACTION_USER_GROUP_ID bigint NOT NULL,
- SUBJECT varchar(200),
- CONTENTS varchar(2000),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE ALARM_MAIL_ACTION_DETAIL_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- ALARM_ACTION_ID bigint NOT NULL,
- ALARM_ACTION_USER_GROUP_ID bigint NOT NULL,
- SUBJECT varchar(200),
- CONTENTS varchar(2000),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE USERS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- USER_ID varchar(200),
- AUTHORITY_ID bigint,
- USER_NAME varchar(200),
- PASSWORD varchar(200),
- EMAIL varchar(200),
- PHONE1 varchar(200),
- PHONE2 varchar(200),
- REFRESH_TOKEN varchar(300),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE USERS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- USER_ID varchar(200),
- AUTHORITY_ID bigint,
- USER_NAME varchar(200),
- PASSWORD varchar(200),
- EMAIL varchar(200),
- PHONE1 varchar(200),
- PHONE2 varchar(200),
- REFRESH_TOKEN varchar(300),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE AUTHORITY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- AUTHORITY_NAME varchar(100),
- DESCRIPTION varchar(100),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE AUTHORITY_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- AUTHORITY_NAME varchar(100),
- DESCRIPTION varchar(100),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE SYSTEM_DEF
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- SYSTEM_DEF_NAME varchar(40),
- SYSTEM_DEF_SEQ int,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE SYSTEM_DEF_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- SYSTEM_DEF_NAME varchar(40),
- SYSTEM_DEF_SEQ int,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE MENUS
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- SYSTEM_DEF_ID bigint NOT NULL,
- MENU_NAME varchar(40) NOT NULL,
- PARENT_MENU_ID bigint,
- VIEW_URL varchar(100),
- MENU_SEQ int,
- DESCRIPTION varchar(400),
- ICON_NAME varchar(100),
- MENU_TYPE varchar(40),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE MENUS_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- SYSTEM_DEF_ID bigint NOT NULL,
- MENU_NAME varchar(40) NOT NULL,
- PARENT_MENU_ID bigint,
- VIEW_URL varchar(100),
- MENU_SEQ int,
- DESCRIPTION varchar(400),
- ICON_NAME varchar(400),
- MENU_TYPE varchar(40),
- DATA_STATE varchar(40),
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE AUTHORITY_MENU
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- AUTHORITY_ID bigint NOT NULL,
- SYSTEM_DEF_ID bigint NOT NULL,
- MENU_ID bigint NOT NULL,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
-CREATE TABLE AUTHORITY_MENU_HISTORY
-(
- ID bigint IDENTITY(1, 1) PRIMARY KEY ,
- AUTHORITY_ID bigint NOT NULL,
- SYSTEM_DEF_ID bigint NOT NULL,
- MENU_ID bigint NOT NULL,
- CHECK_OUT_STATE varchar(40),
- CHECK_OUT_TIME datetime2,
- CHECK_OUT_USER varchar(40),
- DATA_STATE varchar(40),
- EVENT_NAME varchar(40),
- EVENT_TIME datetime2,
- EVENT_USER varchar(40),
- EVENT_COMMENT varchar(100)
- );
-
+CREATE TABLE TRANSPORT_JOB_HISTORY (
+                                       ID                             bigint               NOT NULL,
+                                       TRANSPORT_JOB_NAME             varchar(40)          NOT NULL,
+                                       TRANSPORT_TYPE                 varchar(40)          NOT NULL,
+                                       CARRIER_NAME                   varchar(40)          NOT NULL,
+                                       TRANSPORT_JOB_STATE            varchar(40)          NULL,
+                                       CARRIER_TYPE                   varchar(40)          NULL,
+                                       TRAVEL_PROFILE                 varchar(40)          NULL,
+                                       SOURCE_EQUIPMENT_NAME          varchar(40)          NULL,
+                                       SOURCE_PORT_NAME               varchar(40)          NULL,
+                                       SOURCE_ZONE_NAME               varchar(40)          NULL,
+                                       SOURCE_POSITION_TYPE_NAME      varchar(40)          NULL,
+                                       SOURCE_POSITION_NAME           varchar(40)          NULL,
+                                       DESTINATION_EQUIPMENT_NAME     varchar(40)          NULL,
+                                       DESTINATION_PORT_NAME          varchar(40)          NULL,
+                                       DESTINATION_ZONE_NAME          varchar(40)          NULL,
+                                       DESTINATION_POSITION_TYPE_NAME varchar(40)          NULL,
+                                       DESTINATION_POSITION_NAME      varchar(40)          NULL,
+                                       PRIORITY                       int                  NULL,
+                                       ERROR_CODE                     varchar(40)          NULL,
+                                       ERROR_TEXT                     varchar(250)         NULL,
+                                       REQUEST_SOURCE                 varchar(40)          NULL,
+                                       CREATE_TIME                    datetime2            NULL,
+                                       DEPARTED_TIME                  datetime2            NULL,
+                                       ARRIVED_TIME                   datetime2            NULL,
+                                       REASON_CODE                    varchar(40)          NULL,
+                                       EVENT_NAME                     varchar(40)          NULL,
+                                       EVENT_TIME                     datetime2            NOT NULL,
+                                       EVENT_USER                     varchar(40)          NULL,
+                                       EVENT_COMMENT                  varchar(250)         NULL,
+                                       ORDER_ID                       varchar(40)          NULL
+);
 
 CREATE TABLE TRANSPORT_ORDER (
                                  ID                             bigint               NOT NULL,
-                                 TRANSPORT_ORDER_NAME           varchar(40)          NOT NULL,
-                                 DESCRIPTION                    varchar(40)          NULL,
-                                 TRANSPORT_TYPE                 varchar(40)          NULL,
                                  TRANSPORT_ORDER_ID             varchar(40)          NULL,
+                                 IDOC_ID                        varchar(40)          NULL,
+                                 DESCRIPTION                    varchar(40)          NULL,
+                                 CARRIER_NAME                   varchar(40)          NULL,
+                                 VIRTUAL_CARRIER_NAME           varchar(40)          NULL,
+                                 TRANSPORT_TYPE                 varchar(40)          NULL,
+                                 TRANSPORT_STATUS               varchar(40)          NULL,
+                                 LAST_TRANSACTION_CODE          varchar(40)          NULL,
+                                 CARRIER_TYPE                   varchar(40)          NULL,
                                  PRIORITY                       int                  NULL,
                                  GAL_ID                         varchar(40)          NULL,
                                  GAL_WAREHOUSE                  varchar(40)          NULL,
-                                 FROM_WAREHOUSE                 varchar(40)          NULL,
-                                 FROM_ZONE_NAME                 varchar(40)          NULL,
-                                 FROM_LOCATION_ID               varchar(40)          NULL,
-                                 TO_WAREHOUSE                   varchar(40)          NULL,
-                                 TO_ZONE_NAME                   varchar(40)          NULL,
-                                 TO_LOCATION_ID                 varchar(40)          NULL,
-                                 CARRIER_NAME                   varchar(40)          NULL,
-                                 CARRIER_TYPE                   varchar(40)          NULL,
-                                 DRIVING_PROFILE                varchar(40)          NULL,
+                                 LOCATION_ID                    varchar(40)          NULL,
+                                 WORK_STATION_ID                varchar(40)          NULL,
+                                 SOURCE_ZONE_NAME               varchar(40)          NULL,
+                                 DESTINATION_ZONE_NAME          varchar(40)          NULL,
+                                 ERROR_TEXT                     varchar(40)          NULL,
+                                 ACTUAL_WEIGHT                  varchar(40)          NULL,
+                                 REQUESTED_ZONE_NAME            varchar(40)          NULL,
+                                 ACTUAL_ZONE_NAME               varchar(40)          NULL,
+                                 ACTUAL_LOCATION_ID             varchar(40)          NULL,
+                                 TRAVEL_PROFILE                 varchar(40)          NULL,
                                  CREATE_TIME                    datetime2            NULL,
                                  RELEASE_TIME                   datetime2            NULL,
                                  COMPLETE_TIME                  datetime2            NULL,
+                                 RETRIEVAL_TIME                 datetime2            NULL,
                                  CREATE_USER                    varchar(40)          NULL,
                                  RELEASE_USER                   varchar(40)          NULL,
-                                 COMPLETE_USER                  varchar(40)          NULL
+                                 COMPLETE_USER                  varchar(40)          NULL,
+                                 EVENT_NAME                     varchar(40)          NULL,
+                                 EVENT_TIME                     datetime2            NULL,
+                                 EVENT_USER                     varchar(40)          NULL,
+                                 EVENT_COMMENT                  varchar(40)          NULL
 );
+
+CREATE TABLE TRANSPORT_ORDER_HISTORY (
+                                         ID                             bigint               NOT NULL,
+                                         TRANSPORT_ORDER_ID             varchar(40)          NULL,
+                                         IDOC_ID                        varchar(40)          NULL,
+                                         DESCRIPTION                    varchar(40)          NULL,
+                                         CARRIER_NAME                   varchar(40)          NULL,
+                                         VIRTUAL_CARRIER_NAME           varchar(40)          NULL,
+                                         TRANSPORT_TYPE                 varchar(40)          NULL,
+                                         TRANSPORT_STATUS               varchar(40)          NULL,
+                                         LAST_TRANSACTION_CODE          varchar(40)          NULL,
+                                         CARRIER_TYPE                   varchar(40)          NULL,
+                                         PRIORITY                       int                  NULL,
+                                         GAL_ID                         varchar(40)          NULL,
+                                         GAL_WAREHOUSE                  varchar(40)          NULL,
+                                         LOCATION_ID                    varchar(40)          NULL,
+                                         WORK_STATION_ID                varchar(40)          NULL,
+                                         SOURCE_ZONE_NAME               varchar(40)          NULL,
+                                         DESTINATION_ZONE_NAME          varchar(40)          NULL,
+                                         ERROR_TEXT                     varchar(40)          NULL,
+                                         ACTUAL_WEIGHT                  varchar(40)          NULL,
+                                         REQUESTED_ZONE_NAME            varchar(40)          NULL,
+                                         ACTUAL_ZONE_NAME               varchar(40)          NULL,
+                                         ACTUAL_LOCATION_ID             varchar(40)          NULL,
+                                         TRAVEL_PROFILE                 varchar(40)          NULL,
+                                         CREATE_TIME                    datetime2            NULL,
+                                         RELEASE_TIME                   datetime2            NULL,
+                                         COMPLETE_TIME                  datetime2            NULL,
+                                         RETRIEVAL_TIME                 datetime2            NULL,
+                                         CREATE_USER                    varchar(40)          NULL,
+                                         RELEASE_USER                   varchar(40)          NULL,
+                                         COMPLETE_USER                  varchar(40)          NULL,
+                                         EVENT_NAME                     varchar(40)          NULL,
+                                         EVENT_TIME                     datetime2            NULL,
+                                         EVENT_USER                     varchar(40)          NULL,
+                                         EVENT_COMMENT                  varchar(40)          NULL
+);
+
+
+-- MNG

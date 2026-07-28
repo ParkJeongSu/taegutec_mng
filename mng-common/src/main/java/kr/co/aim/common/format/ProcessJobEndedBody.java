@@ -2,6 +2,9 @@ package kr.co.aim.common.format;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Data
 @ToString
 @Builder
@@ -10,11 +13,14 @@ import lombok.*;
 public class ProcessJobEndedBody {
     private String equipmentName;
     private String portName;
-    private String portType;
-    private String portTransportMode;
-    private String lotName;
-    private String weight;
     private String carrierName;
-    private String carrierState;
-    private String carrierType;
+    private String productionTaskId;
+    private String recipeName;
+    private String orderId;
+    private String orderLineNumber;
+    private BigDecimal quantity;
+    private String lotName;
+    private String itemName;
+    private String productionTaskEnd;
+    private List<MngKeyName> mngKeyList;
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.MaterialUnassignedFromCarrierBody;
+import kr.co.aim.common.format.CarrierInfoDownloadSendReplyBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile({"pex","tex"})
-public class MaterialDeassignFromCarrierHandler implements MessageHandler<String> {
+public class CarrierInfoDownloadSendReplyHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
@@ -26,20 +26,20 @@ public class MaterialDeassignFromCarrierHandler implements MessageHandler<String
 
     @Override
     public String getSupportedMessageName() {
-        return MessageList.MATERIAL_DEASSIGNED_FROM_CARRIER.getMessageName();
+        return MessageList.CARRIER_INFO_DOWNLOAD_SEND_REPLY.getMessageName();
     }
 
     @Override
     @SneakyThrows // objectMapper의 예외 처리를 간소화
     public Object handle(String message) {
-
+        
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<MaterialUnassignedFromCarrierBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<MaterialUnassignedFromCarrierBody> requestMessage = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<CarrierInfoDownloadSendReplyBody>> typeRef = new TypeReference<>() {};
+        BaseMessage<CarrierInfoDownloadSendReplyBody> requestMessage = objectMapper.readValue(message, typeRef);
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        messageExecuteService.materialUnAssignedFromCarrier(requestMessage);
+        messageExecuteService.carrierInfoDownloadSendReply(requestMessage);
 
         return null;
     }

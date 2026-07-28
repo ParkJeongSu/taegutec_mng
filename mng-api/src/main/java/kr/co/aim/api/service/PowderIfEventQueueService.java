@@ -2,9 +2,9 @@ package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.dto.insert.IfEventQueueDto;
+import kr.co.aim.api.dto.powder.IfEventQueueDto;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
-import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
+import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.IfEventQueueCreateCommand;
@@ -44,15 +44,14 @@ public class PowderIfEventQueueService implements FactoryIfEventQueueStrategy {
     @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
     public void enqueueIfEventQueue(Object vo) {
         // Java 17의 Pattern Matching 사용
-        // TODO: powder 에 맞는 ReportVo를 생성
-        if (vo instanceof InsertEventQueueReportVo reportVo) {
+        if (vo instanceof PowderEventQueueReportVo reportVo) {
             // save EventLog로 변경
             Optional<IfEventQueueDto> optionalIfEventQueueDto = createEventQueueDto(reportVo);
             if(optionalIfEventQueueDto.isEmpty()){
                 return;
             }
             IfEventQueueDto dto = optionalIfEventQueueDto.get();
-            TransactionInfo tx = TransactionInfo.now("saveInterfaceEventLog",SystemName.MNG.getValue(), "",reportVo.getTx().eventTime());
+            TransactionInfo tx = TransactionInfo.now(EventName.SAVE_INTERFACE_EVENT_LOG.getValue(), SystemName.MNG.getValue(), "",reportVo.getTx().eventTime());
 
             // DTO 객체를 JSON 문자열로 직접 변환합니다.
             String jsonPayload = "";
@@ -87,11 +86,10 @@ public class PowderIfEventQueueService implements FactoryIfEventQueueStrategy {
 
     }
 
-    private Optional<IfEventQueueDto> createEventQueueDto(InsertEventQueueReportVo vo) {
+    private Optional<IfEventQueueDto> createEventQueueDto(PowderEventQueueReportVo vo) {
         String messageName = vo.getMessageName();
         Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
         Optional<Port> optionalPort = vo.getOptionalPort();
-        String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
         String carrierName = vo.getCarrierName(); // 어떠한 경우에도 공백이 없음

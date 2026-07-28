@@ -45,6 +45,18 @@ public interface TransportOrderJpaRepository extends JpaRepository<TransportOrde
             @Param("workStationId") String workStationId
     );
 
+    @Query("SELECT t FROM TransportOrderEntity t " +
+            "WHERE t.transportType = :transportType " +
+            "AND t.transportStatus IN :transportStatus " +
+            "AND t.workStationId = :workStationId " +
+            "ORDER BY t.createTime ASC"
+    )
+    List<TransportOrderEntity> findOutboundOrderForTransportRequest(
+            @Param("transportType") String transportType,
+            @Param("transportStatus") List<String> transportStatus,
+            @Param("workStationId") String workStationId
+    );
+
     // 2. 비관적 락 조회 (FOR UPDATE)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({

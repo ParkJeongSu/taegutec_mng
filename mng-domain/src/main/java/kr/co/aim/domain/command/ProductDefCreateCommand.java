@@ -20,5 +20,6 @@ public class ProductDefCreateCommand {
     private final String description2;
     private final BigDecimal ratio;
     private final BigDecimal defaultReceiveQuantity;
+    private final BigDecimal toleranceVal;
 
 }

@@ -25,4 +25,5 @@ public interface LotCarrierMappingRepository {
             LocalDateTime thresholdTime
     );
     Page<LotCarrierMapping> findLotCarrierMappingWithConditions(LotCarrierMappingSearchCondition condition, Pageable pageable);
+    List<LotCarrierMapping> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus);
 }

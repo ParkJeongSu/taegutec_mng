@@ -163,6 +163,11 @@ public class LotCarrierMappingRepositoryImpl implements LotCarrierMappingReposit
         return new PageImpl<>(converted, pageable, total);
     }
 
+    @Override
+    public List<LotCarrierMapping> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber, List<String> productionStatus) {
+        return jpaRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(orderId,orderLineNumber,productionStatus).stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
         if (sort.isSorted()) {

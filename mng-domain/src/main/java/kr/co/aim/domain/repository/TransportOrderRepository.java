@@ -38,6 +38,12 @@ public interface TransportOrderRepository {
             String workStationId
     );
 
+    List<TransportOrder> findOutboundOrderForTransportRequest(
+            String transportType,
+            List<String> transportStatus,
+            String workStationId
+    );
+
     Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable);
 
 }

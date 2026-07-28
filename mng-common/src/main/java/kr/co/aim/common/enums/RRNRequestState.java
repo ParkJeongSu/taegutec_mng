@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum RRNRequestState implements MetaDataEnum {
-    WAIT("WAIT"),
+    REQUESTED("REQUESTED"),
     COMPLETED("COMPLETED"),
     TIMEOUT("TIMEOUT");
     private final String value;

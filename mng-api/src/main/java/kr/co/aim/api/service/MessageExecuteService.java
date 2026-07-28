@@ -5,12 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
+import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.payload.MaterialDeassignFromCarrier;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -95,7 +96,6 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierCleanJobCanceledBody> carrierCleanJobCanceled(BaseMessage<CarrierCleanJobCanceledBody> message) {
-        // TODO: 세정작업이 취소 되는 시나리오가 있는지 있다면, WMS에 보고해야하는지 확인
         return message;
     }
 
@@ -119,7 +119,6 @@ public class MessageExecuteService {
 
         Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
-            // TODO: 추후 확인 후 나중에 try catch 로 수정할지 고민
             return null;
         }
         Carrier carrier = optionalCarriers.get();
@@ -133,8 +132,6 @@ public class MessageExecuteService {
 
         carrier.cleanJobStarted(command);
         carrierService.save(carrier);
-
-        // TODO: 반환 후 wms에 어떤식으로 i/f 를 할건지 확인
         return message;
     }
 
@@ -160,7 +157,6 @@ public class MessageExecuteService {
 
         Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
-            // TODO: 추후 확인 후 나중에 try catch 로 수정할지 고민
             return null;
         }
         Carrier carrier = optionalCarriers.get();
@@ -174,8 +170,6 @@ public class MessageExecuteService {
 
         carrier.cleanJobEnded(command);
         carrierService.save(carrier);
-
-        // TODO: 반환 후 wms에 어떤식으로 i/f 를 할건지 확인
         return message;
     }
 
@@ -299,6 +293,11 @@ public class MessageExecuteService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
+    public void carrierInfoDownloadSendReply(BaseMessage<CarrierInfoDownloadSendReplyBody> message) {
+        log.info("business log nothing");
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
     public void carrierScanned(BaseMessage<CarrierScannedBody> message) {
         String messageName = message.getMessageName();
 
@@ -366,15 +365,9 @@ public class MessageExecuteService {
             InsertEventQueueReportVo insertEventQueueReportVo
                     = InsertEventQueueReportVo
                     .builder()
-                    //.transportJobName(transportJobName)
                     .messageName(messageName)
-                    //.optionalPort(optionalPort)
-                    //.optionalPortDef(optionalPortDef)
                     .carrierName(carrierName)
-//                    .actualZoneName()
-//                    .actualWeight()
                     .actualRackLocationId(currentPositionName)
-//                    .errorTexts()
                     .tx(tx)
                     .build();
             factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
@@ -395,15 +388,9 @@ public class MessageExecuteService {
             InsertEventQueueReportVo insertEventQueueReportVo
                     = InsertEventQueueReportVo
                     .builder()
-                    //.transportJobName(transportJobName)
                     .messageName(messageName)
-                    //.optionalPort(optionalPort)
-                    //.optionalPortDef(optionalPortDef)
                     .carrierName(carrierName)
-//                    .actualZoneName()
-//                    .actualWeight()
                     .actualRackLocationId(currentPositionName)
-//                    .errorTexts()
                     .tx(tx)
                     .build();
             factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
@@ -446,13 +433,21 @@ public class MessageExecuteService {
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
-    public void materialDeAssignedFromCarrier(BaseMessage<MaterialDeassignedFromCarrierBody> message) throws Exception{
-        // TODO: Carrier가 설비에 투입 후에 보고 Lot과의 관계를 끊고 Carrier 의 상태를 Empty로 변경 확인
+    public void materialUnAssignedFromCarrier(BaseMessage<MaterialUnassignedFromCarrierBody> message){
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
 
+        String equipmentName = message.getBody().getEquipmentName();
+        String portName = message.getBody().getPortName();
         String carrierName = message.getBody().getCarrierName();
+        String productionTaskId = message.getBody().getProductionTaskId();
+        String orderId = message.getBody().getOrderId();
+        String orderLineNumber = message.getBody().getOrderLineNumber();
+        BigDecimal quantity = message.getBody().getQuantity();
+        String carrierStatus = message.getBody().getCarrierStatus();
+        String mngKey = message.getBody().getMngKey();
+
         Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
         Carrier carrier;
         if(optionalCarriers.isEmpty()){
@@ -460,58 +455,54 @@ public class MessageExecuteService {
         }
         TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
         carrier = optionalCarriers.get();
-        CarrierDeassignCommand command = CarrierDeassignCommand.builder()
-                .transactionInfo(tx)
-                .quantity(BigDecimal.ZERO)
-                .carrierName(carrierName)
-                .capaState(CarrierCapaState.EMPTY.getValue())
-                .useState(CarrierUseState.AVAILABLE.getValue())
-                .build();
+        CarrierDeassignCommand command = null;
+        if(Objects.equals(quantity, BigDecimal.ZERO)){
+            command = CarrierDeassignCommand.builder()
+                    .transactionInfo(tx)
+                    .quantity(BigDecimal.ZERO)
+                    .carrierName(carrierName)
+                    .capaState(CarrierCapaState.EMPTY.getValue())
+                    .useState(CarrierUseState.AVAILABLE.getValue())
+                    .build();
+        }
+        else{
+            command = CarrierDeassignCommand.builder()
+                    .transactionInfo(tx)
+                    .quantity(quantity)
+                    .carrierName(carrierName)
+                    .capaState(CarrierCapaState.FULL.getValue())
+                    .useState(CarrierUseState.IN_USE.getValue())
+                    .build();
+        }
         carrier.deAssigned(command);
         carrier = carrierService.save(carrier);
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
 
-        // TODO: 자재를 Carrier 로부터 빼내고 Gal로 i/f
-        MaterialDeassignFromCarrier materialDeassignFromCarrier =
-                MaterialDeassignFromCarrier.builder()
-                        .carrierName(carrierName)
-                        .equipmentName("")
-                        .build();
-        String jsonPayload = objectMapper.writeValueAsString(materialDeassignFromCarrier);
-        // TODO: 아래의 로직을 factoryProcessStrategy 로 변경
-        // powder EventQueue
-        try{
-            InsertEventQueueReportVo insertEventQueueReportVo
-                    = InsertEventQueueReportVo
-                    .builder()
-//                    .transportJobName(transportJobName)
-//                    .messageName(messageName)
-//                    .port(port)
-//                    .portDef(portDef)
-                    .carrierName(carrierName)
-//                            .actualZoneName()
-//                            .actualWeight()
-//                            .actualRackLocationId()
-//                            .errorTexts()
-                    .tx(tx)
-                    .build();
-            factoryIfEventQueueStrategy.enqueueIfEventQueue(insertEventQueueReportVo);
-        }
-        catch(Exception e){
-            log.error("EventQueue enqueue error",e);
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        if(optionalLotCarrierMapping.isPresent()){
+            LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+            Optional<LotCarrierMapping> optionalNewLotCarrierMapping = lotCarrierMapping.deAssignedAndSplit(command);
+            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            historyService.saveHistory(lotCarrierMappingHistoryEntity);
+            if(optionalNewLotCarrierMapping.isPresent()){
+                LotCarrierMapping newLotCarrierMapping = optionalNewLotCarrierMapping.get();
+                newLotCarrierMapping = lotCarrierMappingService.save(newLotCarrierMapping);
+                LotCarrierMappingHistoryEntity newLotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(newLotCarrierMapping);
+                historyService.saveHistory(newLotCarrierMappingHistoryEntity);
+            }
         }
 
     }
 
     /**
-     * Carrier 와 Lot 데이터 분리
-     * 1. Carrier 의 정보 조회
+     * Carrier 와 Lot 데이터 결합
+     * 1. --
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
     public void materialAssignedToCarrier(BaseMessage<MaterialAssignedToCarrierBody> message) {
-        // TODO: Carrier가 설비에 투입 후에 보고 Lot과의 관계를 끊고 Carrier 의 상태를 Empty로 변경 확인
     }
 
     /**
@@ -560,13 +551,6 @@ public class MessageExecuteService {
 
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<DestinationReplyBody> destinationRequest(BaseMessage<DestinationRequestBody> message) {
-        // 과거에 중간 목적지가 있을때, 필요했던 메시지 현재로선 필요없음
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-        String transportJobName = message.getBody().getTransportJobName();
-        String carrierName = message.getBody().getCarrierName();
-
         return null;
     }
 
@@ -574,10 +558,7 @@ public class MessageExecuteService {
      * 포트의 새로운 캐리어를 요청합니다.
      * 1. 포트에 반송중인 job 조회
      * transferState -> ReservedToLoad로 변경
-     *
      * 2. 설비명으로 TaskJob Find
-     *
-     * 3. TaskJob 반환
      *
      * @param message 받은 메시지
      * @return TEX 로 보낼 메시지 객체
@@ -596,6 +577,10 @@ public class MessageExecuteService {
 
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
         return factoryProcessStrategy.transportOrderRequest(message);
+    }
+
+    public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message){
+        factoryProcessStrategy.orderAllocateRequest(message);
     }
 
     public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message){
@@ -701,6 +686,113 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierInfoDownloadSendBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
         return factoryProcessStrategy.loadCompleted(message);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<CarrierInfoDownloadSendBody> recipeTimeOutRequest(BaseMessage<RecipeTimeOutRequestBody> message) {
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+        String messageFrom = message.getMessageFrom();
+
+        String equipmentName = "";
+        String portName ="";
+        String carrierName = "";
+        String lastCarrierFlag = "";
+
+        Long lotCarrierMappingId = message.getBody().getId();
+
+        LotCarrierMapping lotCarrierMapping = lotCarrierMappingService.findById(lotCarrierMappingId);
+
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+
+        RecipeReplyCommand command = RecipeReplyCommand.builder()
+                .transactionInfo(tx)
+                .carrierName(lotCarrierMapping.getCarrierName())
+                .build();
+
+        lotCarrierMapping.recipeTimeOut(command);
+        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        historyService.saveHistory(historyEntity);
+
+        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(lotCarrierMapping.getCarrierName());
+
+        if(optionalCarrier.isEmpty()){
+            log.error("carrier not found");
+            return null;
+        }
+
+        Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
+
+        if(optionalLot.isEmpty()){
+            log.error("lot not found");
+            return null;
+        }
+
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(lotCarrierMapping.getProductionOrderId());
+        if(optionalProductionOrder.isEmpty()){
+            log.error("production order not found");
+            return null;
+        }
+
+        List<String> productionStatus = new ArrayList<>();
+        productionStatus.add(ProductionStatus.WAIT.getValue());
+        productionStatus.add(ProductionStatus.ALLOCATED.getValue());
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+                lotCarrierMapping.getOrderId(),
+                lotCarrierMapping.getOrderLineNumber(),
+                productionStatus
+        );
+
+        if(lotCarrierMappingList.isEmpty() || lotCarrierMappingList.size() == 1){
+            lastCarrierFlag = YN.Y.name();
+        }
+        else{
+            lastCarrierFlag = YN.N.name();
+        }
+
+        Carrier carrier = optionalCarrier.get();
+        equipmentName = carrier.getEquipmentName();
+        portName = carrier.getPortName();
+        carrierName = carrier.getCarrierName();
+
+        Lot lot = optionalLot.get();
+        ProductionOrder productionOrder = optionalProductionOrder.get();
+
+        BaseMessage<CarrierInfoDownloadSendBody> reply = new BaseMessage<>();
+        reply.setMessageName(MessageList.CARRIER_INFO_DOWNLOAD_SEND.getMessageName());
+        reply.setTransactionId(message.getTransactionId());
+        reply.setMessageFrom(SystemName.MNG.getValue());
+        reply.setMessageOwner(SystemName.MNG.getValue());
+        reply.setMessageTo(SystemName.EAS.getValue());
+        reply.setEventTime(message.getEventTime());
+        reply.setResultMessage("");
+        reply.setResultCode(ResultCode.OK.getValue());
+
+        RecipeBody recipeBody = new RecipeBody();
+        List<RecipeParameterListBody> recipeParameterListBodyList = new ArrayList<>();
+        recipeBody.setParameterList(recipeParameterListBodyList);
+
+        CarrierInfoDownloadSendBody body = CarrierInfoDownloadSendBody
+                .builder()
+                .equipmentName(equipmentName)
+                .portName(portName)
+                .carrierName(carrierName)
+                .productionTaskId(productionOrder.getId().toString())
+                .lotName(lot.getLotName())
+                .itemName(lot.getItemId())
+                .orderId(lotCarrierMapping.getOrderId())
+                .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
+                .quantity(lotCarrierMapping.getQuantity().toString())
+                .totalQuantity(lot.getTotalQuantity().toString())
+                .mngKey(lotCarrierMapping.getMngKey().toString())
+                .lastCarrierFlag(lastCarrierFlag)
+                .recipe(recipeBody)
+                .build();
+        reply.setBody(body);
+
+        return reply;
     }
 
     /**
@@ -879,24 +971,174 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobAborted(BaseMessage<ProcessJobAbortedBody> message) {
+        log.info("Business Logic Nothing");
     }
 
     /**
-     * 설비에 투입 후 보고
+     * 설비 생산 시작 보고
      *
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobStarted(BaseMessage<ProcessJobStartedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
+
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
-        String lotName = message.getBody().getLotName();
         String carrierName = message.getBody().getCarrierName();
+        String productionTaskId = message.getBody().getProductionTaskId();
         String recipeName = message.getBody().getRecipeName();
-        // TODO: ProcessJobStarted 보고 후 wms에 보고 해야한다면 어떤식으로 할지 논의
+        String orderId = message.getBody().getOrderId();
+        String orderLineNumber = message.getBody().getOrderLineNumber();
+        BigDecimal quantity = message.getBody().getQuantity();
+        String mngKey = message.getBody().getMngKey();
+        String lotName = message.getBody().getLotName();
+        String itemName = message.getBody().getItemName();
+
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(Long.parseLong(mngKey));
+        if(optionalLotCarrierMapping.isPresent()){
+            String productionStatus = null;
+            if(1 == 1){
+                // 환원로 설비
+                productionStatus = ProductionStatus.CONSUMED.getValue();
+            }
+            else if(2 == 2){
+                // 해포 설비
+                productionStatus = ProductionStatus.CONSUMED.getValue();
+            }
+            else if(3 == 3){
+                // 일반 조업 설비
+            }
+            LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+            TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
+            ProcessJobStartedCommand command =
+                    ProcessJobStartedCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .equipmentName(equipmentName)
+                            .recipeName(recipeName)
+                            .lotName(lotName)
+                            .itemName(itemName)
+                            .carrierName(carrierName)
+                            .orderId(orderId)
+                            .orderLineNumber(orderLineNumber)
+                            .productionOrderId( Long.parseLong(productionTaskId))
+                            .productionStatus(productionStatus)
+                            .processStatus(ProcessStatus.RUN.getValue())
+                            .quantity(quantity)
+                            .mngKey( Long.parseLong(mngKey))
+                            .jobStartTime(tx.eventTime())
+                            .build();
+            lotCarrierMapping.processJobStarted(command);
+            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            historyService.saveHistory(historyEntity);
+
+            // ProductionOrder 수량 데이터 변경
+            Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(lotCarrierMapping.getProductionOrderId());
+            if(optionalProductionOrder.isPresent()){
+                ProductionOrder productionOrder = optionalProductionOrder.get();
+
+            }
+
+            // TODO : GAL 조업 시작 보고 이때, 주의할 점은 해포 설비와 조업 설비 TC 코드 다름 주의
+
+            // insert EventQueue
+            try{
+                PowderEventQueueReportVo powderEventQueueReportVo
+                        = PowderEventQueueReportVo
+                        .builder()
+                        .messageName(messageName)
+                        .carrierName(carrierName)
+                        .tx(tx)
+                        .build();
+                factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+            }
+            catch(Exception e){
+                log.error("EventQueue enqueue error",e);
+            }
+        }
+    }
+
+    /**
+     * 설비 생산 완료 보고
+     *
+     * @param message 받은 메시지
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public void processJobEnded(BaseMessage<ProcessJobEndedBody> message) {
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
+
+        String equipmentName = message.getBody().getEquipmentName();
+        String portName = message.getBody().getPortName();
+        String carrierName = message.getBody().getCarrierName();
+        String productionTaskId = message.getBody().getProductionTaskId();
+        String productionTaskEnd = message.getBody().getProductionTaskEnd();
+        String recipeName = message.getBody().getRecipeName();
+        String orderId = message.getBody().getOrderId();
+        String orderLineNumber = message.getBody().getOrderLineNumber();
+        BigDecimal quantity = message.getBody().getQuantity();
+        List<MngKeyName> mngKeyNameList = message.getBody().getMngKeyList();
+        String lotName = message.getBody().getLotName();
+        String itemName = message.getBody().getItemName();
+
+        // TODO : productionTaskEnd == Y 인 경우 LOT의 totalQuantity 도 변경
+
+        if(ObjectUtils.isEmpty(mngKeyNameList)){
+            // ex) 환원로 설비의 경우 mngKeyName 을 줄수 없음
+            // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
+        }else if(mngKeyNameList.size() == 1){
+            // 일반적인 조업설비는 mngKeyName 이 1개
+            String mngKeyName = mngKeyNameList.get(0).getMngKeyName();
+            Long mngKey = Long.parseLong(mngKeyName);
+            Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(mngKey);
+            if(optionalLotCarrierMapping.isPresent()){
+                LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+                TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
+                ProcessJobEndedCommand command =
+                        ProcessJobEndedCommand
+                                .builder()
+                                .transactionInfo(tx)
+                                .equipmentName(equipmentName)
+                                .recipeName(recipeName)
+                                .lotName(lotName)
+                                .itemName(itemName)
+                                .carrierName(carrierName)
+                                .orderId(orderId)
+                                .orderLineNumber(orderLineNumber)
+                                .productionTaskEnd(productionTaskEnd)
+                                .productionOrderId(lotCarrierMapping.getProductionOrderId())
+                                .processStatus(ProcessStatus.WAIT.getValue())
+                                .quantity(quantity)
+                                .mngKey(mngKey)
+                                .jobEndTime(tx.eventTime())
+                                .build();
+                lotCarrierMapping.processJobEnded(command);
+                lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+                LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+                historyService.saveHistory(historyEntity);
+
+            }
+        }
+        else if(mngKeyNameList.size() > 1){
+            // ex) 해포 설비의 경우 mngKeyName 이 n개가 1개가 됨
+            // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
+        }
+
+        // TODO : GAL 조업 완료 보고 이때, 주의할 점은 해포 설비와 조업 설비 TC 코드 다름 주의 완료 보고, 그리고 next rrn 요청 보고
+    }
+
+    /**
+     * 설비에 투입 후 완료 후 데이터 보고
+     *
+     * @param message 받은 메시지
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public void processJobDataReport(BaseMessage<ProcessJobDataReportBody> message) {
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -911,22 +1153,48 @@ public class MessageExecuteService {
         String orderLineNumber = message.getBody().getOrderLineNumber();
         String mngKey = message.getBody().getTransactionId();
         RecipeBody recipeBody = message.getBody().getRecipe();
+        Long mngKeyToLong = Long.parseLong(mngKey);
+        String lastCarrierFlag = "";
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        //Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(mngKeyToLong);
         if(optionalLotCarrierMapping.isEmpty()){
             return null;
         }
         LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        RecipeReplyCommand command =
+                RecipeReplyCommand
+                        .builder()
+                        .transactionInfo(tx)
+                        .carrierName(lotCarrierMapping.getCarrierName())
+                        .build();
+        lotCarrierMapping.recipeRely(command);
+        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        historyService.saveHistory(historyEntity);
+
         Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
         if(optionalLot.isEmpty()){
             return null;
         }
         Lot lot = optionalLot.get();
 
-        // TODO:내일 아래거 수정
-        // 내일 저거 orderid 와 rrn 조회하고 gal requststate가 completed인게 하나면
-        // y이고 여러개면 n
+        List<String> productionStatus = new ArrayList<>();
+        productionStatus.add(ProductionStatus.WAIT.getValue());
+        productionStatus.add(ProductionStatus.ALLOCATED.getValue());
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+                orderId,
+                orderLineNumber,
+                productionStatus
+        );
 
+        if(lotCarrierMappingList.isEmpty() || lotCarrierMappingList.size() == 1){
+            lastCarrierFlag = YN.Y.name();
+        }
+        else{
+            lastCarrierFlag = YN.N.name();
+        }
 
 
         BaseMessage<CarrierInfoDownloadSendBody> request = new BaseMessage<>();
@@ -950,37 +1218,71 @@ public class MessageExecuteService {
                 .quantity(lotCarrierMapping.getQuantity().toString())
                 .totalQuantity(lot.getTotalQuantity().toString())
                 .mngKey(mngKey)
-                //.lastCarrierFlag()
+                .lastCarrierFlag(lastCarrierFlag)
                 .recipe(recipeBody)
                 .build();
         request.setBody(body);
         return request;
     }
-    /**
-     * 설비에 투입 후 완료 보고
-     *
-     * @param message 받은 메시지
-     */
+
     @Transactional(value = "mssqlTransactionManager")
-    public void processJobEnded(BaseMessage<ProcessJobEndedBody> message) {
-        // TODO : 작업종료와 Carrier Assign 을 분리하는지 이때 recipe 보고 하는지..
+    public BaseMessage<RecipeChangedRequestForEASBody> recipeChangedRequest(BaseMessage<RecipeChangedRequestForMANTIBody> message) {
         String eventName = message.getMessageName();
         String eventUser = message.getMessageOwner();
         String eventComment =  message.getResultMessage();
         String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String lotName = message.getBody().getLotName();
+        String orderId = message.getBody().getOrderId();
+        String orderLineNumber = message.getBody().getOrderLineNumber();
+        RecipeBody recipeBody = message.getBody().getRecipe();
 
-        // TODO: ProcessJobStarted 보고 후 wms에 보고 해야한다면 어떤식으로 할지 논의
+        BaseMessage<RecipeChangedRequestForEASBody> request = new BaseMessage<>();
+        request.setMessageName(MessageList.RECIPE_CHANGED_REQUEST.getMessageName());
+        request.setTransactionId(message.getTransactionId());
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.EAS.getValue());
+        request.setEventTime(message.getEventTime());
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        RecipeChangedRequestForEASBody body = RecipeChangedRequestForEASBody
+                .builder()
+                .equipmentName(equipmentName)
+                .orderId(orderId)
+                .orderLineNumber(orderLineNumber)
+                .recipe(recipeBody)
+                .build();
+        request.setBody(body);
+        return request;
     }
 
-    /**
-     * 설비에 투입 후 완료 후 데이터 보고
-     *
-     * @param message 받은 메시지
-     */
     @Transactional(value = "mssqlTransactionManager")
-    public void processJobDataReport(BaseMessage<ProcessJobDataReportBody> message) {
+    public BaseMessage<RecipeChangedReplyForMANTIBody> recipeChangedReply(BaseMessage<RecipeChangedReplyForEASBody> message) {
+        String eventName = message.getMessageName();
+        String eventUser = message.getMessageOwner();
+        String eventComment =  message.getResultMessage();
+        String equipmentName = message.getBody().getEquipmentName();
+        String orderId = message.getBody().getOrderId();
+        String orderLineNumber = message.getBody().getOrderLineNumber();
+        RecipeBody recipeBody = message.getBody().getRecipe();
+
+        BaseMessage<RecipeChangedReplyForMANTIBody> request = new BaseMessage<>();
+        request.setMessageName(MessageList.RECIPE_CHANGED_REPLY.getMessageName());
+        request.setTransactionId(message.getTransactionId());
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.MANTI.getValue());
+        request.setEventTime(message.getEventTime());
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        RecipeChangedReplyForMANTIBody body = RecipeChangedReplyForMANTIBody
+                .builder()
+                .equipmentName(equipmentName)
+                .orderId(orderId)
+                .orderLineNumber(orderLineNumber)
+                .recipe(recipeBody)
+                .build();
+        request.setBody(body);
+        return request;
     }
 
     /**
@@ -1540,10 +1842,10 @@ public class MessageExecuteService {
     }
 
     /**
-     * 설비의 communicationState 를 보고 받음
-     * 1. 설비 데이터 조회
-     * 2. 설비의 상태 변경 < 이건 좀 고민
-     * 3. history 생성
+     * 최초 입고시 자재와 Carrier 의 Assign 보고
+     * 1. --
+     * 2. --
+     * 3. --
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
@@ -1655,10 +1957,10 @@ public class MessageExecuteService {
     }
 
     /**
-     * 설비의 communicationState 를 보고 받음
-     * 1. 설비 데이터 조회
-     * 2. 설비의 상태 변경 < 이건 좀 고민
-     * 3. history 생성
+     * 자재와 Carrier Assign 후 창고 보관 요청 메시지
+     * 1. --
+     * 2. --
+     * 3. --
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
@@ -1667,7 +1969,6 @@ public class MessageExecuteService {
         // 1. message parsing
         // 2. WCS Message Request (TransportJobRequest)
         // 3. WMS Message Return
-
 
         BaseMessage<TransportJobReplyByWMSBody> reply = new BaseMessage<>();
         TransportJobReplyByWMSBody body = new TransportJobReplyByWMSBody();

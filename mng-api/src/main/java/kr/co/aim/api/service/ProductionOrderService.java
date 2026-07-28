@@ -6,6 +6,7 @@ import kr.co.aim.common.condition.*;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProductionOrderCreateCommand;
+import kr.co.aim.domain.command.ProductionOrderUpdateStateCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDPEntity;
@@ -106,6 +107,26 @@ public class ProductionOrderService {
         ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(savedProductionOrder);
         historyService.saveHistory(historyEntity);
         return savedProductionOrder;
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public Optional<ProductionOrder> updateOrderState(TransactionInfo tx ,Long productionOrderId, String orderState){
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(productionOrderId);
+        if(optionalProductionOrder.isPresent()){
+            ProductionOrder productionOrder = optionalProductionOrder.get();
+            ProductionOrderUpdateStateCommand command =
+                    ProductionOrderUpdateStateCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .productionOrderState(orderState)
+                            .build();
+            productionOrder.updateState(command);
+            productionOrder = productionOrderRepository.save(productionOrder);
+            ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(productionOrder);
+            historyService.saveHistory(historyEntity);
+            return Optional.of(productionOrder);
+        }
+        return Optional.empty();
     }
 
     @Transactional("mssqlTransactionManager")

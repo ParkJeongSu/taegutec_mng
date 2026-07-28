@@ -3,8 +3,15 @@ package kr.co.aim.domain.model;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.common.enums.ProcessStatus;
+import kr.co.aim.common.enums.RRNRequestState;
+import kr.co.aim.common.handler.HasTransactionInfo;
+import kr.co.aim.domain.command.ProcessJobEndedCommand;
+import kr.co.aim.domain.command.ProcessJobStartedCommand;
 import kr.co.aim.domain.command.ProductionOrderCreateCommand;
+import kr.co.aim.domain.command.ProductionOrderUpdateStateCommand;
 import lombok.*;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,7 +22,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @ToString
 @Builder
-public class ProductionOrder {
+public class ProductionOrder implements HasTransactionInfo {
 
     private Long id;
     private String orderId;
@@ -90,6 +97,29 @@ public class ProductionOrder {
                 .eventUser(command.getTransactionInfo().eventUser())
                 .eventComment(command.getTransactionInfo().eventComment())
                 .build();
+    }
+
+    public void updateState(ProductionOrderUpdateStateCommand command){
+        apply(command.getTransactionInfo());
+        setProductionOrderState(command.getProductionOrderState());
+    }
+
+    public void processJobStarted(ProcessJobStartedCommand command){
+        this.apply(command.getTransactionInfo());
+        setCarrierName(command.getCarrierName());
+        setReleasedQuantity(getReleasedQuantity().add(command.getQuantity()));
+        setStartedQuantity(getStartedQuantity().add(command.getQuantity()));
+        if(ObjectUtils.isEmpty(getReleaseTime())){
+            setReleaseTime(command.getTransactionInfo().eventTime());
+        }
+    }
+
+    public void processJobEnded(ProcessJobEndedCommand command){
+        this.apply(command.getTransactionInfo());
+        setCarrierName(command.getCarrierName());
+        setReleasedQuantity(getReleasedQuantity().subtract(command.getQuantity()));
+        setEndedQuantity(getEndedQuantity().add(command.getQuantity()));
+        setCompleteTime(command.getTransactionInfo().eventTime());
     }
 
 }

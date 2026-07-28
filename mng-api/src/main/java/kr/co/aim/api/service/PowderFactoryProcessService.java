@@ -13,9 +13,11 @@ import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
+import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
+import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final CarrierSelectionService carrierSelectionService;
     private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingMapper lotCarrierMappingMapper;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -272,6 +275,8 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
 
+        LotCarrierMapping lotCarrierMapping = null;
+
         if(StringUtils.isEmpty(carrierName)){
             return null;
         }
@@ -313,15 +318,16 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         historyService.saveHistory(carrierHistoryEntity);
 
         Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
-        if(optionalLotCarrierMapping.isEmpty()){
-            return null;
+        if(optionalLotCarrierMapping.isPresent()){
+            lotCarrierMapping = optionalLotCarrierMapping.get();
+            lotCarrierMapping.loadCompleted(command);
+            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            historyService.saveHistory(historyEntity);
         }
-        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
-        lotCarrierMapping.loadCompleted(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+
 
         // OUTPUT PORT 의 경우 EMPTY CONTAINER 인걸 체크 하고, CarrierInfoDownLoadSend
-
         // INPUT PORT 의 경우 MANTI 로 RECIPE Parameter 요청
 
         if(StringUtils.equals(PortType.OUTPUT.getValue(),portDef.getPortType())){
@@ -349,7 +355,8 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                     .build();
             reply.setBody(body);
             return reply;
-        }else if(StringUtils.equals(PortType.INPUT.getValue(),portDef.getPortType())){
+        }
+        else if(StringUtils.equals(PortType.INPUT.getValue(),portDef.getPortType())){
 
             BaseMessage<RecipeRequestBody> mantiRequestMessage = new BaseMessage<>();
             mantiRequestMessage.setMessageName(MessageList.RECIPE_REQUEST.getMessageName());
@@ -631,6 +638,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     @Override
     public void eventQueueReport(BaseMessage<EventQueueReportBody> message) {
+
+    }
+
+    @Override
+    public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message) {
 
     }
 }

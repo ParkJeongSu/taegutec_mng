@@ -88,6 +88,16 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 workStationId
         ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
     }
+
+    @Override
+    public List<TransportOrder> findOutboundOrderForTransportRequest(String transportType, List<String> transportStatus, String workStationId) {
+        return transportOrderJpaRepository.findOutboundOrderForTransportRequest(
+                transportType,
+                transportStatus,
+                workStationId
+        ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
     @Override
     public Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable) {
         JPAQuery<TransportOrderEntity> query = queryFactory

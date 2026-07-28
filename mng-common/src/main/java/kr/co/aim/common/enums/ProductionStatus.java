@@ -7,7 +7,9 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum ProductionStatus implements MetaDataEnum {
-    RESERVED("RESERVED"),
-    WAIT("WAIT");
+    ALLOCATED("ALLOCATED"),
+    WAIT("WAIT"),
+    CONSUMED("CONSUMED"),
+    COMPLETED("COMPLETED");
     private final String value;
 }

@@ -23,6 +23,7 @@ public class ProductDef implements HasTransactionInfo {
     private String description2;
     private BigDecimal ratio;
     private BigDecimal defaultReceiveQuantity;
+    private BigDecimal toleranceVal;
     private String eventName;
     private LocalDateTime eventTime;
     private String eventUser;
@@ -38,6 +39,7 @@ public class ProductDef implements HasTransactionInfo {
                 .description2(command.getDescription2())
                 .ratio(command.getRatio())
                 .defaultReceiveQuantity(command.getDefaultReceiveQuantity())
+                .toleranceVal(command.getToleranceVal())
                 .eventName(command.getTransactionInfo().eventName())
                 .eventTime(command.getTransactionInfo().eventTime())
                 .eventUser(command.getTransactionInfo().eventUser())
@@ -56,6 +58,7 @@ public class ProductDef implements HasTransactionInfo {
         setEventTime(command.getTransactionInfo().eventTime());
         setEventUser(command.getTransactionInfo().eventUser());
         setEventComment(command.getTransactionInfo().eventComment());
+        setToleranceVal(command.getToleranceVal());
         return this;
     }
 }

@@ -9,18 +9,15 @@ import java.math.BigDecimal;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProcessJobStartedBody {
+public class MaterialUnassignedFromCarrierBody {
     private String equipmentName;
     private String portName;
     private String carrierName;
     private String productionTaskId;
-    private String recipeName;
     private String orderId;
     private String orderLineNumber;
     private BigDecimal quantity;
+    private String carrierStatus;
     private String mngKey;
-    private String lotName;
-    private String itemName;
-
 
 }

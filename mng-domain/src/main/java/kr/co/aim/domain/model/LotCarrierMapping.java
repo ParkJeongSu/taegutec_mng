@@ -2,13 +2,18 @@ package kr.co.aim.domain.model;
 
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.MantiRequestState;
+import kr.co.aim.common.enums.ProcessStatus;
+import kr.co.aim.common.enums.ProductionStatus;
+import kr.co.aim.common.enums.RRNRequestState;
 import kr.co.aim.common.handler.HasTransactionInfo;
-import kr.co.aim.domain.command.LoadCompletedCommand;
-import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
+import kr.co.aim.domain.command.*;
 import lombok.*;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.Optional;
 
 @Setter
 @Getter
@@ -80,5 +85,63 @@ public class LotCarrierMapping implements HasTransactionInfo {
         // port에 도착한 시간 기록
         setMantiRequestTime(command.getTransactionInfo().eventTime());
         setMantiReplyTime(null);
+    }
+
+    public void recipeRely(RecipeReplyCommand command){
+        this.apply(command.getTransactionInfo());
+        setMantiRequestState(MantiRequestState.COMPLETED.getValue());
+        setMantiReplyTime(command.getTransactionInfo().eventTime());
+    }
+
+    public void recipeTimeOut(RecipeReplyCommand command){
+        this.apply(command.getTransactionInfo());
+        setMantiRequestState(MantiRequestState.TIMEOUT.getValue());
+    }
+
+    public Optional<LotCarrierMapping> deAssignedAndSplit(CarrierDeassignCommand command){
+        this.apply(command.getTransactionInfo());
+        if(Objects.equals(quantity, BigDecimal.ZERO)){
+            setCarrierName(null);
+            return Optional.empty();
+        }
+        else{
+            setQuantity( getQuantity().subtract(command.getQuantity()));
+            LotCarrierMapping newLotCarrierMapping = LotCarrierMapping.builder()
+                    .id(TsidUtils.nextId())
+                    .lotName(getLotName())
+                    .carrierName(command.getCarrierName())
+                    .orderId(getOrderId())
+                    .orderLineNumber(getOrderLineNumber())
+                    .productionStatus(ProductionStatus.WAIT.getValue())
+                    .processStatus(ProcessStatus.WAIT.getValue())
+                    .quantity(command.getQuantity())
+                    .holdState(getHoldState())
+                    .reasonCode(getReasonCode())
+                    .eventName(command.getTransactionInfo().eventName())
+                    .eventTime(command.getTransactionInfo().eventTime())
+                    .eventUser(command.getTransactionInfo().eventUser())
+                    .eventComment(command.getTransactionInfo().eventComment())
+                    .build();
+
+            return Optional.of(newLotCarrierMapping);
+        }
+
+    }
+
+    public void processJobStarted(ProcessJobStartedCommand command){
+        this.apply(command.getTransactionInfo());
+        setJobStartTime(command.getTransactionInfo().eventTime());
+        setProcessStatus(ProcessStatus.RUN.getValue());
+        setProductionStatus(ObjectUtils.isEmpty(command.getProductionStatus()) ? getProductionStatus() : command.getProductionStatus());
+    }
+
+    public void processJobEnded(ProcessJobEndedCommand command){
+        this.apply(command.getTransactionInfo());
+        setQuantity(command.getQuantity());
+        setJobEndTime(command.getTransactionInfo().eventTime());
+        setProcessStatus(ProcessStatus.WAIT.getValue());
+        setRrnRequestState(RRNRequestState.REQUESTED.getValue());
+        setRrnRequestTime(command.getTransactionInfo().eventTime());
+        setRrnReplyTime(null);
     }
 }

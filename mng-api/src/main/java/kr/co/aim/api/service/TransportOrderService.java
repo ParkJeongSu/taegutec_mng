@@ -149,6 +149,15 @@ public class TransportOrderService {
     }
 
     @Transactional("mssqlTransactionManager")
+    public List<TransportOrder> findOutboundOrderForTransportRequest(
+            String transportType,
+            List<String> transportStatus,
+            String workStationId
+    ){
+        return transportOrderRepository.findOutboundOrderForTransportRequest(transportType, transportStatus, workStationId);
+    }
+
+    @Transactional("mssqlTransactionManager")
     public List<TransportOrder> findTransportOrderByCondition(String carrierName, String transportType, List<String> transportStatus) {
         return transportOrderRepository.findTransportOrderByCondition(carrierName, transportType, transportStatus);
     }

@@ -11,6 +11,7 @@ public interface LotCarrierMappingJpaRepository extends JpaRepository<LotCarrier
     List<LotCarrierMappingEntity> findByLotName(String lotName);
     Optional<LotCarrierMappingEntity> findByCarrierName(String carrierName);
     List<LotCarrierMappingEntity> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
+    List<LotCarrierMappingEntity> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus);
     Optional<LotCarrierMappingEntity> findByMngKey(Long mngKey);
     List<LotCarrierMappingEntity> findByMantiRequestStateAndMantiRequestTimeBeforeAndMantiReplyTimeIsNull(
             String mantiRequestState,

@@ -95,16 +95,28 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             // 만약 outbound order가 있다면, reserveToLoad 로 변경 후 반송요청 메시지 빈환
             if(StringUtils.isNotBlank(portDef.getWorkCenterName())){
 
+                List<String> transportStatus = new ArrayList<>();
+                transportStatus.add(TransportOrderStatus.CREATED.getValue());
+                transportStatus.add(TransportOrderStatus.REQUESTED.getValue());
+                transportStatus.add(TransportOrderStatus.ACCEPTED.getValue());
+
                 // 이 쿼리가 WORK_CENTER를 기준으로 FIFO 로 ORDER를 가져오는 로직
                 List<TransportOrder> transportOrders = transportOrderService.findOutboundOrderForTransportRequest(
                         TransportOrderType.OUTBOUND.getValue(),
-                        TransportOrderStatus.ACCEPTED.getValue(),
+                        transportStatus,
                         portDef.getWorkCenterName()
                 );
 
                 if(CollectionUtils.isNotEmpty(transportOrders)){
                     TransactionInfo tx = TransactionInfo.now(EventName.AUTO_TRANSPORT.getValue(), SystemName.MNG.getValue(), EventName.AUTO_TRANSPORT.getValue());
                     TransportOrder transportOrder = transportOrders.get(0);
+
+                    if(
+                            StringUtils.equals(TransportOrderStatus.CREATED.getValue(),transportOrder.getTransportStatus())
+                            || StringUtils.equals(TransportOrderStatus.REQUESTED.getValue(),transportOrder.getTransportStatus())
+                    ){
+                        throw new RuntimeException("It hasn't been approved yet.");
+                    }
 
                     Optional<TransportJob> optionalTransportJob = transportJobService.findByOrderId(transportOrder.getTransportOrderId());
 
@@ -1130,5 +1142,10 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 log.error("increase & reportFail id {} ",ifEventQueue.getId());
             }
         }
+    }
+
+    @Override
+    public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message) {
+
     }
 }

@@ -6,14 +6,9 @@ import lombok.RequiredArgsConstructor;
 
 @Getter
 @RequiredArgsConstructor
-public enum ContainerType implements MetaDataEnum {
-    SCRAP("SCRAP"),
-    NONE("NO"),
-    BTO_YTO("TO"),
-    DOPING("DO"),
-    CARBON("CB"),
-    CARBON_WEIGHING("CW"),
-    WPR_WP("WP"),
-    WCM_WC("WC");
+public enum YN implements MetaDataEnum {
+    Y("Y"),
+    N("N");
+
     private final String value;
 }
