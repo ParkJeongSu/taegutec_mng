@@ -13,6 +13,7 @@ public class AllocatedCommand {
     private final String orderId;
     private final String orderLineNumber;
     private final Long productionOrderId;
+    private final Integer seq;
     private final String productionStatus;
 
 }

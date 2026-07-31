@@ -619,15 +619,17 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         // 5. 선택된 캐리어 및 오더 상태 변경
         if (CollectionUtils.isNotEmpty(selectedMappings)) {
             TransactionInfo transactionInfo = TransactionInfo.now(EventName.ALLOCATE.getValue(), SystemName.MNG.getValue(), "Carrier Allocated by DP Knapsack");
-            AllocatedCommand command =
-                    AllocatedCommand
-                            .builder()
-                            .orderId(productionOrder.getOrderId())
-                            .orderLineNumber(productionOrder.getOrderLineNumber())
-                            .productionOrderId(productionOrder.getId())
-                            .productionStatus(ProductionStatus.ALLOCATED.getValue())
-                            .build();
+            int seq = 0;
             for (LotCarrierMapping mapping : selectedMappings) {
+                AllocatedCommand command =
+                        AllocatedCommand
+                                .builder()
+                                .orderId(productionOrder.getOrderId())
+                                .orderLineNumber(productionOrder.getOrderLineNumber())
+                                .productionOrderId(productionOrder.getId())
+                                .seq(seq++)
+                                .productionStatus(ProductionStatus.ALLOCATED.getValue())
+                                .build();
                 mapping.allocated(command);
                 mapping = lotCarrierMappingService.save(mapping);
                 LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(mapping);

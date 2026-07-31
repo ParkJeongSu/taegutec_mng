@@ -15,14 +15,16 @@ import java.util.Arrays;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
+@RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 @Profile({"pex","tex","scheduler"})
 public class CarrierSelectionService {
 
-    // 소수점 3자리(NUMERIC 15,3) 보정을 위한 스케일 배수
-    private static final int SCALE_FACTOR = 1000;
+    // 100톤 기준 수량 ( 단위: kg, 100,000 kg )
+    private static final BigDecimal LARGE_ORDER_THRESHOLD = new BigDecimal("100000");
+    private static final int DEFAULT_SCALE_FACTOR = 1000; // 일반 오더 (소수점 3자리 보정)
+    private static final int LARGE_ORDER_SCALE_FACTOR = 1;  // 100톤 이상 대형 오더 (1kg 단위)
 
     /**
      * DP(0-1 Knapsack) 기반 캐리어 최적 조합 선택
@@ -38,11 +40,18 @@ public class CarrierSelectionService {
             return selectedList;
         }
 
+        // 100톤 이상 여부에 따라 SCALE_FACTOR 동적 결정
+        int scaleFactor = DEFAULT_SCALE_FACTOR;
+        if (targetQuantity.compareTo(LARGE_ORDER_THRESHOLD) >= 0) {
+            scaleFactor = LARGE_ORDER_SCALE_FACTOR;
+            log.info("Large order detected (Target: {} >= 100t). SCALE_FACTOR adjusted to {}", targetQuantity, scaleFactor);
+        }
+
         BigDecimal safeTolerance = (toleranceQuantity != null) ? toleranceQuantity : BigDecimal.ZERO;
 
-        // 1. BigDecimal -> int 스케일 변환
-        int targetWeight = scaleToInt(targetQuantity);
-        int tolerance = scaleToInt(safeTolerance);
+        // 1. BigDecimal -> int 스케일 변환 (결정된 scaleFactor 전달)
+        int targetWeight = scaleToInt(targetQuantity, scaleFactor);
+        int tolerance = scaleToInt(safeTolerance, scaleFactor);
         int maxPossibleWeight = targetWeight + tolerance;
 
         int n = availablePool.size();
@@ -62,7 +71,7 @@ public class CarrierSelectionService {
                 continue;
             }
 
-            int currentWeight = scaleToInt(mapping.getQuantity());
+            int currentWeight = scaleToInt(mapping.getQuantity(), scaleFactor);
 
             // 용량을 초과하는 항목은 제외
             if (currentWeight > maxPossibleWeight || currentWeight <= 0) {
@@ -107,21 +116,19 @@ public class CarrierSelectionService {
             LotCarrierMapping selectedMapping = availablePool.get(carrierIdx);
             selectedList.add(selectedMapping);
 
-            int usedWeight = scaleToInt(selectedMapping.getQuantity());
+            int usedWeight = scaleToInt(selectedMapping.getQuantity(), scaleFactor);
             curr -= usedWeight;
         }
 
         return selectedList;
     }
 
-    private int scaleToInt(BigDecimal value) {
+    private int scaleToInt(BigDecimal value, int scaleFactor) {
         if (value == null) {
             return 0;
         }
         return value.setScale(3, RoundingMode.HALF_UP)
-                .multiply(BigDecimal.valueOf(SCALE_FACTOR))
+                .multiply(BigDecimal.valueOf(scaleFactor))
                 .intValue();
     }
-
-
 }

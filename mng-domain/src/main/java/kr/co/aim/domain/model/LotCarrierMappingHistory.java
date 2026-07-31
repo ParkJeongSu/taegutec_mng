@@ -19,10 +19,14 @@ public class LotCarrierMappingHistory implements IBaseHistoryEntity {
     private String carrierName;
     private String orderId;
     private String orderLineNumber;
+    private Long productionOrderId;
+    private Integer seq;
+    private String productionStatus;
     private String processStatus;
     private BigDecimal quantity;
     private BigDecimal galQuantity;
     private Long mngKey;
+    private LocalDateTime validationTime;
     private LocalDateTime jobStartTime;
     private LocalDateTime jobEndTime;
     private String mantiRequestState;
@@ -31,6 +35,7 @@ public class LotCarrierMappingHistory implements IBaseHistoryEntity {
     private String rrnRequestState;
     private LocalDateTime rrnRequestTime;
     private LocalDateTime rrnReplyTime;
+    private String nextEquipmentName;
     private String holdState;
     private String reasonCode;
     private String eventName;

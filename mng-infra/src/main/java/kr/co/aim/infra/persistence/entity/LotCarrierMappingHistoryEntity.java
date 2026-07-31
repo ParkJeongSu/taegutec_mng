@@ -35,6 +35,15 @@ public class LotCarrierMappingHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "ORDER_LINE_NUMBER")
     private String orderLineNumber;
 
+    @Column(name = "PRODUCTION_ORDER_ID")
+    private Long productionOrderId;
+
+    @Column(name = "SEQ")
+    private Integer seq;
+
+    @Column(name = "PRODUCTION_STATUS")
+    private String productionStatus;
+
     @Column(name = "PROCESS_STATUS")
     private String processStatus;
 
@@ -46,6 +55,9 @@ public class LotCarrierMappingHistoryEntity implements IBaseHistoryEntity {
 
     @Column(name = "MNG_KEY")
     private Long mngKey;
+
+    @Column(name = "VALIDATION_TIME")
+    private LocalDateTime validationTime;
 
     @Column(name = "JOB_START_TIME")
     private LocalDateTime jobStartTime;
@@ -70,6 +82,9 @@ public class LotCarrierMappingHistoryEntity implements IBaseHistoryEntity {
 
     @Column(name = "RRN_REPLY_TIME")
     private LocalDateTime rrnReplyTime;
+
+    @Column(name = "NEXT_EQUIPMENT_NAME")
+    private String nextEquipmentName;
 
     @Column(name = "HOLD_STATE")
     private String holdState;
