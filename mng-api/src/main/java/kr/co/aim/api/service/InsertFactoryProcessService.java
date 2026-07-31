@@ -231,10 +231,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 Optional<PortDef> optionalPortDef = portDefService.findByLocationId(locationId);
                 if(optionalPortDef.isPresent()){
                     PortDef portDef = optionalPortDef.get();
-//                    sourceEquipmentName = portDef.getId().getEquipmentName();
-//                    sourcePortName = portDef.getId().getPortName();
-//                    sourcePositionTypeName = PositionTypeName.PORT.getValue();
-//                    sourcePositionName = portDef.getId().getPortName();
 
                     sourceEquipmentName = portDef.getEquipmentName();
                     sourcePortName = portDef.getPortName();
@@ -299,20 +295,19 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
         String carrierName = message.getBody().getCarrierName();
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
-        String messageName =  message.getMessageName();
         String transportJobName = message.getBody().getTransportJobName();
         String actualWeight = message.getBody().getActualWeight();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         UnLoadCompletedCommand command = UnLoadCompletedCommand.builder()
                 .transactionInfo(tx)
                 .carrierName(carrierName)
@@ -370,20 +365,19 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierInfoDownloadSendBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
         String carrierName = message.getBody().getCarrierName();
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
-        String messageName =  message.getMessageName();
         String transportJobName = message.getBody().getTransportJobName();
         String actualWeight = message.getBody().getActualWeight();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         LoadCompletedCommand command = LoadCompletedCommand.builder()
                 .transactionInfo(tx)
                 .carrierTransportState(CarrierTransportState.ON_PORT.getValue())
@@ -431,11 +425,10 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Transactional(value = "mssqlTransactionManager")
     public void carrierLocationChanged(BaseMessage<CarrierLocationChangedBody> message) {
 
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
         String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
+
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
         String carrierType = message.getBody().getCarrierType();
@@ -451,16 +444,15 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobCancelCompleted(BaseMessage<TransportJobCancelCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        String messageName =  message.getMessageName();
         String carrierName = message.getBody().getCarrierName();
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
         String currentPositionType = message.getBody().getCurrentPositionType();
         String currentPositionName = message.getBody().getCurrentPositionName();
-        String currentPortName = currentPositionName;
+        String currentPortName = null;
         String transportJobName = message.getBody().getTransportJobName();
         String transportType =  message.getBody().getTransportType();
         String orderId =  message.getBody().getOrderId();
@@ -469,7 +461,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String travelProfile =  message.getBody().getTravelProfile();
         List<TransportJobCancelCompletedReasonBody> reasons = message.getBody().getReasons();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        if(StringUtils.equals(PositionTypeName.PORT.getValue(),currentPositionType)){
+            currentPortName =currentPositionName;
+        }
+
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
@@ -485,8 +481,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             historyService.saveHistory(transportJobHistoryEntity);
             Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
             Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
-            // insert EventQueue
 
+            // insert EventQueue
             try{
                 if(CollectionUtils.isNotEmpty(reasons)){
                     List<TransportCancelReasonVo> cancelReasonVoList = new ArrayList<>();
@@ -506,9 +502,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .optionalPortDef(optionalPortDef)
                             .optionalPort(optionalPort)
                             .carrierName(carrierName)
-//                            .actualZoneName()
                             .actualWeight(actualWeight)
-//                            .actualRackLocationId()
                             .reasonList(cancelReasonVoList)
                             .tx(tx)
                             .build();
@@ -526,11 +520,10 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobCompleted(BaseMessage<TransportJobCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        String messageName =  message.getMessageName();
         String carrierName = message.getBody().getCarrierName();
         String transportJobName = message.getBody().getTransportJobName();
 
@@ -540,7 +533,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String destinationPositionTypeName = message.getBody().getDestinationPositionTypeName();
         String destinationPositionName = message.getBody().getDestinationPositionName();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         Optional<Port> optionalPort = Optional.empty();
         Optional<PortDef> optionalPortDef = Optional.empty();
 
@@ -607,13 +600,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobReply(BaseMessage<TransportJobReplyBody> message) {
         String messageName = message.getMessageName();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String resultCode = message.getResultCode();
-        String resultMessage = message.getResultMessage();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
@@ -683,9 +674,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobStarted(BaseMessage<TransportJobStartedBody> message) {
         String messageName = message.getMessageName();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String transportJobName = message.getBody().getTransportJobName();
         String transportType = message.getBody().getTransportType();
@@ -709,7 +699,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String actualWeight = message.getBody().getActualWeight();
         String carrierType = message.getBody().getCarrierType();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         if(StringUtils.equals(SystemName.GAL.getValue(),requestSource)){
             // 비관적 lock 시 EventQueue 넣으면서 에러 발생
@@ -831,9 +821,9 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
 
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -850,7 +840,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
         Port port = optionalPorts.get();
         if(!StringUtils.equals(PortTransportState.READY_TO_LOAD.getValue(),port.getTransportState())){
-            TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+            TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
             LoadRequestCommand command = LoadRequestCommand
                     .builder()
                     .transactionInfo(tx)
@@ -1025,13 +1015,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     @Override
     public void transportJobValidationReply(BaseMessage<TransportJobValidationReplyBody> message) {
         String messageName = message.getMessageName();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String resultCode = message.getResultCode();
-        String resultMessage = message.getResultMessage();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();

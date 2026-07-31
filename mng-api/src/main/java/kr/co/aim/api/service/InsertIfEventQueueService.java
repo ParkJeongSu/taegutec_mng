@@ -49,16 +49,6 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
 
     private final IfEventQueueService ifEventQueueService;
 
-    /**
-     * 1. 큐에 처음 넣을 때 (신규 생성)
-     * try{
-     * InterfaceEventLogService.enqueue(vo);
-     * }
-     * catch(Exception e){
-     * log.error("로그 저장 실패");
-     * }
-     * 위 방식으로 호출 해야함
-     */
     @Override
     @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
     public void enqueueIfEventQueue(Object vo) {
@@ -1650,6 +1640,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             return ifEventQueueDtoList;
         }
         else if(StringUtils.equals(DetailPortType.HORSESHOE_WORKSTATION.getValue(), portDef.getDetailPortType())){
+            // TODO: HorseShoe 관련해서 unloadCompleted 때 105 보고 하는지 확인
             // Inbound Workstation empty
             // 105 repot
             // transportJobName 은 존재
@@ -1864,122 +1855,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             }
         }
         else if(StringUtils.equals(DetailPortType.RACK_OUT_STAGE.getValue(), portDef.getDetailPortType())){
-            // inbound case
-            // outbound case
-            // 109 Out Of Rack report
-            // transportJobName exists
-            // TODO : LOADCOMPETED 인지 UNLOADCOMPLETED 인지 확인후 해당 코드 삭제 혹은 주석 풀기
-//            TransportOrder transportOrder = null;
-//            if(StringUtils.isNotBlank(transportJobName)){
-//                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-//                if(optionalTransportJob.isPresent()){
-//                    TransportJob transportJob = optionalTransportJob.get();
-//                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-//                    if(optionalTransportOrder.isPresent()){
-//                        transportOrder = optionalTransportOrder.get();
-//                    }
-//                }
-//            }
-//            if(ObjectUtils.isEmpty(transportOrder)){
-//                List<String> transportStatus = new ArrayList<>();
-//                transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-//                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
-//                        carrierName,
-//                        TransportOrderType.OUTBOUND.getValue(),
-//                        transportStatus);
-//                if(transportOrders.isEmpty()){
-//                    throw new RuntimeException("Not Exists TransportOrder");
-//                }
-//                transportOrder = transportOrders.get(0);
-//            }
-//            eventType = GALTransportStatus.OUT_OF_RACK.name();
-//            transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
-//            idocId = transportOrder.getIdocId().toString();
-//            orderId = transportOrder.getTransportOrderId();
-//            orderLineNumber = "";
-//            orderType = transportOrder.getTransportType();
-//            galId = transportOrder.getGalId();
-//            actualLocationId = portDef.getLocationId();
-//            actualWorkStationId = portDef.getWorkCenterName();
-//
-//            IfEventQueueDto dto = IfEventQueueDto
-//                    .builder()
-//                    .transportJobName(transportJobName)
-//                    .messageName(messageName)
-//                    .eventType(eventType)
-//                    .transactionCode(transactionCode)
-//                    .carrierName(carrierName)
-//                    .idocId(idocId)
-//                    .galId(galId)
-//                    .orderId(orderId)
-//                    .orderLineNumber(orderLineNumber)
-//                    .orderType(orderType)
-//                    .errorText(errorText)
-//                    .actualWeight(vo.getActualWeight())
-//                    .actualZoneName(vo.getActualZoneName())
-//                    .actualLocationId(actualLocationId)
-//                    .actualWorkStationId(actualWorkStationId)
-//                    .build();
-//            ifEventQueueDtoList.add(dto);
+
         }
         else if(StringUtils.equals(DetailPortType.RACK_BOTH_STAGE.getValue(), portDef.getDetailPortType())){
-            // inbound case
-            // outbound case
-            // 109 Out Of Rack report
-            // transportJobName exists
-            // TODO : LOADCOMPETED 인지 UNLOADCOMPLETED 인지 확인후 해당 코드 삭제 혹은 주석 풀기
-//            TransportOrder transportOrder = null;
-//            if(StringUtils.isNotBlank(transportJobName)){
-//                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-//                if(optionalTransportJob.isPresent()){
-//                    TransportJob transportJob = optionalTransportJob.get();
-//                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
-//                    if(optionalTransportOrder.isPresent()){
-//                        transportOrder = optionalTransportOrder.get();
-//                    }
-//                }
-//            }
-//            if(ObjectUtils.isEmpty(transportOrder)){
-//                List<String> transportStatus = new ArrayList<>();
-//                transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-//                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
-//                        carrierName,
-//                        TransportOrderType.OUTBOUND.getValue(),
-//                        transportStatus);
-//                if(transportOrders.isEmpty()){
-//                    throw new RuntimeException("Not Exists TransportOrder");
-//                }
-//                transportOrder = transportOrders.get(0);
-//            }
-//            eventType = GALTransportStatus.OUT_OF_RACK.name();
-//            transactionCode = GALTransportStatus.OUT_OF_RACK.getValue();
-//            idocId = transportOrder.getIdocId().toString();
-//            orderId = transportOrder.getTransportOrderId();
-//            orderLineNumber = "";
-//            orderType = transportOrder.getTransportType();
-//            galId = transportOrder.getGalId();
-//            actualLocationId = portDef.getLocationId();
-//            actualWorkStationId = portDef.getWorkCenterName();
-//
-//            IfEventQueueDto dto = IfEventQueueDto
-//                    .builder()
-//                    .transportJobName(transportJobName)
-//                    .messageName(messageName)
-//                    .eventType(eventType)
-//                    .transactionCode(transactionCode)
-//                    .carrierName(carrierName)
-//                    .idocId(idocId)
-//                    .galId(galId)
-//                    .orderId(orderId)
-//                    .orderLineNumber(orderLineNumber)
-//                    .orderType(orderType)
-//                    .errorText(errorText)
-//                    .actualWeight(vo.getActualWeight())
-//                    .actualZoneName(vo.getActualZoneName())
-//                    .actualLocationId(actualLocationId)
-//                    .actualWorkStationId(actualWorkStationId)
-//                    .build();
-//            ifEventQueueDtoList.add(dto);
+
         }
         else if(StringUtils.equals(DetailPortType.RACK_IN_STAGE.getValue(), portDef.getDetailPortType())){
             return null;

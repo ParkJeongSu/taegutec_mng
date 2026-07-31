@@ -1,6 +1,5 @@
 package kr.co.aim.api.vo.transportJob;
 
-import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,6 +1,5 @@
 package kr.co.aim.domain.command;
 
-import jakarta.persistence.Column;
 import kr.co.aim.common.record.TransactionInfo;
 import lombok.Builder;
 import lombok.Getter;

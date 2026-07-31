@@ -78,6 +78,14 @@ public class LotCarrierMapping implements HasTransactionInfo {
                 .build();
     }
 
+    public void allocated(AllocatedCommand command){
+        this.apply(command.getTransactionInfo());
+        setOrderId(command.getOrderId());
+        setOrderLineNumber(command.getOrderLineNumber());
+        setProductionOrderId(command.getProductionOrderId());
+        setProductionStatus(command.getProductionStatus());
+    }
+
     public void loadCompleted(LoadCompletedCommand command){
         this.apply(command.getTransactionInfo());
         setMngKey(TsidUtils.nextId());

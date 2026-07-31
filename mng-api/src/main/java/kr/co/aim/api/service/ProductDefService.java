@@ -38,6 +38,11 @@ public class ProductDefService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
+    public Optional<ProductDef> findByProductDefName(String productDefName){
+        return productDefRepository.findByProductDefName(productDefName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
     public ProductDef findById(Long id) {
         Optional<ProductDef> optional = productDefRepository.findById(id);
         if (optional.isEmpty()) {

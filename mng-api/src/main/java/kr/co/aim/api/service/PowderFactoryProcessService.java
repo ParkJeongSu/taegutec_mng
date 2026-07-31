@@ -1,8 +1,5 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.vo.carrier.CarrierDispatchRequestVo;
-import kr.co.aim.api.vo.carrier.CarrierSelectionResult;
-import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -10,7 +7,7 @@ import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.domain.repository.*;
+import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
@@ -30,6 +27,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,150 +41,45 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final HistoryService historyService;
 
+    private final WhereDispatchService whereDispatchService;
+    private final WhatDispatchService whatDispatchService;
+
     private final PortMapper portMapper;
     private final PortDefService portDefService;
     private final PortService portService;
+
+    private final ProductDefService productDefService;
 
     private final CarrierService carrierService;
     private final CarrierMapper carrierMapper;
 
     private final EquipmentService equipmentService;
+    private final EquipmentDefService equipmentDefService;
 
     private final TransportJobService  transportJobService;
     private final TransportJobMapper transportJobMapper;
-
+    private final ProductionOrderService productionOrderService;
     private final CarrierSelectionService carrierSelectionService;
     private final LotCarrierMappingService lotCarrierMappingService;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
+
+    private final PowderExternalInterfaceService powderExternalInterfaceService;
+    private final IfEventQueueService ifEventQueueService;
 
     private final RabbitTemplate rabbitTemplate;
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-        String portType = message.getBody().getPortType();
-        String portTransportMode = message.getBody().getPortTransportMode();
-
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
-        Optional<Port> optionalPorts =  portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
-        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
-        Optional<EquipmentDef> optionalEquipmentDef = equipmentService.findEquipmentDefByEquipmentName(equipmentName);
-
-        if(optionalPortDef.isEmpty()){
-            log.error("Not Exists PortDef [ equipmentName : {} , portName {} ]",equipmentName,portName);
-            return null;
-        }
-        if(optionalPorts.isEmpty()){
-            log.error("Not Exists Ports [ equipmentName : {} , portName {} ]",equipmentName,portName);
-            return null;
-        }
-        if(optionalEquipments.isEmpty()){
-            log.error("Not Exists Equipments [ equipmentName : {} ]",equipmentName);
-            return null;
-        }
-        if(optionalEquipmentDef.isEmpty()){
-            log.error("Not Exists Equipments [ equipmentName : {} ]",equipmentName);
-            return null;
-        }
-
-        Port port = optionalPorts.get();
-        PortDef portDef = optionalPortDef.get();
-        EquipmentDef equipmentDef = optionalEquipmentDef.get();
-        Equipment equipment = optionalEquipments.get();
-        List<CarrierSelectionResult> dispatchCarrierList = null;
-
-        BaseMessage<TransportJobRequestBody> reply = null;
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
-
-        CarrierDispatchRequestVo carrierDispatchRequestVo =
-                CarrierDispatchRequestVo
-                        .builder()
-                        .equipment(equipment)
-                        .equipmentDef(equipmentDef)
-                        .portDef(portDef)
-                        .port(port)
-                        .build();
-
-        // Validation TransportJob exists and transportJob State
-        List<TransportJob> avtiveTransportJobList = transportJobService.findActiveTransportJobs(equipmentName,portName);;
-
-        if(avtiveTransportJobList.isEmpty()){
-            if(PortType.INPUT.getValue().equals(portDef.getPortType())){
-                dispatchCarrierList = carrierSelectionService.selectCarrierByInputPort(carrierDispatchRequestVo);
-            }
-            else if(PortType.OUTPUT.getValue().equals(portDef.getPortType())){
-                dispatchCarrierList = carrierSelectionService.selectCarrierByOutputPort(carrierDispatchRequestVo);
-            }
-            // TODO: mix equipment 보내는 로직 보류
-
-            if(CollectionUtils.isNotEmpty(dispatchCarrierList)){
-                Carrier carrier =  dispatchCarrierList.get(0).getCarrier();
-                String orderId = dispatchCarrierList.get(0).getOrderId();
-                String orderLineNumber = dispatchCarrierList.get(0).getOrderLineNumber();
-                TransportJobCreateCommand command =
-                        TransportJobCreateCommand.builder()
-                                .transportJobName(carrier.getCarrierName() + tx.eventTime().toString().substring(0,12))
-                                .carrierName(carrier.getCarrierName())
-                                .sourceEquipmentName(carrier.getEquipmentName())
-                                .sourcePortName(carrier.getPortName())
-                                .sourceZoneName(carrier.getZoneName())
-                                .sourcePositionTypeName(carrier.getPositionTypeName())
-                                .sourcePositionName(carrier.getPositionName())
-                                .destinationEquipmentName(equipment.getEquipmentName())
-                                .destinationPortName(port.getPortName())
-                                .destinationZoneName("")
-                                .destinationPositionTypeName("")
-                                .destinationPositionName("")
-                                .createTime(tx.eventTime())
-                                .requestSource(TransportJobRequestType.EQP.getValue())
-                                .orderId( orderId )
-                                .transactionInfo(tx)
-                                .build();
-
-                TransportJob transportJob = transportJobService.createTransportJob(command);
-
-                reply = new BaseMessage<>();
-
-                reply.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
-
-                reply.setTransactionId(message.getTransactionId());
-                reply.setMessageFrom(SystemName.MNG.getValue());
-                reply.setMessageOwner(SystemName.MNG.getValue());
-                reply.setMessageTo(SystemName.WCS.getValue());
-                reply.setEventTime(message.getEventTime());
-                reply.setResultMessage("");
-                reply.setResultCode(ResultCode.OK.getValue());
-
-                TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
-                reply.setBody(body);
-            }
-        }
-
-        TransportStateChangedVo vo =
-                TransportStateChangedVo
-                        .builder()
-                        .port(port)
-                        .portTransportState(PortTransportState.RESERVED_TO_LOAD)
-                        .tx(tx)
-                        .build();
-        portService.transportStateChanged(vo);
-
-        return reply;
+        return whatDispatchService.whatDispatchRequest(message);
     }
 
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -202,7 +95,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         Port port = optionalPorts.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         UnLoadRequestCommand command = UnLoadRequestCommand.builder()
                 .transactionInfo(tx)
                 .carrierName(carrierName)
@@ -264,9 +157,9 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierInfoDownloadSendBody> loadCompleted(BaseMessage<LoadCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String messageFrom = message.getMessageFrom();
 
         String equipmentName = message.getBody().getEquipmentName();
@@ -281,7 +174,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             return null;
         }
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         LoadCompletedCommand command = LoadCompletedCommand.builder()
                 .transactionInfo(tx)
                 .carrierTransportState(CarrierTransportState.ON_PORT.getValue())
@@ -395,9 +288,9 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void carrierLocationChanged(BaseMessage<CarrierLocationChangedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
@@ -417,7 +310,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         }
         Carrier carrier = optionalCarriers.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         LocationChangedCommand command = LocationChangedCommand.builder()
                 .transactionInfo(tx)
                 .equipmentName(currentEquipmentName)
@@ -436,16 +329,15 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobCancelCompleted(BaseMessage<TransportJobCancelCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        String messageName =  message.getMessageName();
         String carrierName = message.getBody().getCarrierName();
         String currentEquipmentName = message.getBody().getCurrentEquipmentName();
         String currentPositionType = message.getBody().getCurrentPositionType();
         String currentPositionName = message.getBody().getCurrentPositionName();
-        String currentPortName = currentPositionName;
+        String currentPortName = null;
         String transportJobName = message.getBody().getTransportJobName();
         String transportType =  message.getBody().getTransportType();
         String orderId =  message.getBody().getOrderId();
@@ -454,7 +346,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String travelProfile =  message.getBody().getTravelProfile();
         List<TransportJobCancelCompletedReasonBody> reasons = message.getBody().getReasons();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        if(StringUtils.equals(PositionTypeName.PORT.getValue(),currentPositionType)){
+            currentPortName = currentPositionName;
+        }
+
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
@@ -477,18 +373,17 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobCompleted(BaseMessage<TransportJobCompletedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        String messageName =  message.getMessageName();
         String carrierName = message.getBody().getCarrierName();
         String transportJobName = message.getBody().getTransportJobName();
 
         String actualWeight = message.getBody().getActualWeight();
         String actualZoneName = message.getBody().getDestinationZoneName();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
@@ -511,11 +406,10 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobReply(BaseMessage<TransportJobReplyBody> message) {
         String messageName = message.getMessageName();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
@@ -542,15 +436,14 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobStarted(BaseMessage<TransportJobStartedBody> message) {
         String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String carrierName = message.getBody().getCarrierName();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
 
         String transportJobName = message.getBody().getTransportJobName();
         String requestSource = message.getBody().getRequestSource();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         // 비관적 lock 시 EventQueue 넣으면서 에러 발생
         //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
@@ -574,12 +467,9 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierDispatchRequestBody> loadRequest(BaseMessage<LoadRequestBody> message) {
-        //TODO: POWDER , INSERT 로직 분리
-        // POWDER는 아래의 로직을 그대로 수행하면 되고
-        // INSERT는 PORT_DEF에서 오직 ROLE_TYPE이 INTERNAL 인 경우에만 변경
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -596,7 +486,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         Port port = optionalPorts.get();
         if(!StringUtils.equals(PortTransportState.READY_TO_LOAD.getValue(),port.getTransportState())){
-            TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+            TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
             LoadRequestCommand command = LoadRequestCommand
                     .builder()
                     .transactionInfo(tx)
@@ -638,11 +528,119 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     @Override
     public void eventQueueReport(BaseMessage<EventQueueReportBody> message) {
+        EventQueueReportBody body = message.getBody();
 
+        IfEventQueue ifEventQueue =
+                IfEventQueue
+                        .builder()
+                        .id(body.getId())
+                        .eventType(body.getEventType())
+                        .payload(body.getPayload())
+                        .ifStatus(body.getIfStatus())
+                        .carrierName(body.getCarrierName())
+                        .idocId(body.getIdocId())
+                        .orderId(body.getOrderId())
+                        .orderLineNumber(body.getOrderLineNumber())
+                        .retryCNT(body.getRetryCNT())
+                        .errMSG(body.getErrMSG())
+                        .createTime(body.getCreateTime())
+                        .updateTime(body.getUpdateTime())
+                        .build();
+
+        try {
+            // DB2 H2transReport
+            powderExternalInterfaceService.reportH2trans(ifEventQueue);
+            // ifEventQueue 상태를 Success 로 변경
+            ifEventQueueService.reportCompleted(ifEventQueue.getId());
+
+        } catch (Exception e) {
+            // retry cnt ++
+            // 만일 3초과면, ready -> fail 로 데이터 변경
+            log.error("reportFail id {} ",ifEventQueue.getId());
+            try {
+                Optional<IfEventQueue> optionalIfEventQueue
+                        = ifEventQueueService.increaseRetryCnt(ifEventQueue.getId());
+                if(optionalIfEventQueue.isPresent()){
+                    if(optionalIfEventQueue.get().getRetryCNT() > 3){
+                        ifEventQueueService.reportFailed(ifEventQueue.getId());
+                    }
+                }
+            } catch (Exception e1){
+                log.error("final report error", e1);
+                log.error("increase & reportFail id {} ",ifEventQueue.getId());
+            }
+        }
     }
 
     @Override
     public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message) {
+        OrderAllocateRequestBody body = message.getBody();
+        if (body == null || body.getId() == null) {
+            log.warn("Invalid OrderAllocateRequest message body");
+            return;
+        }
 
+        // 1. ProductionOrder 조회
+        Optional<ProductionOrder> optionalOrder = productionOrderService.findById(body.getId());
+        if (optionalOrder.isEmpty()) {
+            log.error("ProductionOrder not found. ID: {}", body.getId());
+            return;
+        }
+        ProductionOrder productionOrder = optionalOrder.get();
+
+        // 2. ProductDef 조회 (ITEM_NAME으로 TOLERANCE_VAL 가져옴)
+        Optional<ProductDef> optionalProductDef = productDefService.findByProductDefName(productionOrder.getItemName());
+        BigDecimal toleranceVal = BigDecimal.ZERO;
+        if (optionalProductDef.isPresent()) {
+            ProductDef productDef = optionalProductDef.get();
+            if (productDef.getToleranceVal() != null) {
+                toleranceVal = productDef.getToleranceVal();
+            }
+        }
+
+        // 3. 할당 가능한 LotCarrierMapping 목록 조회 (Inbound 시간순/생성순 정렬 데이터)
+        List<LotCarrierMapping> availableMappings = lotCarrierMappingService.findByOrderIdAndOrderLineNumber(
+                productionOrder.getOrderId(),
+                productionOrder.getOrderLineNumber()
+        );
+
+        if (CollectionUtils.isEmpty(availableMappings)) {
+            log.warn("No available LotCarrierMappings found for OrderId: {}, LineNo: {}", productionOrder.getOrderId(), productionOrder.getOrderLineNumber());
+            return;
+        }
+
+        // 4. DP 서비스를 통한 캐리어 최적 조합 선택
+        List<LotCarrierMapping> selectedMappings = carrierSelectionService.selectCarriers(
+                availableMappings,
+                productionOrder.getPlanQuantity(),
+                toleranceVal
+        );
+
+        // 5. 선택된 캐리어 및 오더 상태 변경
+        if (CollectionUtils.isNotEmpty(selectedMappings)) {
+            TransactionInfo transactionInfo = TransactionInfo.now(EventName.ALLOCATE.getValue(), SystemName.MNG.getValue(), "Carrier Allocated by DP Knapsack");
+            AllocatedCommand command =
+                    AllocatedCommand
+                            .builder()
+                            .orderId(productionOrder.getOrderId())
+                            .orderLineNumber(productionOrder.getOrderLineNumber())
+                            .productionOrderId(productionOrder.getId())
+                            .productionStatus(ProductionStatus.ALLOCATED.getValue())
+                            .build();
+            for (LotCarrierMapping mapping : selectedMappings) {
+                mapping.allocated(command);
+                mapping = lotCarrierMappingService.save(mapping);
+                LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(mapping);
+                historyService.saveHistory(historyEntity);
+            }
+
+            // ProductionOrder 상태를 ALLOCATED로 변경
+            Optional<ProductionOrder> optionalProductionOrder = productionOrderService.updateOrderState(transactionInfo,productionOrder.getId(), ProductionOrderState.ALLOCATE_COMPLETED.getValue());
+
+            log.info("Successfully allocated {} carriers for ProductionOrder ID: {}", selectedMappings.size(), productionOrder.getId());
+        } else {
+            log.warn("Failed to allocate carriers for ProductionOrder ID: {}. Holding allocation.", productionOrder.getId());
+            // 조합 실패 시 오더 상태 원복 또는 별도 에러 처리 진행
+        }
     }
 }

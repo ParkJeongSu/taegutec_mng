@@ -8,7 +8,6 @@ import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.error.EntityNotFoundException;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
@@ -42,9 +41,12 @@ public class MessageExecuteService {
 
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
+    private final WhereDispatchService whereDispatchService;
     private final HistoryService historyService;
     private final CarrierService carrierService;
+    private final CarrierDefService carrierDefService;
     private final EquipmentService equipmentService;
+    private final EquipmentDefService equipmentDefService;
     private final PortService portService;
     private final PortDefService portDefService;
     private final ProductionOrderService productionOrderService;
@@ -63,6 +65,7 @@ public class MessageExecuteService {
     private final TransportJobMapper transportJobMapper;
     private final LotService lotService;
     private final LotCarrierMappingService lotCarrierMappingService;
+    private final NamingRuleService namingRuleService;
 
     /**
      * 알람은 log 만 찍음
@@ -73,9 +76,9 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void alarmReport(BaseMessage<AlarmReportBody> message) {
         String alarmCode = message.getBody().getAlarmCode();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String equipmentName = message.getBody().getEquipmentName();
         String alarmState = message.getBody().getAlarmState();
 
@@ -108,10 +111,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierCleanJobStartedBody> carrierCleanJobStarted(BaseMessage<CarrierCleanJobStartedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -123,7 +125,7 @@ public class MessageExecuteService {
         }
         Carrier carrier = optionalCarriers.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         CleanJobStartedCommand command = CleanJobStartedCommand.builder()
                 .transactionInfo(tx)
                 .equipmentName(equipmentName)
@@ -146,9 +148,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierCleanJobEndedBody> carrierCleanJobEnded(BaseMessage<CarrierCleanJobEndedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
 
         String equipmentName = message.getBody().getEquipmentName();
@@ -161,7 +163,7 @@ public class MessageExecuteService {
         }
         Carrier carrier = optionalCarriers.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         CleanJobEndedCommand command = CleanJobEndedCommand.builder()
                 .transactionInfo(tx)
                 .equipmentName(equipmentName)
@@ -182,99 +184,7 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierValidationReplyBody> carrierValidationRequest(BaseMessage<CarrierValidationRequestBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-
-        BaseMessage<CarrierValidationReplyBody> reply = new BaseMessage<>();
-        reply.setTransactionId(message.getTransactionId());
-        reply.setMessageFrom(SystemName.MNG.getValue());
-        reply.setMessageOwner(SystemName.MNG.getValue());
-        reply.setMessageTo(SystemName.EAS.getValue());
-        reply.setEventTime(message.getEventTime());
-        reply.setResultMessage("");
-        reply.setMessageName(MessageList.CARRIER_VALIDATION_REPLY.getMessageName());
-        reply.setResultCode(ResultCode.OK.getValue());
-        CarrierValidationReplyBody body = CarrierValidationReplyBody.builder()
-                .equipmentName(equipmentName)
-                .carrierName(carrierName)
-                .build();
-        reply.setBody(body);
-
-        try {
-            Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
-            if(optionalCarriers.isEmpty()){
-                throw new EntityNotFoundException(Carrier.class,carrierName);
-            }
-            Carrier carrier = optionalCarriers.get();
-
-            Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
-            if(optionalPorts.isEmpty()){
-                throw new EntityNotFoundException(Port.class,equipmentName + "_" +portName);
-            }
-            Port port = optionalPorts.get();
-
-            Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(port.getEquipmentName(),port.getPortName());
-            if(optionalPortDef.isEmpty()){
-                throw new EntityNotFoundException(PortDef.class,equipmentName + "_" +portName);
-            }
-            PortDef portDef = optionalPortDef.get();
-
-
-            if( StringUtils.equals(PortType.INPUT.getValue(),portDef.getPortType())){
-                log.info("full Container Logic Start");
-                // List로 받지만 하나의 Carrier 는 단 하나의 Wait인 TaskJobDetail 을 가지고 있음을 전제
-//                List<TaskJobDetail> taskJobDetailList = taskJobDetailRepository.findByCarrierNameAndState(carrierName, TaskJobDetailState.WAIT.getValue());
-//                if(taskJobDetailList.isEmpty()){
-//                    throw new TaskJobException("Not Found TaskJobDetail");
-//                }
-//                else if(taskJobDetailList.size() > 1){
-//                    throw new TaskJobException("One or more TaskJobs were found.");
-//                }
-//                TaskJobDetail taskJobDetail = taskJobDetailList.get(0);
-//                Optional<TaskJob> optionalTaskJob = taskJobRepository.findById(taskJobDetail.getTaskJobId());
-//                TaskJob taskJob;
-//                if(optionalTaskJob.isPresent()){
-//                    taskJob = optionalTaskJob.get();
-//                }
-//                else{
-//                    throw new TaskJobException("Not Found TaskJob");
-//                }
-//                // TODO: 실제로 이 부분에 EAS 의 필요한 recipe라든가, 정보를 담기
-//                body.setCarrierName(taskJobDetail.getCarrierName());
-            }
-            else if(StringUtils.equals(PortType.OUTPUT.getValue(),portDef.getPortType())){
-                log.info("Empty Container Logic Start");
-                // TODO : PortDef 의 containerType과 현재 Carrier 의 Container Type의 비교 같으면 ok 틀리면 ng
-                if(StringUtils.isEmpty(carrier.getContainerType())){
-                    // Carrier 의 ContainerType이 비어있단 이야기는
-                    // Clean 후 처음으로 Carrier에 자재를 담는다는 이야기
-                    // ok
-                    message.setResultCode(ResultCode.OK.getValue());
-                }
-                else{
-                    // Carrier 의 ContainerType에 값이 있단 이야기는
-                    // 이전에 특정 자재를 담았다는 이야기
-                    // Container 내부의 찌거기와 혼합되면 안되기때문에 철저한 Validation
-//                    if(StringUtils.equals(portDef.getContainerType(), carrier.getContainerType())){
-//                        // ok
-//                        message.setResultCode(ResultCode.OK.getValue());
-//                    }
-//                    else {
-//                        // ng
-//                        message.setResultCode(ResultCode.NG.getValue());
-//                    }
-                }
-            }
-            return reply;
-        } catch (Exception e) {
-            message.setResultCode(ResultCode.NG.getValue());
-            return reply;
-        }
+        return null;
     }
 
     /**
@@ -434,9 +344,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void materialUnAssignedFromCarrier(BaseMessage<MaterialUnassignedFromCarrierBody> message){
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -453,7 +363,7 @@ public class MessageExecuteService {
         if(optionalCarriers.isEmpty()){
             return;
         }
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         carrier = optionalCarriers.get();
         CarrierDeassignCommand command = null;
         if(Objects.equals(quantity, BigDecimal.ZERO)){
@@ -589,35 +499,12 @@ public class MessageExecuteService {
 
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> destinationDispatchRequest(BaseMessage<DestinationDispatchRequestBody> message){
-        // powder Logic
-        // 현재 equipment 와 port 위의 carrier 를 창고 혹은 다음 설비로 이동하는 메시지
+        return whereDispatchService.whereDispatchRequest(message);
+    }
 
-        // loader 와 unloader port 로직 구분
-        // loader port case
-        // 현재 containerType을 토대로 바로 WMS ZoneRequest 문의 후 WCS로 반송요청
-
-        // unloader case
-        // 1) 시간내에 gal에서 요청을 받지 못한 경우 ex 3 minute 안에 gal에서 요청을 받지 못한 경우
-        // 바로 WMS에 문의후 창고에 반환
-
-        // 2) 바로 설비가 아닌 창고로 가야하는 case
-        // 바로 WMS에 문의 후 창고에 반환
-
-        // 3) 바로 설비로 가야하는 case
-        // WMS 에 문의하는게 아니고 바로 해당 설비로 반송 요청 메시지 생성
-
-        // TODO: WMS 담당자와 message 협의
-
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-        String portType = message.getBody().getPortType();
-        String portTransportModeName = message.getBody().getPortTransportMode();
-
+    private void sendToWMSZoneRequest(){
+        // TODO : WMS 와 협의 할건데, 일단 이건 뒤로 미루기
+        // WMS 에 목적지를 물어봐야하는 케이스 최대한 안물어볼 생각
         BaseMessage<CarrierDestinationZoneRequestBody> wmsRequestMessage = zoneRequestBodyBaseMessage();
 
         Object wmsReply = rabbitTemplate.convertSendAndReceive(
@@ -627,7 +514,7 @@ public class MessageExecuteService {
         );
 
         if(ObjectUtils.isEmpty(wmsReply)){
-            return null;
+            //return null;
         }else if(ObjectUtils.isNotEmpty(wmsReply)){
             BaseMessage<CarrierDestinationZoneReplyBody> replyData = null;
             // 1. 자신에게 맞는 DTO로 역직렬화 TypeReference
@@ -649,26 +536,25 @@ public class MessageExecuteService {
                 throw new RuntimeException("convert BaseMessage<CarrierDestinationZoneReplyBody> error");
             }
 
-            BaseMessage<TransportJobRequestBody> request = new  BaseMessage<>();
-            request.setTransactionId(message.getTransactionId());
-            request.setMessageFrom(SystemName.MNG.getValue());
-            request.setMessageOwner(SystemName.MNG.getValue());
-            request.setMessageTo(SystemName.WCS.getValue());
-            request.setEventTime(message.getEventTime());
-            request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
-            request.setResultCode(ResultCode.OK.getValue());
-
-            TransportJobRequestBody body =
-                    TransportJobRequestBody
-                            .builder()
-                            .carrierName(carrierName)
-                            .build();
-            request.setBody(body);
-            return request;
+//            BaseMessage<TransportJobRequestBody> request = new  BaseMessage<>();
+//            request.setTransactionId(message.getTransactionId());
+//            request.setMessageFrom(SystemName.MNG.getValue());
+//            request.setMessageOwner(SystemName.MNG.getValue());
+//            request.setMessageTo(SystemName.WCS.getValue());
+//            request.setEventTime(message.getEventTime());
+//            request.setMessageName(MessageList.TRANSPORT_JOB_REQUEST.getMessageName());
+//            request.setResultCode(ResultCode.OK.getValue());
+//
+//            TransportJobRequestBody body =
+//                    TransportJobRequestBody
+//                            .builder()
+//                            .carrierName(carrierName)
+//                            .build();
+//            request.setBody(body);
+            //return request;
         }
-
-        return null;
     }
+
     private BaseMessage<CarrierDestinationZoneRequestBody> zoneRequestBodyBaseMessage() {
         return null;
     }
@@ -690,9 +576,9 @@ public class MessageExecuteService {
 
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierInfoDownloadSendBody> recipeTimeOutRequest(BaseMessage<RecipeTimeOutRequestBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String messageFrom = message.getMessageFrom();
 
         String equipmentName = "";
@@ -704,7 +590,7 @@ public class MessageExecuteService {
 
         LotCarrierMapping lotCarrierMapping = lotCarrierMappingService.findById(lotCarrierMappingId);
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         RecipeReplyCommand command = RecipeReplyCommand.builder()
                 .transactionInfo(tx)
@@ -801,9 +687,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void portTransportModeChanged(BaseMessage<PortTypeChangedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -817,7 +703,7 @@ public class MessageExecuteService {
         }
 
         Port port = optionalPorts.get();
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         PortTransportModeChangedCommand command = PortTransportModeChangedCommand.builder().transactionInfo(tx).portTransportModeName(portTransportModeName).build();
 
         port.transportModeChanged(command);
@@ -833,9 +719,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void portStateChanged(BaseMessage<PortStateChangedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -852,7 +738,7 @@ public class MessageExecuteService {
         }
 
         Port port = optionalPorts.get();
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         PortState state = PortState.valueOf(portStateName);
         PortStateChangedCommand command = PortStateChangedCommand
                 .builder()
@@ -870,11 +756,11 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void portStateReport(BaseMessage<PortStateReportBodyList> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         List<PortStateReportEquipment> equipmentList = message.getBody().getEquipmentList();
         for(PortStateReportEquipment equipment : equipmentList){
             String equipmentName = equipment.getEquipmentName();
@@ -916,9 +802,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void portTypeChanged(BaseMessage<PortTypeChangedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
@@ -941,7 +827,7 @@ public class MessageExecuteService {
         }
         PortDef portDef = optionalPortDef.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         PortType portType = PortType.valueOf(portTypeName);
         PortTypeChangedCommand command = PortTypeChangedCommand
                 .builder()
@@ -1143,9 +1029,9 @@ public class MessageExecuteService {
 
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<CarrierInfoDownloadSendBody> recipeReply(BaseMessage<RecipeReplyBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String equipmentName = message.getBody().getEquipmentName();
         String portName = message.getBody().getPortName();
         String carrierName = message.getBody().getCarrierName();
@@ -1162,7 +1048,7 @@ public class MessageExecuteService {
             return null;
         }
         LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         RecipeReplyCommand command =
                 RecipeReplyCommand
                         .builder()
@@ -1227,9 +1113,9 @@ public class MessageExecuteService {
 
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<RecipeChangedRequestForEASBody> recipeChangedRequest(BaseMessage<RecipeChangedRequestForMANTIBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String equipmentName = message.getBody().getEquipmentName();
         String orderId = message.getBody().getOrderId();
         String orderLineNumber = message.getBody().getOrderLineNumber();
@@ -1257,9 +1143,9 @@ public class MessageExecuteService {
 
     @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<RecipeChangedReplyForMANTIBody> recipeChangedReply(BaseMessage<RecipeChangedReplyForEASBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String equipmentName = message.getBody().getEquipmentName();
         String orderId = message.getBody().getOrderId();
         String orderLineNumber = message.getBody().getOrderLineNumber();
@@ -1295,9 +1181,9 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void activeTransportJobReport(BaseMessage<ActiveTransportJobReportBody> message) {
         log.info("activeTransportJobReport");
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         List<TransportJobList> transportJobList = message.getBody().getTransportJobList();
         LocalDateTime now = LocalDateTime.now();
         if(ObjectUtils.isNotEmpty(transportJobList)){
@@ -1327,7 +1213,7 @@ public class MessageExecuteService {
                 Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
 
                 if(optionalTransportJob.isPresent()){
-                    continue;
+
                 }
                 else{
                     TransportJobCreateCommand command =
@@ -1383,9 +1269,9 @@ public class MessageExecuteService {
     public void destinationChanged(BaseMessage<DestinationChangedBody> message) {
         log.info("destinationChanged");
 
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
         String transportJobName = message.getBody().getTransportJobName(); // DetailName
         String carrierName = message.getBody().getCarrierName();
         String oldDestinationEquipmentName = message.getBody().getOldDestinationEquipmentName();
@@ -1410,7 +1296,7 @@ public class MessageExecuteService {
         }
         TransportJob transportJob = optionalTransportJob.get();
 
-        TransactionInfo tx =  TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx =  TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         TransportJobUpdateCommand command =
                 TransportJobUpdateCommand
@@ -1448,7 +1334,7 @@ public class MessageExecuteService {
     }
 
     /**
-     * 반송 취소처리 실패 보고 이 경우 그러면 최종적으로 어떻게 되는거지?
+     * 반송 취소처리 실패 필요한지 확인필요
      *
      */
     @Transactional(value = "mssqlTransactionManager")
@@ -1512,11 +1398,11 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void communicationStateReport(BaseMessage<CommunicationStateReportBodyList> message) {
 
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         List<CommunicationStateReportBody> equipmentList = message.getBody().getEquipmentList();
         for(CommunicationStateReportBody body : equipmentList){
             String equipmentName = body.getEquipmentName();
@@ -1552,9 +1438,9 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void communicationStateChanged(BaseMessage<CommunicationStateChangedBody> message) {
         String communicationState = message.getBody().getCommunicationState();
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
 
@@ -1569,7 +1455,7 @@ public class MessageExecuteService {
         }
         Equipment equipment = optionalEquipments.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         CommunicationState state = CommunicationState.valueOf(communicationState);
         CommunicationStateChangeCommand command = CommunicationStateChangeCommand.builder().transactionInfo(tx).communicationState(state).build();
 
@@ -1589,9 +1475,9 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void equipmentStateChanged(BaseMessage<EquipmentStateChangedBody> message) {
 
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String equipmentState = message.getBody().getEquipmentStateName();
@@ -1607,7 +1493,7 @@ public class MessageExecuteService {
         }
         Equipment equipment = optionalEquipments.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         EquipmentState state = EquipmentState.valueOf(equipmentState);
         EquipmentStateChangeCommand command =EquipmentStateChangeCommand.builder().equipmentState(state).transactionInfo(tx).build();
         equipment.equipmentStateChange(command);
@@ -1626,10 +1512,10 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void equipmentStateReport(BaseMessage<EquipmentStateReportBodyList> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         List<EquipmentStateReportBody> bodyList = message.getBody().getEquipmentList();
         for(EquipmentStateReportBody body : bodyList){
@@ -1677,9 +1563,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void operationModeChanged(BaseMessage<OperationModeChangedBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String operationModeName = message.getBody().getOperationModeName();
@@ -1695,7 +1581,7 @@ public class MessageExecuteService {
         }
         Equipment equipment = optionalEquipments.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         EquipmentOperationMode mode = EquipmentOperationMode.valueOf(operationModeName);
         EquipmentOperationModeChangeCommand command = EquipmentOperationModeChangeCommand.builder().equipmentOperationMode(mode).transactionInfo(tx).build();
         equipment.operationModeChange(command);
@@ -1713,9 +1599,9 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void operationModeReport(BaseMessage<OperationModeReportBody> message) {
-        String eventName = message.getMessageName();
-        String eventUser = message.getMessageOwner();
-        String eventComment =  message.getResultMessage();
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
         String equipmentName = message.getBody().getEquipmentName();
         String operationModeName = message.getBody().getOperationModeName();
@@ -1731,7 +1617,7 @@ public class MessageExecuteService {
         }
         Equipment equipment = optionalEquipments.get();
 
-        TransactionInfo tx = TransactionInfo.now(eventName,eventUser,eventComment);
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         EquipmentOperationMode mode = EquipmentOperationMode.valueOf(operationModeName);
         EquipmentOperationModeChangeCommand command = EquipmentOperationModeChangeCommand.builder().equipmentOperationMode(mode).transactionInfo(tx).build();
         equipment.operationModeChange(command);

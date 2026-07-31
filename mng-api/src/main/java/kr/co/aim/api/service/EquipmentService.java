@@ -41,10 +41,7 @@ public class EquipmentService {
         return equipmentRepository.findByEquipmentName(equipmentName);
     }
 
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<EquipmentDef> findEquipmentDefByEquipmentName(String equipmentName){
-        return equipmentDefRepository.findByEquipmentName(equipmentName);
-    }
+
 
     @Transactional(value = "mssqlTransactionManager",readOnly = true)
     public Page<Equipment> findEquipmentByCondition(EquipmentSearchCondition condition, Pageable pageable){

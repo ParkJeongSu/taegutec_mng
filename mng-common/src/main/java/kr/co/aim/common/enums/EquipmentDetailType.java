@@ -7,6 +7,21 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum EquipmentDetailType implements MetaDataEnum {
+    // 대구텍 상세 설비 타입
+    INCOME("INCOME"),
+    DOPING("DOPING"),
+    REDUCTION("REDUCTION"),
+    PURIFICATION("PURIFICATION"),
+    SCREEN("SCREEN"),
+    BLENDING("BLENDING"),
+    MIXING("MIXING"),
+    CARBURIZATION("CARBURIZATION"),
+    DEAGGLOMERATION("DEAGGLOMERATION"),
+    PACKING("PACKING"),
+    MAGAZINE("MAGAZINE"),
+    DISPENSER("DISPENSER"),
+    OTHERS("OTHERS"),
+    // 대구텍 상세 설비 타입
     CVD("CVD"),
     CD("CD"),
     OVERLAY("OVERLAY"),

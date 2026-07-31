@@ -1,7 +1,6 @@
 package kr.co.aim.api.vo.port;
 
 import kr.co.aim.common.enums.PortTransportState;
-import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.Port;
 import lombok.Builder;

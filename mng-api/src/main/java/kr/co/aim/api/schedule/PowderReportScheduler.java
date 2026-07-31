@@ -1,10 +1,13 @@
 package kr.co.aim.api.schedule;
 
 import kr.co.aim.api.service.IfEventQueueService;
-import kr.co.aim.api.service.InsertExternalInterfaceService;
+import kr.co.aim.api.service.PowderExternalInterfaceService;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
-import kr.co.aim.common.enums.*;
+import kr.co.aim.common.enums.IfEventQueueState;
+import kr.co.aim.common.enums.MessageList;
+import kr.co.aim.common.enums.ResultCode;
+import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.format.EventQueueReportBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.IfEventQueue;
@@ -25,20 +28,20 @@ import java.util.List;
 @Slf4j
 @RequiredArgsConstructor
 @Profile("scheduler")
-@ConditionalOnProperty(name = "factory.type", havingValue = "insert")
-public class InsertReportScheduler {
+@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
+public class PowderReportScheduler {
 
-    private final InsertExternalInterfaceService insertExternalInterfaceService;
+    private final PowderExternalInterfaceService powderExternalInterfaceService;
     private final IfEventQueueService ifEventQueueService;
 
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
     @Scheduled(fixedDelay = 5000) // 5초마다 실행
-    @SchedulerLock(name = "insertReportH2Trans",
+    @SchedulerLock(name = "powderReportH2Trans",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
-    public void insertReportH2Trans() {
+    public void powderReportH2Trans() {
 
         // 1단계 : EventLog 조회 MSSQL 트랜잭션 Ready 상태 조회후 PROCESSING 상태로 변경
 
@@ -51,16 +54,16 @@ public class InsertReportScheduler {
 
         if(CollectionUtils.isNotEmpty(ifEventQueues)){
             for(IfEventQueue ifEventQueue : ifEventQueues){
-                sendMessageToTEX(ifEventQueue);
+                sendMessageToPEX(ifEventQueue);
             }
         }
     }
 
-    private void sendMessageToTEX(IfEventQueue ifEventQueue){
+    private void sendMessageToPEX(IfEventQueue ifEventQueue){
         String transactionId = FormatUtils.generateTransactionId();
         BaseMessage<EventQueueReportBody> request = new BaseMessage<>();
 
-        request.setMessageName(MessageList.INSERT_EVENT_QUEUE_REPORT.getMessageName());
+        request.setMessageName(MessageList.POWDER_EVENT_QUEUE_REPORT.getMessageName());
         request.setTransactionId(transactionId);
         request.setMessageFrom(SystemName.MNG.getValue());
         request.setMessageOwner(SystemName.MNG.getValue());
