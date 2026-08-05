@@ -66,4 +66,7 @@ public interface TransportOrderJpaRepository extends JpaRepository<TransportOrde
     Optional<TransportOrderEntity> findWithLockById(
             @Param("id") Long id
     );
+
+    @Query("SELECT COALESCE(MAX(CAST(t.transportOrderId AS Long)), 0L) + 1L FROM TransportOrderEntity t")
+    Long findMaxOrderId();
 }

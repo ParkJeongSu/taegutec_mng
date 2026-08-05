@@ -15,8 +15,8 @@ public class InsertEventQueueReportVo {
 
     private final String transportJobName;
     private final String messageName;
-    private final Optional<Port> optionalPort;
-    private final Optional<PortDef> optionalPortDef;
+    private final PortDef portDef;
+    private final Port port;
     private final String carrierName;
     private final String virtualCarrierName;
     private final String actualZoneName;

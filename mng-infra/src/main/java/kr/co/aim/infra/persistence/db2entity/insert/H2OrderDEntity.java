@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @Table(name = "H2ORDERD")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

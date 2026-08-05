@@ -29,9 +29,7 @@ public class PEXMessageListener implements MessageWorker{
 
     @RabbitListener(
             id = "pex-Listener",
-            queues= "${custom.rabbitmq.queue.pex}",
-            concurrency = "10",
-            containerFactory = "rabbitListenerContainerFactory"
+            queues= "${custom.rabbitmq.queue.pex}"
     )
     public Object process(org.springframework.amqp.core.Message message) {
 

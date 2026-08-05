@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum ProcessStatus implements MetaDataEnum {
     WAIT("WAIT"),
-    RUN("RUN");
+    RUN("RUN"),
+    COMPLETED("COMPLETED");
     private final String value;
 }

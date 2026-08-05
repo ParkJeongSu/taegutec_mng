@@ -1,8 +1,12 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SimulatorIdsDto;
+import kr.co.aim.api.dto.insert.InboundCreateDto;
+import kr.co.aim.api.dto.insert.OutboundCreateDto;
+import kr.co.aim.api.dto.insert.RelocationCreateDto;
 import kr.co.aim.api.vo.insert.sim.*;
 import kr.co.aim.common.enums.*;
+import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2TransEntity;
@@ -23,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -45,6 +50,20 @@ public class InsertSimulatorInterfaceService {
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
                 .dtimeCre(now)
+                .build();
+    }
+
+    private IdocEntity buildBaseIdocForOrderCreate(LocalDateTime now,IdocTypeId idocTypeId) {
+        return IdocEntity.builder()
+                .lineId(idocJpaRepository.findMaxLineIdForCreateOrder())
+                .idocTypId(idocTypeId.getValue())
+                .state(IdocState.INITIAL.getValue())
+                .errorCode(IdocErrorCode.INIT.getValue())
+                .source(IdocMachine.GAL.getValue())
+                .destination( IdocMachine.MNG.getValue())
+                .dtimeCre(now)
+                .dtimeMod(now)
+                .modCnt(0)
                 .build();
     }
 
@@ -458,4 +477,230 @@ public class InsertSimulatorInterfaceService {
         log.info("selectH2TransByOrderId");
         return h2TransJpaRepository.selectByCOrderId(orderId.toString(),pageable);
     }
+
+    @Transactional(value = "db2TransactionManager")
+    public void createInbound(OrderCreateVo vo){
+        String orderId = vo.getOrderId();           // 생성 orderId
+        String location = vo.getLocation();        // 넣는 위치
+        String locationGroup = vo.getLocationGroup();   // 넣는 위치 그룹
+        String galId = vo.getGalId();           // GAL ID
+        String carrierId = vo.getCarrierId();       // Carrier ID
+        String carrierType = vo.getCarrierType();     // Carrier Type
+        String zoneName = vo.getZoneName();        // 창고 Zone Name
+        String speed = vo.getSpeed();           // 속도
+        String sourceZoneName = vo.getSourceZoneName();  // 출발지 Zone Name
+        String targetZoneName = vo.getTargetZoneName();  // 목적지 Zone Name
+        Integer orderPriority = vo.getOrderPriority();     // order의 우선순위
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+
+        IdocEntity newIdoc = buildBaseIdocForOrderCreate(now,IdocTypeId.INBOUND);
+        idocJpaRepository.save(newIdoc);
+
+        H2OrderMEntity h2OrderMEntity =
+                H2OrderMEntity
+                        .builder()
+                        .lineId(h2OrderMJpaRepository.findMaxLineId())
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("10")
+                        .bookCtrl("10")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.INBOUND.getValue())
+                        .cOrderPrio(orderPriority)
+                        //.cTCode()
+                        .cLocId(location)
+                        .cWcId(locationGroup)
+                        .cGalId(galId)
+                        //.cGalWhs()
+                        .build();
+        h2OrderMJpaRepository.save(h2OrderMEntity);
+
+        H2OrderDEntity h2OrderDEntity =
+                H2OrderDEntity
+                        .builder()
+                        .lineId(h2OrderDJpaRepository.findMaxLineId())
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("20")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.INBOUND.getValue())
+                        .cOrderLn(1L)
+                        .cCoId(carrierId)
+                        .cCoTy(carrierType)
+                        .cZone(zoneName)
+                        .cDrivingProfile(speed)
+                        .build();
+        h2OrderDJpaRepository.save(h2OrderDEntity);
+
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void createOutbound(OrderCreateVo vo){
+        String orderId = vo.getOrderId();           // 생성 orderId
+        String location = vo.getLocation();        // 넣는 위치
+        String locationGroup = vo.getLocationGroup();   // 넣는 위치 그룹
+        String galId = vo.getGalId();           // GAL ID
+        String carrierId = vo.getCarrierId();       // Carrier ID
+        String carrierType = vo.getCarrierType();     // Carrier Type
+        String zoneName = vo.getZoneName();        // 창고 Zone Name
+        String speed = vo.getSpeed();           // 속도
+        String sourceZoneName = vo.getSourceZoneName();  // 출발지 Zone Name
+        String targetZoneName = vo.getTargetZoneName();  // 목적지 Zone Name
+        Integer orderPriority = vo.getOrderPriority();     // order의 우선순위
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+
+        IdocEntity newIdoc = buildBaseIdocForOrderCreate(now,IdocTypeId.OUTBOUND);
+        idocJpaRepository.save(newIdoc);
+
+        H2OrderMEntity h2OrderMEntity =
+                H2OrderMEntity
+                        .builder()
+                        .lineId(h2OrderMJpaRepository.findMaxLineId())
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("10")
+                        .bookCtrl("10")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.OUTBOUND.getValue())
+                        .cOrderPrio(orderPriority)
+                        //.cTCode()
+                        .cLocId(location)
+                        .cWcId(locationGroup)
+                        .cGalId(galId)
+                        //.cGalWhs()
+                        .build();
+        h2OrderMJpaRepository.save(h2OrderMEntity);
+
+        H2OrderDEntity h2OrderDEntity =
+                H2OrderDEntity
+                        .builder()
+                        .lineId(h2OrderDJpaRepository.findMaxLineId())
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("40")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.OUTBOUND.getValue())
+                        .cOrderLn(1L)
+                        .cCoId(carrierId)
+                        .cCoTy(carrierType)
+                        .cZone(zoneName)
+                        .cDrivingProfile(speed)
+                        .build();
+        h2OrderDJpaRepository.save(h2OrderDEntity);
+    }
+
+    @Transactional(value = "db2TransactionManager")
+    public void createRelocation(OrderCreateVo vo){
+        String orderId = vo.getOrderId();           // 생성 orderId
+        String location = vo.getLocation();        // 넣는 위치
+        String locationGroup = vo.getLocationGroup();   // 넣는 위치 그룹
+        String galId = vo.getGalId();           // GAL ID
+        String carrierId = vo.getCarrierId();       // Carrier ID
+        String carrierType = vo.getCarrierType();     // Carrier Type
+        String zoneName = vo.getZoneName();        // 창고 Zone Name
+        String speed = vo.getSpeed();           // 속도
+        String sourceZoneName = vo.getSourceZoneName();  // 출발지 Zone Name
+        String targetZoneName = vo.getTargetZoneName();  // 목적지 Zone Name
+        Integer orderPriority = vo.getOrderPriority();     // order의 우선순위
+
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+
+        IdocEntity newIdoc = buildBaseIdocForOrderCreate(now,IdocTypeId.RELOCATION);
+        idocJpaRepository.save(newIdoc);
+
+        H2OrderMEntity h2OrderMEntity =
+                H2OrderMEntity
+                        .builder()
+                        .lineId(h2OrderMJpaRepository.findMaxLineId())
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("10")
+                        .bookCtrl("10")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.RELOCATION.getValue())
+                        .cOrderPrio(orderPriority)
+                        //.cTCode()
+                        .cLocId(location)
+                        .cWcId(locationGroup)
+                        .cGalId(galId)
+                        //.cGalWhs()
+                        .build();
+        h2OrderMJpaRepository.save(h2OrderMEntity);
+
+        Long h2orderDLineId = h2OrderDJpaRepository.findMaxLineId();
+
+        H2OrderDEntity sourceH2OrderDEntity =
+                H2OrderDEntity
+                        .builder()
+                        .lineId(h2orderDLineId)
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("40")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.RELOCATION.getValue())
+                        .cOrderLn(1L)
+                        .cCoId(carrierId)
+                        .cCoTy(carrierType)
+                        .cZone(sourceZoneName)
+                        .cDrivingProfile(speed)
+                        .build();
+        h2OrderDJpaRepository.save(sourceH2OrderDEntity);
+
+        H2OrderDEntity targetH2OrderDEntity =
+                H2OrderDEntity
+                        .builder()
+                        .lineId(h2orderDLineId+1)
+                        .idocId(newIdoc.getLineId())
+                        .dtimeCre(now)
+                        .dtimeMod(now)
+                        .usrMod("SIMULATOR")
+                        .pgmMod("SIMULATOR")
+                        .modCnt(0)
+                        .dataCode("40")
+                        .cClient("001")
+                        .cOrderId(orderId)
+                        .cOrderTy(TransportOrderType.RELOCATION.getValue())
+                        .cOrderLn(1L)
+                        .cCoId(carrierId)
+                        .cCoTy(carrierType)
+                        .cZone(targetZoneName)
+                        .cDrivingProfile(speed)
+                        .build();
+        h2OrderDJpaRepository.save(targetH2OrderDEntity);
+    }
+
+
+
 }

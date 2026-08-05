@@ -250,6 +250,9 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             return reply;
         }
         else if(StringUtils.equals(PortType.INPUT.getValue(),portDef.getPortType())){
+            // TODO: 환원로 케이스 개발하기
+            // 환원로 설비의 경우 seq가 1인 carrier에 대해서만 RECIPE_REQUEST를 보낸다.
+            // 그외의 경우에는 바로 EAS로 CarrierInfoDownloadSend를 보낸다.
 
             BaseMessage<RecipeRequestBody> mantiRequestMessage = new BaseMessage<>();
             mantiRequestMessage.setMessageName(MessageList.RECIPE_REQUEST.getMessageName());

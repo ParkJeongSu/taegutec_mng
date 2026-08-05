@@ -32,9 +32,7 @@ public class TEXSyncMessageListener implements MessageWorker{
 
     @RabbitListener(
             id = "tex-sync-Listener",
-            queues= "${custom.rabbitmq.queue.tex.sync}",
-            concurrency = "10",
-            containerFactory = "rabbitListenerContainerFactory"
+            queues= "${custom.rabbitmq.queue.tex.sync}"
     )
     public Object process(org.springframework.amqp.core.Message message) {
         String jsonString = "";

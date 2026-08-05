@@ -9,6 +9,10 @@ import java.util.Optional;
 
 public interface LotCarrierMappingJpaRepository extends JpaRepository<LotCarrierMappingEntity, Long> {
     List<LotCarrierMappingEntity> findByLotName(String lotName);
+
+    List<LotCarrierMappingEntity> findByLotNameAndProductionStatusNot(String lotName, String productionStatus);
+
+    Optional<LotCarrierMappingEntity> findByLotNameAndCarrierName(String lotName,String carrierName);
     Optional<LotCarrierMappingEntity> findByCarrierName(String carrierName);
     List<LotCarrierMappingEntity> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
     List<LotCarrierMappingEntity> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus);

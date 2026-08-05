@@ -32,9 +32,7 @@ public class TEXMessageListener implements MessageWorker{
 
     @RabbitListener(
             id = "tex-Listener",
-            queues= "${custom.rabbitmq.queue.tex}",
-            concurrency = "10",
-            containerFactory = "rabbitListenerContainerFactory"
+            queues= "${custom.rabbitmq.queue.tex}"
     )
     public Object process(org.springframework.amqp.core.Message message) {
 

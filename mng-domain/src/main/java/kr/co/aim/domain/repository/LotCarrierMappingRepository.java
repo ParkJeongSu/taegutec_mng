@@ -14,6 +14,8 @@ public interface LotCarrierMappingRepository {
     List<LotCarrierMapping> findAll();
     Optional<LotCarrierMapping> findById(Long id);
     List<LotCarrierMapping> findByLotName(String lotName);
+    List<LotCarrierMapping> findByLotNameAndProductionStatusNot(String lotName, String productionStatus);
+    Optional<LotCarrierMapping> findByLotNameAndCarrierName(String lotName,String carrierName);
     Optional<LotCarrierMapping> findByCarrierName(String carrierName);
     List<LotCarrierMapping> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
     Optional<LotCarrierMapping> findByMngKey(Long mngKey);

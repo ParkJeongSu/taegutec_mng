@@ -30,9 +30,7 @@ public class SchedulerMessageListener implements MessageWorker{
 
 //    @RabbitListener(
 //            id = "scheduler-Listener",
-//            queues= "${custom.rabbitmq.queue.scheduler}",
-//            concurrency = "10",
-//            containerFactory = "rabbitListenerContainerFactory"
+//            queues= "${custom.rabbitmq.queue.scheduler}"
 //    )
     public Object process(org.springframework.amqp.core.Message message) {
 

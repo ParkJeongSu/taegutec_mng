@@ -46,10 +46,19 @@ public class LotCarrierMappingService {
     public List<LotCarrierMapping> findByLotName(String lotName) {
         return lotCarrierMappingRepository.findByLotName(lotName);
     }
+    @Transactional(value = "mssqlTransactionManager")
+    public List<LotCarrierMapping> findByLotNameAndProductionStatusNot(String lotName, String productionStatus){
+        return lotCarrierMappingRepository.findByLotNameAndProductionStatusNot(lotName, productionStatus);
+    }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public Optional<LotCarrierMapping> findByCarrierName(String carrierName) {
         return lotCarrierMappingRepository.findByCarrierName(carrierName);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public Optional<LotCarrierMapping> findByLotNameAndCarrierName(String lotName,String carrierName){
+        return lotCarrierMappingRepository.findByLotNameAndCarrierName(lotName,carrierName);
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)

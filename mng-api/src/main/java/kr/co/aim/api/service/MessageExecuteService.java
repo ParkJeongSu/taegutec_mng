@@ -224,8 +224,16 @@ public class MessageExecuteService {
         String carrierType = message.getBody().getCarrierType();
 
         TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
         Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+        PortDef portDef = null;
+        Port port = null;
+        if(optionalPortDef.isPresent()){
+            portDef = optionalPortDef.get();
+        }
+        if(optionalPort.isPresent()){
+            port = optionalPort.get();
+        }
 
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
@@ -248,8 +256,8 @@ public class MessageExecuteService {
                     .builder()
                     .transportJobName(transportJobName)
                     .messageName(messageName)
-                    .optionalPort(optionalPort)
-                    .optionalPortDef(optionalPortDef)
+                    .portDef(portDef)
+                    .port(port)
                     .carrierName(carrierName)
                     .virtualCarrierName(virtualCarrierName)
                     .actualZoneName(currentZoneName)
@@ -439,6 +447,14 @@ public class MessageExecuteService {
 
         Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName, portName);
+        PortDef portDef = null;
+        Port port = null;
+        if(optionalPortDef.isPresent()){
+            portDef = optionalPortDef.get();
+        }
+        if(optionalPort.isPresent()){
+            port = optionalPort.get();
+        }
 
         // insert EventQueue
         try{
@@ -447,8 +463,8 @@ public class MessageExecuteService {
                     .builder()
                     .transportJobName(transportJobName)
                     .messageName(messageName)
-                    .optionalPort(optionalPort)
-                    .optionalPortDef(optionalPortDef)
+                    .portDef(portDef)
+                    .port(port)
                     .carrierName(carrierName)
                     .tx(tx)
                     .build();
@@ -883,19 +899,32 @@ public class MessageExecuteService {
         String lotName = message.getBody().getLotName();
         String itemName = message.getBody().getItemName();
 
+        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
+        if(optionalEquipmentDef.isEmpty()){
+            throw new RuntimeException("equipment not found");
+        }
+        EquipmentDef equipmentDef = optionalEquipmentDef.get();
+        Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        if(optionalEquipment.isEmpty()){
+            throw new RuntimeException("equipment not found");
+        }
+        Equipment equipment = optionalEquipment.get();
+
+
         Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(Long.parseLong(mngKey));
         if(optionalLotCarrierMapping.isPresent()){
             String productionStatus = null;
-            if(1 == 1){
+            if(StringUtils.equals(EquipmentDetailType.REDUCTION.getValue(),equipmentDef.getDetailEquipmentType())){
                 // 환원로 설비
                 productionStatus = ProductionStatus.CONSUMED.getValue();
             }
-            else if(2 == 2){
+            else if(StringUtils.equals(EquipmentDetailType.INCOME.getValue(), equipmentDef.getDetailEquipmentType())){
                 // 해포 설비
                 productionStatus = ProductionStatus.CONSUMED.getValue();
             }
-            else if(3 == 3){
+            else {
                 // 일반 조업 설비
+                productionStatus = ProductionStatus.ALLOCATED.getValue();
             }
             LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
             TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
@@ -930,13 +959,14 @@ public class MessageExecuteService {
             }
 
             // TODO : GAL 조업 시작 보고 이때, 주의할 점은 해포 설비와 조업 설비 TC 코드 다름 주의
-
-            // insert EventQueue
+            // powder EventQueue
             try{
                 PowderEventQueueReportVo powderEventQueueReportVo
                         = PowderEventQueueReportVo
                         .builder()
                         .messageName(messageName)
+                        .equipmentDef(equipmentDef)
+                        .equipment(equipment)
                         .carrierName(carrierName)
                         .tx(tx)
                         .build();
@@ -972,19 +1002,89 @@ public class MessageExecuteService {
         String lotName = message.getBody().getLotName();
         String itemName = message.getBody().getItemName();
 
-        // TODO : productionTaskEnd == Y 인 경우 LOT의 totalQuantity 도 변경
+        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
+        if(optionalEquipmentDef.isEmpty()){
+            throw new RuntimeException("equipment not found");
+        }
+        EquipmentDef equipmentDef = optionalEquipmentDef.get();
+        Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        if(optionalEquipment.isEmpty()){
+            throw new RuntimeException("equipment not found");
+        }
+        Equipment equipment = optionalEquipment.get();
 
-        if(ObjectUtils.isEmpty(mngKeyNameList)){
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById( Long.parseLong(productionTaskId));
+
+        if(optionalProductionOrder.isEmpty()){
+            throw new RuntimeException("production order not found");
+        }
+        ProductionOrder productionOrder = optionalProductionOrder.get();
+
+        TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
+
+        if(StringUtils.equals(EquipmentDetailType.REDUCTION.getValue(),equipmentDef.getDetailEquipmentType())){
+            // 환원로 설비
             // ex) 환원로 설비의 경우 mngKeyName 을 줄수 없음
             // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
-        }else if(mngKeyNameList.size() == 1){
-            // 일반적인 조업설비는 mngKeyName 이 1개
+            LotCarrierMappingCreateCommand command =
+                    LotCarrierMappingCreateCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .lotName(productionOrder.getLotName())
+                            .carrierName(carrierName)
+                            .orderId(productionOrder.getOrderId())
+                            .orderLineNumber(productionOrder.getOrderLineNumber())
+                            .productionOrderId(productionOrder.getId())
+                            .productionStatus(ProductionStatus.ALLOCATED.getValue())
+                            .processStatus(ProcessStatus.COMPLETED.getValue())
+                            .quantity(quantity)
+                            .jobEndTime(tx.eventTime())
+                            .rrnRequestState(RRNRequestState.REQUESTED.getValue())
+                            .rrnRequestTime(tx.eventTime())
+                            .rrnReplyTime(null)
+                            .holdState(HoldState.NOT_ON_HOLD.getValue())
+                            .build();
+
+            LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
+            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            historyService.saveHistory(historyEntity);
+        }
+        else if(StringUtils.equals(EquipmentDetailType.INCOME.getValue(), equipmentDef.getDetailEquipmentType())){
+            // 해포 설비
+            // ex) 해포 설비의 경우 mngKeyName 이 n개가 1개가 됨
+            // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
+            LotCarrierMappingCreateCommand command =
+                    LotCarrierMappingCreateCommand
+                            .builder()
+                            .transactionInfo(tx)
+                            .lotName(productionOrder.getLotName())
+                            .carrierName(carrierName)
+                            .orderId(productionOrder.getOrderId())
+                            .orderLineNumber(productionOrder.getOrderLineNumber())
+                            .productionOrderId(productionOrder.getId())
+                            .productionStatus(ProductionStatus.ALLOCATED.getValue())
+                            .processStatus(ProcessStatus.COMPLETED.getValue())
+                            .quantity(quantity)
+                            .jobEndTime(tx.eventTime())
+                            .rrnRequestState(RRNRequestState.REQUESTED.getValue())
+                            .rrnRequestTime(tx.eventTime())
+                            .rrnReplyTime(null)
+                            .holdState(HoldState.NOT_ON_HOLD.getValue())
+                            .build();
+
+            LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
+            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            historyService.saveHistory(historyEntity);
+        }
+        else {
+            // 일반 조업 설비
             String mngKeyName = mngKeyNameList.get(0).getMngKeyName();
             Long mngKey = Long.parseLong(mngKeyName);
             Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(mngKey);
             if(optionalLotCarrierMapping.isPresent()){
                 LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
-                TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
                 ProcessJobEndedCommand command =
                         ProcessJobEndedCommand
                                 .builder()
@@ -1010,12 +1110,56 @@ public class MessageExecuteService {
 
             }
         }
-        else if(mngKeyNameList.size() > 1){
-            // ex) 해포 설비의 경우 mngKeyName 이 n개가 1개가 됨
-            // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
+
+        if(StringUtils.equals(YN.Y.getValue(),productionTaskEnd)){
+            // 해포 설비가 아닐 경우만
+            // find by LotName LotCarrierMapping
+            // find by LotName Lot
+            // Lot totalQuantity 변경
+            if(!StringUtils.equals(EquipmentDetailType.INCOME.getValue(),equipmentDef.getDetailEquipmentType())){
+                List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
+                if(ObjectUtils.isNotEmpty(lotCarrierMappingList)){
+                    BigDecimal totalQuantity = BigDecimal.ZERO;
+                    for(LotCarrierMapping lotCarrierMapping : lotCarrierMappingList){
+                        totalQuantity = totalQuantity.add(lotCarrierMapping.getQuantity());
+                    }
+
+                    Optional<Lot> optionalLot = lotService.findByLotName(lotName);
+                    if(optionalLot.isPresent()){
+                        Lot lot = optionalLot.get();
+                        LotChangeCommand command =
+                                LotChangeCommand
+                                        .builder()
+                                        .transactionInfo(tx)
+                                        .totalQuantity(totalQuantity)
+                                        .build();
+                        lot.change(command);
+                        lot = lotService.save(lot);
+                        LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
+                        historyService.saveHistory(lotHistoryEntity);
+
+                    }
+                }
+            }
         }
 
         // TODO : GAL 조업 완료 보고 이때, 주의할 점은 해포 설비와 조업 설비 TC 코드 다름 주의 완료 보고, 그리고 next rrn 요청 보고
+        // powder EventQueue
+        try{
+            PowderEventQueueReportVo powderEventQueueReportVo
+                    = PowderEventQueueReportVo
+                    .builder()
+                    .messageName(messageName)
+                    .equipmentDef(equipmentDef)
+                    .equipment(equipment)
+                    .carrierName(carrierName)
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
     }
 
     /**

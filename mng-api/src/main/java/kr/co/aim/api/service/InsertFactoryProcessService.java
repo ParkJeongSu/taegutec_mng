@@ -337,8 +337,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     .builder()
                     .transportJobName(transportJobName)
                     .messageName(messageName)
-                    .optionalPort(optionalPorts)
-                    .optionalPortDef(optionalPortDef)
+                    .portDef(portDef)
+                    .port(port)
                     .carrierName(carrierName)
                     .actualWeight(actualWeight)
                     .actualRackLocationId(actualLocationId)
@@ -406,8 +406,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     .builder()
                     .transportJobName(transportJobName)
                     .messageName(messageName)
-                    .optionalPort(optionalPorts)
-                    .optionalPortDef(optionalPortDef)
+                    .portDef(portDef)
+                    .port(port)
                     .carrierName(carrierName)
                     .actualWeight(actualWeight)
                     .tx(tx)
@@ -479,9 +479,16 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             transportJob = transportJobService.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
-            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
             Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
-
+            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            PortDef portDef = null;
+            Port port = null;
+            if(optionalPortDef.isPresent()){
+                portDef = optionalPortDef.get();
+            }
+            if(optionalPort.isPresent()){
+                port = optionalPort.get();
+            }
             // insert EventQueue
             try{
                 if(CollectionUtils.isNotEmpty(reasons)){
@@ -499,8 +506,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .builder()
                             .transportJobName(transportJob.getTransportJobName())
                             .messageName(messageName)
-                            .optionalPortDef(optionalPortDef)
-                            .optionalPort(optionalPort)
+                            .portDef(portDef)
+                            .port(port)
                             .carrierName(carrierName)
                             .actualWeight(actualWeight)
                             .reasonList(cancelReasonVoList)
@@ -536,12 +543,21 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         Optional<Port> optionalPort = Optional.empty();
         Optional<PortDef> optionalPortDef = Optional.empty();
+        PortDef portDef = null;
+        Port port = null;
+
 
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             if(StringUtils.equals(destinationPositionTypeName,PositionTypeName.PORT.getValue())){
                 optionalPort = portService.findPortByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
                 optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+                if(optionalPortDef.isPresent()){
+                    portDef = optionalPortDef.get();
+                }
+                if(optionalPort.isPresent()){
+                    port = optionalPort.get();
+                }
             }
 
             TransportJob transportJob = optionalTransportJob.get();
@@ -580,8 +596,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         .builder()
                         .transportJobName(transportJob.getTransportJobName())
                         .messageName(messageName)
-                        .optionalPort(optionalPort)
-                        .optionalPortDef(optionalPortDef)
+                        .portDef(portDef)
+                        .port(port)
                         .carrierName(carrierName)
                         .actualZoneName(actualZoneName)
                         .actualWeight(actualWeight)
@@ -613,6 +629,14 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
         Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        PortDef portDef = null;
+        Port port = null;
+        if(optionalPortDef.isPresent()){
+            portDef = optionalPortDef.get();
+        }
+        if(optionalPort.isPresent()){
+            port = optionalPort.get();
+        }
 
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
@@ -655,8 +679,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         .builder()
                         .transportJobName(transportJob.getTransportJobName())
                         .messageName(messageName)
-                        .optionalPort(optionalPort)
-                        .optionalPortDef(optionalPortDef)
+                        .portDef(portDef)
+                        .port(port)
                         .carrierName(carrierName)
                         .resultCode(resultCode)
                         .resultMessage(resultMessage)
@@ -1028,6 +1052,14 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
         Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
         Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        PortDef portDef = null;
+        Port port = null;
+        if(optionalPortDef.isPresent()){
+            portDef = optionalPortDef.get();
+        }
+        if(optionalPort.isPresent()){
+            port = optionalPort.get();
+        }
 
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
@@ -1070,8 +1102,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         .builder()
                         .transportJobName(transportJob.getTransportJobName())
                         .messageName(messageName)
-                        .optionalPort(optionalPort)
-                        .optionalPortDef(optionalPortDef)
+                        .portDef(portDef)
+                        .port(port)
                         .carrierName(carrierName)
                         .resultCode(resultCode)
                         .resultMessage(resultMessage)

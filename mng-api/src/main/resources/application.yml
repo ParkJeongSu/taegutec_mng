@@ -1,9 +1,9 @@
 server:
-  port: 11402
+  port: 11405
   servlet:
     context-path: /wcs-web
 factory:
-  type: powder # 쉼표로 구분하여 여러 개 지정 # [ insert | powder ]
+  type: insert # [ insert | powder ]
 spring:
   application:
     name: mng
@@ -20,7 +20,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: pex # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
+    active: simulator,tex,pex,web # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
@@ -217,6 +217,7 @@ spring:
         concurrency: 10 # 시작 시 생성되는 소비자(consumer) 스레드 수
         max-concurrency: 10 # 부하 증가 시 최대 확장 가능한 소비자 스레드 수
         prefetch: 1 # 스레드당 딱 1개씩만 사전 인출
+        shutdown-timeout: 60s               # 종료 시 60초 대기 (setShutdownTimeout)
         force-stop-for-concurrency: false # 종료 시 리스너가 진행 중인 작업을 마칠 때까지 기다리게 함
         missing-queues-fatal: true # 리슨하려는 큐가 없으면 치명적(Fatal) 에러로 간주하고 앱 종료 시도
         default-requeue-rejected: false # 메시지 처리 중 에러가 났을 때, 다시 큐에 넣지 않음 (중요!)

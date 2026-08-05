@@ -46,4 +46,6 @@ public interface TransportOrderRepository {
 
     Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable);
 
+    Long findMaxOrderId();
+
 }

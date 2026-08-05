@@ -176,10 +176,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleCarrierUnblocked(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -223,10 +221,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleTakeOffCarrier(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -258,8 +254,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 orderLineNumber = "";
                 orderType = transportOrder.getTransportType();
                 galId = transportOrder.getGalId();
-                if(optionalPortDef.isPresent()){
-                    portDef = optionalPortDef.get();
+                if(ObjectUtils.isNotEmpty(portDef)){
                     actualWorkStationId = portDef.getWorkCenterName();
                 }
             }
@@ -290,10 +285,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleCarrierBlocked(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -348,10 +341,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleTransportJobCancelCompleted(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -543,10 +534,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleTransportJobStarted(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -633,10 +622,9 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleTransportJobValidationReply(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
+
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -676,8 +664,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     orderLineNumber = "";
                     orderType = transportOrder.getTransportType();
                     galId =  transportOrder.getGalId();
-                    if(optionalPortDef.isPresent()){
-                        portDef = optionalPortDef.get();
+                    if( ObjectUtils.isNotEmpty(portDef)){
                         actualWorkStationId = portDef.getWorkCenterName();
                         actualLocationId = portDef.getLocationId();
                     }
@@ -716,8 +703,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         orderLineNumber = "";
                         orderType = transportOrder.getTransportType();
                         galId =  transportOrder.getGalId();
-                        if(optionalPortDef.isPresent()){
-                            portDef = optionalPortDef.get();
+                        if( ObjectUtils.isNotEmpty(portDef) ){
                             actualWorkStationId = portDef.getWorkCenterName();
                             actualLocationId = portDef.getLocationId();
                         }
@@ -785,10 +771,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleTransportJobReply(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -831,8 +815,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         orderLineNumber = "";
                         orderType = transportOrder.getTransportType();
                         galId =  transportOrder.getGalId();
-                        if(optionalPortDef.isPresent()){
-                            portDef = optionalPortDef.get();
+                        if( ObjectUtils.isNotEmpty(portDef)){
                             actualWorkStationId = portDef.getWorkCenterName();
                             actualLocationId = portDef.getLocationId();
                         }
@@ -876,8 +859,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         orderLineNumber = "";
                         orderType = transportOrder.getTransportType();
                         galId =  transportOrder.getGalId();
-                        if(optionalPortDef.isPresent()){
-                            portDef = optionalPortDef.get();
+                        if( ObjectUtils.isNotEmpty(portDef) ){
                             actualWorkStationId = portDef.getWorkCenterName();
                             actualLocationId = portDef.getLocationId();
                         }
@@ -945,10 +927,9 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleTransportJobCompleted(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
+
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -1155,8 +1136,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     // outbound : OutOfRack
                     // inbound : ArrivedAtRack
                     if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(), transportJob.getTransportType())){
-                        if(optionalPortDef.isPresent()){
-                            portDef = optionalPortDef.get();
+                        if( ObjectUtils.isNotEmpty(portDef) ){
                             actualWorkStationId = portDef.getWorkCenterName();
                         }
                         eventType = GALTransportStatus.OUT_OF_RACK.name();
@@ -1251,10 +1231,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleCarrierLocationChanged(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -1270,8 +1248,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // 반송 잡은 무조건 존재
         // 이 경우는 TransportOrder가 있을 수도 없을 수도 있음
         // TransportOrder가 없다면, 상위로 보고하지 않음
-        if(optionalPortDef.isPresent()){
-            portDef = optionalPortDef.get();
+        if( ObjectUtils.isNotEmpty(portDef) ){
+
         }else{
             return ifEventQueueDtoList;
         }
@@ -1413,10 +1391,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleCarrierScanned(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -1432,10 +1408,9 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // actualLocationId : Rack Location or location on conveyor on System
 
         String actualLocationId = "";
-        if(optionalPortDef.isPresent()){
-            PortDef portdef = optionalPortDef.get();
-            actualLocationId = portdef.getLocationId();
-            actualWorkStationId = portdef.getWorkCenterName();
+        if( ObjectUtils.isNotEmpty(portDef)){
+            actualLocationId = portDef.getLocationId();
+            actualWorkStationId = portDef.getWorkCenterName();
         }
         // Inbound ContainerId is Scanned
         // 126 repot
@@ -1496,10 +1471,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         log.info("unloadCompleted start");
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -1513,8 +1486,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // actualLocationId : Rack Location or location on conveyor on System
         String actualLocationId = vo.getActualRackLocationId();
         String actualWorkStationId = "";
-        if(optionalPortDef.isPresent()){
-            portDef = optionalPortDef.get();
+        if( ObjectUtils.isNotEmpty(portDef) ){
         }else{
             return ifEventQueueDtoList;
         }
@@ -1706,10 +1678,9 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private List<IfEventQueueDto> handleLoadCompleted(InsertEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
         String messageName = vo.getMessageName();
-        Optional<Port> optionalPort = vo.getOptionalPort();
-        Optional<PortDef> optionalPortDef = vo.getOptionalPortDef();
-        Port port = null;
-        PortDef portDef = null;
+        PortDef portDef = vo.getPortDef();
+        Port port = vo.getPort();
+
         String transportJobName =  vo.getTransportJobName();
         String eventType = "";
         String transactionCode ="";
@@ -1723,8 +1694,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String actualLocationId = vo.getActualRackLocationId();
         String actualWorkStationId = "";
 
-        if(optionalPortDef.isPresent()){
-            portDef = optionalPortDef.get();
+        if( ObjectUtils.isNotEmpty(portDef)){
         }else{
             return ifEventQueueDtoList;
         }

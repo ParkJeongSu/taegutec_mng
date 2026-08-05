@@ -152,7 +152,7 @@ public class LotCarrierMapping implements HasTransactionInfo {
         this.apply(command.getTransactionInfo());
         setQuantity(command.getQuantity());
         setJobEndTime(command.getTransactionInfo().eventTime());
-        setProcessStatus(ProcessStatus.WAIT.getValue());
+        setProcessStatus(ProcessStatus.COMPLETED.getValue());
         setRrnRequestState(RRNRequestState.REQUESTED.getValue());
         setRrnRequestTime(command.getTransactionInfo().eventTime());
         setRrnReplyTime(null);

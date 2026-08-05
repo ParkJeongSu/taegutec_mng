@@ -311,4 +311,26 @@ public class InsertSimulatorController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @PostMapping("/command/inbound")
+    public ResponseEntity<String> createInbound(@RequestBody InboundCreateDto request) {
+        // 가상 Inbound 명령 생성 비즈니스 로직
+        insertSimulatorFacade.createInbound(request);
+        return ResponseEntity.ok("SUCCESS");
+    }
+
+    @PostMapping("/command/outbound")
+    public ResponseEntity<String> createOutbound(@RequestBody OutboundCreateDto request) {
+        // 가상 Outbound 명령 생성 비즈니스 로직
+        insertSimulatorFacade.createOutbound(request);
+        return ResponseEntity.ok("SUCCESS");
+    }
+
+    @PostMapping("/command/relocation")
+    public ResponseEntity<String> createRelocation(@RequestBody RelocationCreateDto request) {
+        // 가상 Relocation 명령 생성 비즈니스 로직
+        insertSimulatorFacade.createRelocation(request);
+        return ResponseEntity.ok("SUCCESS");
+    }
+
 }

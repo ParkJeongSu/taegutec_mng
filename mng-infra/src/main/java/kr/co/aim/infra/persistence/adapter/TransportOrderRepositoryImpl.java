@@ -190,6 +190,11 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
         return new PageImpl<>(converted, pageable, total);
     }
 
+    @Override
+    public Long findMaxOrderId() {
+        return transportOrderJpaRepository.findMaxOrderId();
+    }
+
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
         if (sort != null && sort.isSorted()) {

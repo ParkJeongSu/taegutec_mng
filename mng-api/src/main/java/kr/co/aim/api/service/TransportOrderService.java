@@ -171,4 +171,9 @@ public class TransportOrderService {
     public TransportOrder save(TransportOrder transportOrder) {
         return transportOrderRepository.save(transportOrder);
     }
+
+    @Transactional("mssqlTransactionManager")
+    public Long findMaxOrderId(){
+        return  transportOrderRepository.findMaxOrderId();
+    }
 }

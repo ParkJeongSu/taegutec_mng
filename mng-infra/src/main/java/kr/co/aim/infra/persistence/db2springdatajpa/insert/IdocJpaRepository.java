@@ -50,6 +50,11 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
     )
     Long findMaxLineId();
 
+    @Query("SELECT COALESCE(MAX(i.lineId), 0) +1 FROM IdocEntity i " +
+            "WHERE i.lineId BETWEEN 500000000 AND 999999999"
+    )
+    Long findMaxLineIdForCreateOrder();
+
     @Query("SELECT COUNT(i) > 0 FROM IdocEntity i WHERE i.lineId = 1")
     boolean existsByLineIdOne();
 

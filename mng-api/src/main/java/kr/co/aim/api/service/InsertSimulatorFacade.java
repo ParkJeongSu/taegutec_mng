@@ -1,6 +1,10 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SimulatorIdsDto;
+import kr.co.aim.api.dto.insert.InboundCreateDto;
+import kr.co.aim.api.dto.insert.OutboundCreateDto;
+import kr.co.aim.api.dto.insert.RelocationCreateDto;
+import kr.co.aim.api.vo.insert.sim.OrderCreateVo;
 import kr.co.aim.api.vo.insert.sim.StationOccupiedVo;
 import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
@@ -407,4 +411,107 @@ public class InsertSimulatorFacade {
                 .build();
         transportOrderService.updateStatusTransportOrder(vo);
     }
+
+    public void createInbound(InboundCreateDto request){
+        String location = request.getLocation();        // 넣는 위치
+        String locationGroup = request.getLocationGroup();   // 넣는 위치 그룹
+        String galId = request.getGalId();           // GAL ID
+        String carrierId = request.getCarrierId();       // Carrier ID
+        String carrierType = request.getCarrierType();     // Carrier Type
+        String zoneName = request.getZoneName();        // 창고 Zone Name
+        String speed = request.getSpeed();           // 속도
+
+        // 1. h2orderm 에서 가장 높은 orderId 조회
+        // 2. transportOrder 에서 해당 orderId + 1 조회
+        // 2.1 없으면 진행
+        // 2.2 존재하면 transportOrder 에서 가장큰 orderID +1 로 조회
+        // 3 위 정보로 Inbound order 생성
+
+        Long maxOrderId = h2OrderMJpaRepository.findMaxOrderId();
+        Optional<TransportOrder> optionalTransportOrder= transportOrderService.findByTransportOrderId(maxOrderId.toString());
+        if(optionalTransportOrder.isPresent()){
+            TransportOrder transportOrder = optionalTransportOrder.get();
+            maxOrderId = transportOrderService.findMaxOrderId();
+        }
+        OrderCreateVo orderCreateVo = OrderCreateVo
+                .builder()
+                .orderId(maxOrderId.toString())
+                .location(location)
+                .locationGroup(locationGroup)
+                .galId(galId)
+                .carrierId(carrierId)
+                .carrierType(carrierType)
+                .zoneName(zoneName)
+                .speed(speed)
+                //.cOrderPrio()
+                .build();
+        insertSimulatorInterfaceService.createInbound(orderCreateVo);
+
+    }
+
+    public void createOutbound(OutboundCreateDto request){
+        String locationGroup = request.getLocationGroup();   // 넣는 위치 그룹
+        String galId = request.getGalId();           // GAL ID
+        String carrierId = request.getCarrierId();       // Carrier ID
+        String carrierType = request.getCarrierType();     // Carrier Type
+        String zoneName = request.getZoneName();        // 창고 Zone Name
+        Integer orderPriority = request.getOrderPriority();
+
+        // 1. h2orderm 에서 가장 높은 orderId 조회
+        // 2. transportOrder 에서 해당 orderId + 1 조회
+        // 2.1 없으면 진행
+        // 2.2 존재하면 transportOrder 에서 가장큰 orderID +1 로 조회
+        // 3 위 정보로 Inbound order 생성
+
+        Long maxOrderId = h2OrderMJpaRepository.findMaxOrderId();
+        Optional<TransportOrder> optionalTransportOrder= transportOrderService.findByTransportOrderId(maxOrderId.toString());
+        if(optionalTransportOrder.isPresent()){
+            TransportOrder transportOrder = optionalTransportOrder.get();
+            maxOrderId = transportOrderService.findMaxOrderId();
+        }
+        OrderCreateVo orderCreateVo = OrderCreateVo
+                .builder()
+                .orderId(maxOrderId.toString())
+                .locationGroup(locationGroup)
+                .galId(galId)
+                .carrierId(carrierId)
+                .carrierType(carrierType)
+                .zoneName(zoneName)
+                .orderPriority(orderPriority)
+                .build();
+        insertSimulatorInterfaceService.createOutbound(orderCreateVo);
+    }
+
+    public void createRelocation(RelocationCreateDto request){
+        String galId = request.getGalId();           // GAL ID
+        String carrierId = request.getCarrierId();       // Carrier ID
+        String carrierType = request.getCarrierType();     // Carrier Type
+        String sourceZoneName = request.getSourceZoneName();  // 출발지 Zone Name
+        String targetZoneName = request.getTargetZoneName();  // 목적지 Zone Name
+
+        // 1. h2orderm 에서 가장 높은 orderId 조회
+        // 2. transportOrder 에서 해당 orderId + 1 조회
+        // 2.1 없으면 진행
+        // 2.2 존재하면 transportOrder 에서 가장큰 orderID +1 로 조회
+        // 3 위 정보로 Inbound order 생성
+
+        Long maxOrderId = h2OrderMJpaRepository.findMaxOrderId();
+        Optional<TransportOrder> optionalTransportOrder= transportOrderService.findByTransportOrderId(maxOrderId.toString());
+        if(optionalTransportOrder.isPresent()){
+            TransportOrder transportOrder = optionalTransportOrder.get();
+            maxOrderId = transportOrderService.findMaxOrderId();
+        }
+        OrderCreateVo orderCreateVo = OrderCreateVo
+                .builder()
+                .orderId(maxOrderId.toString())
+                .galId(galId)
+                .carrierId(carrierId)
+                .carrierType(carrierType)
+                .sourceZoneName(sourceZoneName)
+                .targetZoneName(targetZoneName)
+                //.cOrderPrio()
+                .build();
+        insertSimulatorInterfaceService.createRelocation(orderCreateVo);
+    }
+
 }

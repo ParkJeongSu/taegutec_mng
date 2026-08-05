@@ -60,6 +60,18 @@ public class LotCarrierMappingRepositoryImpl implements LotCarrierMappingReposit
     }
 
     @Override
+    public List<LotCarrierMapping> findByLotNameAndProductionStatusNot(String lotName, String productionStatus) {
+        return jpaRepository.findByLotNameAndProductionStatusNot(lotName,productionStatus).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<LotCarrierMapping> findByLotNameAndCarrierName(String lotName, String carrierName) {
+        return jpaRepository.findByLotNameAndCarrierName(lotName,carrierName).map(mapper::toDomain);
+    }
+
+    @Override
     public Optional<LotCarrierMapping> findByCarrierName(String carrierName) {
         return jpaRepository.findByCarrierName(carrierName).map(mapper::toDomain);
 

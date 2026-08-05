@@ -1,15 +1,14 @@
 package kr.co.aim.api.vo.powder.ops;
 
-import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.common.record.TransactionInfo;
+import kr.co.aim.domain.model.Equipment;
+import kr.co.aim.domain.model.EquipmentDef;
 import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
 
 @Getter
 @Builder
@@ -17,8 +16,10 @@ public class PowderEventQueueReportVo {
 
     private final String messageName;
     private final TransactionInfo tx;
-    private final Optional<Port> optionalPort;
-    private final Optional<PortDef> optionalPortDef;
+    private final EquipmentDef equipmentDef;
+    private final Equipment equipment;
+    private final PortDef portDef;
+    private final Port port;
     private final String carrierName;
     // orderType
     //    MATERIAL_INBOUND : 원자재 입고
