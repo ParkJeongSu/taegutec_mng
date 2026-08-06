@@ -10,5 +10,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderCreateReplyBody {
-    private List<ProductionOrder> orderList;
+    private List<ProductionOrderBody> orderList;
 }

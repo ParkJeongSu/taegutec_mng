@@ -1,8 +1,6 @@
 package kr.co.aim.api.web.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.oas.annotations.Hidden;
-import kr.co.aim.api.dto.ProductionOrderSimulatorRequestDto;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;
@@ -135,8 +133,8 @@ public class MessageSendController {
 
         BaseMessage<OrderCreateRequestBody> request = new BaseMessage<>();
         OrderCreateRequestBody body = new OrderCreateRequestBody();
-        List<ProductionOrder> list = new ArrayList<>();
-        ProductionOrder order = new ProductionOrder();
+        List<ProductionOrderBody> list = new ArrayList<>();
+        ProductionOrderBody order = new ProductionOrderBody();
         order.setId(TsidUtils.nextId());
         order.setOrderId("123");
         list.add(order);

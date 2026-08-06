@@ -29,7 +29,7 @@ public class CarrierSelectionService {
     /**
      * DP(0-1 Knapsack) 기반 캐리어 최적 조합 선택
      */
-    public List<LotCarrierMapping> selectCarriers(
+    public List<LotCarrierMapping> selectBestCarriers(
             List<LotCarrierMapping> availablePool,
             BigDecimal targetQuantity,
             BigDecimal toleranceQuantity

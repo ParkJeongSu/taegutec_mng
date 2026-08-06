@@ -85,9 +85,10 @@ public class LotCarrierMappingRepositoryImpl implements LotCarrierMappingReposit
     }
 
     @Override
-    public Optional<LotCarrierMapping> findByMngKey(Long mngKey) {
-        return jpaRepository.findByMngKey(mngKey)
-                .map(mapper::toDomain);
+    public List<LotCarrierMapping> findByMngKey(Long mngKey) {
+        return jpaRepository.findByMngKey(mngKey).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -178,6 +179,11 @@ public class LotCarrierMappingRepositoryImpl implements LotCarrierMappingReposit
     @Override
     public List<LotCarrierMapping> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber, List<String> productionStatus) {
         return jpaRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(orderId,orderLineNumber,productionStatus).stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<LotCarrierMapping> findLotCarrierMappingForUnpacking(String lotName, String carrierType) {
+        return jpaRepository.findLotCarrierMappingForUnpacking(lotName,carrierType).stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {

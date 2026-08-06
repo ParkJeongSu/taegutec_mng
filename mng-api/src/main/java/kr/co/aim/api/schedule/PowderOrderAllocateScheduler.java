@@ -3,7 +3,7 @@ package kr.co.aim.api.schedule;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.OrderAllocateRequestBody;
+import kr.co.aim.common.format.ProductionOrderAllocateRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.ProductionOrder;
@@ -41,19 +41,26 @@ public class PowderOrderAllocateScheduler {
     )
     @Transactional
     public void powderOrderAllocateRequest() {
+
         // 1. CREATED 상태의 ProductionOrder 조회
-        List<String> productionOrderState = new ArrayList<>();
-        productionOrderState.add(ProductionOrderState.CREATED.getValue());
-        List<ProductionOrder> createdOrders = productionOrderService.findByProductionOrderStateInOrderByCreateTimeAsc(
-                productionOrderState
+        //List<String> productionOrderState = new ArrayList<>();
+        //productionOrderState.add(ProductionOrderState.CREATED.getValue());
+        //List<ProductionOrder> productionOrderList = productionOrderService.findByProductionOrderStateInOrderByCreateTimeAsc(productionOrderState);
+
+        List<String> productionOrderType = new ArrayList<>();
+        productionOrderType.add(ProductionOrderType.PRODUCTION.getValue());
+        productionOrderType.add(ProductionOrderType.UNPACKING.getValue());
+        List<ProductionOrder> productionOrderList = productionOrderService.findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(
+                ProductionOrderState.ACCEPTED.getValue(),
+                productionOrderType
         );
 
-        if (CollectionUtils.isEmpty(createdOrders)) {
+        if (CollectionUtils.isEmpty(productionOrderList)) {
             return;
         }
 
         TransactionInfo tx = TransactionInfo.now(EventName.ALLOCATE_REQUEST.getValue(), SystemName.MNG.getValue(), "");
-        for (ProductionOrder order : createdOrders) {
+        for (ProductionOrder order : productionOrderList) {
             try {
                 // 2. 선점 처리를 위해 상태를 ALLOCATE_REQUEST로 변경
                 Optional<ProductionOrder> optionalProductionOrder = productionOrderService.updateOrderState(tx,order.getId(), ProductionOrderState.ALLOCATE_REQUEST.getValue());
@@ -61,15 +68,15 @@ public class PowderOrderAllocateScheduler {
                 if(optionalProductionOrder.isPresent()){
                     // 3. MQ 메시지 생성 및 발송
                     String transactionId = FormatUtils.generateTransactionId();
-                    BaseMessage<OrderAllocateRequestBody> request = new BaseMessage<>();
-                    request.setMessageName(MessageList.ORDER_ALLOCATE_REQUEST.getMessageName());
+                    BaseMessage<ProductionOrderAllocateRequestBody> request = new BaseMessage<>();
+                    request.setMessageName(MessageList.PRODUCTION_ORDER_ALLOCATE_REQUEST.getMessageName());
                     request.setMessageFrom(SystemName.MNG.getValue());
                     request.setMessageOwner(SystemName.MNG.getValue());
                     request.setMessageTo(SystemName.MNG.getValue());
                     request.setResultCode(ResultCode.OK.getValue());
                     request.setTransactionId(transactionId);
 
-                    OrderAllocateRequestBody body = OrderAllocateRequestBody.builder()
+                    ProductionOrderAllocateRequestBody body = ProductionOrderAllocateRequestBody.builder()
                             .id(order.getId())
                             .orderId(order.getOrderId())
                             .orderLineNumber(order.getOrderLineNumber())

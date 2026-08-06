@@ -153,7 +153,7 @@ public class ProductDefService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public ProductDef save(H2PartMPEntity h2PartMPEntity){
+    public ProductDef createProductDef(H2PartMPEntity h2PartMPEntity){
         ProductDef  productDef = null;
         Optional<ProductDef> optionalProductDef = findByH2PartMPEntity(h2PartMPEntity.getCPartId());
         TransactionInfo tx =TransactionInfo.now(EventName.TRANSFER.getValue(), SystemName.GAL.getValue(), "");
@@ -172,6 +172,8 @@ public class ProductDefService {
                     .build();
             productDef = ProductDef.create(command);
             productDef = productDefRepository.save(productDef);
+            ProductDefHistoryEntity historyEntity = productDefMapper.toHistoryEntity(productDef);
+            historyService.saveHistory(historyEntity);
         }else{
             // 변경 케이스
             productDef =  optionalProductDef.get();
@@ -189,6 +191,8 @@ public class ProductDefService {
 
             productDef.update(command);
             productDef = productDefRepository.save(productDef);
+            ProductDefHistoryEntity historyEntity = productDefMapper.toHistoryEntity(productDef);
+            historyService.saveHistory(historyEntity);
         }
 
         return productDef;

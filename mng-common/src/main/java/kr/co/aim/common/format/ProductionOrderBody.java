@@ -1,6 +1,5 @@
 package kr.co.aim.common.format;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -11,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductionOrder {
+public class ProductionOrderBody {
     private Long id;
     private String orderId;
     private String orderLineNumber;

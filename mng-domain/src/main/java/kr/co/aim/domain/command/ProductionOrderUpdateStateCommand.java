@@ -10,6 +10,5 @@ import lombok.RequiredArgsConstructor;
 @Builder
 public class ProductionOrderUpdateStateCommand {
     private final TransactionInfo transactionInfo;
-    private final Long id;
     private final String productionOrderState;
 }

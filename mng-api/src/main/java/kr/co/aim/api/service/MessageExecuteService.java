@@ -7,6 +7,7 @@ import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -59,6 +60,7 @@ public class MessageExecuteService {
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final LotMapper lotMapper;
     private final PortMapper portMapper;
+    private final ProductionOrderMapper productionOrderMapper;
     private final EquipmentMapper equipmentMapper;
     private final PortDefMapper portDefMapper;
     private final CarrierMapper carrierMapper;
@@ -505,8 +507,68 @@ public class MessageExecuteService {
         return factoryProcessStrategy.transportOrderRequest(message);
     }
 
-    public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message){
-        factoryProcessStrategy.orderAllocateRequest(message);
+    public void productionOrderAllocateRequest(BaseMessage<ProductionOrderAllocateRequestBody> message){
+        factoryProcessStrategy.productionOrderAllocateRequest(message);
+    }
+
+    public void productionOrderValidationRequest(BaseMessage<ProductionOrderBody> message){
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
+        String messageFrom = message.getMessageFrom();
+        Long id = message.getBody().getId();
+        String resultCode= "";
+        String productionOrderState = "";
+
+        Optional<ProductionOrder> optionalProductionOrder =  productionOrderService.findById(id);
+        ProductionOrder productionOrder = null;
+        if(optionalProductionOrder.isPresent()){
+            productionOrder = optionalProductionOrder.get();
+        }else{
+            return;
+        }
+
+        TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), resultMessage);
+
+        try {
+            // Validation 이 존재한다면 여기 부분에 Valdation 추가
+
+            resultCode = ResultCode.OK.getValue();
+            productionOrderState = ProductionOrderState.ACCEPTED.getValue();
+        }catch (Exception e){
+            resultCode = ResultCode.NG.getValue();
+            productionOrderState = ProductionOrderState.REJECTED.getValue();
+        }
+
+        ProductionOrderUpdateStateCommand command =
+                ProductionOrderUpdateStateCommand
+                        .builder()
+                        .transactionInfo(tx)
+                        .productionOrderState(productionOrderState)
+                        .build();
+
+        productionOrder.updateState(command);
+        productionOrder = productionOrderService.save(productionOrder);
+        ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(productionOrder);
+        historyService.saveHistory(historyEntity);
+
+        // powder EventQueue
+        try{
+            PowderEventQueueReportVo powderEventQueueReportVo
+                    = PowderEventQueueReportVo
+                    .builder()
+                    .messageName(messageName)
+                    .productionOrder(productionOrder)
+                    .resultCode(resultCode)
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
+
+
     }
 
     public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message){
@@ -910,9 +972,8 @@ public class MessageExecuteService {
         }
         Equipment equipment = optionalEquipment.get();
 
-
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(Long.parseLong(mngKey));
-        if(optionalLotCarrierMapping.isPresent()){
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(Long.parseLong(mngKey));
+        if( ObjectUtils.isNotEmpty(lotCarrierMappingList)){
             String productionStatus = null;
             if(StringUtils.equals(EquipmentDetailType.REDUCTION.getValue(),equipmentDef.getDetailEquipmentType())){
                 // 환원로 설비
@@ -926,7 +987,7 @@ public class MessageExecuteService {
                 // 일반 조업 설비
                 productionStatus = ProductionStatus.ALLOCATED.getValue();
             }
-            LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+            LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
             TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
             ProcessJobStartedCommand command =
                     ProcessJobStartedCommand
@@ -958,7 +1019,6 @@ public class MessageExecuteService {
 
             }
 
-            // TODO : GAL 조업 시작 보고 이때, 주의할 점은 해포 설비와 조업 설비 TC 코드 다름 주의
             // powder EventQueue
             try{
                 PowderEventQueueReportVo powderEventQueueReportVo
@@ -1001,6 +1061,8 @@ public class MessageExecuteService {
         List<MngKeyName> mngKeyNameList = message.getBody().getMngKeyList();
         String lotName = message.getBody().getLotName();
         String itemName = message.getBody().getItemName();
+        Long mngKey = null;
+
 
         Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
         if(optionalEquipmentDef.isEmpty()){
@@ -1026,6 +1088,7 @@ public class MessageExecuteService {
             // 환원로 설비
             // ex) 환원로 설비의 경우 mngKeyName 을 줄수 없음
             // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
+            mngKey = TsidUtils.nextId();
             LotCarrierMappingCreateCommand command =
                     LotCarrierMappingCreateCommand
                             .builder()
@@ -1035,12 +1098,13 @@ public class MessageExecuteService {
                             .orderId(productionOrder.getOrderId())
                             .orderLineNumber(productionOrder.getOrderLineNumber())
                             .productionOrderId(productionOrder.getId())
-                            .productionStatus(ProductionStatus.ALLOCATED.getValue())
+                            .productionStatus(ProductionStatus.WAIT.getValue())
                             .processStatus(ProcessStatus.COMPLETED.getValue())
                             .quantity(quantity)
                             .jobEndTime(tx.eventTime())
                             .rrnRequestState(RRNRequestState.REQUESTED.getValue())
                             .rrnRequestTime(tx.eventTime())
+                            .mngKey(mngKey)
                             .rrnReplyTime(null)
                             .holdState(HoldState.NOT_ON_HOLD.getValue())
                             .build();
@@ -1054,6 +1118,7 @@ public class MessageExecuteService {
             // 해포 설비
             // ex) 해포 설비의 경우 mngKeyName 이 n개가 1개가 됨
             // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
+            mngKey = TsidUtils.nextId();
             LotCarrierMappingCreateCommand command =
                     LotCarrierMappingCreateCommand
                             .builder()
@@ -1063,13 +1128,14 @@ public class MessageExecuteService {
                             .orderId(productionOrder.getOrderId())
                             .orderLineNumber(productionOrder.getOrderLineNumber())
                             .productionOrderId(productionOrder.getId())
-                            .productionStatus(ProductionStatus.ALLOCATED.getValue())
+                            .productionStatus(ProductionStatus.WAIT.getValue())
                             .processStatus(ProcessStatus.COMPLETED.getValue())
                             .quantity(quantity)
                             .jobEndTime(tx.eventTime())
                             .rrnRequestState(RRNRequestState.REQUESTED.getValue())
                             .rrnRequestTime(tx.eventTime())
                             .rrnReplyTime(null)
+                            .mngKey(mngKey)
                             .holdState(HoldState.NOT_ON_HOLD.getValue())
                             .build();
 
@@ -1081,10 +1147,10 @@ public class MessageExecuteService {
         else {
             // 일반 조업 설비
             String mngKeyName = mngKeyNameList.get(0).getMngKeyName();
-            Long mngKey = Long.parseLong(mngKeyName);
-            Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(mngKey);
-            if(optionalLotCarrierMapping.isPresent()){
-                LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+            mngKey = Long.parseLong(mngKeyName);
+            List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngKey);
+            if( ObjectUtils.isNotEmpty(lotCarrierMappingList) ){
+                LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
                 ProcessJobEndedCommand command =
                         ProcessJobEndedCommand
                                 .builder()
@@ -1098,7 +1164,8 @@ public class MessageExecuteService {
                                 .orderLineNumber(orderLineNumber)
                                 .productionTaskEnd(productionTaskEnd)
                                 .productionOrderId(lotCarrierMapping.getProductionOrderId())
-                                .processStatus(ProcessStatus.WAIT.getValue())
+                                .productionStatus(ProductionStatus.WAIT.getValue())
+                                .processStatus(ProcessStatus.COMPLETED.getValue())
                                 .quantity(quantity)
                                 .mngKey(mngKey)
                                 .jobEndTime(tx.eventTime())
@@ -1107,7 +1174,6 @@ public class MessageExecuteService {
                 lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
                 LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
                 historyService.saveHistory(historyEntity);
-
             }
         }
 
@@ -1153,6 +1219,8 @@ public class MessageExecuteService {
                     .equipmentDef(equipmentDef)
                     .equipment(equipment)
                     .carrierName(carrierName)
+                    .productionOrder(productionOrder)
+                    .mngKey(mngKey)
                     .tx(tx)
                     .build();
             factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
@@ -1186,12 +1254,11 @@ public class MessageExecuteService {
         Long mngKeyToLong = Long.parseLong(mngKey);
         String lastCarrierFlag = "";
 
-        //Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByMngKey(mngKeyToLong);
-        if(optionalLotCarrierMapping.isEmpty()){
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngKeyToLong);
+        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
             return null;
         }
-        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         RecipeReplyCommand command =
                 RecipeReplyCommand
@@ -1213,13 +1280,13 @@ public class MessageExecuteService {
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
         productionStatus.add(ProductionStatus.ALLOCATED.getValue());
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+        List<LotCarrierMapping> lotCarrierMappingListByOrderInfo = lotCarrierMappingService.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
                 orderId,
                 orderLineNumber,
                 productionStatus
         );
 
-        if(lotCarrierMappingList.isEmpty() || lotCarrierMappingList.size() == 1){
+        if(lotCarrierMappingListByOrderInfo.isEmpty() || lotCarrierMappingListByOrderInfo.size() == 1){
             lastCarrierFlag = YN.Y.name();
         }
         else{

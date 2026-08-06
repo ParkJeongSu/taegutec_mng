@@ -1,10 +1,7 @@
 package kr.co.aim.api.vo.powder.ops;
 
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.model.Equipment;
-import kr.co.aim.domain.model.EquipmentDef;
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.domain.model.PortDef;
+import kr.co.aim.domain.model.*;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -20,6 +17,7 @@ public class PowderEventQueueReportVo {
     private final Equipment equipment;
     private final PortDef portDef;
     private final Port port;
+    private final ProductionOrder productionOrder;
     private final String carrierName;
     // orderType
     //    MATERIAL_INBOUND : 원자재 입고
@@ -37,16 +35,13 @@ public class PowderEventQueueReportVo {
     private final String resultCode;
     private final String resultMessage;
 
-    private final String equipmentName;
     private final String recipeName;
     private final String lotName;
     private final String itemName;
-    private final String orderId;
-    private final String orderLineNumber;
-    private final Long productionOrderId;
     private final String productionStatus;
     private final String processStatus;
     private final BigDecimal quantity;
+    private final BigDecimal missQuantity;
     private final BigDecimal scrapQuantity;
     private final Long mngKey;
 

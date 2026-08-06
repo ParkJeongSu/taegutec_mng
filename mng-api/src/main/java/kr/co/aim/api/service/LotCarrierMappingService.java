@@ -42,6 +42,11 @@ public class LotCarrierMappingService {
         return optional.get();
     }
 
+    @Transactional(value = "mssqlTransactionManager")
+    public List<LotCarrierMapping> findLotCarrierMappingForUnpacking(String lotName, String carrierType){
+        return lotCarrierMappingRepository.findLotCarrierMappingForUnpacking(lotName,carrierType);
+    }
+
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public List<LotCarrierMapping> findByLotName(String lotName) {
         return lotCarrierMappingRepository.findByLotName(lotName);
@@ -81,7 +86,7 @@ public class LotCarrierMappingService {
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public Optional<LotCarrierMapping> findByMngKey(Long mngKey) {
+    public List<LotCarrierMapping> findByMngKey(Long mngKey) {
         return lotCarrierMappingRepository.findByMngKey(mngKey);
     }
 

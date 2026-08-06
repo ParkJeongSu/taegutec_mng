@@ -26,6 +26,11 @@ public interface ProductionOrderJpaRepository extends JpaRepository<ProductionOr
             String productionOrderState
     );
 
+    List<ProductionOrderEntity> findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(
+            String productionOrderState,
+            List<String> productionOrderType
+    );
+
     List<ProductionOrderEntity> findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(
             String equipmentName,
             List<String> productionOrderState

@@ -2,6 +2,8 @@ package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.dto.powder.*;
+import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
+import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.*;
@@ -48,6 +50,7 @@ public class RawMaterialReceivingService {
     private final LotMapper lotMapper;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final HistoryService historyService;
+    private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
 
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
@@ -63,7 +66,7 @@ public class RawMaterialReceivingService {
         // 1. ProductionOrder 조회 후 원자재 입고 type validation
         // 2. Lot 생성
         // 3. 반환
-
+        String messageName = MessageList.MATERIAL_INBOUND_START.getMessageName();
         List<RawMaterialReceivingStart> list = request.getList();
         RawMaterialReceivingStart first = list.get(0);
         TransactionInfo tx = TransactionInfo.now(EventName.RAW_MATERIAL_RECEIVING_START.getValue(), first.getEventUser(),first.getEventComment());
@@ -102,6 +105,21 @@ public class RawMaterialReceivingService {
             LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
             historyService.saveHistory(historyEntity);
             responseList.add(RawMaterialReceivingStartResponse.from(rawMaterialReceivingStart));
+
+            // powder EventQueue
+            try{
+                PowderEventQueueReportVo powderEventQueueReportVo
+                        = PowderEventQueueReportVo
+                        .builder()
+                        .messageName(messageName)
+                        .productionOrder(productionOrder)
+                        .tx(tx)
+                        .build();
+                factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+            }
+            catch(Exception e){
+                log.error("EventQueue enqueue error",e);
+            }
         }
 
 
@@ -119,6 +137,7 @@ public class RawMaterialReceivingService {
         // 2. Carrier 존재 Validation
         // 3. LotCarrierMapping 데이터 생성 이때, 기본 가방의 무게값 gal Quantity에 생성
         // 4. 반환
+        String messageName = MessageList.BAG_ON_PALLET.getMessageName();
         Long id = request.getId();
         String orderId = request.getOrderId();
         String lotName = request.getLotName();
@@ -180,6 +199,21 @@ public class RawMaterialReceivingService {
 
         List<PalletBagBindingResponse> responseList = new ArrayList<>();
         responseList.add(PalletBagBindingResponse.from(request));
+
+        // powder EventQueue
+        try{
+            PowderEventQueueReportVo powderEventQueueReportVo
+                    = PowderEventQueueReportVo
+                    .builder()
+                    .messageName(messageName)
+                    .productionOrder(productionOrder)
+                    .tx(tx)
+                    .build();
+            factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+        }
+        catch(Exception e){
+            log.error("EventQueue enqueue error",e);
+        }
 
         return new PageImpl<>(responseList, Pageable.unpaged(), responseList.size());
     }

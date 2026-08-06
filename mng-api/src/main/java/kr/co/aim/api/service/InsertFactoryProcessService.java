@@ -1165,7 +1165,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
-    public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message) {
+    public void productionOrderAllocateRequest(BaseMessage<ProductionOrderAllocateRequestBody> message) {
 
     }
 }

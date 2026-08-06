@@ -11,5 +11,5 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderCreateRequestBody {
-    private List<ProductionOrder> orderList = new ArrayList<>();
+    private List<ProductionOrderBody> orderList = new ArrayList<>();
 }

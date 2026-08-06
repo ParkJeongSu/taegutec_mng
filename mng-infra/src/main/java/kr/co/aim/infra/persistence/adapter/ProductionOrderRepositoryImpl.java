@@ -98,6 +98,11 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     }
 
     @Override
+    public List<ProductionOrder> findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(String productionOrderState, List<String> productionOrderType) {
+        return productionOrderJpaRepository.findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(productionOrderState,productionOrderType).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public List<ProductionOrder> findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(String equipmentName, List<String> productionOrderState) {
         return productionOrderJpaRepository.findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(equipmentName,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
     }

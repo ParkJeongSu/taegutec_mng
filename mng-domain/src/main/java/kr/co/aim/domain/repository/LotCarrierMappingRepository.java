@@ -5,6 +5,8 @@ import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.LotCarrierMappingHistory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,7 +20,7 @@ public interface LotCarrierMappingRepository {
     Optional<LotCarrierMapping> findByLotNameAndCarrierName(String lotName,String carrierName);
     Optional<LotCarrierMapping> findByCarrierName(String carrierName);
     List<LotCarrierMapping> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
-    Optional<LotCarrierMapping> findByMngKey(Long mngKey);
+    List<LotCarrierMapping> findByMngKey(Long mngKey);
     LotCarrierMapping save(LotCarrierMapping mapping);
     void deleteAllByIdInBatch(List<Long> ids);
     List<LotCarrierMappingHistory> findHistoryByPeriod(LocalDateTime start, LocalDateTime end);
@@ -28,4 +30,5 @@ public interface LotCarrierMappingRepository {
     );
     Page<LotCarrierMapping> findLotCarrierMappingWithConditions(LotCarrierMappingSearchCondition condition, Pageable pageable);
     List<LotCarrierMapping> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus);
+    List<LotCarrierMapping> findLotCarrierMappingForUnpacking(String lotName, String carrierType);
 }

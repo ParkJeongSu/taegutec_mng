@@ -1,5 +1,8 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.strategy.SelectStrategy;
+import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
+import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -20,6 +23,7 @@ import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -43,6 +47,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final WhereDispatchService whereDispatchService;
     private final WhatDispatchService whatDispatchService;
+    private final List<SelectStrategy> selectStrategyList;
 
     private final PortMapper portMapper;
     private final PortDefService portDefService;
@@ -56,6 +61,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final EquipmentService equipmentService;
     private final EquipmentDefService equipmentDefService;
 
+    private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
     private final TransportJobService  transportJobService;
     private final TransportJobMapper transportJobMapper;
     private final ProductionOrderService productionOrderService;
@@ -402,6 +408,30 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             transportJob = transportJobService.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
+
+            Long productionOrderId = null;
+            if(ObjectUtils.isNotEmpty(transportJob.getOrderId())){
+                productionOrderId = Long.parseLong(transportJob.getOrderId());
+                Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById( productionOrderId );
+                if(optionalProductionOrder.isPresent()){
+                    ProductionOrder productionOrder = optionalProductionOrder.get();
+                    // powder EventQueue
+                    try{
+                        PowderEventQueueReportVo powderEventQueueReportVo
+                                = PowderEventQueueReportVo
+                                .builder()
+                                .messageName(messageName)
+                                .productionOrder(productionOrder)
+                                .carrierName(carrierName)
+                                .tx(tx)
+                                .build();
+                        factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+                    }
+                    catch(Exception e){
+                        log.error("EventQueue enqueue error",e);
+                    }
+                }
+            }
         }
     }
 
@@ -464,6 +494,30 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             transportJob = transportJobService.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
+
+            Long productionOrderId = null;
+            if(ObjectUtils.isNotEmpty(transportJob.getOrderId())){
+                productionOrderId = Long.parseLong(transportJob.getOrderId());
+                Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById( productionOrderId );
+                if(optionalProductionOrder.isPresent()){
+                    ProductionOrder productionOrder = optionalProductionOrder.get();
+                    // powder EventQueue
+                    try{
+                        PowderEventQueueReportVo powderEventQueueReportVo
+                                = PowderEventQueueReportVo
+                                .builder()
+                                .messageName(messageName)
+                                .productionOrder(productionOrder)
+                                .carrierName(carrierName)
+                                .tx(tx)
+                                .build();
+                        factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
+                    }
+                    catch(Exception e){
+                        log.error("EventQueue enqueue error",e);
+                    }
+                }
+            }
         }
     }
 
@@ -576,8 +630,8 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
-    public void orderAllocateRequest(BaseMessage<OrderAllocateRequestBody> message) {
-        OrderAllocateRequestBody body = message.getBody();
+    public void productionOrderAllocateRequest(BaseMessage<ProductionOrderAllocateRequestBody> message) {
+        ProductionOrderAllocateRequestBody body = message.getBody();
         if (body == null || body.getId() == null) {
             log.warn("Invalid OrderAllocateRequest message body");
             return;
@@ -601,11 +655,21 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             }
         }
 
+        SelectStrategy targetStrategy = null;
+        for (SelectStrategy strategy : selectStrategyList) {
+            if (strategy.supports(productionOrder)) {
+                targetStrategy = strategy;
+                break; // 적합한 전략을 찾았으므로 루프 탈출
+            }
+        }
+
+        // 조건에 맞는 전략을 찾지 못한 경우 예외 처리
+        if (targetStrategy == null) {
+            throw new IllegalArgumentException("No dispatch strategy found for context");
+        }
+
         // 3. 할당 가능한 LotCarrierMapping 목록 조회 (Inbound 시간순/생성순 정렬 데이터)
-        List<LotCarrierMapping> availableMappings = lotCarrierMappingService.findByOrderIdAndOrderLineNumber(
-                productionOrder.getOrderId(),
-                productionOrder.getOrderLineNumber()
-        );
+        List<LotCarrierMapping> availableMappings = targetStrategy.selectAvailableCarrier(productionOrder);
 
         if (CollectionUtils.isEmpty(availableMappings)) {
             log.warn("No available LotCarrierMappings found for OrderId: {}, LineNo: {}", productionOrder.getOrderId(), productionOrder.getOrderLineNumber());
@@ -613,7 +677,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         }
 
         // 4. DP 서비스를 통한 캐리어 최적 조합 선택
-        List<LotCarrierMapping> selectedMappings = carrierSelectionService.selectCarriers(
+        List<LotCarrierMapping> selectedMappings = carrierSelectionService.selectBestCarriers(
                 availableMappings,
                 productionOrder.getPlanQuantity(),
                 toleranceVal
@@ -622,7 +686,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         // 5. 선택된 캐리어 및 오더 상태 변경
         if (CollectionUtils.isNotEmpty(selectedMappings)) {
             TransactionInfo transactionInfo = TransactionInfo.now(EventName.ALLOCATE.getValue(), SystemName.MNG.getValue(), "Carrier Allocated by DP Knapsack");
-            int seq = 0;
+            int seq = 1;
             for (LotCarrierMapping mapping : selectedMappings) {
                 AllocatedCommand command =
                         AllocatedCommand

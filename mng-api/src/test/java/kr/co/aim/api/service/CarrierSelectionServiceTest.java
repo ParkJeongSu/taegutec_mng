@@ -35,7 +35,7 @@ class CarrierSelectionServiceTest {
         pool.add(createMapping("CARRIER_4", "500.000"));
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectCarriers(pool, targetQty, toleranceQty);
+        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -68,7 +68,7 @@ class CarrierSelectionServiceTest {
         pool.add(createMapping("CARRIER_5", "700.000"));
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectCarriers(pool, targetQty, toleranceQty);
+        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -100,7 +100,7 @@ class CarrierSelectionServiceTest {
         pool.add(createMapping("CARRIER_2", "600.000")); // 가능 조합: 500, 600, 1100 (모두 오차범위 밖)
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectCarriers(pool, targetQty, toleranceQty);
+        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -121,7 +121,7 @@ class CarrierSelectionServiceTest {
         pool.add(createMapping("CARRIER_3", "300.000")); // 합: 1000.500
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectCarriers(pool, targetQty, toleranceQty);
+        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -143,9 +143,9 @@ class CarrierSelectionServiceTest {
         List<LotCarrierMapping> emptyPool = new ArrayList<>();
 
         // When
-        List<LotCarrierMapping> result1 = carrierSelectionService.selectCarriers(emptyPool, new BigDecimal("1000"), new BigDecimal("10"));
-        List<LotCarrierMapping> result2 = carrierSelectionService.selectCarriers(null, new BigDecimal("1000"), new BigDecimal("10"));
-        List<LotCarrierMapping> result3 = carrierSelectionService.selectCarriers(emptyPool, null, new BigDecimal("10"));
+        List<LotCarrierMapping> result1 = carrierSelectionService.selectBestCarriers(emptyPool, new BigDecimal("1000"), new BigDecimal("10"));
+        List<LotCarrierMapping> result2 = carrierSelectionService.selectBestCarriers(null, new BigDecimal("1000"), new BigDecimal("10"));
+        List<LotCarrierMapping> result3 = carrierSelectionService.selectBestCarriers(emptyPool, null, new BigDecimal("10"));
 
         // Then
         assertTrue(result1.isEmpty());

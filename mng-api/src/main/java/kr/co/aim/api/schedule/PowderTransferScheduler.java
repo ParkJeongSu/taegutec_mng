@@ -7,6 +7,7 @@ import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.OrderCreateRequestBody;
+import kr.co.aim.common.format.ProductionOrderBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProductionOrderCreateCommand;
@@ -21,7 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Component
@@ -67,60 +68,20 @@ public class PowderTransferScheduler {
         // MATERIAL_ISSUE > WMS
 
         // 6단계 errorCode와 dtimemode를 수정하고,
-
-        List<IdocPEntity> idocEntities = powderExternalInterfaceService.findByStateAndErrorCode(10L,0L);
+        List<IdocPEntity> idocEntities = powderExternalInterfaceService.findByStateAndErrorCode(IdocState.INITIAL.getValue(),IdocErrorCode.INIT.getValue());
 
         if(CollectionUtils.isEmpty(idocEntities)){
             return;
         }
-        TransactionInfo transactionInfo = TransactionInfo.now(
-                EventName.TRANSFER.getValue(),
-                SystemName.MNG.getValue(),
-                "");
+        TransactionInfo transactionInfo = TransactionInfo.now(EventName.TRANSFER.getValue(), SystemName.MNG.getValue(), "");
         for(IdocPEntity idocEntity : idocEntities){
+
             try {
                 // Part
-                if( idocEntity.getIdocTypId() == 19L ){
-
-                    // List PartM 조회
-                    Pageable pageable = Pageable.unpaged();
-                    Page<H2PartMPEntity> partMPEntities = powderExternalInterfaceService.getPartList(idocEntity.getLineId(),pageable);
-                    List<H2PartMPEntity> h2PartMPEntities = partMPEntities.getContent();
-                    // product_def 조회
-
-                    // 데이터 있으면 변경
-                    // 데이터 없으면 생성
-                    // n개의 데이터 erp 생성(4) 수정(230) 보고
-                    for(H2PartMPEntity h2PartMP : h2PartMPEntities){
-                        Optional<ProductDef> optionalProductDef = productDefService.findByH2PartMPEntity(h2PartMP);
-                        ProductDef productDef = null;
-                        if(optionalProductDef.isEmpty()){
-                            // 생성 보고 (4)
-                            productDef = productDefService.save(h2PartMP);
-                            H2TransPReportVo vo =
-                                    H2TransPReportVo
-                                            .builder()
-                                            .status(GALProductionStatus.CREATED_PART_MASTER)
-                                            .cPartId(h2PartMP.getCPartId())
-                                            .build();
-                            powderExternalInterfaceService.reportPartMPCreated(vo);
-
-                        }else {
-                            // 생성 보고 (230)
-                            productDef = productDefService.save(h2PartMP);
-                            H2TransPReportVo vo =
-                                    H2TransPReportVo
-                                            .builder()
-                                            .status(GALProductionStatus.CHANGED_PART_MASTER)
-                                            .cPartId(h2PartMP.getCPartId())
-                                            .build();
-                            powderExternalInterfaceService.reportPartMPModified(vo);
-                        }
-                    }
-
+                if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PART.getCode())){
+                    createPart(idocEntity);
                 }
                 else{
-
                     // H2OrderMPEntity 조회 및 List<H2OrderDPEntity> 조회 by IdocId
 
                     // List<H2OrderDPEntity> 갯수만큼 Production Order 생성
@@ -131,45 +92,45 @@ public class PowderTransferScheduler {
                     List<H2OrderDPEntity> h2OrderDEntities = powderExternalInterfaceService.selectH2OrderDEntityByIdocId(idocEntity.getLineId());
                     for(H2OrderDPEntity  h2OrderDPEntity : h2OrderDEntities){
                         String productionOrderType = "";
-                        if(idocEntity.getIdocTypId() == 12L){
+                        if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())){
                             // 원자재 입고
                             productionOrderType = ProductionOrderType.MATERIAL_INBOUND.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 11L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())){
                             // 출하
                             productionOrderType = ProductionOrderType.OUTBOUND.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 13L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())){
                             // 해포
                             productionOrderType = ProductionOrderType.UNPACKING.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 21L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())){
                             // MATERIAL_ISSUE
                             productionOrderType = ProductionOrderType.PRODUCTION_ISSUE.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 15L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())){
                             // 조업
                             productionOrderType = ProductionOrderType.PRODUCTION.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 17L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())){
                             // RRN_REPLY
                             productionOrderType = ProductionOrderType.RRN_REPLY.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 51L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())){
                             // ENTER_TO_STOCK
                             productionOrderType = ProductionOrderType.ENTER_TO_STOCK.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 31L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())){
                             // PACKING_ISSUE
                             productionOrderType = ProductionOrderType.PACKING_ISSUE.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 18L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())){
                             // PACKING
                             productionOrderType = ProductionOrderType.PACKING.getValue();
                         }
-                        else if(idocEntity.getIdocTypId() == 50L){
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())){
                             // CHANGE_RRN
-                            productionOrderType = ProductionOrderType.CHANGE_ROUTING.getValue();
+                            productionOrderType = ProductionOrderType.CHANGE_RRN.getValue();
                         }
                         // Production Order 생성
                         ProductionOrderCreateCommand command =
@@ -188,7 +149,7 @@ public class PowderTransferScheduler {
                                         .productionOrderType(productionOrderType)
                                         .productionOrderState(ProductionOrderState.CREATED.getValue())
                                         //.reportState()
-                                        //.holdState()
+                                        .holdState(HoldState.NOT_ON_HOLD.getValue())
                                         //.reasonCode()
                                         .equipmentName(h2OrderDPEntity.getMachine())
                                         .planQuantity(h2OrderDPEntity.getQty())
@@ -215,66 +176,41 @@ public class PowderTransferScheduler {
 
                         productionOrder = productionOrderService.createProductionOrder(productionOrder);
 
+                        // ProductionOrder 에 대한 Validation
+                        sendProductionOrderValidationToPEX(transactionInfo,productionOrder);
+
                         //필요한 경우 각 시스템에 order 전송
-                        if(StringUtils.equals(ProductionOrderType.MATERIAL_INBOUND.getValue(),productionOrderType)) {
-                            // 메시지 전송
-                            String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
-
-                            BaseMessage<OrderCreateRequestBody> request = new BaseMessage<>();
-                            request.setMessageFrom(SystemName.MNG.getValue());
-                            request.setMessageOwner(SystemName.MNG.getValue());
-                            request.setMessageTo(SystemName.MNG.getValue());
-                            request.setEventTime(transactionId);
-                            request.setResultMessage("");
-                            request.setResultCode(ResultCode.OK.getValue());
-                            request.setTransactionId(transactionId);
-                            request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
-                            kr.co.aim.common.format.ProductionOrder order =
-                                    kr.co.aim.common.format.ProductionOrder
-                                            .builder()
-                                            .id(productionOrder.getId())
-                                            .orderId(productionOrder.getOrderId())
-                                            .orderLineNumber(productionOrder.getOrderLineNumber())
-                                            .lotName(productionOrder.getLotName())
-                                            .description(productionOrder.getDescription())
-                                            .itemName(productionOrder.getItemName())
-                                            .recipeName(productionOrder.getRecipeName())
-                                            .carrierName(productionOrder.getCarrierName())
-                                            .idocId(productionOrder.getIdocId())
-                                            .h2OrderDpLineId(productionOrder.getH2OrderDpLineId())
-                                            .galKey(productionOrder.getGalKey())
-                                            .productionOrderType(productionOrder.getProductionOrderType())
-                                            .productionOrderState(productionOrder.getProductionOrderState())
-                                            .reportState(productionOrder.getReportState())
-                                            .holdState(productionOrder.getHoldState())
-                                            .reasonCode(productionOrder.getReasonCode())
-                                            .equipmentName(productionOrder.getEquipmentName())
-                                            .planQuantity(productionOrder.getPlanQuantity())
-                                            .releasedQuantity(productionOrder.getReleasedQuantity())
-                                            .startedQuantity(productionOrder.getStartedQuantity())
-                                            .endedQuantity(productionOrder.getEndedQuantity())
-                                            .scrappedQuantity(productionOrder.getScrappedQuantity())
-                                            .createTime(productionOrder.getCreateTime())
-                                            .releaseTime(productionOrder.getReleaseTime())
-                                            .completeTime(productionOrder.getCompleteTime())
-                                            .validationTime(productionOrder.getValidationTime())
-                                            .createUser(productionOrder.getCreateUser())
-                                            .releaseUser(productionOrder.getReleaseUser())
-                                            .completeUser(productionOrder.getCompleteUser())
-                                            .dueDate(productionOrder.getDueDate())
-                                            .eventName(productionOrder.getEventName())
-                                            .eventTime(productionOrder.getEventTime())
-                                            .eventUser(productionOrder.getEventUser())
-                                            .eventComment(productionOrder.getEventComment())
-                                            .build();
-
-                            request.getBody().getOrderList().add(order);
-                            jsonUtils.writePrettyJson(request);
-
-                            // 5. String 으로 변환된 메시지 reply
-                            rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_WMS,RabbitConfig.ROUTING_WMS, request );
-                            log.info("Send Completed");
+                        if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())) {
+                            // 원자재 입고
                         }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())){
+                            // 출하
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())){
+                            // 해포
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())){
+                            // MATERIAL_ISSUE
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())){
+                            // 조업
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())){
+                            // RRN_REPLY
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())){
+                            // ENTER_TO_STOCK
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())){
+                            // PACKING_ISSUE
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())){
+                            // PACKING
+                        }
+                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())){
+                            // CHANGE_RRN
+                        }
+
                     }
 
                 }
@@ -289,6 +225,164 @@ public class PowderTransferScheduler {
             }
         }
 
+    }
+
+    private void createPart(IdocPEntity idocEntity) {
+        // List PartM 조회
+        Pageable pageable = Pageable.unpaged();
+        Page<H2PartMPEntity> partMPEntities = powderExternalInterfaceService.getPartList(idocEntity.getLineId(),pageable);
+        List<H2PartMPEntity> h2PartMPEntities = partMPEntities.getContent();
+        // product_def 조회
+
+        // 데이터 있으면 변경
+        // 데이터 없으면 생성
+        // n개의 데이터 erp 생성(4) 수정(230) 보고
+        for(H2PartMPEntity h2PartMP : h2PartMPEntities){
+            Optional<ProductDef> optionalProductDef = productDefService.findByH2PartMPEntity(h2PartMP);
+            ProductDef productDef = null;
+            if(optionalProductDef.isEmpty()){
+                // 생성 보고 (4)
+                productDef = productDefService.createProductDef(h2PartMP);
+                H2TransPReportVo vo =
+                        H2TransPReportVo
+                                .builder()
+                                .status(GALProductionStatus.CREATED_PART_MASTER)
+                                .cPartId(h2PartMP.getCPartId())
+                                .build();
+                powderExternalInterfaceService.reportPartMPCreated(vo);
+
+            }else {
+                // 생성 보고 (230)
+                productDef = productDefService.createProductDef(h2PartMP);
+                H2TransPReportVo vo =
+                        H2TransPReportVo
+                                .builder()
+                                .status(GALProductionStatus.CHANGED_PART_MASTER)
+                                .cPartId(h2PartMP.getCPartId())
+                                .build();
+                powderExternalInterfaceService.reportPartMPModified(vo);
+            }
+        }
+    }
+
+    private void sendProductionOrderValidationToPEX(TransactionInfo transactionInfo,ProductionOrder productionOrder){
+        // 메시지 전송
+        String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
+
+        BaseMessage<ProductionOrderBody> request = new BaseMessage<>();
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.MNG.getValue());
+        request.setEventTime(transactionId);
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setTransactionId(transactionId);
+        request.setMessageName(MessageList.PRODUCTION_ORDER_VALIDATION_REQUEST.getMessageName());
+        ProductionOrderBody order =
+                ProductionOrderBody
+                        .builder()
+                        .id(productionOrder.getId())
+                        .orderId(productionOrder.getOrderId())
+                        .orderLineNumber(productionOrder.getOrderLineNumber())
+                        .lotName(productionOrder.getLotName())
+                        .description(productionOrder.getDescription())
+                        .itemName(productionOrder.getItemName())
+                        .recipeName(productionOrder.getRecipeName())
+                        .carrierName(productionOrder.getCarrierName())
+                        .idocId(productionOrder.getIdocId())
+                        .h2OrderDpLineId(productionOrder.getH2OrderDpLineId())
+                        .galKey(productionOrder.getGalKey())
+                        .productionOrderType(productionOrder.getProductionOrderType())
+                        .productionOrderState(productionOrder.getProductionOrderState())
+                        .reportState(productionOrder.getReportState())
+                        .holdState(productionOrder.getHoldState())
+                        .reasonCode(productionOrder.getReasonCode())
+                        .equipmentName(productionOrder.getEquipmentName())
+                        .planQuantity(productionOrder.getPlanQuantity())
+                        .releasedQuantity(productionOrder.getReleasedQuantity())
+                        .startedQuantity(productionOrder.getStartedQuantity())
+                        .endedQuantity(productionOrder.getEndedQuantity())
+                        .scrappedQuantity(productionOrder.getScrappedQuantity())
+                        .createTime(productionOrder.getCreateTime())
+                        .releaseTime(productionOrder.getReleaseTime())
+                        .completeTime(productionOrder.getCompleteTime())
+                        .validationTime(productionOrder.getValidationTime())
+                        .createUser(productionOrder.getCreateUser())
+                        .releaseUser(productionOrder.getReleaseUser())
+                        .completeUser(productionOrder.getCompleteUser())
+                        .dueDate(productionOrder.getDueDate())
+                        .eventName(productionOrder.getEventName())
+                        .eventTime(productionOrder.getEventTime())
+                        .eventUser(productionOrder.getEventUser())
+                        .eventComment(productionOrder.getEventComment())
+                        .build();
+
+        request.setBody(order);
+        jsonUtils.writePrettyJson(request);
+
+        // 5. String 으로 변환된 메시지 reply
+        rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_PEX,RabbitConfig.ROUTING_PEX, request );
+        log.info("Send Completed");
+    }
+
+    private void sendToWMS(TransactionInfo transactionInfo,ProductionOrder productionOrder){
+        // 메시지 전송
+        String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
+
+        BaseMessage<OrderCreateRequestBody> request = new BaseMessage<>();
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.MNG.getValue());
+        request.setEventTime(transactionId);
+        request.setResultMessage("");
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setTransactionId(transactionId);
+        request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
+        ProductionOrderBody order =
+                ProductionOrderBody
+                        .builder()
+                        .id(productionOrder.getId())
+                        .orderId(productionOrder.getOrderId())
+                        .orderLineNumber(productionOrder.getOrderLineNumber())
+                        .lotName(productionOrder.getLotName())
+                        .description(productionOrder.getDescription())
+                        .itemName(productionOrder.getItemName())
+                        .recipeName(productionOrder.getRecipeName())
+                        .carrierName(productionOrder.getCarrierName())
+                        .idocId(productionOrder.getIdocId())
+                        .h2OrderDpLineId(productionOrder.getH2OrderDpLineId())
+                        .galKey(productionOrder.getGalKey())
+                        .productionOrderType(productionOrder.getProductionOrderType())
+                        .productionOrderState(productionOrder.getProductionOrderState())
+                        .reportState(productionOrder.getReportState())
+                        .holdState(productionOrder.getHoldState())
+                        .reasonCode(productionOrder.getReasonCode())
+                        .equipmentName(productionOrder.getEquipmentName())
+                        .planQuantity(productionOrder.getPlanQuantity())
+                        .releasedQuantity(productionOrder.getReleasedQuantity())
+                        .startedQuantity(productionOrder.getStartedQuantity())
+                        .endedQuantity(productionOrder.getEndedQuantity())
+                        .scrappedQuantity(productionOrder.getScrappedQuantity())
+                        .createTime(productionOrder.getCreateTime())
+                        .releaseTime(productionOrder.getReleaseTime())
+                        .completeTime(productionOrder.getCompleteTime())
+                        .validationTime(productionOrder.getValidationTime())
+                        .createUser(productionOrder.getCreateUser())
+                        .releaseUser(productionOrder.getReleaseUser())
+                        .completeUser(productionOrder.getCompleteUser())
+                        .dueDate(productionOrder.getDueDate())
+                        .eventName(productionOrder.getEventName())
+                        .eventTime(productionOrder.getEventTime())
+                        .eventUser(productionOrder.getEventUser())
+                        .eventComment(productionOrder.getEventComment())
+                        .build();
+
+        request.getBody().getOrderList().add(order);
+        jsonUtils.writePrettyJson(request);
+
+        // 5. String 으로 변환된 메시지 reply
+        rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_WMS,RabbitConfig.ROUTING_WMS, request );
+        log.info("Send Completed");
     }
 
 

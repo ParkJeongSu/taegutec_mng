@@ -44,6 +44,11 @@ public interface ProductionOrderRepository {
             String productionOrderState
     );
 
+    List<ProductionOrder> findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(
+            String productionOrderState,
+            List<String> productionOrderType
+    );
+
     List<ProductionOrder> findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(
             String equipmentName,
             List<String> productionOrderState
