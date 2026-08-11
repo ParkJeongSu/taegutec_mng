@@ -1,10 +1,12 @@
 package kr.co.aim.infra.persistence.springdatajpa;
 
 import kr.co.aim.infra.persistence.entity.CarrierEntity;
+import kr.co.aim.infra.persistence.entity.PortEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +43,17 @@ public interface CarrierJpaRepository extends JpaRepository<CarrierEntity, Long>
             @Param("transportState") String transportState,
             @Param("jobId") String transportJobId,
             @Param("useState") String useState
+    );
+
+    @Query("SELECT c FROM CarrierEntity c " +
+            "JOIN CarrierDefEntity cd ON c.carrierDefName = cd.carrierDefName " +
+            "WHERE p.quantity = :quantity " +
+            "AND cd.carrierType = :carrierType " +
+            "ORDER BY c.inboundTime ASC"
+    )
+    List<CarrierEntity> findByQuantityAndCarrierType(
+            @Param("quantity") BigDecimal quantity,
+            @Param("portRoleType") String carrierType
     );
 
 }

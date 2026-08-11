@@ -96,6 +96,12 @@ public class CarrierRepositoryImpl implements CarrierRepository {
     }
 
     @Override
+    public List<Carrier> findByQuantityAndCarrierType(BigDecimal quantity, String carrierType) {
+        return carrierJpaRepository.findByQuantityAndCarrierType(quantity,carrierType)
+                .stream().map(carrierMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition, Pageable pageable) {
         // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<CarrierEntity> query = queryFactory

@@ -29,6 +29,8 @@ public interface EquipmentDefRepository {
      */
     Optional<EquipmentDef> findByEquipmentName(String equipmentName);
 
+    List<EquipmentDef> findByDetailEquipmentType(String detailEquipmentType);
+
     EquipmentDef save(EquipmentDef equipmentDef);
 
     Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchCondition condition, Pageable pageable);

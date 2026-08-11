@@ -25,6 +25,8 @@ public interface PortJpaRepository extends JpaRepository<PortEntity, Long> {
             @Param("portName") String portName
     );
 
+    List<PortEntity> findByEquipmentNameAndPortType(String equipmentName,String portType);
+
     List<PortEntity> findByTransportState(String transportState);
 
     @Query("SELECT p FROM PortEntity p " +

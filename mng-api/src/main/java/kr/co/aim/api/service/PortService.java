@@ -26,9 +26,6 @@ public class PortService {
 
     private final HistoryService historyService;
 
-    private final PortDefRepository portDefRepository;
-    private final PortDefMapper portDefMapper;
-
     private final PortRepository portRepository;
     private final PortMapper portMapper;
 
@@ -55,6 +52,11 @@ public class PortService {
     @Transactional(value = "mssqlTransactionManager")
     public List<Port> findByTransportState(String transportState) {
         return portRepository.findByTransportState(transportState);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public List<Port> findByEquipmentNameAndPortType(String equipmentName,String portType){
+        return portRepository.findByEquipmentNameAndPortType(equipmentName,portType);
     }
 
     @Transactional(value = "mssqlTransactionManager")

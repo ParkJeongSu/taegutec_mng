@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class IncomeEquipmentDispatchStrategy implements WhereDispatchStrategy {
+public class MagazineEquipmentDispatchStrategy implements WhereDispatchStrategy {
 
     private final EquipmentDefService equipmentDefService;
     private final EquipmentService equipmentService;
@@ -33,7 +33,7 @@ public class IncomeEquipmentDispatchStrategy implements WhereDispatchStrategy {
     @Override
     public boolean supports(WhereDispatchContext context) {
         String detailType = context.getSourceEquipmentDef().getDetailEquipmentType();
-        return StringUtils.equals(EquipmentDetailType.INCOME.getValue(), detailType);
+        return StringUtils.equals(EquipmentDetailType.MAGAZINE.getValue(), detailType);
     }
 
     @Override
@@ -41,35 +41,16 @@ public class IncomeEquipmentDispatchStrategy implements WhereDispatchStrategy {
         PortDef sourcePortDef = context.getSourcePortDef();
 
         if (StringUtils.equals(PortType.INPUT.getValue(), sourcePortDef.getPortType())) {
-            // TODO: Magazine Input Port 조회 로직
+
+        } else if (StringUtils.equals(PortType.OUTPUT.getValue(), sourcePortDef.getPortType())) {
+            // TODO: 창고(Warehouse) 반송 로직
             // 해포 설비 input port 에서 빈 팔렛트가 되면 무조건 Magazine 으로 이동
             // Magazine 은 설비 한 대라고 함
 
-            List<EquipmentDef> equipmentDefList = equipmentDefService.findByDetailEquipmentType(EquipmentDetailType.MAGAZINE.getValue());
+            Equipment targetEquipment = null; // < 목적지 창고 설비 명
+            String targetZoneName = "";
 
-            if(CollectionUtils.isEmpty(equipmentDefList)){
-                throw new RuntimeException("equipmentDefList is empty");
-            }
-            EquipmentDef equipmentDef = equipmentDefList.get(0);
-
-            Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentDef.getEquipmentName());
-            if(optionalEquipment.isEmpty()){
-                // 여기서도 에러
-                throw  new RuntimeException("equipment not found");
-            }
-            Equipment targetEquipment = optionalEquipment.get();
-
-            List<Port> portList = portService.findByEquipmentNameAndPortType(targetEquipment.getEquipmentName(),PortType.INPUT.getValue());
-
-            if(CollectionUtils.isEmpty(portList)){
-                throw new RuntimeException("portList is empty");
-            }
-            Port targetPort = portList.get(0);
-
-            context.assignTarget(targetEquipment, targetPort, StringUtils.EMPTY);
-        } else if (StringUtils.equals(PortType.OUTPUT.getValue(), sourcePortDef.getPortType())) {
-            // TODO: 창고(Warehouse) 반송 로직
-            // 4개의 창고중 어디로 가야하는지 확인하기
+            context.assignTarget(targetEquipment, null, targetZoneName);
         }
     }
 }

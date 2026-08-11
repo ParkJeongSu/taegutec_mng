@@ -11,7 +11,6 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,6 +58,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final EquipmentService equipmentService;
     private final EquipmentDefService equipmentDefService;
+    private final DownloadService downloadService;
 
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
     private final TransportJobService  transportJobService;
@@ -114,8 +113,31 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
-        BaseMessage<DestinationDispatchRequestBody> reply = new BaseMessage<>();
+        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
+        if(optionalEquipmentDef.isPresent()){
+            EquipmentDef equipmentDef = optionalEquipmentDef.get();
+            if(StringUtils.equals(EquipmentDetailType.MAGAZINE.getValue(),equipmentDef.getDetailEquipmentType())){
+                // Magazine 설비에서는 무조건 8단으로 unload 됨
+                Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+                if(optionalCarrier.isPresent()){
+                    Carrier carrier = optionalCarrier.get();
+                    command = UnLoadRequestCommand.builder()
+                            .transactionInfo(tx)
+                            .carrierName(carrierName)
+                            .equipmentName(equipmentName)
+                            .carrierTransportState(CarrierTransportState.ON_PORT.getValue())
+                            .quantity(new BigDecimal(8))
+                            .portName(portName)
+                            .build();
+                    carrier.unloadRequest(command);
+                    carrier = carrierService.save(carrier);
+                    CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
+                    historyService.saveHistory(carrierHistoryEntity);
+                }
+            }
+        }
 
+        BaseMessage<DestinationDispatchRequestBody> reply = new BaseMessage<>();
         reply.setMessageName(MessageList.DESTINATION_DISPATCH_REQUEST.getMessageName());
         reply.setTransactionId(message.getTransactionId());
         reply.setMessageFrom(SystemName.MNG.getValue());
@@ -225,73 +247,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             historyService.saveHistory(historyEntity);
         }
 
-
-        // OUTPUT PORT 의 경우 EMPTY CONTAINER 인걸 체크 하고, CarrierInfoDownLoadSend
-        // INPUT PORT 의 경우 MANTI 로 RECIPE Parameter 요청
-
-        if(StringUtils.equals(PortType.OUTPUT.getValue(),portDef.getPortType())){
-            BaseMessage<CarrierInfoDownloadSendBody> reply = new BaseMessage<>();
-
-            reply.setMessageName(MessageList.CARRIER_INFO_DOWNLOAD_SEND.getMessageName());
-            reply.setTransactionId(message.getTransactionId());
-            reply.setMessageFrom(SystemName.MNG.getValue());
-            reply.setMessageOwner(SystemName.MNG.getValue());
-            reply.setMessageTo(SystemName.EAS.getValue());
-            reply.setEventTime(message.getEventTime());
-            reply.setResultMessage("");
-            reply.setResultCode(ResultCode.OK.getValue());
-
-            RecipeBody recipeBody = new RecipeBody();
-            List<RecipeParameterListBody> recipeParameterListBodyList = new ArrayList<>();
-            recipeBody.setParameterList(recipeParameterListBodyList);
-
-            CarrierInfoDownloadSendBody body = CarrierInfoDownloadSendBody
-                    .builder()
-                    .equipmentName(equipmentName)
-                    .portName(portName)
-                    .carrierName(carrierName)
-                    .recipe(recipeBody)
-                    .build();
-            reply.setBody(body);
-            return reply;
-        }
-        else if(StringUtils.equals(PortType.INPUT.getValue(),portDef.getPortType())){
-            // TODO: 환원로 케이스 개발하기
-            // 환원로 설비의 경우 seq가 1인 carrier에 대해서만 RECIPE_REQUEST를 보낸다.
-            // 그외의 경우에는 바로 EAS로 CarrierInfoDownloadSend를 보낸다.
-
-            BaseMessage<RecipeRequestBody> mantiRequestMessage = new BaseMessage<>();
-            mantiRequestMessage.setMessageName(MessageList.RECIPE_REQUEST.getMessageName());
-            mantiRequestMessage.setTransactionId(message.getTransactionId());
-            mantiRequestMessage.setMessageFrom(SystemName.MNG.getValue());
-            mantiRequestMessage.setMessageOwner(SystemName.MNG.getValue());
-            mantiRequestMessage.setMessageTo(SystemName.MANTI.getValue());
-            mantiRequestMessage.setEventTime(message.getEventTime());
-            mantiRequestMessage.setResultMessage("");
-            mantiRequestMessage.setResultCode(ResultCode.OK.getValue());
-            RecipeRequestBody body =
-                    RecipeRequestBody
-                            .builder()
-                            .equipmentName(equipmentName)
-                            .portName(portName)
-                            .carrierName(carrierName)
-                            .orderId(lotCarrierMapping.getOrderId())
-                            .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
-                            .transactionId(lotCarrierMapping.getMngKey().toString())
-                            .build();
-
-            mantiRequestMessage.setBody(body);
-
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_MANTI,
-                    RabbitConfig.ROUTING_MANTI,
-                    mantiRequestMessage
-            );
-
-            return null;
-        }
-
-        return null;
+        return downloadService.downloadRequest(tx,message);
     }
 
     @Override

@@ -13,6 +13,8 @@ import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.model.TransportJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +52,24 @@ public class WhereDispatchService {
         }
         targetStrategy.determineDestination(context);
 
+        if(ObjectUtils.isEmpty(context.getTargetEquipment())){
+            throw new RuntimeException("No dispatch strategy found for target equipment");
+        }
+
+        if(ObjectUtils.isEmpty(context.getTargetPort())){
+            // target port가 비어있다는 이야기는 창고로 들어간다는 이야기
+            // targetEquipment 가 창고인지 그리고 targetZoneName이 존재하는지 확인
+            if(StringUtils.isEmpty(context.getTargetZoneName())){
+                throw new RuntimeException("target zone name is empty");
+            }
+        }
+        else if(ObjectUtils.isNotEmpty(context.getTargetPort())){
+            if(!StringUtils.equals(PortTransportState.READY_TO_LOAD.getValue(),context.getTargetPort().getTransportState())){
+                throw new RuntimeException("target port is not ready for transport");
+            }
+        }
+
+
         // 3. 반송 작업 생성 및 BaseMessage 반환
         return createTransportJobMessage(context);
     }
@@ -70,7 +90,7 @@ public class WhereDispatchService {
                 .sourcePositionTypeName(context.getCarrier().getPositionTypeName())
                 .sourcePositionName(context.getCarrier().getPositionName())
                 .destinationEquipmentName(context.getTargetEquipment().getEquipmentName())
-                .destinationPortName(context.getTargetPort().getPortName())
+                .destinationPortName( ObjectUtils.isEmpty(context.getTargetPort()) ? "" : context.getTargetPort().getPortName())
                 .destinationZoneName(context.getTargetZoneName())
                 .createTime(tx.eventTime())
                 .transactionInfo(tx)

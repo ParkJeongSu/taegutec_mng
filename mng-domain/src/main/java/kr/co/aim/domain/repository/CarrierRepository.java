@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,6 +58,11 @@ public interface CarrierRepository {
             String useState,
             Integer quantity,
             List<String> containerTypes
+    );
+
+    List<Carrier> findByQuantityAndCarrierType(
+            BigDecimal quantity,
+            String carrierType
     );
 
     Page<Carrier> findCarrierByCondition(CarrierSearchCondition condition, Pageable pageable);

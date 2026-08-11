@@ -72,6 +72,11 @@ public class EquipmentDefService {
         return equipmentDefRepository.findByEquipmentName(equipmentName);
     }
 
+    @Transactional(value = "mssqlTransactionManager")
+    public List<EquipmentDef> findByDetailEquipmentType(String detailEquipmentType){
+        return equipmentDefRepository.findByDetailEquipmentType(detailEquipmentType);
+    }
+
     public EquipmentDef findById(Long id) {
         Optional<EquipmentDef> optional = equipmentDefRepository.findById(id);
         if (optional.isEmpty()) {

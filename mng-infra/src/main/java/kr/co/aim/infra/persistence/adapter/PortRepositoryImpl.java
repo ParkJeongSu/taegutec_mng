@@ -64,6 +64,11 @@ public class PortRepositoryImpl implements PortRepository {
     }
 
     @Override
+    public List<Port> findByEquipmentNameAndPortType(String equipmentName, String portType) {
+        return portJpaRepository.findByEquipmentNameAndPortType(equipmentName,portType).stream().map(portMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public List<Port> findPortsWithEarliestTransportOrder(String transportState, String transportType, String transportStatus) {
         return portJpaRepository.findPortsWithEarliestTransportOrder(transportState,transportType,transportStatus).stream().map(portMapper::toDomain).collect(Collectors.toList());
     }

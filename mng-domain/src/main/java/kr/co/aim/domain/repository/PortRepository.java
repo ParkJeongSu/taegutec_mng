@@ -45,6 +45,8 @@ public interface PortRepository {
 
     List<Port> findByTransportState(String transportState);
 
+    List<Port> findByEquipmentNameAndPortType(String equipmentName,String portType);
+
     List<Port> findPortsWithEarliestTransportOrder(
             String transportState,
             String transportType,

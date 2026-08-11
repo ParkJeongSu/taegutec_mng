@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +23,9 @@ import java.util.Optional;
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
 public class CarrierService {
-    private final ObjectMapper objectMapper;
-    private final CarrierDefRepository carrierDefRepository;
+
     private final CarrierRepository carrierRepository;
+    private final ObjectMapper objectMapper;
 
     @Transactional(value = "mssqlTransactionManager")
     public Optional<Carrier> findByCarrierName(String carrierName){
@@ -39,6 +40,11 @@ public class CarrierService {
     @Transactional(value = "mssqlTransactionManager")
     public Page<CarrierLotSearchResultDto> findCarrierLotByCondition(CarrierLotSearchCondition condition, Pageable pageable){
         return carrierRepository.findCarrierLotByCondition(condition,pageable);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public List<Carrier> findByQuantityAndCarrierType(BigDecimal quantity, String carrierType){
+        return carrierRepository.findByQuantityAndCarrierType(quantity,carrierType);
     }
 
     @Transactional(value = "mssqlTransactionManager")

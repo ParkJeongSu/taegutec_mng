@@ -57,6 +57,11 @@ public class EquipmentDefRepositoryImpl implements EquipmentDefRepository {
     }
 
     @Override
+    public List<EquipmentDef> findByDetailEquipmentType(String detailEquipmentType) {
+        return equipmentDefJpaRepository.findByDetailEquipmentType(detailEquipmentType).stream().map(equipmentDefMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public EquipmentDef save(EquipmentDef equipmentDef) {
         EquipmentDefEntity entity = equipmentDefMapper.toEntity(equipmentDef);
         EquipmentDefEntity savedEntity = equipmentDefJpaRepository.save(entity);
