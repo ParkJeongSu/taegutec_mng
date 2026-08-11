@@ -20,5 +20,10 @@ public enum CommunicationState implements MetaDataEnum {
         // 일치하는 상수가 없으면 예외를 발생시키거나 null을 반환할 수 있습니다.
         return false;
     }
+
+    public static boolean isNotExist(String communicationState) {
+        return !isExist(communicationState);
+    }
+
     private final String value;
 }

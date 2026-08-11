@@ -47,13 +47,13 @@ public interface CarrierJpaRepository extends JpaRepository<CarrierEntity, Long>
 
     @Query("SELECT c FROM CarrierEntity c " +
             "JOIN CarrierDefEntity cd ON c.carrierDefName = cd.carrierDefName " +
-            "WHERE p.quantity = :quantity " +
+            "WHERE c.quantity = :quantity " +
             "AND cd.carrierType = :carrierType " +
             "ORDER BY c.inboundTime ASC"
     )
     List<CarrierEntity> findByQuantityAndCarrierType(
             @Param("quantity") BigDecimal quantity,
-            @Param("portRoleType") String carrierType
+            @Param("carrierType") String carrierType
     );
 
 }

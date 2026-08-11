@@ -43,6 +43,7 @@ public class MessageExecuteService {
     private final RabbitTemplate rabbitTemplate;
     private final ObjectMapper objectMapper;
     private final WhereDispatchService whereDispatchService;
+    private final ProcessJobService processJobService;
     private final HistoryService historyService;
     private final CarrierService carrierService;
     private final CarrierDefService carrierDefService;
@@ -97,11 +98,10 @@ public class MessageExecuteService {
      * 1. Carrier 의 상태를 변하는건 없음
      *
      * @param message 받은 메시지
-     * @return WMS 로 보낼 메시지 객체
      */
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<CarrierCleanJobCanceledBody> carrierCleanJobCanceled(BaseMessage<CarrierCleanJobCanceledBody> message) {
-        return message;
+    public void carrierCleanJobCanceled(BaseMessage<CarrierCleanJobCanceledBody> message) {
+        // 현재 clean 설비는 예정되어있지 않음
     }
 
     /**
@@ -112,7 +112,8 @@ public class MessageExecuteService {
      * @param message 받은 메시지
      */
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<CarrierCleanJobStartedBody> carrierCleanJobStarted(BaseMessage<CarrierCleanJobStartedBody> message) {
+    public void carrierCleanJobStarted(BaseMessage<CarrierCleanJobStartedBody> message) {
+        // 현재 clean 설비는 예정되어있지 않음
         String messageName = message.getMessageName();
         String messageOwner = message.getMessageOwner();
         String resultMessage =  message.getResultMessage();
@@ -123,7 +124,7 @@ public class MessageExecuteService {
 
         Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
-            return null;
+            return;
         }
         Carrier carrier = optionalCarriers.get();
 
@@ -136,7 +137,6 @@ public class MessageExecuteService {
 
         carrier.cleanJobStarted(command);
         carrierService.save(carrier);
-        return message;
     }
 
     /**
@@ -146,10 +146,10 @@ public class MessageExecuteService {
      * 3 만일 Container 라면, CarrierDetailType 의 값을 null 로 수정
      *
      * @param message 받은 메시지
-     * @return RTD 로 보낼 메시지 객체
      */
     @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<CarrierCleanJobEndedBody> carrierCleanJobEnded(BaseMessage<CarrierCleanJobEndedBody> message) {
+    public void carrierCleanJobEnded(BaseMessage<CarrierCleanJobEndedBody> message) {
+        // 현재 clean 설비는 예정되어있지 않음
         String messageName = message.getMessageName();
         String messageOwner = message.getMessageOwner();
         String resultMessage =  message.getResultMessage();
@@ -161,7 +161,7 @@ public class MessageExecuteService {
 
         Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
-            return null;
+            return;
         }
         Carrier carrier = optionalCarriers.get();
 
@@ -174,7 +174,6 @@ public class MessageExecuteService {
 
         carrier.cleanJobEnded(command);
         carrierService.save(carrier);
-        return message;
     }
 
     /**
@@ -732,7 +731,7 @@ public class MessageExecuteService {
         reply.setMessageTo(SystemName.EAS.getValue());
         reply.setEventTime(message.getEventTime());
         reply.setResultMessage("");
-        reply.setResultCode(ResultCode.OK.getValue());
+        reply.setResultCode(ResultCode.NG.getValue());
 
         RecipeBody recipeBody = new RecipeBody();
         List<RecipeParameterListBody> recipeParameterListBodyList = new ArrayList<>();
@@ -749,7 +748,7 @@ public class MessageExecuteService {
                 .orderId(lotCarrierMapping.getOrderId())
                 .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
                 .quantity(lotCarrierMapping.getQuantity().toString())
-                .totalQuantity(lot.getTotalQuantity().toString())
+                .totalQuantity(productionOrder.getPlanQuantity().toString())
                 .mngKey(lotCarrierMapping.getMngKey().toString())
                 .lastCarrierFlag(lastCarrierFlag)
                 .recipe(recipeBody)
@@ -852,20 +851,21 @@ public class MessageExecuteService {
                 Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
 
                 if(optionalPorts.isEmpty()){
-                    //throw new RuntimeException("port not found");
-                    //TODO : 추후 수정
                     continue;
                 }
-                if(!PortState.isExist(portStateName)){
-                    //throw new RuntimeException("portState not found");
-                    //TODO : 추후 수정
+                if(PortState.isNotExist(portStateName)){
                     continue;
                 }
 
                 Port port = optionalPorts.get();
 
                 PortState state = PortState.valueOf(portStateName);
-                PortStateChangedCommand command = PortStateChangedCommand.builder().transactionInfo(tx).portState(state).build();
+                PortStateChangedCommand command =
+                        PortStateChangedCommand
+                                .builder()
+                                .transactionInfo(tx)
+                                .portState(state)
+                                .build();
                 port.portStateChanged(command);
                 port = portService.save(port);
                 PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
@@ -945,97 +945,7 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobStarted(BaseMessage<ProcessJobStartedBody> message) {
-        String messageName = message.getMessageName();
-        String messageOwner = message.getMessageOwner();
-        String resultMessage =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-        String productionTaskId = message.getBody().getProductionTaskId();
-        String recipeName = message.getBody().getRecipeName();
-        String orderId = message.getBody().getOrderId();
-        String orderLineNumber = message.getBody().getOrderLineNumber();
-        BigDecimal quantity = message.getBody().getQuantity();
-        String mngKey = message.getBody().getMngKey();
-        String lotName = message.getBody().getLotName();
-        String itemName = message.getBody().getItemName();
-
-        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
-        if(optionalEquipmentDef.isEmpty()){
-            throw new RuntimeException("equipment not found");
-        }
-        EquipmentDef equipmentDef = optionalEquipmentDef.get();
-        Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentName);
-        if(optionalEquipment.isEmpty()){
-            throw new RuntimeException("equipment not found");
-        }
-        Equipment equipment = optionalEquipment.get();
-
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(Long.parseLong(mngKey));
-        if( ObjectUtils.isNotEmpty(lotCarrierMappingList)){
-            String productionStatus = null;
-            if(StringUtils.equals(EquipmentDetailType.REDUCTION.getValue(),equipmentDef.getDetailEquipmentType())){
-                // 환원로 설비
-                productionStatus = ProductionStatus.CONSUMED.getValue();
-            }
-            else if(StringUtils.equals(EquipmentDetailType.INCOME.getValue(), equipmentDef.getDetailEquipmentType())){
-                // 해포 설비
-                productionStatus = ProductionStatus.CONSUMED.getValue();
-            }
-            else {
-                // 일반 조업 설비
-                productionStatus = ProductionStatus.ALLOCATED.getValue();
-            }
-            LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
-            TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
-            ProcessJobStartedCommand command =
-                    ProcessJobStartedCommand
-                            .builder()
-                            .transactionInfo(tx)
-                            .equipmentName(equipmentName)
-                            .recipeName(recipeName)
-                            .lotName(lotName)
-                            .itemName(itemName)
-                            .carrierName(carrierName)
-                            .orderId(orderId)
-                            .orderLineNumber(orderLineNumber)
-                            .productionOrderId( Long.parseLong(productionTaskId))
-                            .productionStatus(productionStatus)
-                            .processStatus(ProcessStatus.RUN.getValue())
-                            .quantity(quantity)
-                            .mngKey( Long.parseLong(mngKey))
-                            .jobStartTime(tx.eventTime())
-                            .build();
-            lotCarrierMapping.processJobStarted(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
-            historyService.saveHistory(historyEntity);
-
-            // ProductionOrder 수량 데이터 변경
-            Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(lotCarrierMapping.getProductionOrderId());
-            if(optionalProductionOrder.isPresent()){
-                ProductionOrder productionOrder = optionalProductionOrder.get();
-
-            }
-
-            // powder EventQueue
-            try{
-                PowderEventQueueReportVo powderEventQueueReportVo
-                        = PowderEventQueueReportVo
-                        .builder()
-                        .messageName(messageName)
-                        .equipmentDef(equipmentDef)
-                        .equipment(equipment)
-                        .carrierName(carrierName)
-                        .tx(tx)
-                        .build();
-                factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
-            }
-            catch(Exception e){
-                log.error("EventQueue enqueue error",e);
-            }
-        }
+        processJobService.processJobStarted(message);
     }
 
     /**
@@ -1045,189 +955,7 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void processJobEnded(BaseMessage<ProcessJobEndedBody> message) {
-        String messageName = message.getMessageName();
-        String messageOwner = message.getMessageOwner();
-        String resultMessage =  message.getResultMessage();
-
-        String equipmentName = message.getBody().getEquipmentName();
-        String portName = message.getBody().getPortName();
-        String carrierName = message.getBody().getCarrierName();
-        String productionTaskId = message.getBody().getProductionTaskId();
-        String productionTaskEnd = message.getBody().getProductionTaskEnd();
-        String recipeName = message.getBody().getRecipeName();
-        String orderId = message.getBody().getOrderId();
-        String orderLineNumber = message.getBody().getOrderLineNumber();
-        BigDecimal quantity = message.getBody().getQuantity();
-        List<MngKeyName> mngKeyNameList = message.getBody().getMngKeyList();
-        String lotName = message.getBody().getLotName();
-        String itemName = message.getBody().getItemName();
-        Long mngKey = null;
-
-
-        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
-        if(optionalEquipmentDef.isEmpty()){
-            throw new RuntimeException("equipment not found");
-        }
-        EquipmentDef equipmentDef = optionalEquipmentDef.get();
-        Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentName);
-        if(optionalEquipment.isEmpty()){
-            throw new RuntimeException("equipment not found");
-        }
-        Equipment equipment = optionalEquipment.get();
-
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById( Long.parseLong(productionTaskId));
-
-        if(optionalProductionOrder.isEmpty()){
-            throw new RuntimeException("production order not found");
-        }
-        ProductionOrder productionOrder = optionalProductionOrder.get();
-
-        TransactionInfo tx = TransactionInfo.now(messageName,equipmentName,resultMessage);
-
-        if(StringUtils.equals(EquipmentDetailType.REDUCTION.getValue(),equipmentDef.getDetailEquipmentType())){
-            // 환원로 설비
-            // ex) 환원로 설비의 경우 mngKeyName 을 줄수 없음
-            // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
-            mngKey = TsidUtils.nextId();
-            LotCarrierMappingCreateCommand command =
-                    LotCarrierMappingCreateCommand
-                            .builder()
-                            .transactionInfo(tx)
-                            .lotName(productionOrder.getLotName())
-                            .carrierName(carrierName)
-                            .orderId(productionOrder.getOrderId())
-                            .orderLineNumber(productionOrder.getOrderLineNumber())
-                            .productionOrderId(productionOrder.getId())
-                            .productionStatus(ProductionStatus.WAIT.getValue())
-                            .processStatus(ProcessStatus.COMPLETED.getValue())
-                            .quantity(quantity)
-                            .jobEndTime(tx.eventTime())
-                            .rrnRequestState(RRNRequestState.REQUESTED.getValue())
-                            .rrnRequestTime(tx.eventTime())
-                            .mngKey(mngKey)
-                            .rrnReplyTime(null)
-                            .holdState(HoldState.NOT_ON_HOLD.getValue())
-                            .build();
-
-            LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
-            historyService.saveHistory(historyEntity);
-        }
-        else if(StringUtils.equals(EquipmentDetailType.INCOME.getValue(), equipmentDef.getDetailEquipmentType())){
-            // 해포 설비
-            // ex) 해포 설비의 경우 mngKeyName 이 n개가 1개가 됨
-            // 새로운 LotCarrierMapping 생성 기존 LotCarrierMapping 은 CONSUMED 상태
-            mngKey = TsidUtils.nextId();
-            LotCarrierMappingCreateCommand command =
-                    LotCarrierMappingCreateCommand
-                            .builder()
-                            .transactionInfo(tx)
-                            .lotName(productionOrder.getLotName())
-                            .carrierName(carrierName)
-                            .orderId(productionOrder.getOrderId())
-                            .orderLineNumber(productionOrder.getOrderLineNumber())
-                            .productionOrderId(productionOrder.getId())
-                            .productionStatus(ProductionStatus.WAIT.getValue())
-                            .processStatus(ProcessStatus.COMPLETED.getValue())
-                            .quantity(quantity)
-                            .jobEndTime(tx.eventTime())
-                            .rrnRequestState(RRNRequestState.REQUESTED.getValue())
-                            .rrnRequestTime(tx.eventTime())
-                            .rrnReplyTime(null)
-                            .mngKey(mngKey)
-                            .holdState(HoldState.NOT_ON_HOLD.getValue())
-                            .build();
-
-            LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
-            historyService.saveHistory(historyEntity);
-        }
-        else {
-            // 일반 조업 설비
-            String mngKeyName = mngKeyNameList.get(0).getMngKeyName();
-            mngKey = Long.parseLong(mngKeyName);
-            List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngKey);
-            if( ObjectUtils.isNotEmpty(lotCarrierMappingList) ){
-                LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
-                ProcessJobEndedCommand command =
-                        ProcessJobEndedCommand
-                                .builder()
-                                .transactionInfo(tx)
-                                .equipmentName(equipmentName)
-                                .recipeName(recipeName)
-                                .lotName(lotName)
-                                .itemName(itemName)
-                                .carrierName(carrierName)
-                                .orderId(orderId)
-                                .orderLineNumber(orderLineNumber)
-                                .productionTaskEnd(productionTaskEnd)
-                                .productionOrderId(lotCarrierMapping.getProductionOrderId())
-                                .productionStatus(ProductionStatus.WAIT.getValue())
-                                .processStatus(ProcessStatus.COMPLETED.getValue())
-                                .quantity(quantity)
-                                .mngKey(mngKey)
-                                .jobEndTime(tx.eventTime())
-                                .build();
-                lotCarrierMapping.processJobEnded(command);
-                lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
-                LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
-                historyService.saveHistory(historyEntity);
-            }
-        }
-
-        if(StringUtils.equals(YN.Y.getValue(),productionTaskEnd)){
-            // 해포 설비가 아닐 경우만
-            // find by LotName LotCarrierMapping
-            // find by LotName Lot
-            // Lot totalQuantity 변경
-            if(!StringUtils.equals(EquipmentDetailType.INCOME.getValue(),equipmentDef.getDetailEquipmentType())){
-                List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
-                if(ObjectUtils.isNotEmpty(lotCarrierMappingList)){
-                    BigDecimal totalQuantity = BigDecimal.ZERO;
-                    for(LotCarrierMapping lotCarrierMapping : lotCarrierMappingList){
-                        totalQuantity = totalQuantity.add(lotCarrierMapping.getQuantity());
-                    }
-
-                    Optional<Lot> optionalLot = lotService.findByLotName(lotName);
-                    if(optionalLot.isPresent()){
-                        Lot lot = optionalLot.get();
-                        LotChangeCommand command =
-                                LotChangeCommand
-                                        .builder()
-                                        .transactionInfo(tx)
-                                        .totalQuantity(totalQuantity)
-                                        .build();
-                        lot.change(command);
-                        lot = lotService.save(lot);
-                        LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
-                        historyService.saveHistory(lotHistoryEntity);
-
-                    }
-                }
-            }
-        }
-
-        // TODO : GAL 조업 완료 보고 이때, 주의할 점은 해포 설비와 조업 설비 TC 코드 다름 주의 완료 보고, 그리고 next rrn 요청 보고
-        // powder EventQueue
-        try{
-            PowderEventQueueReportVo powderEventQueueReportVo
-                    = PowderEventQueueReportVo
-                    .builder()
-                    .messageName(messageName)
-                    .equipmentDef(equipmentDef)
-                    .equipment(equipment)
-                    .carrierName(carrierName)
-                    .productionOrder(productionOrder)
-                    .mngKey(mngKey)
-                    .tx(tx)
-                    .build();
-            factoryIfEventQueueStrategy.enqueueIfEventQueue(powderEventQueueReportVo);
-        }
-        catch(Exception e){
-            log.error("EventQueue enqueue error",e);
-        }
+        processJobService.processJobEnded(message);
     }
 
     /**
@@ -1622,10 +1350,10 @@ public class MessageExecuteService {
             Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
             if(optionalEquipments.isEmpty()){
-                throw new RuntimeException("Equipment not found");
+                continue;
             }
             if(!CommunicationState.isExist(communicationState)){
-                throw new RuntimeException("CommunicationState not found");
+                continue;
             }
             Equipment equipment = optionalEquipments.get();
 
@@ -1706,7 +1434,7 @@ public class MessageExecuteService {
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         EquipmentState state = EquipmentState.valueOf(equipmentState);
-        EquipmentStateChangeCommand command =EquipmentStateChangeCommand.builder().equipmentState(state).transactionInfo(tx).build();
+        EquipmentStateChangeCommand command = EquipmentStateChangeCommand.builder().equipmentState(state).transactionInfo(tx).build();
         equipment.equipmentStateChange(command);
         equipment = equipmentService.save(equipment);
         EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
@@ -1735,18 +1463,13 @@ public class MessageExecuteService {
             String equipmentState = body.getEquipmentStateName();
             String communicationState = body.getCommunicationState();
 
-            // TODO: 비관적 LOCK 고민
             Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
 
             if(optionalEquipments.isEmpty()){
-                //throw new RuntimeException("Equipment not found");
-                // TODO : 현재는 continue 추후 고민
                 continue;
             }
 
             if(!EquipmentState.isExist(equipmentState)){
-                // TODO : 현재는 continue 추후 고민
-                //throw new RuntimeException("EquipmentState not found");
                 continue;
             }
             Equipment equipment = optionalEquipments.get();

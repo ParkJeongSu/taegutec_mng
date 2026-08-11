@@ -21,6 +21,6 @@ public class ProcessJobEndedBody {
     private BigDecimal quantity;
     private String lotName;
     private String itemName;
-    private String productionTaskEnd;
+    private String lastFlag;
     private List<MngKeyName> mngKeyList;
 }
