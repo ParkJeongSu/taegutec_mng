@@ -44,6 +44,8 @@ public class ProductionOrder implements HasTransactionInfo {
     private BigDecimal startedQuantity;
     private BigDecimal endedQuantity;
     private BigDecimal scrappedQuantity;
+    private String materialLotName;
+    private String galOrderId;
     private LocalDateTime createTime;
     private LocalDateTime releaseTime;
     private LocalDateTime completeTime;
@@ -81,6 +83,8 @@ public class ProductionOrder implements HasTransactionInfo {
                 .startedQuantity(command.getStartedQuantity())
                 .endedQuantity(command.getEndedQuantity())
                 .scrappedQuantity(command.getScrappedQuantity())
+                .materialLotName(command.getMaterialLotName())
+                .galOrderId(command.getGalOrderId())
                 .createTime(command.getCreateTime())
                 .releaseTime(command.getReleaseTime())
                 .completeTime(command.getCompleteTime())

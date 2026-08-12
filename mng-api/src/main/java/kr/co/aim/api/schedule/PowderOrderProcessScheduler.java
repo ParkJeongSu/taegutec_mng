@@ -3,7 +3,7 @@ package kr.co.aim.api.schedule;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.ProductionOrderAllocateRequestBody;
+import kr.co.aim.common.format.ProductionOrderProcessRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.ProductionOrder;
@@ -28,19 +28,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Profile("scheduler")
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
-public class PowderOrderAllocateScheduler {
+public class PowderOrderProcessScheduler {
 
     private final ProductionOrderService productionOrderService;
     private final RabbitTemplate rabbitTemplate;
 
     @Scheduled(fixedDelay = 5000)
     @SchedulerLock(
-            name = "powderOrderAllocateRequest",
+            name = "powderOrderProcessRequest",
             lockAtMostFor = "PT2M",
             lockAtLeastFor = "PT5S"
     )
     @Transactional
-    public void powderOrderAllocateRequest() {
+    public void powderOrderProcessRequest() {
 
         // 1. CREATED 상태의 ProductionOrder 조회
         //List<String> productionOrderState = new ArrayList<>();
@@ -50,6 +50,8 @@ public class PowderOrderAllocateScheduler {
         List<String> productionOrderType = new ArrayList<>();
         productionOrderType.add(ProductionOrderType.PRODUCTION.getValue());
         productionOrderType.add(ProductionOrderType.UNPACKING.getValue());
+        productionOrderType.add(ProductionOrderType.PRODUCTION_ISSUE.getValue());
+        productionOrderType.add(ProductionOrderType.RRN_REPLY.getValue());
         List<ProductionOrder> productionOrderList = productionOrderService.findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(
                 ProductionOrderState.ACCEPTED.getValue(),
                 productionOrderType
@@ -59,24 +61,24 @@ public class PowderOrderAllocateScheduler {
             return;
         }
 
-        TransactionInfo tx = TransactionInfo.now(EventName.ALLOCATE_REQUEST.getValue(), SystemName.MNG.getValue(), "");
+        TransactionInfo tx = TransactionInfo.now(EventName.PROCESS_REQUEST.getValue(), SystemName.MNG.getValue(), "");
         for (ProductionOrder order : productionOrderList) {
             try {
-                // 2. 선점 처리를 위해 상태를 ALLOCATE_REQUEST로 변경
-                Optional<ProductionOrder> optionalProductionOrder = productionOrderService.updateOrderState(tx,order.getId(), ProductionOrderState.ALLOCATE_REQUEST.getValue());
+                // 2. 선점 처리를 위해 상태를 PROCESS_REQUEST로 변경
+                Optional<ProductionOrder> optionalProductionOrder = productionOrderService.updateOrderState(tx,order.getId(), ProductionOrderState.PROCESS_REQUEST.getValue());
 
                 if(optionalProductionOrder.isPresent()){
                     // 3. MQ 메시지 생성 및 발송
                     String transactionId = FormatUtils.generateTransactionId();
-                    BaseMessage<ProductionOrderAllocateRequestBody> request = new BaseMessage<>();
-                    request.setMessageName(MessageList.PRODUCTION_ORDER_ALLOCATE_REQUEST.getMessageName());
+                    BaseMessage<ProductionOrderProcessRequestBody> request = new BaseMessage<>();
+                    request.setMessageName(MessageList.PRODUCTION_ORDER_PROCESS_REQUEST.getMessageName());
                     request.setMessageFrom(SystemName.MNG.getValue());
                     request.setMessageOwner(SystemName.MNG.getValue());
                     request.setMessageTo(SystemName.MNG.getValue());
                     request.setResultCode(ResultCode.OK.getValue());
                     request.setTransactionId(transactionId);
 
-                    ProductionOrderAllocateRequestBody body = ProductionOrderAllocateRequestBody.builder()
+                    ProductionOrderProcessRequestBody body = ProductionOrderProcessRequestBody.builder()
                             .id(order.getId())
                             .orderId(order.getOrderId())
                             .orderLineNumber(order.getOrderLineNumber())

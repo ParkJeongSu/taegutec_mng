@@ -19,6 +19,9 @@ public enum EquipmentState implements MetaDataEnum {
     IDLE("IDLE"){
 
     },
+    STOP("STOP"){
+
+    },
     DOWN("DOWN"){
 
     },

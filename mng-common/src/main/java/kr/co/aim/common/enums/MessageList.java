@@ -35,7 +35,7 @@ public enum MessageList {
     OP_CALL_SEND("OpCallSend"),
     MATERIAL_INBOUND_START("MaterialInboundStart"),
     BAG_ON_PALLET("BagOnPallet"),
-    PRODUCTION_ORDER_ALLOCATE_REQUEST("ProductionOrderAllocateRequest"),
+    PRODUCTION_ORDER_PROCESS_REQUEST("ProductionOrderProcessRequest"),
     PRODUCTION_ORDER_VALIDATION_REQUEST("ProductionOrderValidationRequest"),
     RECIPE_TIME_OUT_REQUEST("RecipeTimeOutRequest"),
     COMMUNICATION_STATE_REPORT("CommunicationStateReport"),

@@ -10,6 +10,7 @@ import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
+import kr.co.aim.domain.model.Equipment;
 import kr.co.aim.domain.model.TransportJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +38,6 @@ public class WhereDispatchService {
         WhereDispatchContext context = contextFactory.createContext(message.getBody());
 
         // 2. 적합한 Strategy 탐색 및 목적지 결정
-
         WhereDispatchStrategy targetStrategy = null;
         for (WhereDispatchStrategy strategy : dispatchStrategies) {
             if (strategy.supports(context)) {
@@ -69,8 +69,13 @@ public class WhereDispatchService {
             }
         }
 
+        // 3.target 설비가 down 상태라면 반송요청을 하지 않음
+        Equipment targetEquipment = context.getTargetEquipment();
+        if(StringUtils.equals(EquipmentState.DOWN.getValue(),targetEquipment.getEquipmentState())){
+            throw new RuntimeException("target equipment state is DOWN");
+        }
 
-        // 3. 반송 작업 생성 및 BaseMessage 반환
+        // 4. 반송 작업 생성 및 BaseMessage 반환
         return createTransportJobMessage(context);
     }
 

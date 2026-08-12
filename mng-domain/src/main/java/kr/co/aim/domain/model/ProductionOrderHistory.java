@@ -37,6 +37,8 @@ public class ProductionOrderHistory implements IBaseHistoryEntity {
     private BigDecimal startedQuantity;
     private BigDecimal endedQuantity;
     private BigDecimal scrappedQuantity;
+    private String materialLotName;
+    private String galOrderId;
     private LocalDateTime createTime;
     private LocalDateTime releaseTime;
     private LocalDateTime completeTime;

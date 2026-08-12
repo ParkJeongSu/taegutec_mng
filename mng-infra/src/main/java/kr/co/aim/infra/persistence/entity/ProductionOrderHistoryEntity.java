@@ -90,6 +90,12 @@ public class ProductionOrderHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "SCRAPPED_QUANTITY")
     private BigDecimal scrappedQuantity;
 
+    @Column(name = "MATERIAL_LOT_NAME")
+    private String materialLotName;
+
+    @Column(name = "GAL_ORDER_ID")
+    private String galOrderId;
+
     @Column(name = "CREATE_TIME")
     private LocalDateTime createTime;
 

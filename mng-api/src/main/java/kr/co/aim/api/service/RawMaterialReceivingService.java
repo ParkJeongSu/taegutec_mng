@@ -95,7 +95,7 @@ public class RawMaterialReceivingService {
                             .transactionInfo(tx)
                             .lotName(productionOrder.getLotName())
                             .originalLotName(productionOrder.getLotName())
-                            .lotStatus(LotState.CREATED.getValue())
+                            .lotStatus(LotStatus.STOCK.getValue())
                             .itemId(productionOrder.getItemName())
                             .totalQuantity(productionOrder.getPlanQuantity())
                             .holdState(HoldState.NOT_ON_HOLD.getValue())

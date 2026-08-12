@@ -7,7 +7,6 @@ import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
-import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -52,6 +51,7 @@ public class MessageExecuteService {
     private final PortService portService;
     private final PortDefService portDefService;
     private final ProductionOrderService productionOrderService;
+    private final ProductionOrderProcessService productionOrderProcessService;
     private final TransportJobService transportJobService;
     private final IfEventQueueService ifEventQueueService;
 
@@ -506,8 +506,8 @@ public class MessageExecuteService {
         return factoryProcessStrategy.transportOrderRequest(message);
     }
 
-    public void productionOrderAllocateRequest(BaseMessage<ProductionOrderAllocateRequestBody> message){
-        factoryProcessStrategy.productionOrderAllocateRequest(message);
+    public void productionOrderProcessRequest(BaseMessage<ProductionOrderProcessRequestBody> message){
+        productionOrderProcessService.productionOrderProcessRequest(message);
     }
 
     public void productionOrderValidationRequest(BaseMessage<ProductionOrderBody> message){

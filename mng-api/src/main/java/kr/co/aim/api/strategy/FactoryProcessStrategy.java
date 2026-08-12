@@ -20,5 +20,4 @@ public interface FactoryProcessStrategy {
     public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message);
     public void transportJobValidationReply(BaseMessage<TransportJobValidationReplyBody> message) ;
     public void eventQueueReport(BaseMessage<EventQueueReportBody> message) ;
-    public void productionOrderAllocateRequest(BaseMessage<ProductionOrderAllocateRequestBody> message);
 }

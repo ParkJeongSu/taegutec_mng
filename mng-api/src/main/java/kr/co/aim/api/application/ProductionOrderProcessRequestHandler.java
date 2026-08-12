@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.ProductionOrderAllocateRequestBody;
+import kr.co.aim.common.format.ProductionOrderProcessRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 @Profile({"tex"})
-public class ProductionOrderAllocateRequestHandler implements MessageHandler<String> {
+public class ProductionOrderProcessRequestHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
@@ -28,7 +28,7 @@ public class ProductionOrderAllocateRequestHandler implements MessageHandler<Str
 
     @Override
     public String getSupportedMessageName() {
-        return MessageList.PRODUCTION_ORDER_ALLOCATE_REQUEST.getMessageName();
+        return MessageList.PRODUCTION_ORDER_PROCESS_REQUEST.getMessageName();
     }
 
     @Override
@@ -36,12 +36,12 @@ public class ProductionOrderAllocateRequestHandler implements MessageHandler<Str
     public Object handle(String message) {
         
         // 1. 자신에게 맞는 DTO로 역직렬화
-        TypeReference<BaseMessage<ProductionOrderAllocateRequestBody>> typeRef = new TypeReference<>() {};
-        BaseMessage<ProductionOrderAllocateRequestBody> requestMessage = objectMapper.readValue(message, typeRef);
+        TypeReference<BaseMessage<ProductionOrderProcessRequestBody>> typeRef = new TypeReference<>() {};
+        BaseMessage<ProductionOrderProcessRequestBody> requestMessage = objectMapper.readValue(message, typeRef);
 
         // 2. 해당 비즈니스 로직 호출 & reply 메시지 생성
         // 서비스 호출
-        messageExecuteService.productionOrderAllocateRequest(requestMessage);
+        messageExecuteService.productionOrderProcessRequest(requestMessage);
 
         return null;
     }

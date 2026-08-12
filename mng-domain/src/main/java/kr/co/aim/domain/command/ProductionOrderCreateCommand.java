@@ -1,5 +1,6 @@
 package kr.co.aim.domain.command;
 
+import jakarta.persistence.Column;
 import kr.co.aim.common.record.TransactionInfo;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,6 +37,8 @@ public class ProductionOrderCreateCommand {
     private final BigDecimal startedQuantity;
     private final BigDecimal endedQuantity;
     private final BigDecimal scrappedQuantity;
+    private final String materialLotName;
+    private final String galOrderId;
     private final LocalDateTime createTime;
     private final LocalDateTime releaseTime;
     private final LocalDateTime completeTime;

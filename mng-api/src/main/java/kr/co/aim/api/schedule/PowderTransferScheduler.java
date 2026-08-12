@@ -83,55 +83,14 @@ public class PowderTransferScheduler {
                 }
                 else{
                     // H2OrderMPEntity 조회 및 List<H2OrderDPEntity> 조회 by IdocId
-
                     // List<H2OrderDPEntity> 갯수만큼 Production Order 생성
-
                     // 특정 타입의 경우 각 시스템별로 Message 전송
 
-                    H2OrderMPEntity h2OrderMEntity = powderExternalInterfaceService.selectH2OrderMEntityByIdocId(idocEntity.getLineId());
+                    // H2OrderMPEntity h2OrderMEntity = powderExternalInterfaceService.selectH2OrderMEntityByIdocId(idocEntity.getLineId());
                     List<H2OrderDPEntity> h2OrderDEntities = powderExternalInterfaceService.selectH2OrderDEntityByIdocId(idocEntity.getLineId());
                     for(H2OrderDPEntity  h2OrderDPEntity : h2OrderDEntities){
-                        String productionOrderType = "";
-                        if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())){
-                            // 원자재 입고
-                            productionOrderType = ProductionOrderType.MATERIAL_INBOUND.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())){
-                            // 출하
-                            productionOrderType = ProductionOrderType.OUTBOUND.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())){
-                            // 해포
-                            productionOrderType = ProductionOrderType.UNPACKING.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())){
-                            // MATERIAL_ISSUE
-                            productionOrderType = ProductionOrderType.PRODUCTION_ISSUE.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())){
-                            // 조업
-                            productionOrderType = ProductionOrderType.PRODUCTION.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())){
-                            // RRN_REPLY
-                            productionOrderType = ProductionOrderType.RRN_REPLY.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())){
-                            // ENTER_TO_STOCK
-                            productionOrderType = ProductionOrderType.ENTER_TO_STOCK.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())){
-                            // PACKING_ISSUE
-                            productionOrderType = ProductionOrderType.PACKING_ISSUE.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())){
-                            // PACKING
-                            productionOrderType = ProductionOrderType.PACKING.getValue();
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())){
-                            // CHANGE_RRN
-                            productionOrderType = ProductionOrderType.CHANGE_RRN.getValue();
-                        }
+                        String productionOrderType = getProductionOrderType(idocEntity);
+
                         // Production Order 생성
                         ProductionOrderCreateCommand command =
                                 ProductionOrderCreateCommand
@@ -139,18 +98,13 @@ public class PowderTransferScheduler {
                                         .orderId(h2OrderDPEntity.getCOrderId())
                                         .orderLineNumber(h2OrderDPEntity.getRrn().toString())
                                         .lotName(h2OrderDPEntity.getLot().toString())
-                                        //.description()
                                         .itemName(h2OrderDPEntity.getCPartId())
-                                        //.recipeName()
-                                        //.carrierName()
                                         .idocId(idocEntity.getLineId())
                                         .h2OrderDpLineId(h2OrderDPEntity.getLineId())
                                         .galKey(h2OrderDPEntity.getGalKey())
                                         .productionOrderType(productionOrderType)
                                         .productionOrderState(ProductionOrderState.CREATED.getValue())
-                                        //.reportState()
                                         .holdState(HoldState.NOT_ON_HOLD.getValue())
-                                        //.reasonCode()
                                         .equipmentName(h2OrderDPEntity.getMachine())
                                         .planQuantity(h2OrderDPEntity.getQty())
                                         .releasedQuantity(BigDecimal.ZERO)
@@ -158,17 +112,7 @@ public class PowderTransferScheduler {
                                         .endedQuantity(BigDecimal.ZERO)
                                         .scrappedQuantity(BigDecimal.ZERO)
                                         .createTime(transactionInfo.eventTime())
-                                        //.releaseTime()
-                                        //.completeTime()
-                                        //.validationTime()
                                         .createUser(SystemName.MNG.getValue())
-                                        //.releaseUser()
-                                        //.completeUser()
-                                        //.dueDate()
-                                        //.eventName()
-                                        //.eventTime()
-                                        //.eventUser()
-                                        //.eventComment()
                                         .transactionInfo(transactionInfo)
                                         .build();
 
@@ -178,41 +122,7 @@ public class PowderTransferScheduler {
 
                         // ProductionOrder 에 대한 Validation
                         sendProductionOrderValidationToPEX(transactionInfo,productionOrder);
-
-                        //필요한 경우 각 시스템에 order 전송
-                        if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())) {
-                            // 원자재 입고
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())){
-                            // 출하
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())){
-                            // 해포
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())){
-                            // MATERIAL_ISSUE
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())){
-                            // 조업
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())){
-                            // RRN_REPLY
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())){
-                            // ENTER_TO_STOCK
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())){
-                            // PACKING_ISSUE
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())){
-                            // PACKING
-                        }
-                        else if(Objects.equals(idocEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())){
-                            // CHANGE_RRN
-                        }
-
                     }
-
                 }
 
                 // 정상적으로 수행했기 때문에, errorCode (60 : processed)와 dtimemode를 수정
@@ -225,6 +135,50 @@ public class PowderTransferScheduler {
             }
         }
 
+    }
+
+    private String getProductionOrderType(IdocPEntity idocPEntity) {
+        if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())){
+            // 원자재 입고
+            return ProductionOrderType.MATERIAL_INBOUND.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())){
+            // 출하
+            return ProductionOrderType.OUTBOUND.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())){
+            // 해포
+            return ProductionOrderType.UNPACKING.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())){
+            // MATERIAL_ISSUE
+            return ProductionOrderType.PRODUCTION_ISSUE.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())){
+            // 조업
+            return ProductionOrderType.PRODUCTION.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())){
+            // RRN_REPLY
+            return ProductionOrderType.RRN_REPLY.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())){
+            // ENTER_TO_STOCK
+            return ProductionOrderType.ENTER_TO_STOCK.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())){
+            // PACKING_ISSUE
+            return ProductionOrderType.PACKING_ISSUE.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())){
+            // PACKING
+            return ProductionOrderType.PACKING.getValue();
+        }
+        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())){
+            // CHANGE_RRN
+            return ProductionOrderType.CHANGE_RRN.getValue();
+        }
+        return "";
     }
 
     private void createPart(IdocPEntity idocEntity) {

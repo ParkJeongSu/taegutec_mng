@@ -13,20 +13,17 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
-public class ProductionTypeStrategy implements SelectStrategy {
+public class SelectProductionIssueTypeStrategy implements SelectStrategy {
 
     private final LotCarrierMappingService lotCarrierMappingService;
 
     @Override
     public boolean supports(ProductionOrder productionOrder) {
-        return StringUtils.equals(ProductionOrderType.PRODUCTION.getValue(), productionOrder.getProductionOrderType());
+        return StringUtils.equals(ProductionOrderType.PRODUCTION_ISSUE.getValue(), productionOrder.getProductionOrderType());
     }
 
     @Override
     public List<LotCarrierMapping> selectAvailableCarrier(ProductionOrder productionOrder) {
-        return lotCarrierMappingService.findByOrderIdAndOrderLineNumber(
-                productionOrder.getOrderId(),
-                productionOrder.getOrderLineNumber()
-        );
+        return lotCarrierMappingService.findByLotName(productionOrder.getMaterialLotName());
     }
 }

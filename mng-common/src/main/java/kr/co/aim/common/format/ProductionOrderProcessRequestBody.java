@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ProductionOrderAllocateRequestBody {
+public class ProductionOrderProcessRequestBody {
     private Long id;
     private String orderId;
     private String orderLineNumber;

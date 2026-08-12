@@ -11,10 +11,12 @@ import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
+import kr.co.aim.domain.model.Equipment;
 import kr.co.aim.domain.model.TransportJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,8 +39,17 @@ public class WhatDispatchService {
         // 1. 요청 검증 및 DispatchContext 조회 (Guard Clause 캡슐화)
         WhatDispatchContext context = contextFactory.createContext(message.getBody());
 
-        // 2. 적합한 Strategy 탐색 및 목적지 결정
+        // 2. Validation
+        // 2.1 target Equipment가 Down인경우 return null
+        Equipment equipment = context.getEquipment();
+        if(ObjectUtils.isEmpty(equipment)){
+            throw new RuntimeException("equipment is null");
+        }
+        if(StringUtils.equals(EquipmentState.DOWN.getValue(),equipment.getEquipmentState()) ){
+            throw new RuntimeException("equipment state is DOWN");
+        }
 
+        // 3. 적합한 Strategy 탐색 및 목적지 결정
         WhatDispatchStrategy targetStrategy = null;
         for (WhatDispatchStrategy strategy : dispatchStrategies) {
             if (strategy.supports(context)) {
