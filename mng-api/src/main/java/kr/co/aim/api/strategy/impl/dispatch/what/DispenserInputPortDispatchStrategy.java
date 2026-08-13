@@ -2,7 +2,7 @@ package kr.co.aim.api.strategy.impl.dispatch.what;
 
 import kr.co.aim.api.service.*;
 import kr.co.aim.api.strategy.WhatDispatchStrategy;
-import kr.co.aim.api.vo.powder.ops.WhatDispatchContext;
+import kr.co.aim.api.context.WhatDispatchContext;
 import kr.co.aim.common.enums.CarrierType;
 import kr.co.aim.common.enums.EquipmentDetailType;
 import kr.co.aim.common.enums.PortType;

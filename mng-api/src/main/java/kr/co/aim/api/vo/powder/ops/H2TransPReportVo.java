@@ -1,7 +1,6 @@
 package kr.co.aim.api.vo.powder.ops;
 
 import kr.co.aim.common.enums.GALProductionStatus;
-import kr.co.aim.common.enums.GALTransportStatus;
 import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
 import lombok.*;
 

@@ -1,7 +1,7 @@
 package kr.co.aim.api.strategy.impl.download;
 
 import kr.co.aim.api.strategy.DownloadStrategy;
-import kr.co.aim.api.vo.powder.ops.DownloadContext;
+import kr.co.aim.api.context.DownloadContext;
 import kr.co.aim.common.enums.PortType;
 import kr.co.aim.common.enums.PortUseType;
 import kr.co.aim.common.format.CarrierInfoDownloadSendBody;

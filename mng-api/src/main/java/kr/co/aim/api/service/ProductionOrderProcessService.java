@@ -1,27 +1,16 @@
 package kr.co.aim.api.service;
 
 
+import kr.co.aim.api.context.ProductionOrderProcessContextFactory;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.ProductionOrderProcessStrategy;
-import kr.co.aim.api.strategy.WhatDispatchStrategy;
-import kr.co.aim.api.vo.port.TransportStateChangedVo;
 import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
-import kr.co.aim.api.vo.powder.ops.ProductionOrderProcessContext;
-import kr.co.aim.api.vo.powder.ops.WhatDispatchContext;
-import kr.co.aim.common.Utils.FormatUtils;
-import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.CarrierDispatchRequestBody;
+import kr.co.aim.api.context.ProductionOrderProcessContext;
 import kr.co.aim.common.format.ProductionOrderProcessRequestBody;
-import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.TransportJobCreateCommand;
-import kr.co.aim.domain.model.Equipment;
-import kr.co.aim.domain.model.TransportJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

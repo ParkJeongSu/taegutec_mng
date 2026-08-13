@@ -4,7 +4,7 @@ import kr.co.aim.api.service.HistoryService;
 import kr.co.aim.api.service.LotCarrierMappingService;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.api.strategy.ProcessJobStartedStrategy;
-import kr.co.aim.api.vo.powder.ops.ProcessJobStartedContext;
+import kr.co.aim.api.context.ProcessJobStartedContext;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProcessJobStartedCommand;

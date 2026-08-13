@@ -100,6 +100,19 @@ public class LotCarrierMapping implements HasTransactionInfo {
         setMantiReplyTime(null);
     }
 
+    public void nextRRNReply(NextRRNReplyCommand command){
+        this.apply(command.getTransactionInfo());
+        setOrderId(command.getOrderId());
+        setOrderLineNumber(command.getOrderLineNumber());
+        setProductionOrderId(command.getProductionOrderId());
+        setSeq(command.getSeq());
+        setProductionStatus(ProductionStatus.WAIT.getValue());
+        setProcessStatus(ProcessStatus.WAIT.getValue());
+        setRrnRequestState(RRNRequestState.COMPLETED.getValue());
+        setRrnReplyTime(command.getTransactionInfo().eventTime());
+        setNextEquipmentName(command.getNextEquipmentName());
+    }
+
     public void recipeRely(RecipeReplyCommand command){
         this.apply(command.getTransactionInfo());
         setMantiRequestState(MantiRequestState.COMPLETED.getValue());

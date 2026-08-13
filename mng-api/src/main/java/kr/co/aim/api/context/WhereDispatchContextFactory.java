@@ -1,6 +1,6 @@
-package kr.co.aim.api.service;
+package kr.co.aim.api.context;
 
-import kr.co.aim.api.vo.powder.ops.WhereDispatchContext;
+import kr.co.aim.api.service.*;
 import kr.co.aim.common.format.DestinationDispatchRequestBody;
 import kr.co.aim.domain.model.*;
 import lombok.RequiredArgsConstructor;

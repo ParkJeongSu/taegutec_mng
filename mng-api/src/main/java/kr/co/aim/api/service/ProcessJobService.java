@@ -1,11 +1,13 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.context.ProcessJobEndedContextFactory;
+import kr.co.aim.api.context.ProcessJobStartedContextFactory;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.strategy.ProcessJobEndedStrategy;
 import kr.co.aim.api.strategy.ProcessJobStartedStrategy;
 import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
-import kr.co.aim.api.vo.powder.ops.ProcessJobEndedContext;
-import kr.co.aim.api.vo.powder.ops.ProcessJobStartedContext;
+import kr.co.aim.api.context.ProcessJobEndedContext;
+import kr.co.aim.api.context.ProcessJobStartedContext;
 import kr.co.aim.common.enums.ProcessStatus;
 import kr.co.aim.common.format.MngKeyName;
 import kr.co.aim.common.format.ProcessJobEndedBody;

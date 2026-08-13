@@ -87,14 +87,14 @@ public class PowderOrderProcessScheduler {
                     request.setBody(body);
 
                     rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_PEX, RabbitConfig.ROUTING_PEX, request);
-                    log.info("Allocation request sent for OrderId: {}, LineNo: {}", order.getOrderId(), order.getOrderLineNumber());
+                    log.info("Process request sent for OrderId: {}, LineNo: {}", order.getOrderId(), order.getOrderLineNumber());
                 }
                 else{
                     throw new RuntimeException("update Error");
                 }
 
             } catch (Exception e) {
-                log.error("Failed to process allocate request for ProductionOrder ID: {}", order.getId(), e);
+                log.error("Failed to process request for ProductionOrder ID: {}", order.getId(), e);
             }
         }
     }

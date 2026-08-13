@@ -1,8 +1,9 @@
 package kr.co.aim.api.service;
 
 
+import kr.co.aim.api.context.WhereDispatchContextFactory;
 import kr.co.aim.api.strategy.WhereDispatchStrategy;
-import kr.co.aim.api.vo.powder.ops.WhereDispatchContext;
+import kr.co.aim.api.context.WhereDispatchContext;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.DestinationDispatchRequestBody;

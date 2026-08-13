@@ -5,20 +5,14 @@ import kr.co.aim.api.service.EquipmentService;
 import kr.co.aim.api.service.PortDefService;
 import kr.co.aim.api.service.PortService;
 import kr.co.aim.api.strategy.WhereDispatchStrategy;
-import kr.co.aim.api.vo.powder.ops.WhereDispatchContext;
+import kr.co.aim.api.context.WhereDispatchContext;
 import kr.co.aim.common.enums.EquipmentDetailType;
 import kr.co.aim.common.enums.PortType;
 import kr.co.aim.domain.model.Equipment;
-import kr.co.aim.domain.model.EquipmentDef;
-import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor

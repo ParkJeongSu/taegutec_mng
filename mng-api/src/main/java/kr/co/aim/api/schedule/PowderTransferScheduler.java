@@ -89,6 +89,8 @@ public class PowderTransferScheduler {
                     // H2OrderMPEntity h2OrderMEntity = powderExternalInterfaceService.selectH2OrderMEntityByIdocId(idocEntity.getLineId());
                     List<H2OrderDPEntity> h2OrderDEntities = powderExternalInterfaceService.selectH2OrderDEntityByIdocId(idocEntity.getLineId());
                     for(H2OrderDPEntity  h2OrderDPEntity : h2OrderDEntities){
+
+                        // TODO: 아래의 ProductionOrderCreateCommand 를 type에 따라서 command를 다르게 만들어야함
                         String productionOrderType = getProductionOrderType(idocEntity);
 
                         // Production Order 생성

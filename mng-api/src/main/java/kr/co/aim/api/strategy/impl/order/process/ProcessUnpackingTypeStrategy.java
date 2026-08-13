@@ -3,7 +3,7 @@ package kr.co.aim.api.strategy.impl.order.process;
 import kr.co.aim.api.service.*;
 import kr.co.aim.api.strategy.ProductionOrderProcessStrategy;
 import kr.co.aim.api.strategy.SelectStrategy;
-import kr.co.aim.api.vo.powder.ops.ProductionOrderProcessContext;
+import kr.co.aim.api.context.ProductionOrderProcessContext;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.AllocatedCommand;

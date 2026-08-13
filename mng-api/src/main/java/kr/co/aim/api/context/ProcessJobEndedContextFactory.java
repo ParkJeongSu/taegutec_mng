@@ -1,12 +1,12 @@
-package kr.co.aim.api.service;
+package kr.co.aim.api.context;
 
-import kr.co.aim.api.vo.powder.ops.ProcessJobStartedContext;
-import kr.co.aim.common.format.ProcessJobStartedBody;
+import kr.co.aim.api.service.*;
+import kr.co.aim.common.format.MngKeyName;
+import kr.co.aim.common.format.ProcessJobEndedBody;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,7 +16,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class ProcessJobStartedContextFactory {
+public class ProcessJobEndedContextFactory {
 
     private final EquipmentDefService equipmentDefService;
     private final EquipmentService equipmentService;
@@ -25,11 +25,11 @@ public class ProcessJobStartedContextFactory {
     private final LotCarrierMappingService lotCarrierMappingService;
     private final ProductionOrderService productionOrderService;
 
-    public ProcessJobStartedContext createContext(TransactionInfo tx, ProcessJobStartedBody body) {
+    public ProcessJobEndedContext createContext(TransactionInfo tx, ProcessJobEndedBody body) {
         String equipmentName = body.getEquipmentName();
         String portName = body.getPortName();
         String carrierName = body.getCarrierName();
-        String mngKeyName =  body.getMngKey();
+        List<MngKeyName> mngKeyNameList =  body.getMngKeyList();
         String productionTaskId = body.getProductionTaskId();
         String recipeName = body.getRecipeName();
         String orderId = body.getOrderId();
@@ -37,7 +37,7 @@ public class ProcessJobStartedContextFactory {
         BigDecimal quantity = body.getQuantity();
         String lotName = body.getLotName();
         String itemName = body.getItemName();
-        Long mngkey =  Long.parseLong(mngKeyName);
+
 
         // 2. Equipment 및 EquipmentDef 조회
         Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
@@ -69,12 +69,13 @@ public class ProcessJobStartedContextFactory {
         }
         Port port = optionalPort.get();
 
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngkey);
-        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
-            log.error("LotCarrierMapping not found: {}", mngkey);
-            throw new IllegalArgumentException("LotCarrierMapping not found");
-        }
-        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
+        // TODO: MNGKEY 이부분 해결하기
+//        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngkey);
+//        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
+//            log.error("LotCarrierMapping not found: {}", mngkey);
+//            throw new IllegalArgumentException("LotCarrierMapping not found");
+//        }
+//        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
 
         Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(Long.parseLong(productionTaskId));
         if (optionalProductionOrder.isEmpty()) {
@@ -85,12 +86,12 @@ public class ProcessJobStartedContextFactory {
 
 
         // 4. 조회된 데이터로 Context 생성 후 반환
-        return ProcessJobStartedContext.builder()
+        return ProcessJobEndedContext.builder()
                 .equipmentDef(equipmentDef)
                 .equipment(equipment)
                 .portDef(portDef)
                 .port(port)
-                .lotCarrierMapping(lotCarrierMapping)
+                //.lotCarrierMapping(lotCarrierMapping)
                 .productionOrder(productionOrder)
                 .carrierName(carrierName)
                 .recipeName(recipeName)

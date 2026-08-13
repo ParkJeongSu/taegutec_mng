@@ -1,6 +1,6 @@
 package kr.co.aim.api.strategy;
 
-import kr.co.aim.api.vo.powder.ops.WhereDispatchContext;
+import kr.co.aim.api.context.WhereDispatchContext;
 
 public interface WhereDispatchStrategy {
 

@@ -1,14 +1,6 @@
 package kr.co.aim.api.strategy;
 
-import kr.co.aim.api.vo.powder.ops.DownloadContext;
-import kr.co.aim.api.vo.powder.ops.ProductionOrderProcessContext;
-import kr.co.aim.common.Utils.FormatUtils;
-import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.enums.ResultCode;
-import kr.co.aim.common.enums.SystemName;
-import kr.co.aim.common.format.CarrierInfoDownloadSendBody;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.record.TransactionInfo;
+import kr.co.aim.api.context.ProductionOrderProcessContext;
 
 public interface ProductionOrderProcessStrategy {
 

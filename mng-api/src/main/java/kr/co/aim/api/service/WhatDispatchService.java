@@ -1,9 +1,10 @@
 package kr.co.aim.api.service;
 
 
+import kr.co.aim.api.context.WhatDispatchContextFactory;
 import kr.co.aim.api.strategy.WhatDispatchStrategy;
 import kr.co.aim.api.vo.port.TransportStateChangedVo;
-import kr.co.aim.api.vo.powder.ops.WhatDispatchContext;
+import kr.co.aim.api.context.WhatDispatchContext;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.CarrierDispatchRequestBody;

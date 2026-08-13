@@ -5,7 +5,7 @@ import kr.co.aim.api.service.EquipmentService;
 import kr.co.aim.api.service.PortDefService;
 import kr.co.aim.api.service.PortService;
 import kr.co.aim.api.strategy.WhereDispatchStrategy;
-import kr.co.aim.api.vo.powder.ops.WhereDispatchContext;
+import kr.co.aim.api.context.WhereDispatchContext;
 import kr.co.aim.common.enums.EquipmentDetailType;
 import kr.co.aim.common.enums.PortType;
 import kr.co.aim.domain.model.Equipment;

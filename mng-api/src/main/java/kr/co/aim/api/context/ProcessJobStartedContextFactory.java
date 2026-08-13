@@ -1,33 +1,43 @@
-package kr.co.aim.api.service;
+package kr.co.aim.api.context;
 
-import kr.co.aim.api.vo.powder.ops.DownloadContext;
-import kr.co.aim.api.vo.powder.ops.WhatDispatchContext;
-import kr.co.aim.common.format.CarrierDispatchRequestBody;
-import kr.co.aim.common.format.LoadCompletedBody;
+import kr.co.aim.api.service.*;
+import kr.co.aim.common.format.ProcessJobStartedBody;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class DownloadContextFactory {
+public class ProcessJobStartedContextFactory {
 
-    private final CarrierService carrierService;
-    private final CarrierDefService carrierDefService;
     private final EquipmentDefService equipmentDefService;
     private final EquipmentService equipmentService;
     private final PortDefService portDefService;
     private final PortService portService;
+    private final LotCarrierMappingService lotCarrierMappingService;
+    private final ProductionOrderService productionOrderService;
 
-    public DownloadContext createContext(TransactionInfo transactionInfo, LoadCompletedBody body) {
+    public ProcessJobStartedContext createContext(TransactionInfo tx, ProcessJobStartedBody body) {
         String equipmentName = body.getEquipmentName();
         String portName = body.getPortName();
         String carrierName = body.getCarrierName();
+        String mngKeyName =  body.getMngKey();
+        String productionTaskId = body.getProductionTaskId();
+        String recipeName = body.getRecipeName();
+        String orderId = body.getOrderId();
+        String orderLineNumber = body.getOrderLineNumber();
+        BigDecimal quantity = body.getQuantity();
+        String lotName = body.getLotName();
+        String itemName = body.getItemName();
+        Long mngkey =  Long.parseLong(mngKeyName);
 
         // 2. Equipment 및 EquipmentDef 조회
         Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
@@ -59,30 +69,33 @@ public class DownloadContextFactory {
         }
         Port port = optionalPort.get();
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
-        if (optionalCarrier.isEmpty()) {
-            log.error("Carrier not found: {} - {}", carrierName, carrierName);
-            throw new IllegalArgumentException("Carrier not found");
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngkey);
+        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
+            log.error("LotCarrierMapping not found: {}", mngkey);
+            throw new IllegalArgumentException("LotCarrierMapping not found");
         }
-        Carrier carrier = optionalCarrier.get();
+        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
 
-        Optional<CarrierDef> optionalCarrierDef = carrierDefService.findByCarrierDefName(carrier.getCarrierDefName());
-        if (optionalCarrierDef.isEmpty()) {
-            log.error("Carrier Def not found: {} - {}", carrierName, carrierName);
-            throw new IllegalArgumentException("Carrier Def not found");
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(Long.parseLong(productionTaskId));
+        if (optionalProductionOrder.isEmpty()) {
+            log.error("ProductionOrder not found: {}", productionTaskId);
+            throw new IllegalArgumentException("ProductionOrder not found");
         }
-        CarrierDef carrierDef = optionalCarrierDef.get();
+        ProductionOrder productionOrder = optionalProductionOrder.get();
+
 
         // 4. 조회된 데이터로 Context 생성 후 반환
-        return DownloadContext
-                .builder()
+        return ProcessJobStartedContext.builder()
                 .equipmentDef(equipmentDef)
                 .equipment(equipment)
                 .portDef(portDef)
                 .port(port)
-                .carrierDef(carrierDef)
-                .carrier(carrier)
-                .tx(transactionInfo)
+                .lotCarrierMapping(lotCarrierMapping)
+                .productionOrder(productionOrder)
+                .carrierName(carrierName)
+                .recipeName(recipeName)
+                .quantity(quantity)
+                .tx(tx)
                 .build();
     }
 }

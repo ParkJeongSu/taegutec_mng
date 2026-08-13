@@ -1,6 +1,6 @@
 package kr.co.aim.api.strategy;
 
-import kr.co.aim.api.vo.powder.ops.WhatDispatchContext;
+import kr.co.aim.api.context.WhatDispatchContext;
 
 public interface WhatDispatchStrategy {
 

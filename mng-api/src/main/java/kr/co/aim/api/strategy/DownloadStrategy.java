@@ -1,6 +1,6 @@
 package kr.co.aim.api.strategy;
 
-import kr.co.aim.api.vo.powder.ops.DownloadContext;
+import kr.co.aim.api.context.DownloadContext;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.ResultCode;

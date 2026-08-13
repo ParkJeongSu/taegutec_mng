@@ -5,7 +5,7 @@ import kr.co.aim.api.service.LotCarrierMappingService;
 import kr.co.aim.api.service.LotService;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.api.strategy.ProcessJobEndedStrategy;
-import kr.co.aim.api.vo.powder.ops.ProcessJobEndedContext;
+import kr.co.aim.api.context.ProcessJobEndedContext;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.MngKeyName;
 import kr.co.aim.common.record.TransactionInfo;
