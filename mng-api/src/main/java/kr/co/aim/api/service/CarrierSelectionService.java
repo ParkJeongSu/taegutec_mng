@@ -18,7 +18,7 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
+//@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 @Profile({"pex", "tex", "scheduler"})
 public class CarrierSelectionService {
 

@@ -32,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -179,8 +180,11 @@ public class PowderExternalInterfaceService implements FactoryGALInterfaceStrate
 
     @Transactional(value = "db2TransactionManager",propagation = Propagation.REQUIRES_NEW)
     public void transferCompleted(Long idocId) {
-        IdocPEntity idoc = idocPJpaRepository.findByLineId(idocId)
-                .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
+        Optional<IdocPEntity> optionalIdocPEntity = idocPJpaRepository.findByLineId(idocId);
+        if(optionalIdocPEntity.isEmpty()){
+            throw new RuntimeException("IDOC을 찾을 수 없습니다.");
+        }
+        IdocPEntity idoc = optionalIdocPEntity.get();
         idoc.setErrorCode(IdocErrorCode.PROCESSED.getValue());
         idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         idocPJpaRepository.save(idoc);

@@ -326,6 +326,25 @@ public class InsertSimulatorController {
         return ResponseEntity.ok("SUCCESS");
     }
 
+    @PostMapping("/command/outbound/auto")
+    public ResponseEntity<String> autoCreateOutbound() {
+        // 가상 Outbound 명령 생성 비즈니스 로직
+        for(int i=0 ; i<10 ;i++){
+            OutboundCreateDto request =
+                    OutboundCreateDto
+                            .builder()
+                            .locationGroup("341")
+                            .galId("SI" + i)
+                            .carrierId("c" + i)
+                            .carrierType("TBD")
+                            .zoneName("ZONE1")
+                            .orderPriority(1)
+                            .build();
+            insertSimulatorFacade.createOutbound(request);
+        }
+        return ResponseEntity.ok("SUCCESS");
+    }
+
     @PostMapping("/command/relocation")
     public ResponseEntity<String> createRelocation(@RequestBody RelocationCreateDto request) {
         // 가상 Relocation 명령 생성 비즈니스 로직

@@ -15,13 +15,13 @@ import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.db2entity.powder.H2OrderDPEntity;
-import kr.co.aim.infra.persistence.db2entity.powder.H2OrderMPEntity;
 import kr.co.aim.infra.persistence.db2entity.powder.H2PartMPEntity;
 import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -90,33 +90,7 @@ public class PowderTransferScheduler {
                     List<H2OrderDPEntity> h2OrderDEntities = powderExternalInterfaceService.selectH2OrderDEntityByIdocId(idocEntity.getLineId());
                     for(H2OrderDPEntity  h2OrderDPEntity : h2OrderDEntities){
 
-                        // TODO: 아래의 ProductionOrderCreateCommand 를 type에 따라서 command를 다르게 만들어야함
-                        String productionOrderType = getProductionOrderType(idocEntity);
-
-                        // Production Order 생성
-                        ProductionOrderCreateCommand command =
-                                ProductionOrderCreateCommand
-                                        .builder()
-                                        .orderId(h2OrderDPEntity.getCOrderId())
-                                        .orderLineNumber(h2OrderDPEntity.getRrn().toString())
-                                        .lotName(h2OrderDPEntity.getLot().toString())
-                                        .itemName(h2OrderDPEntity.getCPartId())
-                                        .idocId(idocEntity.getLineId())
-                                        .h2OrderDpLineId(h2OrderDPEntity.getLineId())
-                                        .galKey(h2OrderDPEntity.getGalKey())
-                                        .productionOrderType(productionOrderType)
-                                        .productionOrderState(ProductionOrderState.CREATED.getValue())
-                                        .holdState(HoldState.NOT_ON_HOLD.getValue())
-                                        .equipmentName(h2OrderDPEntity.getMachine())
-                                        .planQuantity(h2OrderDPEntity.getQty())
-                                        .releasedQuantity(BigDecimal.ZERO)
-                                        .startedQuantity(BigDecimal.ZERO)
-                                        .endedQuantity(BigDecimal.ZERO)
-                                        .scrappedQuantity(BigDecimal.ZERO)
-                                        .createTime(transactionInfo.eventTime())
-                                        .createUser(SystemName.MNG.getValue())
-                                        .transactionInfo(transactionInfo)
-                                        .build();
+                        ProductionOrderCreateCommand command = createProductionOrderCreateCommand(transactionInfo,idocEntity,h2OrderDPEntity);
 
                         ProductionOrder productionOrder = ProductionOrder.create(command);
 
@@ -139,48 +113,129 @@ public class PowderTransferScheduler {
 
     }
 
-    private String getProductionOrderType(IdocPEntity idocPEntity) {
-        if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())){
+    private ProductionOrderCreateCommand createProductionOrderCreateCommand(TransactionInfo transactionInfo, IdocPEntity idocPEntity, H2OrderDPEntity h2OrderDPEntity) {
+        String productionOrderType = "";
+        String galOrderId = "";
+        String orderId = "";
+        String orderLineNumber = "";
+        String lotName = "";
+        String materialLotName = "";
+
+        if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.MATERIAL_INBOUND.getCode())) {
             // 원자재 입고
-            return ProductionOrderType.MATERIAL_INBOUND.getValue();
+            productionOrderType = ProductionOrderType.MATERIAL_INBOUND.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.OUTBOUND.getCode())) {
             // 출하
-            return ProductionOrderType.OUTBOUND.getValue();
+            productionOrderType = ProductionOrderType.OUTBOUND.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.UNPACKING.getCode())) {
             // 해포
-            return ProductionOrderType.UNPACKING.getValue();
+            productionOrderType = ProductionOrderType.UNPACKING.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PRODUCTION_ISSUE.getCode())) {
             // MATERIAL_ISSUE
-            return ProductionOrderType.PRODUCTION_ISSUE.getValue();
+            productionOrderType = ProductionOrderType.PRODUCTION_ISSUE.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PRODUCTION.getCode())) {
             // 조업
-            return ProductionOrderType.PRODUCTION.getValue();
+            productionOrderType = ProductionOrderType.PRODUCTION.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.RRN_REPLY.getCode())) {
             // RRN_REPLY
-            return ProductionOrderType.RRN_REPLY.getValue();
+            productionOrderType = ProductionOrderType.RRN_REPLY.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getNextRrn()) ? h2OrderDPEntity.getNextRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.ENTER_TO_STOCK.getCode())) {
             // ENTER_TO_STOCK
-            return ProductionOrderType.ENTER_TO_STOCK.getValue();
+            productionOrderType = ProductionOrderType.ENTER_TO_STOCK.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PACKING_ISSUE.getCode())) {
             // PACKING_ISSUE
-            return ProductionOrderType.PACKING_ISSUE.getValue();
+            productionOrderType = ProductionOrderType.PACKING_ISSUE.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.PACKING.getCode())) {
             // PACKING
-            return ProductionOrderType.PACKING.getValue();
+            productionOrderType = ProductionOrderType.PACKING.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        else if(Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())){
+        else if (Objects.equals(idocPEntity.getIdocTypId(), ProductionOrderType.CHANGE_RRN.getCode())) {
             // CHANGE_RRN
-            return ProductionOrderType.CHANGE_RRN.getValue();
+            productionOrderType = ProductionOrderType.CHANGE_RRN.getValue();
+            lotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getLot()) ? h2OrderDPEntity.getLot().toString() : "";
+            orderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCOrderId()) ? h2OrderDPEntity.getCOrderId() : "";
+            galOrderId = ObjectUtils.isNotEmpty(h2OrderDPEntity.getCmoord()) ? h2OrderDPEntity.getCmoord().toString() : "";
+            orderLineNumber = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRrn()) ? h2OrderDPEntity.getRrn().toString() : "";
+            materialLotName = ObjectUtils.isNotEmpty(h2OrderDPEntity.getRefLot()) ? h2OrderDPEntity.getRefLot().toString() : "";
         }
-        return "";
+
+        // Production Order 생성
+        return ProductionOrderCreateCommand
+                .builder()
+                .orderId(orderId)
+                .orderLineNumber(orderLineNumber)
+                .lotName(lotName)
+                .itemName(h2OrderDPEntity.getCPartId())
+                .idocId(idocPEntity.getLineId())
+                .h2OrderDpLineId(h2OrderDPEntity.getLineId())
+                .galKey(h2OrderDPEntity.getGalKey())
+                .productionOrderType(productionOrderType)
+                .productionOrderState(ProductionOrderState.CREATED.getValue())
+                .holdState(HoldState.NOT_ON_HOLD.getValue())
+                .equipmentName(h2OrderDPEntity.getMachine())
+                .planQuantity(h2OrderDPEntity.getQty())
+                .releasedQuantity(BigDecimal.ZERO)
+                .startedQuantity(BigDecimal.ZERO)
+                .endedQuantity(BigDecimal.ZERO)
+                .scrappedQuantity(BigDecimal.ZERO)
+                .galOrderId(galOrderId)
+                .materialLotName(materialLotName)
+                .createTime(transactionInfo.eventTime())
+                .createUser(SystemName.MNG.getValue())
+                .transactionInfo(transactionInfo)
+                .build();
     }
 
     private void createPart(IdocPEntity idocEntity) {
