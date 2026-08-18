@@ -3,28 +3,33 @@ package kr.co.aim.infra.persistence.adapter;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.core.types.dsl.CaseBuilder;
+import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.insert.QTransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.QWorkStationTransportCountResponse;
+import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
+import kr.co.aim.common.enums.TransportOrderStatus;
+import kr.co.aim.common.enums.TransportOrderType;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.time.LocalTime;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QTransportOrderEntity.transportOrderEntity;
@@ -195,6 +200,199 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
         return transportOrderJpaRepository.findMaxOrderId();
     }
 
+    @Override
+    public TransportOrderStatisticsResponse getWorkStationStatistics(String workStationId, LocalDate targetDate) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.atTime(LocalTime.MAX);
+
+        List<String> inProgressStatuses = Arrays.asList(
+                TransportOrderStatus.CREATED.getValue(),
+                TransportOrderStatus.REQUESTED.getValue(),
+                TransportOrderStatus.ACCEPTED.getValue(),
+                TransportOrderStatus.STARTED.getValue()
+        );
+
+        // 1) 완료 수량 집계
+        NumberExpression<Long> completedCountExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportStatus.eq(TransportOrderStatus.COMPLETED.getValue()))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        // 2) 진행 중 Inbound 집계
+        NumberExpression<Long> inboundProgressExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.INBOUND.getValue())
+                        .and(transportOrderEntity.transportStatus.in(inProgressStatuses)))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        // 3) 진행 중 Outbound 집계
+        NumberExpression<Long> outboundProgressExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.OUTBOUND.getValue())
+                        .and(transportOrderEntity.transportStatus.in(inProgressStatuses)))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        TransportOrderStatisticsResponse response = queryFactory
+                .select(new QTransportOrderStatisticsResponse(
+                        transportOrderEntity.workStationId,
+                        completedCountExpr,
+                        inboundProgressExpr,
+                        outboundProgressExpr
+                ))
+                .from(transportOrderEntity)
+                .where(
+                        workStationIdEq(workStationId),
+                        transportOrderEntity.createTime.between(startOfDay, endOfDay)
+                )
+                .groupBy(transportOrderEntity.workStationId)
+                .fetchOne();
+
+        // 데이터가 없는 경우 0으로 초기화된 기본 객체 반환
+        if (response == null) {
+            return new TransportOrderStatisticsResponse(workStationId, 0L, 0L, 0L);
+        }
+
+        return response;
+    }
+
+    @Override
+    public Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit) {
+        // 1. transportType에 따른 status 조건 목록 분기
+        List<String> targetStatuses;
+
+        if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
+            targetStatuses = Arrays.asList(
+                    TransportOrderStatus.ACCEPTED.getValue(),
+                    TransportOrderStatus.STARTED.getValue(),
+                    TransportOrderStatus.COMPLETED.getValue()
+            );
+        } else if (TransportOrderType.OUTBOUND.getValue().equalsIgnoreCase(transportType)) {
+            targetStatuses = Arrays.asList(
+                    TransportOrderStatus.CREATED.getValue(),
+                    TransportOrderStatus.REQUESTED.getValue(),
+                    TransportOrderStatus.ACCEPTED.getValue(),
+                    TransportOrderStatus.STARTED.getValue()
+            );
+        } else {
+            targetStatuses = Collections.emptyList();
+        }
+
+        // 2. 기본 쿼리 생성
+        JPAQuery<TransportOrderEntity> query = queryFactory
+                .selectFrom(transportOrderEntity)
+                .where(
+                        workStationIdEq(workStationId),
+                        transportTypeEq(transportType),
+                        transportStatusIn(targetStatuses)
+                )
+                .orderBy(
+                        transportOrderEntity.createTime.desc(),
+                        transportOrderEntity.id.desc()
+                );
+
+        // 3. limit 적용 분기: "I"인 경우에만 limit 설정
+        Pageable pageable;
+        if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
+            query.limit(limit);
+            pageable = PageRequest.of(0, limit);
+        } else {
+            pageable = Pageable.unpaged();
+        }
+
+        // 4. 데이터 조회 및 Domain 변환 (람다 미사용)
+        List<TransportOrderEntity> entities = query.fetch();
+        List<TransportOrder> content = new ArrayList<>();
+        for (TransportOrderEntity entity : entities) {
+            content.add(transportOrderMapper.toDomain(entity));
+        }
+
+        // 5. Total Count 조회
+        long total;
+        if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
+            Long count = queryFactory
+                    .select(transportOrderEntity.count())
+                    .from(transportOrderEntity)
+                    .where(
+                            workStationIdEq(workStationId),
+                            transportTypeEq(transportType),
+                            transportStatusIn(targetStatuses)
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public Page<WorkStationTransportCountResponse> getWorkStationTransportCounts(LocalDate targetDate, Pageable pageable) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
+
+        // 1. Inbound 집계 표현식
+        NumberExpression<Long> inboundCountExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.INBOUND.getValue()))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        // 2. Outbound 집계 표현식
+        NumberExpression<Long> outboundCountExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.OUTBOUND.getValue()))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        // 3. 페이징 데이터 쿼리
+        JPAQuery<WorkStationTransportCountResponse> query = queryFactory
+                .select(new QWorkStationTransportCountResponse(
+                        transportOrderEntity.workStationId,
+                        inboundCountExpr,
+                        outboundCountExpr
+                ))
+                .from(transportOrderEntity)
+                .where(
+                        transportOrderEntity.workStationId.isNotNull(),
+                        transportOrderEntity.createTime.goe(startOfDay),
+                        transportOrderEntity.createTime.lt(startOfNextDay)
+                )
+                .groupBy(transportOrderEntity.workStationId)
+                .orderBy(transportOrderEntity.workStationId.asc());
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<WorkStationTransportCountResponse> content = query.fetch();
+
+        // 4. 총 그룹 개수(distinct workStationId) 조회
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(transportOrderEntity.workStationId.countDistinct())
+                    .from(transportOrderEntity)
+                    .where(
+                            transportOrderEntity.workStationId.isNotNull(),
+                            transportOrderEntity.createTime.goe(startOfDay),
+                            transportOrderEntity.createTime.lt(startOfNextDay)
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
         if (sort != null && sort.isSorted()) {
@@ -329,6 +527,22 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
 
     private BooleanExpression completeUserContains(String completeUser) {
         return StringUtils.hasText(completeUser) ? transportOrderEntity.completeUser.contains(completeUser) : null;
+    }
+
+    private BooleanExpression workStationIdEq(String workStationId) {
+        return StringUtils.hasText(workStationId) ? transportOrderEntity.workStationId.eq(workStationId) : null;
+    }
+
+    private BooleanExpression transportTypeEq(String transportType) {
+        return StringUtils.hasText(transportType) ? transportOrderEntity.transportType.eq(transportType) : null;
+    }
+
+    // status IN 절 동적 쿼리 헬퍼 메소드
+    private BooleanExpression transportStatusIn(List<String> statuses) {
+        if (statuses == null || statuses.isEmpty()) {
+            return null;
+        }
+        return transportOrderEntity.transportStatus.in(statuses);
     }
 
 }

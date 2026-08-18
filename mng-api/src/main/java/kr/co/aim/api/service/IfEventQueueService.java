@@ -18,7 +18,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex","scheduler","web"})
 public class IfEventQueueService {
     private final IfEventQueueRepository ifEventQueueRepository;
     // private final FactoryProcessStrategy factoryProcessStrategy; << 이걸 주입하면 에러 발생 순환참조

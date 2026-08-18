@@ -19,7 +19,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 @Slf4j
 //@ConditionalOnProperty(name = "factory.type", havingValue = "powder")
-@Profile({"pex", "tex", "scheduler"})
+@Profile({"pex", "tex", "scheduler","web"})
 public class CarrierSelectionService {
 
     private static final BigDecimal LARGE_ORDER_THRESHOLD = new BigDecimal("100000");

@@ -3,6 +3,8 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.enums.TransportOrderStatus;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -176,4 +179,21 @@ public class TransportOrderService {
     public Long findMaxOrderId(){
         return  transportOrderRepository.findMaxOrderId();
     }
+
+    @Transactional("mssqlTransactionManager")
+    public TransportOrderStatisticsResponse getWorkStationStatistics(String workStationId, LocalDate targetDate) {
+        return transportOrderRepository.getWorkStationStatistics(workStationId, targetDate);
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit) {
+        return transportOrderRepository.findRecentTransportOrders(workStationId, transportType, limit);
+    }
+
+    @Transactional("mssqlTransactionManager")
+    public Page<WorkStationTransportCountResponse> getWorkStationTransportCounts(LocalDate targetDate, Pageable pageable) {
+        return transportOrderRepository.getWorkStationTransportCounts(targetDate, pageable);
+    }
+
+
 }

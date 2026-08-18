@@ -1,10 +1,13 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.domain.model.TransportOrder;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -48,4 +51,9 @@ public interface TransportOrderRepository {
 
     Long findMaxOrderId();
 
+    TransportOrderStatisticsResponse getWorkStationStatistics(String workStationId, LocalDate targetDate);
+
+    Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit);
+
+    Page<WorkStationTransportCountResponse> getWorkStationTransportCounts(LocalDate targetDate, Pageable pageable);
 }
