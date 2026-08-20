@@ -90,8 +90,8 @@ public class PowderReportScheduler {
 
         jsonUtils.writePrettyJson(request);
         rabbitTemplate.convertAndSend(
-                RabbitConfig.EXCHANGE_TEX,
-                RabbitConfig.ROUTING_TEX,
+                RabbitConfig.EXCHANGE_SCHEDULER,
+                RabbitConfig.ROUTING_SCHEDULER,
                 request );
     }
 
