@@ -2,9 +2,8 @@ package kr.co.aim.api.application;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.service.MessageExecuteService;
+import kr.co.aim.api.service.MessageSchedulerExecuteService;
 import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.format.CarrierScannedBody;
 import kr.co.aim.common.format.EventQueueReportBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
@@ -18,12 +17,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex"})
+@Profile({"scheduler"})
 public class InsertEventQueueReportHandler implements MessageHandler<String> {
 
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
-    private final MessageExecuteService messageExecuteService;
+    private final MessageSchedulerExecuteService  messageSchedulerExecuteService;
 
     @Override
     public String getSupportedMessageName() {
@@ -40,7 +39,7 @@ public class InsertEventQueueReportHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        messageExecuteService.eventQueueReport(requestMessage);
+        messageSchedulerExecuteService.eventQueueReport(requestMessage);
 
         return null;
     }

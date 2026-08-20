@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 
 
 // 추후 openSearch 사용시 bean 생성
-@Configuration
+//@Configuration
 public class OpenSearchConfig {
 	@Bean
     public OpenSearchClient openSearchClient() {

@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
-//@Component
+@Component
 @RequiredArgsConstructor
 @Profile({"scheduler"})
 public class SchedulerMessageListener implements MessageWorker{
@@ -28,10 +28,10 @@ public class SchedulerMessageListener implements MessageWorker{
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
-//    @RabbitListener(
-//            id = "scheduler-Listener",
-//            queues= "${custom.rabbitmq.queue.scheduler}"
-//    )
+    @RabbitListener(
+            id = "scheduler-Listener",
+            queues= "${custom.rabbitmq.queue.scheduler}"
+    )
     public Object process(org.springframework.amqp.core.Message message) {
 
         try {
@@ -60,6 +60,7 @@ public class SchedulerMessageListener implements MessageWorker{
             } else {
                 log.warn("⚠️ No handler found for messageName: {}", messageName);
             }
+
             if (replyObject != null) {
                 // 1. 응답 시 요청의 correlationId를 그대로 유지해야 함
                 String correlationId = message.getMessageProperties().getCorrelationId();

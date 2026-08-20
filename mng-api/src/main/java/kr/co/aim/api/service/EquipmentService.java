@@ -1,10 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.dto.EquipmentDataDashboard;
-import kr.co.aim.api.dto.EquipmentGroupDashboard;
-import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.condition.EquipmentSearchCondition;
-import kr.co.aim.common.enums.ProductionOrderState;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.EquipmentDefRepository;
 import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
@@ -13,7 +9,6 @@ import kr.co.aim.infra.persistence.mapper.EquipmentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -326,10 +326,30 @@ public class InsertSimulatorController {
         return ResponseEntity.ok("SUCCESS");
     }
 
+    @PostMapping("/command/inbound/auto")
+    public ResponseEntity<String> autoCreateInbound() {
+        // 가상 Inbound 명령 생성 비즈니스 로직
+        for(int i=0;i<1000;i++){
+            InboundCreateDto request =
+                    InboundCreateDto
+                            .builder()
+                            .location("34105")
+                            .locationGroup("341")
+                            .galId("SI" + i)
+                            .carrierId("c" + i)
+                            .carrierType("TBD")
+                            .zoneName("C1D")
+                            .speed("1")
+                            .build();
+            insertSimulatorFacade.createInbound(request);
+        }
+        return ResponseEntity.ok("SUCCESS");
+    }
+
     @PostMapping("/command/outbound/auto")
     public ResponseEntity<String> autoCreateOutbound() {
         // 가상 Outbound 명령 생성 비즈니스 로직
-        for(int i=0 ; i<10 ;i++){
+        for(int i=0 ; i<1000 ;i++){
             OutboundCreateDto request =
                     OutboundCreateDto
                             .builder()
@@ -337,7 +357,7 @@ public class InsertSimulatorController {
                             .galId("SI" + i)
                             .carrierId("c" + i)
                             .carrierType("TBD")
-                            .zoneName("ZONE1")
+                            .zoneName("C1D")
                             .orderPriority(1)
                             .build();
             insertSimulatorFacade.createOutbound(request);

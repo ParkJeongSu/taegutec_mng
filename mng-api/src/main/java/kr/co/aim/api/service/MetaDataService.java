@@ -46,7 +46,7 @@ public class MetaDataService {
                     // 클래스 이름(예: AlarmType)을 API URL(예: alarm-type)로 변환
                     String enumKey = convertCamelCaseToKebabCase(enumClass.getSimpleName());
 
-                    log.info("Registering MetaDataEnum: {} -> {}", enumKey, enumClass.getName());
+                    //log.info("Registering MetaDataEnum: {} -> {}", enumKey, enumClass.getName());
                     enumRegistry.put(enumKey, enumClass);
                 }
             } catch (ClassNotFoundException e) {

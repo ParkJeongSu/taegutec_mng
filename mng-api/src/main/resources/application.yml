@@ -3,7 +3,7 @@ server:
   servlet:
     context-path: /wcs-web
 factory:
-  type: insert # [ insert | powder ]
+  type: powder # [ insert | powder ]
 spring:
   application:
     name: mng
@@ -20,7 +20,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: web # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
+    active: pex # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
@@ -38,7 +38,7 @@ spring:
       driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
       hikari:
         pool-name: mssql-pool
-        maximum-pool-size: 20          # ← 최대 커넥션 수
+        maximum-pool-size: 10          # ← 최대 커넥션 수
         minimum-idle: 10               # ← 최소 유휴 커넥션 수
         connection-timeout: 30000      # ← 커넥션 획득 대기시간
         idle-timeout: 600000
@@ -56,7 +56,7 @@ spring:
       dialect: org.hibernate.dialect.DB2Dialect
       hikari:
         pool-name: db2-pool
-        maximum-pool-size: 20          # ← 최대 커넥션 수
+        maximum-pool-size: 10          # ← 최대 커넥션 수
         minimum-idle: 10               # ← 최소 유휴 커넥션 수
         connection-timeout: 30000      # ← 커넥션 획득 대기시간
         connection-test-query: "SELECT 1 FROM SYSIBM.SYSDUMMY1"
@@ -75,7 +75,7 @@ spring:
   #      dialect: org.hibernate.dialect.DB2iDialect
   #      hikari:
   #        pool-name: as400-pool
-  #        maximum-pool-size: 20
+  #        maximum-pool-size: 10
   #        minimum-idle: 10
   #        connection-timeout: 30000
   #        connection-test-query: "SELECT 1 FROM QSYS2.QSQPTABL"
@@ -131,14 +131,14 @@ logging:
     org.hibernate.orm.jdbc.extract: DEBUG        # JDBC 결과 추출(선택)
     org.hibernate.type.descriptor.sql: TRACE     # (버전에 따라) 추가 바인딩 상세
     org.hibernate.stat: DEBUG                    # 2차캐시/쿼리카운트 등 통계 로그
+    org.hibernate.engine.internal.StatisticalLoggingSessionEventListener: WARN
     # === JPA (Spring Data) ===
     org.springframework.orm.jpa: DEBUG           # JPA 트랜잭션 등 프레임워크 레벨
     org.springframework.transaction: DEBUG       # 트랜잭션 경계 로그
     # === HikariCP ===
-    #com.zaxxer.hikari: DEBUG                     # 풀 라이프사이클/대여/반납 등 상세
-    #com.zaxxer.hikari.pool.HikariPool: DEBUG     # 풀 상태 변화 상세
+    com.zaxxer.hikari: DEBUG                     # 풀 라이프사이클/대여/반납 등 상세
+    com.zaxxer.hikari.pool.HikariPool: DEBUG     # 풀 상태 변화 상세
     com.zaxxer.hikari.HikariConfig: DEBUG        # 구성 파라미터 덤프
-    ezieco.eziframe.middleware: DEBUG
     net:
       javacrumbs:
         shedlock: DEBUG
@@ -156,9 +156,10 @@ custom:
       wms: "system.direct"
       wcs: "system.direct"
       manti: "system.direct"
+      scheduler: "system.direct"
     queue:
       pex: "q.insert.pex.request"
-      tex: "q.powder.tex.request"
+      tex: "q.insert.tex.request"
       tex.sync: "q.insert.tex.request.sync"
       dead: "DEAD.request.queue"
       eas: "q.insert.eas.request"
@@ -166,6 +167,7 @@ custom:
       wms.sync: "q.insert.wms.request.sync"
       wcs: "q.insert.wcs.request"
       manti: "q.insert.manti.request"
+      scheduler: "q.insert.scheduler.request"
     routing:
       pex: "key.insert.pex"
       tex: "key.insert.tex"
@@ -176,6 +178,7 @@ custom:
       wms.sync: "key.insert.wms.sync"
       wcs: "key.insert.wcs"
       manti: "key.insert.manti"
+      scheduler: "key.insert.scheduler"
 #    queue:
 #      pex: "q.powder.pex.request"
 #      tex: "q.powder.tex.request"
@@ -186,6 +189,7 @@ custom:
 #      wms.sync: "q.powder.wms.request.sync"
 #      wcs: "q.powder.wcs.request"
 #      manti: "q.powder.manti.request"
+#      scheduler: "q.powder.scheduler.request"
 #    routing:
 #      pex: "key.powder.pex"
 #      tex: "key.powder.tex"
@@ -196,6 +200,7 @@ custom:
 #      wms.sync: "key.powder.wms.sync"
 #      wcs: "key.powder.wcs"
 #      manti: "key.powder.manti"
+#      scheduler: "key.powder.scheduler"
 ---
 # 'pex,tex,dispatcher,scheduler' 프로필이 활성화될 때만 이 설정이 적용됩니다.
 spring:

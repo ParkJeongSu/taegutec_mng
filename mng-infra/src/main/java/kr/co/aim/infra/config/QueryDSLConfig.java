@@ -21,7 +21,7 @@ public class QueryDSLConfig {
     }
     // 2. DB2 전용 팩토리
     @Bean(name = "db2QueryFactory")
-    @Profile({"scheduler","simulator","web","pex","tex"})
+    @Profile({"scheduler","simulator","web"})
     public JPAQueryFactory db2QueryFactory(
             @Qualifier("db2EntityManagerFactory") jakarta.persistence.EntityManager entityManager) {
         return new JPAQueryFactory(entityManager);

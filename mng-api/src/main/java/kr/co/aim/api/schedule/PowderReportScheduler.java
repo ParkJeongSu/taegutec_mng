@@ -1,7 +1,6 @@
 package kr.co.aim.api.schedule;
 
 import kr.co.aim.api.service.IfEventQueueService;
-import kr.co.aim.api.service.PowderExternalInterfaceService;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.IfEventQueueState;
@@ -31,7 +30,6 @@ import java.util.List;
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class PowderReportScheduler {
 
-    private final PowderExternalInterfaceService powderExternalInterfaceService;
     private final IfEventQueueService ifEventQueueService;
 
     private final RabbitTemplate rabbitTemplate;

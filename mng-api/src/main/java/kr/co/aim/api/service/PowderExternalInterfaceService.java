@@ -37,7 +37,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","web","simulator","pex","tex"})
+@Profile({"scheduler","web","simulator"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class PowderExternalInterfaceService implements FactoryGALInterfaceStrategy {
 

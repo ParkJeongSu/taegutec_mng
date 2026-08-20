@@ -36,7 +36,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex"})
 public class MessageExecuteService {
 
     private final RabbitTemplate rabbitTemplate;
@@ -197,10 +197,6 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void carrierLocationChanged(BaseMessage<CarrierLocationChangedBody> message) {
         factoryProcessStrategy.carrierLocationChanged(message);
-    }
-
-    public void eventQueueReport(BaseMessage<EventQueueReportBody> message) {
-        factoryProcessStrategy.eventQueueReport(message);
     }
 
     @Transactional(value = "mssqlTransactionManager")

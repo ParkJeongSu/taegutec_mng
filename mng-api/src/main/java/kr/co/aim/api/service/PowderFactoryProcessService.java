@@ -38,7 +38,7 @@ import java.util.Optional;
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
-@Profile({"pex","tex","scheduler"})
+@Profile({"pex","tex"})
 public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final HistoryService historyService;
@@ -68,8 +68,6 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final LotCarrierMappingService lotCarrierMappingService;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
 
-    private final PowderExternalInterfaceService powderExternalInterfaceService;
-    private final IfEventQueueService ifEventQueueService;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -537,51 +535,5 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     public void transportJobValidationReply(BaseMessage<TransportJobValidationReplyBody> message) {
 
-    }
-
-    @Override
-    public void eventQueueReport(BaseMessage<EventQueueReportBody> message) {
-        EventQueueReportBody body = message.getBody();
-
-        IfEventQueue ifEventQueue =
-                IfEventQueue
-                        .builder()
-                        .id(body.getId())
-                        .eventType(body.getEventType())
-                        .payload(body.getPayload())
-                        .ifStatus(body.getIfStatus())
-                        .carrierName(body.getCarrierName())
-                        .idocId(body.getIdocId())
-                        .orderId(body.getOrderId())
-                        .orderLineNumber(body.getOrderLineNumber())
-                        .retryCNT(body.getRetryCNT())
-                        .errMSG(body.getErrMSG())
-                        .createTime(body.getCreateTime())
-                        .updateTime(body.getUpdateTime())
-                        .build();
-
-        try {
-            // DB2 H2transReport
-            powderExternalInterfaceService.reportH2trans(ifEventQueue);
-            // ifEventQueue 상태를 Success 로 변경
-            ifEventQueueService.reportCompleted(ifEventQueue.getId());
-
-        } catch (Exception e) {
-            // retry cnt ++
-            // 만일 3초과면, ready -> fail 로 데이터 변경
-            log.error("reportFail id {} ",ifEventQueue.getId());
-            try {
-                Optional<IfEventQueue> optionalIfEventQueue
-                        = ifEventQueueService.increaseRetryCnt(ifEventQueue.getId());
-                if(optionalIfEventQueue.isPresent()){
-                    if(optionalIfEventQueue.get().getRetryCNT() > 3){
-                        ifEventQueueService.reportFailed(ifEventQueue.getId());
-                    }
-                }
-            } catch (Exception e1){
-                log.error("final report error", e1);
-                log.error("increase & reportFail id {} ",ifEventQueue.getId());
-            }
-        }
     }
 }

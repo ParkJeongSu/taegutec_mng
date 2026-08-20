@@ -30,6 +30,7 @@ public class RabbitConfig {
     public static String EXCHANGE_WCS;
     public static String EXCHANGE_MANTI;
     public static String EXCHANGE_DEAD;
+    public static String EXCHANGE_SCHEDULER;
 
     public static String QUEUE_PEX;
     public static String QUEUE_TEX;
@@ -40,6 +41,7 @@ public class RabbitConfig {
     public static String QUEUE_WCS;
     public static String QUEUE_MANTI;
     public static String QUEUE_DEAD;
+    public static String QUEUE_SCHEDULER;
 
     public static String ROUTING_PEX;
     public static String ROUTING_TEX;
@@ -50,6 +52,7 @@ public class RabbitConfig {
     public static String ROUTING_WCS;
     public static String ROUTING_MANTI;
     public static String ROUTING_DEAD;
+    public static String ROUTING_SCHEDULER;
 
     public static final String DLX_KEY = "x-dead-letter-exchange";
     public static final String DLK_KEY = "x-dead-letter-routing-key";
@@ -62,6 +65,7 @@ public class RabbitConfig {
     @Value("${custom.rabbitmq.exchange.wcs}") public void setExWcs(String v) { EXCHANGE_WCS = v; }
     @Value("${custom.rabbitmq.exchange.manti}") public void setExManti(String v) { EXCHANGE_MANTI = v; }
     @Value("${custom.rabbitmq.exchange.dead}") public void setExDead(String v) { EXCHANGE_DEAD = v; }
+    @Value("${custom.rabbitmq.exchange.scheduler}") public void setExScheduler(String v) { EXCHANGE_SCHEDULER = v; }
 
     @Value("${custom.rabbitmq.queue.pex}") public void setQp(String v) { QUEUE_PEX = v; }
     @Value("${custom.rabbitmq.queue.tex}") public void setQt(String v) { QUEUE_TEX = v; }
@@ -72,6 +76,7 @@ public class RabbitConfig {
     @Value("${custom.rabbitmq.queue.wcs}") public void setQc(String v) { QUEUE_WCS = v; }
     @Value("${custom.rabbitmq.queue.manti}") public void setQm(String v) { QUEUE_MANTI = v; }
     @Value("${custom.rabbitmq.queue.dead}") public void setQd(String v) { QUEUE_DEAD = v; }
+    @Value("${custom.rabbitmq.queue.scheduler}") public void setQs(String v) { QUEUE_SCHEDULER = v; }
 
     @Value("${custom.rabbitmq.routing.pex}") public void setRp(String v) { ROUTING_PEX = v; }
     @Value("${custom.rabbitmq.routing.tex}") public void setRt(String v) { ROUTING_TEX = v; }
@@ -82,6 +87,7 @@ public class RabbitConfig {
     @Value("${custom.rabbitmq.routing.wcs}") public void setRc(String v) { ROUTING_WCS = v; }
     @Value("${custom.rabbitmq.routing.manti}") public void setRm(String v) { ROUTING_MANTI = v; }
     @Value("${custom.rabbitmq.routing.dead}") public void setRd(String v) { ROUTING_DEAD = v; }
+    @Value("${custom.rabbitmq.routing.scheduler}") public void setRs(String v) { ROUTING_SCHEDULER = v; }
 
     // --- RabbitAdmin 인프라 초기화 ---
     @Bean
@@ -109,17 +115,20 @@ public class RabbitConfig {
     @Bean public Queue texQueue() { return new Queue(QUEUE_TEX, true, false, false,queueArgs()); }
     @Bean public Queue texQueueSync() { return new Queue(QUEUE_TEX_SYNC, true, false, false,queueArgs()); }
     @Bean public Queue deadLetterQueue() { return new Queue(QUEUE_DEAD, true); }
+    @Bean public Queue schedulerQueue() { return new Queue(QUEUE_SCHEDULER, true, false, false,queueArgs()); }
     // Exchanges
     @Bean public DirectExchange pexExchange() { return new DirectExchange(EXCHANGE_PEX); }
     @Bean public DirectExchange texExchange() { return new DirectExchange(EXCHANGE_TEX); }
     @Bean public DirectExchange texSyncExchange() { return new DirectExchange(EXCHANGE_TEX); }
     @Bean public DirectExchange deadLetterExchange() { return new DirectExchange(EXCHANGE_DEAD); }
+    @Bean public DirectExchange schedulerExchange() { return new DirectExchange(EXCHANGE_SCHEDULER); }
 
     // Bindings
     @Bean Binding pexBinding() { return BindingBuilder.bind(pexQueue()).to(pexExchange()).with(ROUTING_PEX); }
     @Bean Binding texBinding() { return BindingBuilder.bind(texQueue()).to(texExchange()).with(ROUTING_TEX); }
     @Bean Binding texSyncBinding() { return BindingBuilder.bind(texQueueSync()).to(texSyncExchange()).with(ROUTING_TEX_SYNC); }
     @Bean Binding deadLetterBinding() { return BindingBuilder.bind(deadLetterQueue()).to(deadLetterExchange()).with(ROUTING_DEAD); }
+    @Bean Binding schedulerBinding() { return BindingBuilder.bind(schedulerQueue()).to(schedulerExchange()).with(ROUTING_SCHEDULER); }
 
     // --- Template & Converter ---
     @Bean

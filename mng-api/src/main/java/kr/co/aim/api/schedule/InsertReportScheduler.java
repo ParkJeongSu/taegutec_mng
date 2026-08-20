@@ -1,7 +1,6 @@
 package kr.co.aim.api.schedule;
 
 import kr.co.aim.api.service.IfEventQueueService;
-import kr.co.aim.api.service.InsertExternalInterfaceService;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.*;
@@ -28,7 +27,6 @@ import java.util.List;
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertReportScheduler {
 
-    private final InsertExternalInterfaceService insertExternalInterfaceService;
     private final IfEventQueueService ifEventQueueService;
 
     private final RabbitTemplate rabbitTemplate;

@@ -32,7 +32,7 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler", "simulator"})
+@Profile({"simulator"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertSimulatorInterfaceService {
 

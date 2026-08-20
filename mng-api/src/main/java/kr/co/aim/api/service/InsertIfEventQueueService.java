@@ -32,7 +32,6 @@ import java.util.Optional;
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
-@Profile({"pex","tex","scheduler","web"})
 public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
 
     private final HistoryService historyService;

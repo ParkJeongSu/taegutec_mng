@@ -35,7 +35,6 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler","web","pex","tex","simulator"})
 public class ProductionOrderService {
     private final ProductionOrderRepository productionOrderRepository;
     private final ProductionOrderMapper productionOrderMapper;

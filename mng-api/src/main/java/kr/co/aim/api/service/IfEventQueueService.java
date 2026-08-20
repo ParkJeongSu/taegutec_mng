@@ -18,11 +18,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"pex","tex","scheduler","web"})
 public class IfEventQueueService {
     private final IfEventQueueRepository ifEventQueueRepository;
-    // private final FactoryProcessStrategy factoryProcessStrategy; << 이걸 주입하면 에러 발생 순환참조
-    // IfEventQueueService 는 단순히 eventQueue 에 관한 서비스만
 
     @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
     public List<IfEventQueue> findByIfStatusOrderByCreateTimeAscAndToProcessing(String ifStatus){

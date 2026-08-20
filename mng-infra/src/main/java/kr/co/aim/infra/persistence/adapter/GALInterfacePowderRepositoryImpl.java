@@ -37,7 +37,7 @@ import static kr.co.aim.infra.persistence.db2entity.powder.QH2PartMPEntity.h2Par
 
 @Repository
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
-@Profile({"scheduler","simulator","web","pex","tex"})
+@Profile({"scheduler","simulator","web"})
 public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository {
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
 

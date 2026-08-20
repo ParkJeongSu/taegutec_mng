@@ -2,9 +2,11 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -12,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest(properties = "factory.type=insert")
 @Transactional // 테스트 완료 후 DB를 자동으로
 // 롤백하여 기존 데이터에 영향을 주지 않음
-//@ActiveProfiles({"tex"}) // 환경에 맞는 프로파일 설정 (로컬 LUW 연결용)
-//@Disabled
+@ActiveProfiles({"scheduler"}) // 환경에 맞는 프로파일 설정 (로컬 LUW 연결용)
+@Disabled
 class InsertIdocServiceTest {
 
     @Autowired

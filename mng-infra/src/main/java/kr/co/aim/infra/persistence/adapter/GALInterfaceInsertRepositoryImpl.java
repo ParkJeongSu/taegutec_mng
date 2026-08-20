@@ -37,7 +37,7 @@ import static kr.co.aim.infra.persistence.db2entity.insert.QH2TransEntity.h2Tran
 
 @Repository
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
-@Profile({"scheduler","simulator","web","pex","tex"})
+@Profile({"scheduler","simulator","web"})
 public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository {
     private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
 

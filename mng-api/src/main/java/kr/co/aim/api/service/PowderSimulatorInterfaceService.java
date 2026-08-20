@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"scheduler", "simulator"})
+@Profile({"simulator"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "powder")
 public class PowderSimulatorInterfaceService {
 
