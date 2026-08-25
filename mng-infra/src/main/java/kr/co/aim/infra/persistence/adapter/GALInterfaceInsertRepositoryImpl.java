@@ -70,7 +70,7 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
                         idocEntity.dtimeMod.as("dtimeMod"),
                         idocEntity.usrMod.as("usrMod"),
                         idocEntity.pgmMod.as("pgmMod"),
-                        idocEntity.modCnt.as("modCnt"),
+                        idocEntity.modCnt.longValue().as("modCnt"),
 
                         // === H2ORDERM (Master) 필드 ===
                         h2OrderMEntity.dataCode.as("dataCode"),

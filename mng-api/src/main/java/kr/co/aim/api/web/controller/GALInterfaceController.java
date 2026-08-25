@@ -33,6 +33,7 @@ public class GALInterfaceController {
     @Operation(summary = "GAL Interface List", description = "GAL Interface 조회")
     @GetMapping("")
     public ResponseEntity<Page<GALInterfaceResponse>> getInterfaceList(
+            @org.springdoc.core.annotations.ParameterObject
             GALInterfaceSearchCondition condition,
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable
@@ -55,6 +56,7 @@ public class GALInterfaceController {
     @Operation(summary = "GAL Part List", description = "GAL Part 조회")
     @GetMapping("/part")
     public ResponseEntity<Page<GALPartResponse>> getPartList(
+            @org.springdoc.core.annotations.ParameterObject
             GALPartSearchCondition condition,
             @org.springdoc.core.annotations.ParameterObject
             Pageable pageable

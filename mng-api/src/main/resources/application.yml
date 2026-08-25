@@ -3,7 +3,7 @@ server:
   servlet:
     context-path: /wcs-web
 factory:
-  type: powder # [ insert | powder ]
+  type: insert # [ insert | powder ]
 spring:
   application:
     name: mng
@@ -136,8 +136,8 @@ logging:
     org.springframework.orm.jpa: DEBUG           # JPA 트랜잭션 등 프레임워크 레벨
     org.springframework.transaction: DEBUG       # 트랜잭션 경계 로그
     # === HikariCP ===
-    com.zaxxer.hikari: DEBUG                     # 풀 라이프사이클/대여/반납 등 상세
-    com.zaxxer.hikari.pool.HikariPool: DEBUG     # 풀 상태 변화 상세
+    #com.zaxxer.hikari: DEBUG                     # 풀 라이프사이클/대여/반납 등 상세
+    #com.zaxxer.hikari.pool.HikariPool: DEBUG     # 풀 상태 변화 상세
     com.zaxxer.hikari.HikariConfig: DEBUG        # 구성 파라미터 덤프
     net:
       javacrumbs:
