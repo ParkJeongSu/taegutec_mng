@@ -53,6 +53,7 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
                 .select(Projections.fields(GALInterfaceResponse.class,
                         // === IDOC (Header) 필드 ===
                         idocEntity.lineId.as("lineId"),
+                        idocEntity.lineId.as("idocId"),
                         idocEntity.idocTypId.as("idocTypId"),
                         idocEntity.state.as("state"),
                         idocEntity.errorCode.as("errorCode"),

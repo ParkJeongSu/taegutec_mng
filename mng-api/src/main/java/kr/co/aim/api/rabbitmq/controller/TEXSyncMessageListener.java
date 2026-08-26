@@ -14,6 +14,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
@@ -29,6 +30,8 @@ public class TEXSyncMessageListener implements MessageWorker{
     private final ObjectMapper objectMapper;
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
+    @Value("${custom.rabbitmq.retry.enabled:false}")
+    private boolean retryEnabled;
 
     @RabbitListener(
             id = "tex-sync-Listener",
@@ -68,8 +71,10 @@ public class TEXSyncMessageListener implements MessageWorker{
         catch (Exception e) {
             // 🔥 [핵심] 미처 생각하지 못한 모든 에러(시스템 에러 등)는 일로 떨어집니다.
             // 서비스 단의 DB 작업은 이미 안전하게 Rollback된 상태입니다.
-            log.error("❌ [시스템 에러 발생] 메시지 처리 중 오류 발생. 롤백 후 NG 응답을 전송합니다. 원인: {}", e.getMessage(), e);
-
+            if (retryEnabled) {
+                throw new RuntimeException("Message processing failed", e);
+            }
+            log.error("❌ [비동기 시스템 에러] 메시지 처리 중 오류가 발생하여 작업을 롤백합니다. (비동기이므로 응답 생략) 원인: {}", e.getMessage(), e);
             if (replyTo != null) {
                 // 예기치 못한 시스템 에러용 공통 NG 메시지를 생성하여 전송
                 Object errorReply = buildSystemErrorReply(messageName, messageHeader, e.getMessage());

@@ -43,7 +43,7 @@ public class TransportJobReplyHandler implements MessageHandler<String> {
 
         // 2. 해당 비즈니스 로직 호출
         // 서비스 호출
-        roundtripLatencyRecorder.recordByJobName(requestMessage.getBody().getTransportJobName());
+        //roundtripLatencyRecorder.recordByJobName(requestMessage.getBody().getTransportJobName());
         messageExecuteService.transportJobReply(requestMessage);
 
         return null;

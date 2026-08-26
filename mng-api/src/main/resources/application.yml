@@ -148,6 +148,12 @@ jwt:
   refresh-token-validity-in-seconds: 604800 # 리프레시 토큰 만료 시간 (예: 7일)
 custom:
   rabbitmq:
+    retry:
+      enabled: false          # true: N회 재시도 후 DLQ 이동 / false: 즉시 DLQ 이동(또는 폐기)
+      max-attempts: 3        # 최대 시도 횟수 (초기 1회 + 재시도 2회)
+      initial-interval: 1000 # 초기 대기시간 (ms)
+      multiplier: 2.0        # 대기시간 증가 배수
+      max-interval: 5000     # 최대 대기시간 (ms)
     exchange:
       pex: "system.direct"
       tex: "system.direct"
