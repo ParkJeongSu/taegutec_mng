@@ -1,5 +1,6 @@
 package kr.co.aim.domain.model;
 import kr.co.aim.common.Utils.TsidUtils;
+import kr.co.aim.common.enums.TransportOrderStatus;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import kr.co.aim.domain.command.TransportOrderStatusChangeCommand;
 import kr.co.aim.domain.command.TransportOrderCreateCommand;
@@ -93,27 +94,32 @@ public class TransportOrder implements HasTransactionInfo {
 
     public void requested(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
-        this.setTransportStatus(command.getTransportStatus());
+        this.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
     }
 
     public void accept(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
-        this.setTransportStatus(command.getTransportStatus());
+        this.setTransportStatus(TransportOrderStatus.ACCEPTED.getValue());
     }
 
     public void started(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
-        this.setTransportStatus(command.getTransportStatus());
+        this.setTransportStatus(TransportOrderStatus.STARTED.getValue());
     }
 
     public void completed(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
-        this.setTransportStatus(command.getTransportStatus());
+        this.setTransportStatus(TransportOrderStatus.COMPLETED.getValue());
     }
 
     public void rejected(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
-        this.setTransportStatus(command.getTransportStatus());
+        this.setTransportStatus(TransportOrderStatus.REJECTED.getValue());
+    }
+
+    public void cancelCompleted(TransportOrderStatusChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(TransportOrderStatus.CANCEL_COMPLETED.getValue());
     }
 
 }

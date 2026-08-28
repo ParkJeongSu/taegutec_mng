@@ -167,7 +167,40 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     @Override
     @Transactional(value = "mssqlTransactionManager")
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message) {
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
 
+        String equipmentName = message.getBody().getEquipmentName();
+        String portName = message.getBody().getPortName();
+        String carrierName = message.getBody().getCarrierName();
+        String portType = message.getBody().getPortType();
+        String portTransportMode = message.getBody().getPortTransportMode();
+        String transportJobName = message.getBody().getTransportJobName();
+        String actualWeight = message.getBody().getActualWeight();
+
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
+        UnLoadCompletedCommand command = UnLoadCompletedCommand.builder()
+                .transactionInfo(tx)
+                .carrierName(carrierName)
+                .equipmentName(equipmentName)
+                .portName(portName)
+                .build();
+        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        if(optionalPortDef.isEmpty()){
+            return;
+        }
+        PortDef portDef = optionalPortDef.get();
+        String actualLocationId = portDef.getLocationId();
+        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        if(optionalPorts.isEmpty()){
+            return;
+        }
+        Port port = optionalPorts.get();
+        port.unloadCompleted(command);
+        port = portService.save(port);
+        PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+        historyService.saveHistory(portHistoryEntity);
     }
 
 

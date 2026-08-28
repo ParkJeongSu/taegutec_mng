@@ -476,6 +476,21 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             transportJob = transportJobService.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
+
+            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            if(optionalTransportOrder.isPresent()){
+                TransportOrder transportOrder = optionalTransportOrder.get();
+                TransportOrderStatusChangeCommand cancelCompletedCommand =
+                        TransportOrderStatusChangeCommand
+                                .builder()
+                                .transactionInfo(tx)
+                                .build();
+                transportOrder.cancelCompleted(cancelCompletedCommand);
+                transportOrder = transportOrderService.save(transportOrder);
+                TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+                historyService.saveHistory(transportOrderHistoryEntity);
+            }
+
             Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
             Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
             PortDef portDef = null;
@@ -578,7 +593,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         TransportOrderStatusChangeCommand
                                 .builder()
                                 .transactionInfo(tx)
-                                .transportStatus(TransportOrderStatus.COMPLETED.getValue())
                                 .build();
                 transportOrder.completed(completedCommand);
                 transportOrder = transportOrderService.save(transportOrder);
@@ -663,7 +677,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                 .transactionInfo(tx)
                                 .transportStatus(TransportOrderStatus.ACCEPTED.getValue())
                                 .build();
-                transportOrder.accept(acceptCommand);
+                if(StringUtils.equals(TransportJobState.ACCEPTED.getValue(),transportJobState)){
+                    transportOrder.accept(acceptCommand);
+                }else if(StringUtils.equals(TransportJobState.REJECTED.getValue(),transportJobState)){
+                    transportOrder.rejected(acceptCommand);
+                }
                 transportOrder = transportOrderService.save(transportOrder);
                 TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                 historyService.saveHistory(transportOrderHistoryEntity);
@@ -723,8 +741,6 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         if(StringUtils.equals(SystemName.GAL.getValue(),requestSource)){
-            // 비관적 lock 시 EventQueue 넣으면서 에러 발생
-            //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
             Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
@@ -735,23 +751,31 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                 .transactionInfo(tx)
                                 .build();
                 transportJob.changeTransportJob(command);
-
                 transportJob = transportJobService.save(transportJob);
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
+
+                Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                if(optionalTransportOrder.isPresent()){
+                    TransportOrder transportOrder = optionalTransportOrder.get();
+                    TransportOrderStatusChangeCommand startedCommand =
+                            TransportOrderStatusChangeCommand
+                                    .builder()
+                                    .transactionInfo(tx)
+                                    .build();
+                    transportOrder.started(startedCommand);
+                    transportOrder = transportOrderService.save(transportOrder);
+                    TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+                    historyService.saveHistory(transportOrderHistoryEntity);
+                }
+
                 try{
                     InsertEventQueueReportVo insertEventQueueReportVo
                             = InsertEventQueueReportVo
                             .builder()
                             .transportJobName(transportJob.getTransportJobName())
                             .messageName(messageName)
-//                            .port()
-//                            .portDef()
                             .carrierName(carrierName)
-//                            .actualZoneName()
-//                            .actualWeight()
-//                            .actualRackLocationId()
-//                            .errorTexts()
                             .orderType(transportJob.getTransportType()) // I | O | R
                             .requestSource(requestSource) // WCS | GAL
                             .tx(tx)
@@ -1084,9 +1108,12 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         TransportOrderStatusChangeCommand
                                 .builder()
                                 .transactionInfo(tx)
-                                .transportStatus(TransportOrderStatus.ACCEPTED.getValue())
                                 .build();
-                transportOrder.accept(acceptCommand);
+                if(StringUtils.equals(transportJobState,TransportJobState.ACCEPTED.getValue())){
+                    transportOrder.accept(acceptCommand);
+                }else if(StringUtils.equals(transportJobState,TransportJobState.REJECTED.getValue())){
+                    transportOrder.rejected(acceptCommand);
+                }
                 transportOrder = transportOrderService.save(transportOrder);
                 TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                 historyService.saveHistory(transportOrderHistoryEntity);

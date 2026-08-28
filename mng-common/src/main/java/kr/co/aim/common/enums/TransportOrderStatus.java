@@ -13,6 +13,7 @@ public enum TransportOrderStatus implements MetaDataEnum {
     STARTED("STARTED"),
     REJECTED("REJECTED"),
     COMPLETED("COMPLETED"),
+    CANCEL_COMPLETED("CANCEL_COMPLETED"),
     TERMINATED("TERMINATED");
     private final String value;
 }

@@ -26,7 +26,7 @@ public class GALDetailInterfaceResponse {
     private String cOrderTy;
 
     // === Insert 전용 상세 필드 ===
-    private Long dataCode;
+    private String dataCode;
     private Long cOrderLn;
     private String cCoId;
     private String cCoTy;

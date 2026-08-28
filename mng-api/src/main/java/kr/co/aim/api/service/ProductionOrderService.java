@@ -255,6 +255,11 @@ public class ProductionOrderService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
+    public Optional<ProductionOrder> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber){
+        return productionOrderRepository.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
     public ProductionOrder save(ProductionOrder productionOrder){
         return productionOrderRepository.save(productionOrder);
     }

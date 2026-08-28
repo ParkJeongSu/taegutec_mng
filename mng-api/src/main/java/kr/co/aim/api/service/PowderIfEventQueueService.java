@@ -253,7 +253,6 @@ public class PowderIfEventQueueService implements FactoryIfEventQueueStrategy {
 
     private List<IfEventQueueDto> handleLoadCompleted(PowderEventQueueReportVo vo){
         List<IfEventQueueDto>  ifEventQueueDtoList = new ArrayList<>();
-        // TODO: 비지니스 로직 추가
         return  ifEventQueueDtoList;
     }
 
@@ -463,29 +462,34 @@ public class PowderIfEventQueueService implements FactoryIfEventQueueStrategy {
 
         ifEventQueueDtoList.add(dto);
 
-        eventType = GALProductionStatus.WHAT_IS_NEXT_RRN.name();
-        transactionCode = GALProductionStatus.WHAT_IS_NEXT_RRN.getValue();
+        if(StringUtils.equals(EquipmentDetailType.INCOME.getValue(),equipmentDef.getDetailEquipmentType())){
 
-        dto = IfEventQueueDto
-                .builder()
-                .productionOrderId(productionOrder.getId().toString())
-                .messageName(messageName)
-                .eventType(eventType)
-                .transactionCode(transactionCode)
-                .idocId(productionOrder.getIdocId().toString())
-                .orderId(productionOrder.getOrderId())
-                .orderLineNumber(productionOrder.getOrderLineNumber())
-                .quantity(productionOrder.getPlanQuantity())
-                .orderType(productionOrder.getProductionOrderType())
-                .galKey(productionOrder.getGalKey())
-                .lotName(productionOrder.getLotName())
-                .itemName(productionOrder.getItemName())
-                .mngKey(mngKey.toString())
-                .resultStatus("")
-                .errorReason("")
-                .build();
+        }
+        else {
+            eventType = GALProductionStatus.WHAT_IS_NEXT_RRN.name();
+            transactionCode = GALProductionStatus.WHAT_IS_NEXT_RRN.getValue();
 
-        ifEventQueueDtoList.add(dto);
+            dto = IfEventQueueDto
+                    .builder()
+                    .productionOrderId(productionOrder.getId().toString())
+                    .messageName(messageName)
+                    .eventType(eventType)
+                    .transactionCode(transactionCode)
+                    .idocId(productionOrder.getIdocId().toString())
+                    .orderId(productionOrder.getOrderId())
+                    .orderLineNumber(productionOrder.getOrderLineNumber())
+                    .quantity(productionOrder.getPlanQuantity())
+                    .orderType(productionOrder.getProductionOrderType())
+                    .galKey(productionOrder.getGalKey())
+                    .lotName(productionOrder.getLotName())
+                    .itemName(productionOrder.getItemName())
+                    .mngKey(mngKey.toString())
+                    .resultStatus("")
+                    .errorReason("")
+                    .build();
+
+            ifEventQueueDtoList.add(dto);
+        }
 
         return  ifEventQueueDtoList;
     }

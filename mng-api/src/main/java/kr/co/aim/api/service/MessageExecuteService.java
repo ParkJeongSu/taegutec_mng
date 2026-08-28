@@ -480,7 +480,7 @@ public class MessageExecuteService {
     /**
      * 포트의 새로운 캐리어를 요청합니다.
      * 1. 포트에 반송중인 job 조회
-     * transferState -> ReservedToLoad로 변경
+     * transportState -> READY_TO_LOAD 변경
      * 2. 설비명으로 TaskJob Find
      *
      * @param message 받은 메시지
@@ -496,6 +496,11 @@ public class MessageExecuteService {
     }
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message){
         return factoryProcessStrategy.unLoadRequest(message);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<TransportJobRequestBody> destinationDispatchRequest(BaseMessage<DestinationDispatchRequestBody> message){
+        return whereDispatchService.whereDispatchRequest(message);
     }
 
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
@@ -526,7 +531,7 @@ public class MessageExecuteService {
         TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), resultMessage);
 
         try {
-            // Validation 이 존재한다면 여기 부분에 Valdation 추가
+            // Validation 이 존재한다면 여기 부분에 Validation 추가
 
             resultCode = ResultCode.OK.getValue();
             productionOrderState = ProductionOrderState.ACCEPTED.getValue();
@@ -568,11 +573,6 @@ public class MessageExecuteService {
 
     public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message){
         return factoryProcessStrategy.transportOrderValidationRequest(message);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public BaseMessage<TransportJobRequestBody> destinationDispatchRequest(BaseMessage<DestinationDispatchRequestBody> message){
-        return whereDispatchService.whereDispatchRequest(message);
     }
 
     private void sendToWMSZoneRequest(){
@@ -658,6 +658,10 @@ public class MessageExecuteService {
         String portName ="";
         String carrierName = "";
         String lastCarrierFlag = "";
+        String lotName = "";
+        String itemName = "";
+        String productionTaskId = "";
+        String totalQuantity ="";
 
         Long lotCarrierMappingId = message.getBody().getId();
 
@@ -675,25 +679,7 @@ public class MessageExecuteService {
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(lotCarrierMapping.getCarrierName());
 
-        if(optionalCarrier.isEmpty()){
-            log.error("carrier not found");
-            return null;
-        }
-
-        Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
-
-        if(optionalLot.isEmpty()){
-            log.error("lot not found");
-            return null;
-        }
-
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(lotCarrierMapping.getProductionOrderId());
-        if(optionalProductionOrder.isEmpty()){
-            log.error("production order not found");
-            return null;
-        }
 
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
@@ -711,13 +697,28 @@ public class MessageExecuteService {
             lastCarrierFlag = YN.N.name();
         }
 
-        Carrier carrier = optionalCarrier.get();
-        equipmentName = carrier.getEquipmentName();
-        portName = carrier.getPortName();
-        carrierName = carrier.getCarrierName();
+        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(lotCarrierMapping.getCarrierName());
+        Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(lotCarrierMapping.getProductionOrderId());
 
-        Lot lot = optionalLot.get();
-        ProductionOrder productionOrder = optionalProductionOrder.get();
+
+        if(optionalCarrier.isPresent()){
+            Carrier carrier = optionalCarrier.get();
+            equipmentName = carrier.getEquipmentName();
+            portName = carrier.getPortName();
+            carrierName = carrier.getCarrierName();
+        }
+
+        if(optionalLot.isPresent()){
+            Lot lot = optionalLot.get();
+            lotName =  lot.getLotName();
+        }
+
+        if(optionalProductionOrder.isPresent()){
+            ProductionOrder productionOrder = optionalProductionOrder.get();
+            productionTaskId = productionOrder.getId().toString();
+            totalQuantity =productionOrder.getPlanQuantity().toString();
+        }
 
         BaseMessage<CarrierInfoDownloadSendBody> reply = new BaseMessage<>();
         reply.setMessageName(MessageList.CARRIER_INFO_DOWNLOAD_SEND.getMessageName());
@@ -738,13 +739,13 @@ public class MessageExecuteService {
                 .equipmentName(equipmentName)
                 .portName(portName)
                 .carrierName(carrierName)
-                .productionTaskId(productionOrder.getId().toString())
-                .lotName(lot.getLotName())
-                .itemName(lot.getItemId())
+                .productionTaskId(productionTaskId)
+                .lotName(lotName)
+                .itemName(itemName)
                 .orderId(lotCarrierMapping.getOrderId())
                 .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
                 .quantity(lotCarrierMapping.getQuantity().toString())
-                .totalQuantity(productionOrder.getPlanQuantity().toString())
+                .totalQuantity(totalQuantity)
                 .mngKey(lotCarrierMapping.getMngKey().toString())
                 .lastCarrierFlag(lastCarrierFlag)
                 .recipe(recipeBody)
@@ -977,6 +978,9 @@ public class MessageExecuteService {
         RecipeBody recipeBody = message.getBody().getRecipe();
         Long mngKeyToLong = Long.parseLong(mngKey);
         String lastCarrierFlag = "";
+        String lotName = "";
+        String itemName = "";
+        String totalQuantity = "";
 
         List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngKeyToLong);
         if( ObjectUtils.isEmpty(lotCarrierMappingList)){
@@ -996,10 +1000,13 @@ public class MessageExecuteService {
         historyService.saveHistory(historyEntity);
 
         Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
-        if(optionalLot.isEmpty()){
-            return null;
+        if(optionalLot.isPresent()){
+            Lot lot = optionalLot.get();
+            lotName = lot.getLotName();
+            itemName = lot.getItemId();
+            totalQuantity = lot.getTotalQuantity().toString();
         }
-        Lot lot = optionalLot.get();
+
 
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
@@ -1032,12 +1039,12 @@ public class MessageExecuteService {
                 .equipmentName(equipmentName)
                 .portName(portName)
                 .carrierName(carrierName)
-                .lotName(lot.getLotName())
-                .itemName(lot.getItemId())
+                .lotName(lotName)
+                .itemName(itemName)
                 .orderId(orderId)
                 .orderLineNumber(orderLineNumber)
                 .quantity(lotCarrierMapping.getQuantity().toString())
-                .totalQuantity(lot.getTotalQuantity().toString())
+                .totalQuantity(totalQuantity)
                 .mngKey(mngKey)
                 .lastCarrierFlag(lastCarrierFlag)
                 .recipe(recipeBody)
@@ -1055,6 +1062,13 @@ public class MessageExecuteService {
         String orderId = message.getBody().getOrderId();
         String orderLineNumber = message.getBody().getOrderLineNumber();
         RecipeBody recipeBody = message.getBody().getRecipe();
+        String productionTaskId ="";
+
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
+        if(optionalProductionOrder.isPresent()){
+            ProductionOrder productionOrder = optionalProductionOrder.get();
+            productionTaskId = productionOrder.getId().toString();
+        }
 
         BaseMessage<RecipeChangedRequestForEASBody> request = new BaseMessage<>();
         request.setMessageName(MessageList.RECIPE_CHANGED_REQUEST.getMessageName());
@@ -1067,6 +1081,7 @@ public class MessageExecuteService {
         request.setResultCode(ResultCode.OK.getValue());
         RecipeChangedRequestForEASBody body = RecipeChangedRequestForEASBody
                 .builder()
+                .productionTaskId(productionTaskId)
                 .equipmentName(equipmentName)
                 .orderId(orderId)
                 .orderLineNumber(orderLineNumber)
@@ -1202,12 +1217,10 @@ public class MessageExecuteService {
      */
     @Transactional(value = "mssqlTransactionManager")
     public void destinationChanged(BaseMessage<DestinationChangedBody> message) {
-        log.info("destinationChanged");
-
         String messageName = message.getMessageName();
         String messageOwner = message.getMessageOwner();
         String resultMessage =  message.getResultMessage();
-        String transportJobName = message.getBody().getTransportJobName(); // DetailName
+        String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
         String oldDestinationEquipmentName = message.getBody().getOldDestinationEquipmentName();
         String oldDestinationZoneName = message.getBody().getOldDestinationZoneName();

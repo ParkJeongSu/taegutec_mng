@@ -165,7 +165,7 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
                         h2OrderDEntity.cCoId.as("cCoId"),
                         h2OrderDEntity.cCoTy.as("cCoTy"),
                         h2OrderDEntity.cZone.as("cZone"),
-                        h2OrderDEntity.cZone.as("cDrivingProfile")
+                        h2OrderDEntity.cDrivingProfile.as("cDrivingProfile")
                 ))
                 .from(h2OrderDEntity)
                 .where(
