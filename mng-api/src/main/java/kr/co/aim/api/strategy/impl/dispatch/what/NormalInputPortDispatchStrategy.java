@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class NormalInputPortDispatchStrategy implements WhatDispatchStrategy {
 
-    private final EquipmentService equipmentService;
-    private final PortService portService;
 
     @Override
     public boolean supports(WhatDispatchContext context) {

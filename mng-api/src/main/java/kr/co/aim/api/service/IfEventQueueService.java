@@ -33,11 +33,6 @@ public class IfEventQueueService {
         return ifEventQueues;
     }
 
-    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public List<IfEventQueue> findByIfStatusOrderByCreateTimeAsc(String ifStatus){
-        return ifEventQueueRepository.findByIfStatusOrderByCreateTimeAsc(ifStatus);
-    }
-
     @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW) // 독립 트랜잭션 생성
     public void reportCompleted(Long id) {
         // id 조회

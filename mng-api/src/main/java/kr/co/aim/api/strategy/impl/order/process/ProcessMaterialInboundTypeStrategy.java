@@ -18,13 +18,6 @@ import java.util.List;
 @Slf4j
 public class ProcessMaterialInboundTypeStrategy implements ProductionOrderProcessStrategy {
 
-    private final LotCarrierMappingService lotCarrierMappingService;
-    private final ProductDefService productDefService;
-    private final List<SelectStrategy> selectStrategyList;
-    private final CarrierSelectionService carrierSelectionService;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
-    private final HistoryService historyService;
-    private final ProductionOrderService productionOrderService;
 
     @Override
     public boolean supports(ProductionOrderProcessContext context) {

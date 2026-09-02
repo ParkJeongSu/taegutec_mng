@@ -11,6 +11,7 @@ import kr.co.aim.common.enums.ProductionStatus;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProcessJobStartedCommand;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,7 @@ import java.math.BigDecimal;
 public class ReductionTypeStartedStrategy implements ProcessJobStartedStrategy {
 
     private final HistoryService historyService;
-    private final ProductionOrderService productionOrderService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
 
     @Override
@@ -84,7 +84,7 @@ public class ReductionTypeStartedStrategy implements ProcessJobStartedStrategy {
                         .jobStartTime(tx.eventTime())
                         .build();
         lotCarrierMapping.processJobStarted(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
 

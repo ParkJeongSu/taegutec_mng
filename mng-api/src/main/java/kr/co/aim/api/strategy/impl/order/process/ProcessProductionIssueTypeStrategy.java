@@ -11,6 +11,9 @@ import kr.co.aim.domain.command.LotSplitCommand;
 import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
+import kr.co.aim.domain.repository.ProductionOrderRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
@@ -28,14 +31,14 @@ import java.util.Optional;
 @Slf4j
 public class ProcessProductionIssueTypeStrategy implements ProductionOrderProcessStrategy {
 
-    private final LotCarrierMappingService lotCarrierMappingService;
-    private final ProductDefService productDefService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final List<SelectStrategy> selectStrategyList;
     private final CarrierSelectionService carrierSelectionService;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final HistoryService historyService;
     private final ProductionOrderService productionOrderService;
-    private final LotService lotService;
+    private final ProductionOrderRepository productionOrderRepository;
+    private final LotRepository lotRepository;
     private final LotMapper lotMapper;
 
     @Override
@@ -49,7 +52,7 @@ public class ProcessProductionIssueTypeStrategy implements ProductionOrderProces
         ProductionOrder productionOrder = context.getProductionOrder();
 
         // 원자재 Lot 정보 조회
-        Optional<Lot> optionalLot = lotService.findByLotName(productionOrder.getMaterialLotName());
+        Optional<Lot> optionalLot = lotRepository.findByLotName(productionOrder.getMaterialLotName());
         if(optionalLot.isEmpty()){
             throw new RuntimeException("lot not found");
         }
@@ -97,10 +100,10 @@ public class ProcessProductionIssueTypeStrategy implements ProductionOrderProces
                             .holdState(HoldState.NOT_ON_HOLD.getValue())
                             .build();
             Lot newLot = materialLot.split(lotSplitCommand);
-            materialLot = lotService.save(materialLot);
+            materialLot = lotRepository.save(materialLot);
             LotHistoryEntity materialLotHistoryEntity = lotMapper.toHistoryEntity(materialLot);
             historyService.saveHistory(materialLotHistoryEntity);
-            newLot = lotService.save(newLot);
+            newLot = lotRepository.save(newLot);
             LotHistoryEntity  newLotHistoryEntity = lotMapper.toHistoryEntity(newLot);
             historyService.saveHistory(newLotHistoryEntity);
 
@@ -118,7 +121,7 @@ public class ProcessProductionIssueTypeStrategy implements ProductionOrderProces
                                 .productionStatus(ProductionStatus.WAIT.getValue())
                                 .build();
                 mapping.allocated(command);
-                mapping = lotCarrierMappingService.save(mapping);
+                mapping = lotCarrierMappingRepository.save(mapping);
                 LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(mapping);
                 historyService.saveHistory(historyEntity);
             }

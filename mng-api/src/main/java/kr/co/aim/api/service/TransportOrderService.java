@@ -137,32 +137,8 @@ public class TransportOrderService {
     }
 
     @Transactional("mssqlTransactionManager")
-    public Optional<TransportOrder> findWithLockById(Long id) {
-        return transportOrderRepository.findWithLockById(id);
-    }
-
-    @Transactional("mssqlTransactionManager")
     public List<TransportOrder> findByTransportTypeInAndTransportStatus(List<String> types, String status) {
         return transportOrderRepository.findByTransportTypeInAndTransportStatus(types, status);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public List<TransportOrder> findOutboundOrderForTransportRequest(String transportType, String transportStatus, String workStationId) {
-        return transportOrderRepository.findOutboundOrderForTransportRequest(transportType, transportStatus, workStationId);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public List<TransportOrder> findOutboundOrderForTransportRequest(
-            String transportType,
-            List<String> transportStatus,
-            String workStationId
-    ){
-        return transportOrderRepository.findOutboundOrderForTransportRequest(transportType, transportStatus, workStationId);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public List<TransportOrder> findTransportOrderByCondition(String carrierName, String transportType, List<String> transportStatus) {
-        return transportOrderRepository.findTransportOrderByCondition(carrierName, transportType, transportStatus);
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
@@ -173,11 +149,6 @@ public class TransportOrderService {
     @Transactional("mssqlTransactionManager")
     public TransportOrder save(TransportOrder transportOrder) {
         return transportOrderRepository.save(transportOrder);
-    }
-
-    @Transactional("mssqlTransactionManager")
-    public Long findMaxOrderId(){
-        return  transportOrderRepository.findMaxOrderId();
     }
 
     @Transactional("mssqlTransactionManager")

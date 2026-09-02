@@ -8,6 +8,7 @@ import kr.co.aim.common.condition.EquipmentProductivityDailySearchCondition;
 import kr.co.aim.common.condition.TransportRouteDailySearchCondition;
 import kr.co.aim.common.condition.WorkOrderProcessedDailySearchCondition;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.EquipmentRepository;
 import kr.co.aim.domain.repository.StatRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +26,7 @@ import java.util.*;
 @Slf4j
 public class StatService {
     private final StatRepository statRepository;
-    private final EquipmentService equipmentService;
+    private final EquipmentRepository equipmentRepository;
 
     public void aggregateDailyStatistics(String statDate) {
         // 1. 설비 가동 시간 통계 산출 및 저장 (가장 까다로운 로직)
@@ -49,7 +50,7 @@ public class StatService {
         LocalDateTime end = StatTimeUtils.toEndDateTime(statDate);
 
         // 대상 정렬 데이터 조회 (설비명 순, 이벤트 시간 순)
-        List<EquipmentHistory> histories = equipmentService.findEquipmentHistoryByPeriod(start, end);
+        List<EquipmentHistory> histories = equipmentRepository.findEquipmentHistoryByPeriod(start, end);
 
         // 메모리 상에서 설비별, 시간대별 통계를 누적하기 위한 데이터 맵 구조
         // 단일 PK 구조이므로 Key는 "날짜_시간_설비명" 조합 문자열을 고유 키로 활용

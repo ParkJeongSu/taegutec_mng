@@ -14,6 +14,7 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.*;
 import kr.co.aim.infra.persistence.mapper.*;
@@ -33,6 +34,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
+
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
@@ -44,15 +47,14 @@ public class MessageExecuteService {
     private final WhereDispatchService whereDispatchService;
     private final ProcessJobService processJobService;
     private final HistoryService historyService;
-    private final CarrierService carrierService;
-    private final CarrierDefService carrierDefService;
-    private final EquipmentService equipmentService;
-    private final EquipmentDefService equipmentDefService;
-    private final PortService portService;
-    private final PortDefService portDefService;
-    private final ProductionOrderService productionOrderService;
+    private final CarrierRepository carrierRepository;
+    private final EquipmentRepository equipmentRepository;
+    private final PortRepository portRepository;
+    private final PortDefRepository portDefRepository;
+    private final ProductionOrderRepository productionOrderRepository;
     private final ProductionOrderProcessService productionOrderProcessService;
     private final TransportJobService transportJobService;
+    private final TransportJobRepository transportJobRepository;
     private final IfEventQueueService ifEventQueueService;
 
     private final FactoryProcessStrategy factoryProcessStrategy;
@@ -66,8 +68,8 @@ public class MessageExecuteService {
     private final PortDefMapper portDefMapper;
     private final CarrierMapper carrierMapper;
     private final TransportJobMapper transportJobMapper;
-    private final LotService lotService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotRepository lotRepository;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final NamingRuleService namingRuleService;
 
     /**
@@ -122,7 +124,7 @@ public class MessageExecuteService {
         String portName = message.getBody().getPortName();
         String carrierName = message.getBody().getCarrierName();
 
-        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
             return;
         }
@@ -136,7 +138,7 @@ public class MessageExecuteService {
                 .build();
 
         carrier.cleanJobStarted(command);
-        carrierService.save(carrier);
+        carrierRepository.save(carrier);
     }
 
     /**
@@ -159,7 +161,7 @@ public class MessageExecuteService {
         String portName = message.getBody().getPortName();
         String carrierName = message.getBody().getCarrierName();
 
-        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
             return;
         }
@@ -173,7 +175,7 @@ public class MessageExecuteService {
                 .build();
 
         carrier.cleanJobEnded(command);
-        carrierService.save(carrier);
+        carrierRepository.save(carrier);
     }
 
     /**
@@ -221,8 +223,8 @@ public class MessageExecuteService {
         String carrierType = message.getBody().getCarrierType();
 
         TransactionInfo tx = TransactionInfo.now(messageName,message.getMessageOwner(),message.getResultMessage());
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
+        Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(currentEquipmentName,currentPositionName);
         PortDef portDef = null;
         Port port = null;
         if(optionalPortDef.isPresent()){
@@ -232,7 +234,7 @@ public class MessageExecuteService {
             port = optionalPort.get();
         }
 
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
@@ -241,7 +243,7 @@ public class MessageExecuteService {
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
         }
@@ -363,7 +365,7 @@ public class MessageExecuteService {
         String carrierStatus = message.getBody().getCarrierStatus();
         String mngKey = message.getBody().getMngKey();
 
-        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
         Carrier carrier;
         if(optionalCarriers.isEmpty()){
             return;
@@ -390,20 +392,20 @@ public class MessageExecuteService {
                     .build();
         }
         carrier.deAssigned(command);
-        carrier = carrierService.save(carrier);
+        carrier = carrierRepository.save(carrier);
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(carrierName);
         if(optionalLotCarrierMapping.isPresent()){
             LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
             Optional<LotCarrierMapping> optionalNewLotCarrierMapping = lotCarrierMapping.deAssignedAndSplit(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
             LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
             historyService.saveHistory(lotCarrierMappingHistoryEntity);
             if(optionalNewLotCarrierMapping.isPresent()){
                 LotCarrierMapping newLotCarrierMapping = optionalNewLotCarrierMapping.get();
-                newLotCarrierMapping = lotCarrierMappingService.save(newLotCarrierMapping);
+                newLotCarrierMapping = lotCarrierMappingRepository.save(newLotCarrierMapping);
                 LotCarrierMappingHistoryEntity newLotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(newLotCarrierMapping);
                 historyService.saveHistory(newLotCarrierMappingHistoryEntity);
             }
@@ -442,8 +444,8 @@ public class MessageExecuteService {
         }
         TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(), message.getResultMessage());
 
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(equipmentName, portName);
         PortDef portDef = null;
         Port port = null;
         if(optionalPortDef.isPresent()){
@@ -520,7 +522,7 @@ public class MessageExecuteService {
         String resultCode= "";
         String productionOrderState = "";
 
-        Optional<ProductionOrder> optionalProductionOrder =  productionOrderService.findById(id);
+        Optional<ProductionOrder> optionalProductionOrder =  productionOrderRepository.findById(id);
         ProductionOrder productionOrder = null;
         if(optionalProductionOrder.isPresent()){
             productionOrder = optionalProductionOrder.get();
@@ -548,7 +550,7 @@ public class MessageExecuteService {
                         .build();
 
         productionOrder.updateState(command);
-        productionOrder = productionOrderService.save(productionOrder);
+        productionOrder = productionOrderRepository.save(productionOrder);
         ProductionOrderHistoryEntity historyEntity = productionOrderMapper.toHistoryEntity(productionOrder);
         historyService.saveHistory(historyEntity);
 
@@ -665,7 +667,12 @@ public class MessageExecuteService {
 
         Long lotCarrierMappingId = message.getBody().getId();
 
-        LotCarrierMapping lotCarrierMapping = lotCarrierMappingService.findById(lotCarrierMappingId);
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findById(lotCarrierMappingId);
+        if (optionalLotCarrierMapping.isEmpty()) {
+            throw new IllegalArgumentException("해당 Lot Carrier Mapping 정보가 존재하지 않습니다. ID: " + lotCarrierMappingId);
+        }
+
+        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
@@ -675,7 +682,7 @@ public class MessageExecuteService {
                 .build();
 
         lotCarrierMapping.recipeTimeOut(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
 
@@ -684,7 +691,7 @@ public class MessageExecuteService {
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
         productionStatus.add(ProductionStatus.ALLOCATED.getValue());
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
                 lotCarrierMapping.getOrderId(),
                 lotCarrierMapping.getOrderLineNumber(),
                 productionStatus
@@ -697,9 +704,9 @@ public class MessageExecuteService {
             lastCarrierFlag = YN.N.name();
         }
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(lotCarrierMapping.getCarrierName());
-        Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(lotCarrierMapping.getProductionOrderId());
+        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(lotCarrierMapping.getCarrierName());
+        Optional<Lot> optionalLot = lotRepository.findByLotName(lotCarrierMapping.getLotName());
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(lotCarrierMapping.getProductionOrderId());
 
 
         if(optionalCarrier.isPresent()){
@@ -770,7 +777,7 @@ public class MessageExecuteService {
         String portType = message.getBody().getPortType();
         String portTransportModeName = message.getBody().getPortTransportMode();
 
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return;
@@ -781,7 +788,7 @@ public class MessageExecuteService {
         PortTransportModeChangedCommand command = PortTransportModeChangedCommand.builder().transactionInfo(tx).portTransportModeName(portTransportModeName).build();
 
         port.transportModeChanged(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
@@ -802,7 +809,7 @@ public class MessageExecuteService {
         String portType = message.getBody().getPortType();
         String portStateName = message.getBody().getPortStateName();
 
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return;
@@ -820,7 +827,7 @@ public class MessageExecuteService {
                 .portState(state)
                 .build();
         port.portStateChanged(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
     }
@@ -845,7 +852,7 @@ public class MessageExecuteService {
                 String portType = portData.getPortType();
                 String portTransportMode = portData.getPortTransportMode();
                 String carrierName = portData.getCarrierName();
-                Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+                Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
 
                 if(optionalPorts.isEmpty()){
                     continue;
@@ -864,7 +871,7 @@ public class MessageExecuteService {
                                 .portState(state)
                                 .build();
                 port.portStateChanged(command);
-                port = portService.save(port);
+                port = portRepository.save(port);
                 PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
                 historyService.saveHistory(portHistoryEntity);
             }
@@ -889,14 +896,14 @@ public class MessageExecuteService {
             return;
         }
 
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return;
         }
         Port port = optionalPorts.get();
 
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPortDef.isEmpty()){
             return;
         }
@@ -910,7 +917,7 @@ public class MessageExecuteService {
                 .portType(portType)
                 .build();
         port.portTypeChanged(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
     }
@@ -982,7 +989,7 @@ public class MessageExecuteService {
         String itemName = "";
         String totalQuantity = "";
 
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngKeyToLong);
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByMngKey(mngKeyToLong);
         if( ObjectUtils.isEmpty(lotCarrierMappingList)){
             return null;
         }
@@ -995,11 +1002,11 @@ public class MessageExecuteService {
                         .carrierName(lotCarrierMapping.getCarrierName())
                         .build();
         lotCarrierMapping.recipeRely(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
 
-        Optional<Lot> optionalLot = lotService.findByLotName(lotCarrierMapping.getLotName());
+        Optional<Lot> optionalLot = lotRepository.findByLotName(lotCarrierMapping.getLotName());
         if(optionalLot.isPresent()){
             Lot lot = optionalLot.get();
             lotName = lot.getLotName();
@@ -1011,7 +1018,7 @@ public class MessageExecuteService {
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
         productionStatus.add(ProductionStatus.ALLOCATED.getValue());
-        List<LotCarrierMapping> lotCarrierMappingListByOrderInfo = lotCarrierMappingService.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+        List<LotCarrierMapping> lotCarrierMappingListByOrderInfo = lotCarrierMappingRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
                 orderId,
                 orderLineNumber,
                 productionStatus
@@ -1064,7 +1071,7 @@ public class MessageExecuteService {
         RecipeBody recipeBody = message.getBody().getRecipe();
         String productionTaskId ="";
 
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
         if(optionalProductionOrder.isPresent()){
             ProductionOrder productionOrder = optionalProductionOrder.get();
             productionTaskId = productionOrder.getId().toString();
@@ -1160,7 +1167,7 @@ public class MessageExecuteService {
                 String actualWeight = transportJob.getActualWeight();
                 String carrierType  = transportJob.getCarrierType();
 
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
 
                 if(optionalTransportJob.isPresent()){
 
@@ -1238,7 +1245,7 @@ public class MessageExecuteService {
         }
 
         Optional<TransportJob> optionalTransportJob
-                = transportJobService.findByTransportJobName(transportJobName);
+                = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isEmpty()){
             return;
         }
@@ -1258,7 +1265,7 @@ public class MessageExecuteService {
                         .transactionInfo(tx)
                         .build();
         transportJob.changeDestination(command);
-        transportJob = transportJobService.save(transportJob);
+        transportJob = transportJobRepository.save(transportJob);
         TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
         historyService.saveHistory(transportJobHistoryEntity);
     }
@@ -1356,7 +1363,7 @@ public class MessageExecuteService {
             String equipmentName = body.getEquipmentName();
             String communicationState = body.getCommunicationState();
 
-            Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+            Optional<Equipment> optionalEquipments = equipmentRepository.findByEquipmentName(equipmentName);
 
             if(optionalEquipments.isEmpty()){
                 continue;
@@ -1370,7 +1377,7 @@ public class MessageExecuteService {
             CommunicationStateChangeCommand command = CommunicationStateChangeCommand.builder().transactionInfo(tx).communicationState(state).build();
             equipment.communicationStateChange(command);
 
-            equipment = equipmentService.save(equipment);
+            equipment = equipmentRepository.save(equipment);
             EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
             historyService.saveHistory(equipmentHistoryEntity);
         }
@@ -1392,7 +1399,7 @@ public class MessageExecuteService {
 
         String equipmentName = message.getBody().getEquipmentName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentRepository.findByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1408,7 +1415,7 @@ public class MessageExecuteService {
         CommunicationStateChangeCommand command = CommunicationStateChangeCommand.builder().transactionInfo(tx).communicationState(state).build();
 
         equipment.communicationStateChange(command);
-        equipment = equipmentService.save(equipment);
+        equipment = equipmentRepository.save(equipment);
         EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
         historyService.saveHistory(equipmentHistoryEntity);
     }
@@ -1430,7 +1437,7 @@ public class MessageExecuteService {
         String equipmentName = message.getBody().getEquipmentName();
         String equipmentState = message.getBody().getEquipmentStateName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentRepository.findByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1445,7 +1452,7 @@ public class MessageExecuteService {
         EquipmentState state = EquipmentState.valueOf(equipmentState);
         EquipmentStateChangeCommand command = EquipmentStateChangeCommand.builder().equipmentState(state).transactionInfo(tx).build();
         equipment.equipmentStateChange(command);
-        equipment = equipmentService.save(equipment);
+        equipment = equipmentRepository.save(equipment);
         EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
         historyService.saveHistory(equipmentHistoryEntity);
 
@@ -1472,7 +1479,7 @@ public class MessageExecuteService {
             String equipmentState = body.getEquipmentStateName();
             String communicationState = body.getCommunicationState();
 
-            Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+            Optional<Equipment> optionalEquipments = equipmentRepository.findByEquipmentName(equipmentName);
 
             if(optionalEquipments.isEmpty()){
                 continue;
@@ -1490,7 +1497,7 @@ public class MessageExecuteService {
                             .communicationState(communicationState)
                             .transactionInfo(tx).build();
             equipment.equipmentStateReport(command);
-            equipment = equipmentService.save(equipment);
+            equipment = equipmentRepository.save(equipment);
             EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
             historyService.saveHistory(equipmentHistoryEntity);
         }
@@ -1513,7 +1520,7 @@ public class MessageExecuteService {
         String equipmentName = message.getBody().getEquipmentName();
         String operationModeName = message.getBody().getOperationModeName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentRepository.findByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1528,7 +1535,7 @@ public class MessageExecuteService {
         EquipmentOperationMode mode = EquipmentOperationMode.valueOf(operationModeName);
         EquipmentOperationModeChangeCommand command = EquipmentOperationModeChangeCommand.builder().equipmentOperationMode(mode).transactionInfo(tx).build();
         equipment.operationModeChange(command);
-        equipment = equipmentService.save(equipment);
+        equipment = equipmentRepository.save(equipment);
         EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
         historyService.saveHistory(equipmentHistoryEntity);
     }
@@ -1549,7 +1556,7 @@ public class MessageExecuteService {
         String equipmentName = message.getBody().getEquipmentName();
         String operationModeName = message.getBody().getOperationModeName();
 
-        Optional<Equipment> optionalEquipments = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipments = equipmentRepository.findByEquipmentName(equipmentName);
 
         if(optionalEquipments.isEmpty()){
             return;
@@ -1564,7 +1571,7 @@ public class MessageExecuteService {
         EquipmentOperationMode mode = EquipmentOperationMode.valueOf(operationModeName);
         EquipmentOperationModeChangeCommand command = EquipmentOperationModeChangeCommand.builder().equipmentOperationMode(mode).transactionInfo(tx).build();
         equipment.operationModeChange(command);
-        equipment = equipmentService.save(equipment);
+        equipment = equipmentRepository.save(equipment);
         EquipmentHistoryEntity equipmentHistoryEntity = equipmentMapper.toHistoryEntity(equipment);
         historyService.saveHistory(equipmentHistoryEntity);
     }
@@ -1622,7 +1629,7 @@ public class MessageExecuteService {
         Long productionOrderId = message.getBody().getId();
         String orderId = message.getBody().getOrderId();
 
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(productionOrderId);
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(productionOrderId);
 
         // 🌟 [핵심 수정] 상대방에게 돌려줄 응답용 Body 객체를 먼저 생성합니다.
         OrderReleaseReplyBody replyBody = OrderReleaseReplyBody.builder()
@@ -1662,7 +1669,7 @@ public class MessageExecuteService {
                         .reasonCode("")
                         .build();
         Lot lot = Lot.create(command);
-        lot = lotService.save(lot);
+        lot = lotRepository.save(lot);
         LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
 
@@ -1694,7 +1701,7 @@ public class MessageExecuteService {
         String orderId = message.getBody().getOrderId();
         List<Material> materialList = message.getBody().getMaterialList();
 
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(productionOrderId);
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(productionOrderId);
 
         // 🌟 [핵심 수정] 상대방에게 돌려줄 응답용 Body 객체를 먼저 생성합니다.
         MaterialAssignCarrierReplyBody replyBody =
@@ -1711,7 +1718,7 @@ public class MessageExecuteService {
             return createReplyMessage(message, ResultCode.NG, "Production Order를 찾을 수 없습니다.",replyBody);
         }
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
 
         if(materialList.isEmpty()){
             return createReplyMessage(message,ResultCode.NG,"CarrierName 을 찾을수 없습니다.",replyBody);
@@ -1764,7 +1771,7 @@ public class MessageExecuteService {
                     //.reasonCode()
                     .build();
             LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
             LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
             historyService.saveHistory(lotCarrierMappingHistoryEntity);
 
@@ -1777,7 +1784,7 @@ public class MessageExecuteService {
                             .galQuantity(quantity)
                             .build();
             carrier.change(carrierChangeCommand);
-            carrier = carrierService.save(carrier);
+            carrier = carrierRepository.save(carrier);
             CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
             historyService.saveHistory(carrierHistoryEntity);
         }

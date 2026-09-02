@@ -21,22 +21,11 @@ import java.util.*;
 @Slf4j
 public class EquipmentService {
     private final EquipmentRepository equipmentRepository;
-    private final EquipmentGroupDefRepository equipmentGroupDefRepository;
-    private final EquipmentDefRepository equipmentDefRepository;
-    private final EquipmentMapper equipmentMapper;
-    private final HistoryService historyService;
 
     @Transactional(value = "mssqlTransactionManager")
     public Equipment save(Equipment equipment){
         return equipmentRepository.save(equipment);
     }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<Equipment> findEquipmentByEquipmentName(String equipmentName){
-        return equipmentRepository.findByEquipmentName(equipmentName);
-    }
-
-
 
     @Transactional(value = "mssqlTransactionManager",readOnly = true)
     public Page<Equipment> findEquipmentByCondition(EquipmentSearchCondition condition, Pageable pageable){

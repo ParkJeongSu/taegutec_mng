@@ -25,7 +25,6 @@ import java.util.Optional;
 public class PortService {
 
     private final HistoryService historyService;
-
     private final PortRepository portRepository;
     private final PortMapper portMapper;
 
@@ -55,50 +54,14 @@ public class PortService {
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public List<Port> findByEquipmentNameAndPortType(String equipmentName,String portType){
-        return portRepository.findByEquipmentNameAndPortType(equipmentName,portType);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public List<Port> findPortsWithEarliestTransportOrder(
-            String transportState,
-            String transportType,
-            String transportStatus
-    ){
-        return portRepository.findPortsWithEarliestTransportOrder(transportState,transportType,transportStatus);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
     public List<Port> findEarliestPortPerWorkCenter(String transportState,List<String> detailPortType){
         return portRepository.findEarliestPortPerWorkCenter(transportState,detailPortType);
     }
 
-    @Transactional(value = "mssqlTransactionManager")
-    Optional<Port> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName){
-        return portRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<Port> findPortByEquipmentNameAndPortName(String equipmentName,String portName) {
-        return portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
-    }
 
     @Transactional(value = "mssqlTransactionManager")
     public Port save(Port port) {
         return portRepository.save(port);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public List<Port> findByTransportStateAndPortRoleType(String transportState,String portRoleType){
-        return portRepository.findByTransportStateAndPortRoleType(transportState,portRoleType);
-    }
-    @Transactional(value = "mssqlTransactionManager")
-    public List<Port> findByTransportStateAndDetailPortTypeIn(String transportState,List<String> detailPortType)
-    {
-        if (ObjectUtils.isEmpty(detailPortType)) {
-            return new ArrayList<Port>();
-        }
-        return portRepository.findByTransportStateAndDetailPortTypeIn(transportState,detailPortType);
     }
 
 }

@@ -14,6 +14,7 @@ import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
 import kr.co.aim.domain.command.LotCreateCommand;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
@@ -40,12 +41,12 @@ import java.util.Optional;
 @Slf4j
 public class RawMaterialReceivingService {
     private final ObjectMapper objectMapper;
-    private final ProductionOrderService productionOrderService;
-    private final LotService lotService;
-    private final LotCarrierMappingService lotCarrierMappingService;
-    private final CarrierService carrierService;
-    private final CarrierDefService carrierDefService;
-    private final ProductDefService productDefService;
+    private final ProductionOrderRepository productionOrderRepository;
+    private final LotRepository lotRepository;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final CarrierRepository carrierRepository;
+    private final CarrierDefRepository carrierDefRepository;
+    private final ProductDefRepository productDefRepository;
     private final TransportJobService transportJobService;
     private final LotMapper lotMapper;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
@@ -78,7 +79,7 @@ public class RawMaterialReceivingService {
             String lotName = rawMaterialReceivingStart.getLotName();
             String itemName = rawMaterialReceivingStart.getItemName();
 
-            Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(id);
+            Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(id);
 
             if(optionalProductionOrder.isEmpty()) {
                 throw new RuntimeException("production order not found");
@@ -101,7 +102,7 @@ public class RawMaterialReceivingService {
                             .holdState(HoldState.NOT_ON_HOLD.getValue())
                             .build();
             Lot lot = Lot.create(command);
-            lot = lotService.save(lot);
+            lot = lotRepository.save(lot);
             LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
             historyService.saveHistory(historyEntity);
             responseList.add(RawMaterialReceivingStartResponse.from(rawMaterialReceivingStart));
@@ -147,7 +148,7 @@ public class RawMaterialReceivingService {
         String eventUser = request.getEventUser();
         String eventComment = request.getEventComment();
 
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(id);
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(id);
 
         if(optionalProductionOrder.isEmpty()) {
             throw new RuntimeException("production order not found");
@@ -155,20 +156,20 @@ public class RawMaterialReceivingService {
 
         ProductionOrder productionOrder = optionalProductionOrder.get();
 
-        Optional<Lot> optionalLot = lotService.findByLotName(lotName);
+        Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
         if(optionalLot.isEmpty()) {
             throw new RuntimeException("lot not found");
         }
         Lot lot = optionalLot.get();
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
 
         if(optionalCarrier.isEmpty()) {
             throw new RuntimeException("carrier not found");
         }
         Carrier carrier = optionalCarrier.get();
 
-        Optional<ProductDef> optionalProductDef = productDefService.findByProductDefName(itemName);
+        Optional<ProductDef> optionalProductDef = productDefRepository.findByProductDefName(itemName);
 
         if(optionalProductDef.isEmpty()) {
             throw new RuntimeException("itemName not found");
@@ -193,7 +194,7 @@ public class RawMaterialReceivingService {
                         .build();
 
         LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
 
@@ -249,7 +250,7 @@ public class RawMaterialReceivingService {
         String eventUser = request.getEventUser();
         String eventComment = request.getEventComment();
 
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(id);
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(id);
 
         if(optionalProductionOrder.isEmpty()) {
             throw new RuntimeException("production order not found");
@@ -257,27 +258,27 @@ public class RawMaterialReceivingService {
 
         ProductionOrder productionOrder = optionalProductionOrder.get();
 
-        Optional<Lot> optionalLot = lotService.findByLotName(lotName);
+        Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
         if(optionalLot.isEmpty()) {
             throw new RuntimeException("lot not found");
         }
         Lot lot = optionalLot.get();
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
 
         if(optionalCarrier.isEmpty()) {
             throw new RuntimeException("carrier not found");
         }
         Carrier carrier = optionalCarrier.get();
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByLotNameAndCarrierName(lot.getLotName(), carrier.getCarrierName());
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByLotNameAndCarrierName(lot.getLotName(), carrier.getCarrierName());
 
         if(optionalLotCarrierMapping.isEmpty()) {
             throw new RuntimeException("lot carrier not found");
         }
         LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
 
-        Optional<CarrierDef> optionalCarrierDef = carrierDefService.findByCarrierDefName(carrier.getCarrierDefName());
+        Optional<CarrierDef> optionalCarrierDef = carrierDefRepository.findByCarrierDefName(carrier.getCarrierDefName());
         if(optionalCarrierDef.isEmpty()) {
             throw new RuntimeException("carrier Def not found");
         }

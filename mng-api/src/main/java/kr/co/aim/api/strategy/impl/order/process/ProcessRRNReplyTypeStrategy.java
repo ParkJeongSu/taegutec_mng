@@ -8,6 +8,7 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.NextRRNReplyCommand;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import java.util.List;
 @Slf4j
 public class ProcessRRNReplyTypeStrategy implements ProductionOrderProcessStrategy {
 
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final HistoryService historyService;
 
@@ -35,7 +36,7 @@ public class ProcessRRNReplyTypeStrategy implements ProductionOrderProcessStrate
         // 1. ProductionOrder 조회
         ProductionOrder productionOrder = context.getProductionOrder();
         TransactionInfo tx = context.getTx();
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(productionOrder.getMngKey());
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByMngKey(productionOrder.getMngKey());
         NextRRNReplyCommand command =
                 NextRRNReplyCommand
                         .builder()
@@ -47,7 +48,7 @@ public class ProcessRRNReplyTypeStrategy implements ProductionOrderProcessStrate
                         .build();
         for(LotCarrierMapping lotCarrierMapping : lotCarrierMappingList) {
             lotCarrierMapping.nextRRNReply(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
             LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
             historyService.saveHistory(lotCarrierMappingHistoryEntity);
         }

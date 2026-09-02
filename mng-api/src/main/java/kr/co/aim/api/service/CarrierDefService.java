@@ -27,11 +27,6 @@ public class CarrierDefService {
     private final HistoryService historyService;
     private final CarrierDefMapper carrierDefMapper;
 
-    @Transactional
-    public Optional<CarrierDef> findByCarrierDefName(String carrierDefName){
-        return carrierDefRepository.findByCarrierDefName(carrierDefName);
-    }
-
     // [Create] 기준정보 등록
     @Transactional
     public CarrierDef createCarrierDef(CarrierDefSaveRequestDto dto) {

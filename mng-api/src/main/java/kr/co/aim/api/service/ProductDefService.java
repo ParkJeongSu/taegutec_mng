@@ -33,16 +33,6 @@ public class ProductDefService {
     private final ProductDefMapper productDefMapper;
 
     @Transactional(value = "mssqlTransactionManager")
-    public List<ProductDef> findAll(){
-        return productDefRepository.findAll();
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<ProductDef> findByProductDefName(String productDefName){
-        return productDefRepository.findByProductDefName(productDefName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
     public ProductDef findById(Long id) {
         Optional<ProductDef> optional = productDefRepository.findById(id);
         if (optional.isEmpty()) {
@@ -197,8 +187,5 @@ public class ProductDefService {
 
         return productDef;
     }
-
-
-
 
 }

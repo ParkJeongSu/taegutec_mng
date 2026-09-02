@@ -18,11 +18,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class MagazineEquipmentDispatchStrategy implements WhereDispatchStrategy {
 
-    private final EquipmentDefService equipmentDefService;
-    private final EquipmentService equipmentService;
-    private final PortDefService portDefService;
-    private final PortService portService;
-
 
     @Override
     public boolean supports(WhereDispatchContext context) {

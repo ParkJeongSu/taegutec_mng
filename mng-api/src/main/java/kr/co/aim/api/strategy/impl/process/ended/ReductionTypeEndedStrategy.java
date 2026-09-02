@@ -12,6 +12,8 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
 import kr.co.aim.domain.command.LotChangeCommand;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
@@ -30,10 +32,9 @@ import java.util.Optional;
 public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
 
     private final HistoryService historyService;
-    private final ProductionOrderService productionOrderService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
-    private final LotService lotService;
+    private final LotRepository lotRepository;
     private final LotMapper lotMapper;
 
 
@@ -82,7 +83,7 @@ public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
                         .build();
 
         LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
 
@@ -91,7 +92,7 @@ public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
             // find by LotName LotCarrierMapping
             // find by LotName Lot
             // Lot totalQuantity 변경
-            List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
+            List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
             if(ObjectUtils.isNotEmpty(lotCarrierMappingList)){
                 BigDecimal totalQuantity = BigDecimal.ZERO;
 
@@ -99,7 +100,7 @@ public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
                     totalQuantity = totalQuantity.add(lcm.getQuantity());
                 }
 
-                Optional<Lot> optionalLot = lotService.findByLotName(lotName);
+                Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
                 if(optionalLot.isPresent()){
                     Lot lot = optionalLot.get();
                     LotChangeCommand lotChangeCommand =
@@ -109,7 +110,7 @@ public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
                                     .totalQuantity(totalQuantity)
                                     .build();
                     lot.change(lotChangeCommand);
-                    lot = lotService.save(lot);
+                    lot = lotRepository.save(lot);
                     LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
                     historyService.saveHistory(lotHistoryEntity);
                 }

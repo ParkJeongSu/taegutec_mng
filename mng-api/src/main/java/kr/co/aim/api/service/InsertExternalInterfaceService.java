@@ -43,11 +43,11 @@ import java.util.List;
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertExternalInterfaceService implements FactoryGALInterfaceStrategy {
 
+    private final ObjectMapper objectMapper;
     private final IdocJpaRepository idocJpaRepository;
     private final H2OrderMJpaRepository h2OrderMJpaRepository;
     private final H2OrderDJpaRepository h2OrderDJpaRepository;
     private final H2TransJpaRepository h2TransJpaRepository;
-    private final ObjectMapper objectMapper;
     private final GALInterfaceRepository galInterfaceRepository;
 
     // --- [Helper Methods] ---

@@ -10,6 +10,9 @@ import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.CarrierDef;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.PortDef;
+import kr.co.aim.domain.repository.CarrierDefRepository;
+import kr.co.aim.domain.repository.CarrierRepository;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,9 +26,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class DispenserInputPortDispatchStrategy implements WhatDispatchStrategy {
 
-    private final CarrierService carrierService;
-    private final CarrierDefService carrierDefService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final CarrierRepository carrierRepository;
+    private final CarrierDefRepository carrierDefRepository;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
 
     @Override
     public boolean supports(WhatDispatchContext context) {
@@ -39,19 +42,19 @@ public class DispenserInputPortDispatchStrategy implements WhatDispatchStrategy 
 
         if (StringUtils.equals(PortType.INPUT.getValue(), portDef.getPortType())) {
             // Dispenser input 설비는 창고에 있는 8단이 쌓여있는 Empty pallet을 가져오는 로직임
-            List<Carrier> targetCarrierList = carrierService.findByQuantityAndCarrierType(new BigDecimal(8), CarrierType.PALLET.getValue());
+            List<Carrier> targetCarrierList = carrierRepository.findByQuantityAndCarrierType(new BigDecimal(8), CarrierType.PALLET.getValue());
             if(CollectionUtils.isEmpty(targetCarrierList)){
                 throw new RuntimeException("carrier not found");
             }
             Carrier targetCarrier = targetCarrierList.get(0);
 
-            Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(targetCarrier.getCarrierName());
+            Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(targetCarrier.getCarrierName());
             if(optionalLotCarrierMapping.isPresent()){
                 // Lot이 존재하면 안됨 존재하면 Error
                 throw new RuntimeException("Lot found");
             }
 
-            Optional<CarrierDef> optionalCarrierDef = carrierDefService.findByCarrierDefName(targetCarrier.getCarrierDefName());
+            Optional<CarrierDef> optionalCarrierDef = carrierDefRepository.findByCarrierDefName(targetCarrier.getCarrierDefName());
             if(optionalCarrierDef.isEmpty()){
                 throw new RuntimeException("carrier Def not found");
             }

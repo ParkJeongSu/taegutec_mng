@@ -12,6 +12,8 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.LotChangeCommand;
 import kr.co.aim.domain.command.ProcessJobEndedCommand;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
@@ -30,10 +32,9 @@ import java.util.Optional;
 public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
 
     private final HistoryService historyService;
-    private final ProductionOrderService productionOrderService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
-    private final LotService lotService;
+    private final LotRepository lotRepository;
     private final LotMapper lotMapper;
 
 
@@ -75,7 +76,7 @@ public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
         // 일반 조업 설비
         String mngKeyName = mngKeyNameList.get(0).getMngKeyName();
         Long mngKey = Long.parseLong(mngKeyName);
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngKey);
+        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByMngKey(mngKey);
         if( ObjectUtils.isNotEmpty(lotCarrierMappingList) ){
             LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
             ProcessJobEndedCommand command =
@@ -98,7 +99,7 @@ public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
                             .jobEndTime(tx.eventTime())
                             .build();
             lotCarrierMapping.processJobEnded(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
             LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
             historyService.saveHistory(historyEntity);
         }
@@ -108,14 +109,14 @@ public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
             // find by LotName LotCarrierMapping
             // find by LotName Lot
             // Lot totalQuantity 변경
-            List<LotCarrierMapping> lotCarrierMappingListByLotName = lotCarrierMappingService.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
+            List<LotCarrierMapping> lotCarrierMappingListByLotName = lotCarrierMappingRepository.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
             if(ObjectUtils.isNotEmpty(lotCarrierMappingListByLotName)){
                 BigDecimal totalQuantity = BigDecimal.ZERO;
                 for(LotCarrierMapping lcm : lotCarrierMappingListByLotName){
                     totalQuantity = totalQuantity.add(lcm.getQuantity());
                 }
 
-                Optional<Lot> optionalLot = lotService.findByLotName(lotName);
+                Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
                 if(optionalLot.isPresent()){
                     Lot lot = optionalLot.get();
                     LotChangeCommand command =
@@ -125,7 +126,7 @@ public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
                                     .totalQuantity(totalQuantity)
                                     .build();
                     lot.change(command);
-                    lot = lotService.save(lot);
+                    lot = lotRepository.save(lot);
                     LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
                     historyService.saveHistory(lotHistoryEntity);
 

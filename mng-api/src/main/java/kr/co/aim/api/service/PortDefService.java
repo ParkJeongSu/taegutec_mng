@@ -32,18 +32,8 @@ public class PortDefService {
     private final HistoryService historyService;
 
     @Transactional(value = "mssqlTransactionManager")
-    public Optional<PortDef> findByEquipmentNameAndPortName(String equipmentName,String portName){
-        return  portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
     public PortDef save(PortDef portDef) {
         return portDefRepository.save(portDef);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<PortDef> findWithLockByEquipmentNameAndPortName(String equipmentName, String portName){
-        return portDefRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -83,16 +73,6 @@ public class PortDefService {
     @Transactional(value = "mssqlTransactionManager")
     public Page<PortDef> findPortDefWithConditions(PortDefSearchCondition condition, Pageable pageable) {
         return portDefRepository.findPortDefWithConditions(condition, pageable);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<PortDef> findPortDefByEquipmentNameAndPortName(String equipmentName,String portName) {
-        return portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<PortDef> findByLocationId(String locationId) {
-        return portDefRepository.findByLocationId(locationId);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -146,12 +126,4 @@ public class PortDefService {
         portDefRepository.deleteAllByIdInBatch(ids);
     }
 
-    @Transactional(value = "mssqlTransactionManager")
-    public List<PortDef> findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
-            String workCenterName,
-            List<String> detailPortTypes,
-            List<String> portTypes
-    ){
-        return portDefRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(workCenterName,detailPortTypes,portTypes);
-    }
 }

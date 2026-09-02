@@ -178,35 +178,6 @@ public class ProductionOrderService {
         return savedProductionOrder;
     }
 
-    @Transactional(value = "mssqlTransactionManager" ,readOnly = true)
-    public List<ProductionOrder> findActiveProductionOrderList(String equipmentName) {
-        List<String> productionOrderStateList = new ArrayList<>();
-        productionOrderStateList.add(ProductionOrderState.REQUESTED.getValue());
-        productionOrderStateList.add(ProductionOrderState.RELEASED.getValue());
-        return productionOrderRepository.findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(
-                equipmentName,
-                productionOrderStateList
-        );
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<ProductionOrder> findByProductionOrderStateInOrderByCreateTimeAsc(
-            List<String> productionOrderState
-    ){
-       return  productionOrderRepository.findByProductionOrderStateInOrderByCreateTimeAsc(productionOrderState);
-    }
-
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<ProductionOrder> findNewProductionOrderList(String equipmentName) {
-        List<String> productionOrderStateList = new ArrayList<>();
-        productionOrderStateList.add(ProductionOrderState.CREATED.getValue());
-        return productionOrderRepository.findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(
-                equipmentName,
-                productionOrderStateList
-        );
-    }
-
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable) {
         return productionOrderRepository.findProductionOrderSummaryByCondition(condition,pageable);
@@ -220,20 +191,6 @@ public class ProductionOrderService {
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public Page<ProductionOrderHistory> findProductionOrderHistoryByCondition(ProductionOrderHistorySearchCondition condition, Pageable pageable) {
         return productionOrderRepository.findProductionOrderHistoryByCondition(condition,pageable);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<ProductionOrder> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return productionOrderRepository.findByCreateTimeBetween(startDateTime, endDateTime);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<ProductionOrder> findByCreateTimeBetweenAndProductionOrderState(LocalDateTime startDateTime,
-                                                         LocalDateTime endDateTime,
-                                                         String productionOrderState) {
-        return productionOrderRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime,
-                endDateTime,
-                productionOrderState);
     }
 
     @Transactional(value = "mssqlTransactionManager")
@@ -252,11 +209,6 @@ public class ProductionOrderService {
     @Transactional(value = "mssqlTransactionManager")
     public Optional<ProductionOrder> findById(Long id){
         return productionOrderRepository.findById(id);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<ProductionOrder> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber){
-        return productionOrderRepository.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber);
     }
 
     @Transactional(value = "mssqlTransactionManager")

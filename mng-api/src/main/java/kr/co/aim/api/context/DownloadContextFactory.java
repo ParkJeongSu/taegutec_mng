@@ -4,6 +4,7 @@ import kr.co.aim.api.service.*;
 import kr.co.aim.common.format.LoadCompletedBody;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,12 +16,12 @@ import java.util.Optional;
 @Slf4j
 public class DownloadContextFactory {
 
-    private final CarrierService carrierService;
-    private final CarrierDefService carrierDefService;
-    private final EquipmentDefService equipmentDefService;
-    private final EquipmentService equipmentService;
-    private final PortDefService portDefService;
-    private final PortService portService;
+    private final CarrierRepository carrierRepository;
+    private final CarrierDefRepository carrierDefRepository;
+    private final EquipmentDefRepository equipmentDefRepository;
+    private final EquipmentRepository equipmentRepository;
+    private final PortDefRepository portDefRepository;
+    private final PortRepository portRepository;
 
     public DownloadContext createContext(TransactionInfo transactionInfo, LoadCompletedBody body) {
         String equipmentName = body.getEquipmentName();
@@ -28,14 +29,14 @@ public class DownloadContextFactory {
         String carrierName = body.getCarrierName();
 
         // 2. Equipment 및 EquipmentDef 조회
-        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
+        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefRepository.findByEquipmentName(equipmentName);
         if (optionalEquipmentDef.isEmpty()) {
             log.error("Equipment Def not found: {}", equipmentName);
             throw new IllegalArgumentException("Equipment Def not found");
         }
         EquipmentDef equipmentDef = optionalEquipmentDef.get();
 
-        Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentName);
+        Optional<Equipment> optionalEquipment = equipmentRepository.findByEquipmentName(equipmentName);
         if (optionalEquipment.isEmpty()) {
             log.error("Equipment not found: {}", equipmentName);
             throw new IllegalArgumentException("Equipment not found");
@@ -43,28 +44,28 @@ public class DownloadContextFactory {
         Equipment equipment = optionalEquipment.get();
 
         // 3. Port 및 PortDef 조회
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName, portName);
         if (optionalPortDef.isEmpty()) {
             log.error("Port Def not found: {} - {}", equipmentName, portName);
             throw new IllegalArgumentException("Port Def not found");
         }
         PortDef portDef = optionalPortDef.get();
 
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(equipmentName, portName);
         if (optionalPort.isEmpty()) {
             log.error("Port not found: {} - {}", equipmentName, portName);
             throw new IllegalArgumentException("Port not found");
         }
         Port port = optionalPort.get();
 
-        Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
         if (optionalCarrier.isEmpty()) {
             log.error("Carrier not found: {} - {}", carrierName, carrierName);
             throw new IllegalArgumentException("Carrier not found");
         }
         Carrier carrier = optionalCarrier.get();
 
-        Optional<CarrierDef> optionalCarrierDef = carrierDefService.findByCarrierDefName(carrier.getCarrierDefName());
+        Optional<CarrierDef> optionalCarrierDef = carrierDefRepository.findByCarrierDefName(carrier.getCarrierDefName());
         if (optionalCarrierDef.isEmpty()) {
             log.error("Carrier Def not found: {} - {}", carrierName, carrierName);
             throw new IllegalArgumentException("Carrier Def not found");

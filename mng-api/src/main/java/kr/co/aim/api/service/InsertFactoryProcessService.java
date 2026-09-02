@@ -13,6 +13,10 @@ import kr.co.aim.api.strategy.FactoryProcessStrategy;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.PortDefRepository;
+import kr.co.aim.domain.repository.PortRepository;
+import kr.co.aim.domain.repository.TransportJobRepository;
+import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
@@ -43,18 +47,18 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     private final HistoryService historyService;
     private final ObjectMapper objectMapper;
 
-    private final PortService portService;
-    private final PortDefService portDefService;
+    private final PortRepository portRepository;
+    private final PortDefRepository portDefRepository;
     private final PortMapper portMapper;
 
     private final TransportJobService transportJobService;
+    private final TransportJobRepository transportJobRepository;
     private final TransportJobMapper transportJobMapper;
 
-    private final TransportOrderService transportOrderService;
+    private final TransportOrderRepository transportOrderRepository;
     private final TransportOrderMapper transportOrderMapper;
 
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
-
     private final NamingRuleService namingRuleService;
 
 
@@ -71,8 +75,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String portType =  message.getBody().getPortType();
         String portTransportMode =  message.getBody().getPortTransportMode();
 
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         PortDef portDef = null;
         Port port = null;
         TransportJob transportJob = null;
@@ -98,7 +102,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 transportStatus.add(TransportOrderStatus.ACCEPTED.getValue());
 
                 // 이 쿼리가 WORK_CENTER를 기준으로 FIFO 로 ORDER를 가져오는 로직
-                List<TransportOrder> transportOrders = transportOrderService.findOutboundOrderForTransportRequest(
+                List<TransportOrder> transportOrders = transportOrderRepository.findOutboundOrderForTransportRequest(
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus,
                         portDef.getWorkCenterName()
@@ -115,7 +119,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         throw new RuntimeException("It hasn't been approved yet.");
                     }
 
-                    Optional<TransportJob> optionalTransportJob = transportJobService.findByOrderId(transportOrder.getTransportOrderId());
+                    Optional<TransportJob> optionalTransportJob = transportJobRepository.findByOrderId(transportOrder.getTransportOrderId());
 
                     if(optionalTransportJob.isPresent()){
 
@@ -131,7 +135,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
                         transportJob.startRequestTransportJob(startRequestCommand);
 
-                        transportJob = transportJobService.save(transportJob);
+                        transportJob = transportJobRepository.save(transportJob);
                         TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                         historyService.saveHistory(transportJobHistoryEntity);
                         String transactionId = FormatUtils.getTransactionId(tx.eventTime());;
@@ -150,15 +154,16 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
                         request.setBody(body);
 
-                        // port update
-                        TransportStateChangedVo transportStateChangedVo =
-                                TransportStateChangedVo
+                        PortTransportStateChangedCommand portCommand =
+                                PortTransportStateChangedCommand
                                         .builder()
-                                        .port(port)
-                                        .portTransportState(PortTransportState.RESERVED_TO_LOAD)
-                                        .tx(tx)
+                                        .transactionInfo(tx)
+                                        .portTransportStateName(PortTransportState.RESERVED_TO_LOAD.getValue())
                                         .build();
-                        portService.transportStateChanged(transportStateChangedVo);
+                        port.transportStateChanged(portCommand);
+                        port = portRepository.save(port);
+                        PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
+                        historyService.saveHistory(portHistoryEntity);
 
                         return request;
                     }
@@ -186,7 +191,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         // 3. Created 상태라면, TransportJob 생성 후 TEX 로 전송
         // 4. 전송 후 Request 상태로 변경
         Long id = message.getBody().getId();
-        Optional<TransportOrder> optionalTransportOrder = transportOrderService.findWithLockById(id);
+        Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findWithLockById(id);
 
         if(optionalTransportOrder.isEmpty()){
             return null;
@@ -225,7 +230,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             String sourcePositionName = "";
             String destinationEquipmentName = "";
             if(StringUtils.isNotEmpty(locationId)){
-                Optional<PortDef> optionalPortDef = portDefService.findByLocationId(locationId);
+                Optional<PortDef> optionalPortDef = portDefRepository.findByLocationId(locationId);
                 if(optionalPortDef.isPresent()){
                     PortDef portDef = optionalPortDef.get();
 
@@ -240,7 +245,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             }
             // transportOrder 를 REQUESTED 상태로 변경해서 다시 보내는 로직이 없도록 수정
             transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
-            transportOrder = transportOrderService.save(transportOrder);
+            transportOrder = transportOrderRepository.save(transportOrder);
 
             TransportJobCreateCommand command =
                     TransportJobCreateCommand.builder()
@@ -311,19 +316,19 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 .equipmentName(equipmentName)
                 .portName(portName)
                 .build();
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName, portName);
         if(optionalPortDef.isEmpty()){
             return;
         }
         PortDef portDef = optionalPortDef.get();
         String actualLocationId = portDef.getLocationId();
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
             return;
         }
         Port port = optionalPorts.get();
         port.unloadCompleted(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
@@ -382,18 +387,18 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 .equipmentName(equipmentName)
                 .portName(portName)
                 .build();
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName, portName);
         if(optionalPortDef.isEmpty()){
             return null;
         }
         PortDef portDef = optionalPortDef.get();
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
             return null;
         }
         Port port = optionalPorts.get();
         port.loadCompleted(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
@@ -463,7 +468,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         }
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
@@ -473,11 +478,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             if(optionalTransportOrder.isPresent()){
                 TransportOrder transportOrder = optionalTransportOrder.get();
                 TransportOrderStatusChangeCommand cancelCompletedCommand =
@@ -486,13 +491,13 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                 .transactionInfo(tx)
                                 .build();
                 transportOrder.cancelCompleted(cancelCompletedCommand);
-                transportOrder = transportOrderService.save(transportOrder);
+                transportOrder = transportOrderRepository.save(transportOrder);
                 TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                 historyService.saveHistory(transportOrderHistoryEntity);
             }
 
-            Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
-            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
             PortDef portDef = null;
             Port port = null;
             if(optionalPortDef.isPresent()){
@@ -559,11 +564,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         Port port = null;
 
 
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             if(StringUtils.equals(destinationPositionTypeName,PositionTypeName.PORT.getValue())){
-                optionalPort = portService.findPortByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
-                optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+                optionalPort = portRepository.findByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
+                optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(destinationEquipmentName,destinationPositionName);
                 if(optionalPortDef.isPresent()){
                     portDef = optionalPortDef.get();
                 }
@@ -581,11 +586,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .build();
             transportJob.changeTransportJob(command);
 
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             if(optionalTransportOrder.isPresent()){
                 TransportOrder transportOrder = optionalTransportOrder.get();
 
@@ -595,7 +600,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                 .transactionInfo(tx)
                                 .build();
                 transportOrder.completed(completedCommand);
-                transportOrder = transportOrderService.save(transportOrder);
+                transportOrder = transportOrderRepository.save(transportOrder);
                 TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                 historyService.saveHistory(transportOrderHistoryEntity);
             }
@@ -637,9 +642,9 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String carrierName = message.getBody().getCarrierName();
         String sourceEquipmentName = message.getBody().getSourceEquipmentName();
         String sourcePortName = message.getBody().getSourcePositionName();
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
+        Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
         PortDef portDef = null;
         Port port = null;
         if(optionalPortDef.isPresent()){
@@ -664,11 +669,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             if(optionalTransportOrder.isPresent()){
                 TransportOrder transportOrder = optionalTransportOrder.get();
                 TransportOrderStatusChangeCommand acceptCommand =
@@ -682,7 +687,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 }else if(StringUtils.equals(TransportJobState.REJECTED.getValue(),transportJobState)){
                     transportOrder.rejected(acceptCommand);
                 }
-                transportOrder = transportOrderService.save(transportOrder);
+                transportOrder = transportOrderRepository.save(transportOrder);
                 TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                 historyService.saveHistory(transportOrderHistoryEntity);
             }
@@ -741,7 +746,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         if(StringUtils.equals(SystemName.GAL.getValue(),requestSource)){
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
                 TransportJobUpdateCommand command =
@@ -751,11 +756,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                 .transactionInfo(tx)
                                 .build();
                 transportJob.changeTransportJob(command);
-                transportJob = transportJobService.save(transportJob);
+                transportJob = transportJobRepository.save(transportJob);
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
 
-                Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                 if(optionalTransportOrder.isPresent()){
                     TransportOrder transportOrder = optionalTransportOrder.get();
                     TransportOrderStatusChangeCommand startedCommand =
@@ -764,7 +769,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                     .transactionInfo(tx)
                                     .build();
                     transportOrder.started(startedCommand);
-                    transportOrder = transportOrderService.save(transportOrder);
+                    transportOrder = transportOrderRepository.save(transportOrder);
                     TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                     historyService.saveHistory(transportOrderHistoryEntity);
                 }
@@ -792,7 +797,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             // 없으면 생성
             // 있으면 started 상태로 변경후 InsertEventQueueReportVo 생성
 
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             TransportJob transportJob = null;
             if(optionalTransportJob.isPresent()){
                 transportJob = optionalTransportJob.get();
@@ -804,7 +809,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                 .build();
                 transportJob.changeTransportJob(command);
 
-                transportJob = transportJobService.save(transportJob);
+                transportJob = transportJobRepository.save(transportJob);
                 TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
                 historyService.saveHistory(transportJobHistoryEntity);
 
@@ -877,7 +882,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String portTransportMode = message.getBody().getPortTransportMode();
 
         Optional<Port> optionalPorts =
-                portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
+                portRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return null;
@@ -891,12 +896,12 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                     .transactionInfo(tx)
                     .build();
             port.loadRequest(command);
-            port = portService.save(port);
+            port = portRepository.save(port);
             PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
             historyService.saveHistory(portHistoryEntity);
         }
 
-        Optional<PortDef> optionalPortDef = portDefService.findByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPortDef.isEmpty()){
             return null;
         }
@@ -936,7 +941,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         // 3. Created 상태라면, TransportJob 생성 후 TEX 로 전송
         // 4. 전송 후 Request 상태로 변경
         Long id = message.getBody().getId();
-        Optional<TransportOrder> optionalTransportOrder = transportOrderService.findWithLockById(id);
+        Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findWithLockById(id);
 
         if(optionalTransportOrder.isEmpty()){
             return null;
@@ -987,7 +992,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 portTypes.add(PortType.BOTH.getValue());
                 portTypes.add(PortType.OUTPUT.getValue());
 
-                List<PortDef> portDefList = portDefService.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
+                List<PortDef> portDefList = portDefRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
                         workStationId,
                         detailPortTypes,
                         portTypes
@@ -1007,7 +1012,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
 
                 // transportOrder 를 REQUESTED 상태로 변경해서 다시 보내는 로직이 없도록 수정
                 transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
-                transportOrder = transportOrderService.save(transportOrder);
+                transportOrder = transportOrderRepository.save(transportOrder);
 
                 TransportJobCreateCommand command =
                         TransportJobCreateCommand.builder()
@@ -1070,9 +1075,9 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         String carrierName = message.getBody().getCarrierName();
         String sourceEquipmentName = message.getBody().getSourceEquipmentName();
         String sourcePortName = message.getBody().getSourcePositionName();
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
-        Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
+        Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(sourceEquipmentName,sourcePortName);
         PortDef portDef = null;
         Port port = null;
         if(optionalPortDef.isPresent()){
@@ -1097,11 +1102,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             if(optionalTransportOrder.isPresent()){
                 TransportOrder transportOrder = optionalTransportOrder.get();
                 TransportOrderStatusChangeCommand acceptCommand =
@@ -1114,7 +1119,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 }else if(StringUtils.equals(transportJobState,TransportJobState.REJECTED.getValue())){
                     transportOrder.rejected(acceptCommand);
                 }
-                transportOrder = transportOrderService.save(transportOrder);
+                transportOrder = transportOrderRepository.save(transportOrder);
                 TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
                 historyService.saveHistory(transportOrderHistoryEntity);
             }

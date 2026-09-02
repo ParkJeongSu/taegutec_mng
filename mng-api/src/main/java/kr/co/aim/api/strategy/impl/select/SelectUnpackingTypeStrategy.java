@@ -6,6 +6,7 @@ import kr.co.aim.common.enums.CarrierType;
 import kr.co.aim.common.enums.ProductionOrderType;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SelectUnpackingTypeStrategy implements SelectStrategy {
 
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
 
     @Override
     public boolean supports(ProductionOrder productionOrder) {
@@ -25,7 +26,7 @@ public class SelectUnpackingTypeStrategy implements SelectStrategy {
 
     @Override
     public List<LotCarrierMapping> selectAvailableCarrier(ProductionOrder productionOrder) {
-        return lotCarrierMappingService.findLotCarrierMappingForUnpacking(
+        return lotCarrierMappingRepository.findLotCarrierMappingForUnpacking(
                 productionOrder.getLotName(),
                 CarrierType.PALLET.getValue()
         );

@@ -26,7 +26,7 @@ public class EquipmentGroupDefService {
     private final EquipmentGroupDefMapper equipmentGroupDefMapper;
     private final HistoryService historyService;
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public EquipmentGroupDef createEquipmentGroupDef(EquipmentGroupDefSaveRequestDto dto) {
         Optional<EquipmentGroupDef> existing = equipmentGroupDefRepository.findByEquipmentGroupName(dto.getEquipmentGroupName());
         if (existing.isPresent()) {
@@ -49,10 +49,12 @@ public class EquipmentGroupDefService {
         return equipmentGroupDef;
     }
 
+    @Transactional(value = "mssqlTransactionManager")
     public Page<EquipmentGroupDef> findEquipmentGroupDefWithConditions(EquipmentGroupDefSearchCondition condition, Pageable pageable) {
         return equipmentGroupDefRepository.findEquipmentGroupDefWithConditions(condition, pageable);
     }
 
+    @Transactional(value = "mssqlTransactionManager")
     public EquipmentGroupDef findById(Long id) {
         Optional<EquipmentGroupDef> optional = equipmentGroupDefRepository.findById(id);
         if (optional.isEmpty()) {
@@ -61,7 +63,7 @@ public class EquipmentGroupDefService {
         return optional.get();
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public EquipmentGroupDef updateEquipmentGroupDef(EquipmentGroupDefSaveRequestDto dto) {
         Optional<EquipmentGroupDef> optional = equipmentGroupDefRepository.findById(dto.getId());
         if (optional.isEmpty()) {
@@ -86,7 +88,7 @@ public class EquipmentGroupDefService {
         return equipmentGroupDef;
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public void deleteEquipmentGroupDefs(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
         equipmentGroupDefRepository.deleteAllByIdInBatch(ids);

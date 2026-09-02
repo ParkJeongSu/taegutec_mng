@@ -28,22 +28,12 @@ public class LotService {
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<Lot> findAll() {
-        return lotRepository.findAll();
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public Lot findById(Long id) {
         Optional<Lot> optional = lotRepository.findById(id);
         if (optional.isEmpty()) {
             throw new IllegalArgumentException("해당 Lot 기준정보가 존재하지 않습니다. ID: " + id);
         }
         return optional.get();
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public Optional<Lot> findByLotName(String lotName) {
-        return lotRepository.findByLotName(lotName);
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
@@ -57,8 +47,4 @@ public class LotService {
         lotRepository.deleteAllByIdInBatch(ids);
     }
 
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotHistory> findLotHistoryByPeriod(LocalDateTime start, LocalDateTime end) {
-        return lotRepository.findLotHistoryByPeriod(start, end);
-    }
 }

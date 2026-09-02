@@ -13,6 +13,7 @@ import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.EquipmentDef;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.PortDef;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -27,7 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ReductionInputTypeStrategy implements DownloadStrategy {
 
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final RabbitTemplate rabbitTemplate;
 
 
@@ -43,7 +44,7 @@ public class ReductionInputTypeStrategy implements DownloadStrategy {
     @Override
     public BaseMessage<CarrierInfoDownloadSendBody> determineCarrierInfo(DownloadContext context) {
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(context.getCarrier().getCarrierName());
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(context.getCarrier().getCarrierName());
 
         if (optionalLotCarrierMapping.isEmpty()) {
             throw new RuntimeException("Carrier not found");

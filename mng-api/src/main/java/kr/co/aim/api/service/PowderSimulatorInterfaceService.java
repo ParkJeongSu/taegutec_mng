@@ -32,8 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PowderSimulatorInterfaceService {
 
     private final IdocPJpaRepository idocPJpaRepository;
-    private final H2OrderMPJpaRepository h2OrderMPJpaRepository;
-    private final H2OrderDPJpaRepository h2OrderDPJpaRepository;
     private final H2TransPJpaRepository h2TransPJpaRepository;
 
 

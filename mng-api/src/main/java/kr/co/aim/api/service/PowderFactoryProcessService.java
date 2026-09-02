@@ -11,6 +11,7 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
@@ -42,30 +43,23 @@ import java.util.Optional;
 public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
     private final HistoryService historyService;
-
-    private final WhereDispatchService whereDispatchService;
     private final WhatDispatchService whatDispatchService;
-    private final List<SelectStrategy> selectStrategyList;
 
     private final PortMapper portMapper;
-    private final PortDefService portDefService;
-    private final PortService portService;
+    private final PortDefRepository portDefRepository;
+    private final PortRepository portRepository;
 
-    private final ProductDefService productDefService;
-
-    private final CarrierService carrierService;
+    private final CarrierRepository carrierRepository;
     private final CarrierMapper carrierMapper;
 
-    private final EquipmentService equipmentService;
-    private final EquipmentDefService equipmentDefService;
+    private final EquipmentDefRepository equipmentDefRepository;
     private final DownloadService downloadService;
 
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
-    private final TransportJobService  transportJobService;
+    private final TransportJobRepository transportJobRepository;
     private final TransportJobMapper transportJobMapper;
-    private final ProductionOrderService productionOrderService;
-    private final CarrierSelectionService carrierSelectionService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final ProductionOrderRepository productionOrderRepository;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
 
 
@@ -90,7 +84,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
 
-        Optional<Port> optionalPorts =  portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts =  portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return null;
@@ -107,16 +101,16 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                 .build();
 
         port.unloadRequest(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
-        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefService.findEquipmentDefByEquipmentName(equipmentName);
+        Optional<EquipmentDef> optionalEquipmentDef = equipmentDefRepository.findByEquipmentName(equipmentName);
         if(optionalEquipmentDef.isPresent()){
             EquipmentDef equipmentDef = optionalEquipmentDef.get();
             if(StringUtils.equals(EquipmentDetailType.MAGAZINE.getValue(),equipmentDef.getDetailEquipmentType())){
                 // Magazine 설비에서는 무조건 8단으로 unload 됨
-                Optional<Carrier> optionalCarrier = carrierService.findByCarrierName(carrierName);
+                Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
                 if(optionalCarrier.isPresent()){
                     Carrier carrier = optionalCarrier.get();
                     command = UnLoadRequestCommand.builder()
@@ -128,7 +122,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                             .portName(portName)
                             .build();
                     carrier.unloadRequest(command);
-                    carrier = carrierService.save(carrier);
+                    carrier = carrierRepository.save(carrier);
                     CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
                     historyService.saveHistory(carrierHistoryEntity);
                 }
@@ -186,19 +180,19 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                 .equipmentName(equipmentName)
                 .portName(portName)
                 .build();
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName, portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName, portName);
         if(optionalPortDef.isEmpty()){
             return;
         }
         PortDef portDef = optionalPortDef.get();
         String actualLocationId = portDef.getLocationId();
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
             return;
         }
         Port port = optionalPorts.get();
         port.unloadCompleted(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
     }
@@ -242,38 +236,38 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                 .portName(portName)
                 .build();
 
-        Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPortDef.isEmpty()){
             return null;
         }
         PortDef portDef = optionalPortDef.get();
 
-        Optional<Port> optionalPorts = portService.findPortByEquipmentNameAndPortName(equipmentName,portName);
+        Optional<Port> optionalPorts = portRepository.findByEquipmentNameAndPortName(equipmentName,portName);
         if(optionalPorts.isEmpty()){
             return null;
         }
         Port port = optionalPorts.get();
         port.loadCompleted(command);
-        port = portService.save(port);
+        port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
         historyService.saveHistory(portHistoryEntity);
 
-        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
             return null;
         }
 
         Carrier carrier = optionalCarriers.get();
         carrier.loadCompleted(command);
-        carrier = carrierService.save(carrier);
+        carrier = carrierRepository.save(carrier);
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingService.findByCarrierName(carrierName);
+        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(carrierName);
         if(optionalLotCarrierMapping.isPresent()){
             lotCarrierMapping = optionalLotCarrierMapping.get();
             lotCarrierMapping.loadCompleted(command);
-            lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
             LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
             historyService.saveHistory(historyEntity);
         }
@@ -300,7 +294,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             currentPortName = currentPositionName;
         }
 
-        Optional<Carrier> optionalCarriers = carrierService.findByCarrierName(carrierName);
+        Optional<Carrier> optionalCarriers = carrierRepository.findByCarrierName(carrierName);
         if(optionalCarriers.isEmpty()){
             return;
         }
@@ -317,7 +311,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                 .build();
 
         carrier.locationChanged(command);
-        carrier = carrierService.save(carrier);
+        carrier = carrierRepository.save(carrier);
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
     }
@@ -347,7 +341,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         }
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
@@ -357,11 +351,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
-            Optional<Port> optionalPort = portService.findPortByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
-            Optional<PortDef> optionalPortDef = portDefService.findPortDefByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<Port> optionalPort = portRepository.findByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
+            Optional<PortDef> optionalPortDef = portDefRepository.findByEquipmentNameAndPortName(currentEquipmentName,currentPortName);
 
         }
     }
@@ -381,7 +375,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
@@ -392,14 +386,14 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                             .build();
             transportJob.changeTransportJob(command);
 
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
             Long productionOrderId = null;
             if(ObjectUtils.isNotEmpty(transportJob.getOrderId())){
                 productionOrderId = Long.parseLong(transportJob.getOrderId());
-                Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById( productionOrderId );
+                Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById( productionOrderId );
                 if(optionalProductionOrder.isPresent()){
                     ProductionOrder productionOrder = optionalProductionOrder.get();
                     // powder EventQueue
@@ -433,9 +427,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         String transportJobName = message.getBody().getTransportJobName();
         String carrierName = message.getBody().getCarrierName();
-        // 비관적 Lock 으로 조회시 문제 발생
-        //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
 
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
@@ -446,7 +438,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                             .transactionInfo(tx)
                             .build();
             transportJob.changeTransportJob(command);
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
         }
@@ -465,9 +457,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
-        // 비관적 lock 시 EventQueue 넣으면서 에러 발생
-        //Optional<TransportJob> optionalTransportJob = transportJobService.findWithLockByTransportJobName(transportJobName);
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
             TransportJobUpdateCommand command =
@@ -478,14 +468,14 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                             .build();
             transportJob.changeTransportJob(command);
 
-            transportJob = transportJobService.save(transportJob);
+            transportJob = transportJobRepository.save(transportJob);
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
 
             Long productionOrderId = null;
             if(ObjectUtils.isNotEmpty(transportJob.getOrderId())){
                 productionOrderId = Long.parseLong(transportJob.getOrderId());
-                Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById( productionOrderId );
+                Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById( productionOrderId );
                 if(optionalProductionOrder.isPresent()){
                     ProductionOrder productionOrder = optionalProductionOrder.get();
                     // powder EventQueue
@@ -522,7 +512,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String portTransportMode = message.getBody().getPortTransportMode();
 
         Optional<Port> optionalPorts =
-                portService.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
+                portRepository.findWithLockByEquipmentNameAndPortName(equipmentName,portName);
 
         if(optionalPorts.isEmpty()){
             return null;
@@ -536,7 +526,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
                     .transactionInfo(tx)
                     .build();
             port.loadRequest(command);
-            port = portService.save(port);
+            port = portRepository.save(port);
             PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
             historyService.saveHistory(portHistoryEntity);
         }

@@ -18,6 +18,7 @@ import kr.co.aim.domain.command.ProcessJobStartedCommand;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.repository.CarrierDefRepository;
 import kr.co.aim.domain.repository.CarrierRepository;
+import kr.co.aim.domain.repository.ProductionOrderRepository;
 import kr.co.aim.infra.persistence.entity.ProductionOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
@@ -35,13 +36,7 @@ import java.util.List;
 @Slf4j
 public class ProcessJobService {
 
-    private final CarrierDefRepository carrierDefRepository;
-    private final CarrierRepository carrierRepository;
-    private final EquipmentDefService equipmentDefService;
-    private final EquipmentService equipmentService;
-    private final LotCarrierMappingService lotCarrierMappingService;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
-    private final ProductionOrderService productionOrderService;
+    private final ProductionOrderRepository productionOrderRepository;
     private final ProcessJobStartedContextFactory processJobStartedContextFactory;
     private final ProcessJobEndedContextFactory processJobEndedContextFactory;
     private final List<ProcessJobStartedStrategy> processJobStartedStrategy;
@@ -108,7 +103,7 @@ public class ProcessJobService {
                 .jobStartTime(tx.eventTime())
                 .build();
         productionOrder.processJobStarted(command);
-        productionOrder = productionOrderService.save(productionOrder);
+        productionOrder = productionOrderRepository.save(productionOrder);
         ProductionOrderHistoryEntity productionOrderHistoryEntity = productionOrderMapper.toHistoryEntity(productionOrder);
         historyService.saveHistory(productionOrderHistoryEntity);
 

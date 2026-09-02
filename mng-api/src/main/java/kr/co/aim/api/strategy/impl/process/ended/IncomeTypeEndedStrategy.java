@@ -11,6 +11,7 @@ import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import kr.co.aim.infra.persistence.mapper.LotMapper;
@@ -25,11 +26,8 @@ import java.math.BigDecimal;
 public class IncomeTypeEndedStrategy implements ProcessJobEndedStrategy {
 
     private final HistoryService historyService;
-    private final ProductionOrderService productionOrderService;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
-    private final LotService lotService;
-    private final LotMapper lotMapper;
 
 
     @Override
@@ -77,7 +75,7 @@ public class IncomeTypeEndedStrategy implements ProcessJobEndedStrategy {
                         .build();
 
         LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-        lotCarrierMapping = lotCarrierMappingService.save(lotCarrierMapping);
+        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
         LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
         historyService.saveHistory(historyEntity);
     }

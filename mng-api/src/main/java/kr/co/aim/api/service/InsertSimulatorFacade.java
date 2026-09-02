@@ -34,11 +34,12 @@ import java.util.Optional;
 public class InsertSimulatorFacade {
 
     private final TransportOrderService transportOrderService;
+    private final TransportOrderRepository transportOrderRepository;
     private final InsertSimulatorInterfaceService insertSimulatorInterfaceService;
     private final IdocJpaRepository idocJpaRepository;
     private final H2OrderMJpaRepository h2OrderMJpaRepository;
     private final H2OrderDJpaRepository h2OrderDJpaRepository;
-    private final TransportOrderRepository transportOrderRepository;
+
 
     // --- [Private Helper Methods] 조회 및 검증 공통화 ---
 
@@ -428,10 +429,10 @@ public class InsertSimulatorFacade {
         // 3 위 정보로 Inbound order 생성
 
         Long maxOrderId = h2OrderMJpaRepository.findMaxOrderId();
-        Optional<TransportOrder> optionalTransportOrder= transportOrderService.findByTransportOrderId(maxOrderId.toString());
+        Optional<TransportOrder> optionalTransportOrder= transportOrderRepository.findByTransportOrderId(maxOrderId.toString());
         if(optionalTransportOrder.isPresent()){
             TransportOrder transportOrder = optionalTransportOrder.get();
-            maxOrderId = transportOrderService.findMaxOrderId();
+            maxOrderId = transportOrderRepository.findMaxOrderId();
         }
         OrderCreateVo orderCreateVo = OrderCreateVo
                 .builder()
@@ -464,10 +465,10 @@ public class InsertSimulatorFacade {
         // 3 위 정보로 Inbound order 생성
 
         Long maxOrderId = h2OrderMJpaRepository.findMaxOrderId();
-        Optional<TransportOrder> optionalTransportOrder= transportOrderService.findByTransportOrderId(maxOrderId.toString());
+        Optional<TransportOrder> optionalTransportOrder= transportOrderRepository.findByTransportOrderId(maxOrderId.toString());
         if(optionalTransportOrder.isPresent()){
             TransportOrder transportOrder = optionalTransportOrder.get();
-            maxOrderId = transportOrderService.findMaxOrderId();
+            maxOrderId = transportOrderRepository.findMaxOrderId();
         }
         OrderCreateVo orderCreateVo = OrderCreateVo
                 .builder()
@@ -496,10 +497,10 @@ public class InsertSimulatorFacade {
         // 3 위 정보로 Inbound order 생성
 
         Long maxOrderId = h2OrderMJpaRepository.findMaxOrderId();
-        Optional<TransportOrder> optionalTransportOrder= transportOrderService.findByTransportOrderId(maxOrderId.toString());
+        Optional<TransportOrder> optionalTransportOrder= transportOrderRepository.findByTransportOrderId(maxOrderId.toString());
         if(optionalTransportOrder.isPresent()){
             TransportOrder transportOrder = optionalTransportOrder.get();
-            maxOrderId = transportOrderService.findMaxOrderId();
+            maxOrderId = transportOrderRepository.findMaxOrderId();
         }
         OrderCreateVo orderCreateVo = OrderCreateVo
                 .builder()

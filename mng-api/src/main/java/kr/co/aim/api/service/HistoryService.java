@@ -16,7 +16,7 @@ public class HistoryService {
     private final GenericHistoryRepository historyRepository;
 
     // (저장 로직은 어제와 동일)
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public <T extends IBaseHistoryEntity> T saveHistory(T historyEntity) {
         return historyRepository.save(historyEntity);
     }

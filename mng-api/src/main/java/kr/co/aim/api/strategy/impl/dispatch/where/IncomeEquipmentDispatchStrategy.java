@@ -1,9 +1,5 @@
 package kr.co.aim.api.strategy.impl.dispatch.where;
 
-import kr.co.aim.api.service.EquipmentDefService;
-import kr.co.aim.api.service.EquipmentService;
-import kr.co.aim.api.service.PortDefService;
-import kr.co.aim.api.service.PortService;
 import kr.co.aim.api.strategy.WhereDispatchStrategy;
 import kr.co.aim.api.context.WhereDispatchContext;
 import kr.co.aim.common.enums.EquipmentDetailType;
@@ -12,6 +8,9 @@ import kr.co.aim.domain.model.Equipment;
 import kr.co.aim.domain.model.EquipmentDef;
 import kr.co.aim.domain.model.Port;
 import kr.co.aim.domain.model.PortDef;
+import kr.co.aim.domain.repository.EquipmentDefRepository;
+import kr.co.aim.domain.repository.EquipmentRepository;
+import kr.co.aim.domain.repository.PortRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,10 +23,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class IncomeEquipmentDispatchStrategy implements WhereDispatchStrategy {
 
-    private final EquipmentDefService equipmentDefService;
-    private final EquipmentService equipmentService;
-    private final PortDefService portDefService;
-    private final PortService portService;
+    private final EquipmentDefRepository equipmentDefRepository;
+    private final EquipmentRepository equipmentRepository;
+    private final PortRepository portRepository;
 
 
     @Override
@@ -45,21 +43,21 @@ public class IncomeEquipmentDispatchStrategy implements WhereDispatchStrategy {
             // 해포 설비 input port 에서 빈 팔렛트가 되면 무조건 Magazine 으로 이동
             // Magazine 은 설비 한 대라고 함
 
-            List<EquipmentDef> equipmentDefList = equipmentDefService.findByDetailEquipmentType(EquipmentDetailType.MAGAZINE.getValue());
+            List<EquipmentDef> equipmentDefList = equipmentDefRepository.findByDetailEquipmentType(EquipmentDetailType.MAGAZINE.getValue());
 
             if(CollectionUtils.isEmpty(equipmentDefList)){
                 throw new RuntimeException("equipmentDefList is empty");
             }
             EquipmentDef equipmentDef = equipmentDefList.get(0);
 
-            Optional<Equipment> optionalEquipment = equipmentService.findEquipmentByEquipmentName(equipmentDef.getEquipmentName());
+            Optional<Equipment> optionalEquipment = equipmentRepository.findByEquipmentName(equipmentDef.getEquipmentName());
             if(optionalEquipment.isEmpty()){
                 // 여기서도 에러
                 throw  new RuntimeException("equipment not found");
             }
             Equipment targetEquipment = optionalEquipment.get();
 
-            List<Port> portList = portService.findByEquipmentNameAndPortType(targetEquipment.getEquipmentName(),PortType.INPUT.getValue());
+            List<Port> portList = portRepository.findByEquipmentNameAndPortType(targetEquipment.getEquipmentName(),PortType.INPUT.getValue());
 
             if(CollectionUtils.isEmpty(portList)){
                 throw new RuntimeException("portList is empty");

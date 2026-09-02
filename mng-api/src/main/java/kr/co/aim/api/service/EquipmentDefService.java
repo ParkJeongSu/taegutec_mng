@@ -29,7 +29,7 @@ public class EquipmentDefService {
     private final EquipmentDefMapper equipmentDefMapper;
     private final HistoryService historyService;
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public EquipmentDef createEquipmentDef(EquipmentDefSaveRequestDto dto) {
         Optional<EquipmentDef> existing = equipmentDefRepository.findByEquipmentName(dto.getEquipmentName());
         if (existing.isPresent()) {
@@ -63,20 +63,12 @@ public class EquipmentDefService {
         return equipmentDef;
     }
 
+    @Transactional(value = "mssqlTransactionManager")
     public Page<EquipmentDef> findEquipmentDefWithConditions(EquipmentDefSearchCondition condition, Pageable pageable) {
         return equipmentDefRepository.findEquipmentDefWithConditions(condition, pageable);
     }
 
     @Transactional(value = "mssqlTransactionManager")
-    public Optional<EquipmentDef> findEquipmentDefByEquipmentName(String equipmentName){
-        return equipmentDefRepository.findByEquipmentName(equipmentName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public List<EquipmentDef> findByDetailEquipmentType(String detailEquipmentType){
-        return equipmentDefRepository.findByDetailEquipmentType(detailEquipmentType);
-    }
-
     public EquipmentDef findById(Long id) {
         Optional<EquipmentDef> optional = equipmentDefRepository.findById(id);
         if (optional.isEmpty()) {
@@ -85,7 +77,7 @@ public class EquipmentDefService {
         return optional.get();
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public EquipmentDef updateEquipmentDef(EquipmentDefSaveRequestDto dto) {
         Optional<EquipmentDef> optional = equipmentDefRepository.findById(dto.getId());
         if (optional.isEmpty()) {
@@ -122,7 +114,7 @@ public class EquipmentDefService {
         return equipmentDef;
     }
 
-    @Transactional
+    @Transactional(value = "mssqlTransactionManager")
     public void deleteEquipmentDefs(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
         equipmentDefRepository.deleteAllByIdInBatch(ids);

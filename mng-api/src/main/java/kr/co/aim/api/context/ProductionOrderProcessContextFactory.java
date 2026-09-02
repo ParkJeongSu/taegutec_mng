@@ -4,6 +4,7 @@ import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.common.format.ProductionOrderProcessRequestBody;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.ProductionOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -16,12 +17,12 @@ import java.util.Optional;
 public class ProductionOrderProcessContextFactory {
 
 
-    private final ProductionOrderService productionOrderService;
+    private final ProductionOrderRepository productionOrderRepository;
 
     public ProductionOrderProcessContext createContext(TransactionInfo transactionInfo, ProductionOrderProcessRequestBody body) {
 
         Long id = body.getId();
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderService.findById(id);
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(id);
         if(optionalProductionOrder.isEmpty()){
             log.error("production order not found {} ",id);
             throw new RuntimeException("production order not found");

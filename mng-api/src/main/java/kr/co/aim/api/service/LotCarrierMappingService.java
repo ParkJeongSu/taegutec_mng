@@ -28,11 +28,6 @@ public class LotCarrierMappingService {
         return lotCarrierMappingRepository.save(mapping);
     }
 
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotCarrierMapping> findAll() {
-        return lotCarrierMappingRepository.findAll();
-    }
-
     @Transactional(value = "mssqlTransactionManager")
     public LotCarrierMapping findById(Long id) {
         Optional<LotCarrierMapping> optional = lotCarrierMappingRepository.findById(id);
@@ -40,54 +35,6 @@ public class LotCarrierMappingService {
             throw new IllegalArgumentException("해당 Lot Carrier Mapping 정보가 존재하지 않습니다. ID: " + id);
         }
         return optional.get();
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public List<LotCarrierMapping> findLotCarrierMappingForUnpacking(String lotName, String carrierType){
-        return lotCarrierMappingRepository.findLotCarrierMappingForUnpacking(lotName,carrierType);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotCarrierMapping> findByLotName(String lotName) {
-        return lotCarrierMappingRepository.findByLotName(lotName);
-    }
-    @Transactional(value = "mssqlTransactionManager")
-    public List<LotCarrierMapping> findByLotNameAndProductionStatusNot(String lotName, String productionStatus){
-        return lotCarrierMappingRepository.findByLotNameAndProductionStatusNot(lotName, productionStatus);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public Optional<LotCarrierMapping> findByCarrierName(String carrierName) {
-        return lotCarrierMappingRepository.findByCarrierName(carrierName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager")
-    public Optional<LotCarrierMapping> findByLotNameAndCarrierName(String lotName,String carrierName){
-        return lotCarrierMappingRepository.findByLotNameAndCarrierName(lotName,carrierName);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotCarrierMapping> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber) {
-        return lotCarrierMappingRepository.findByOrderIdAndOrderLineNumber(orderId, orderLineNumber);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotCarrierMapping> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus){
-        if (productionStatus == null || productionStatus.isEmpty()) {
-            // 빈 리스트 전달 시 쿼리 미수행 또는 별도 처리
-            return Collections.emptyList();
-        }
-
-        return lotCarrierMappingRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
-                orderId,
-                orderLineNumber,
-                productionStatus
-        );
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotCarrierMapping> findByMngKey(Long mngKey) {
-        return lotCarrierMappingRepository.findByMngKey(mngKey);
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
@@ -99,11 +46,6 @@ public class LotCarrierMappingService {
     public void deleteAllByIdInBatch(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
         lotCarrierMappingRepository.deleteAllByIdInBatch(ids);
-    }
-
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<LotCarrierMappingHistory> findHistoryByPeriod(LocalDateTime start, LocalDateTime end) {
-        return lotCarrierMappingRepository.findHistoryByPeriod(start, end);
     }
 
     @Transactional(value = "mssqlTransactionManager", readOnly = true)

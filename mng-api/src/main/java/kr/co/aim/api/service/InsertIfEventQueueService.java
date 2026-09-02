@@ -10,6 +10,9 @@ import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.IfEventQueueCreateCommand;
 import kr.co.aim.domain.model.*;
+import kr.co.aim.domain.repository.IfEventQueueRepository;
+import kr.co.aim.domain.repository.TransportJobRepository;
+import kr.co.aim.domain.repository.TransportOrderRepository;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
@@ -33,20 +36,11 @@ import java.util.Optional;
 @Slf4j
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
-
-    private final HistoryService historyService;
+    
     private final ObjectMapper objectMapper;
-
-    private final PortService portService;
-    private final PortMapper portMapper;
-
-    private final TransportJobService transportJobService;
-    private final TransportJobMapper transportJobMapper;
-
-    private final TransportOrderService transportOrderService;
-    private final TransportOrderMapper transportOrderMapper;
-
-    private final IfEventQueueService ifEventQueueService;
+    private final TransportJobRepository transportJobRepository;
+    private final TransportOrderRepository transportOrderRepository;
+    private final IfEventQueueRepository ifEventQueueRepository;
 
     @Override
     @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
@@ -85,7 +79,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                                     .createTime(tx.eventTime())
                                     .build();
                     IfEventQueue interfaceEventLog = IfEventQueue.create(command);
-                    ifEventQueueService.save(interfaceEventLog);
+                    ifEventQueueRepository.save(interfaceEventLog);
                 }
             }
         }else {
@@ -241,10 +235,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         eventType = GALTransportStatus.TAKE_OFF.name();
         transactionCode = GALTransportStatus.TAKE_OFF.getValue();
 
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             TransportOrder transportOrder = null;
             if(optionalTransportOrder.isPresent()){
                 transportOrder = optionalTransportOrder.get();
@@ -362,10 +356,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             // Bin Empty 113 report
             // Shortage Outbound 82 report
             // Outbound order Done 90 report
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
-                Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                 TransportOrder transportOrder = null;
                 if(optionalTransportOrder.isPresent()){
                     transportOrder = optionalTransportOrder.get();
@@ -450,13 +444,13 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         } else{
             // 그 외에 n 개의 errorCode를 받을 수 있는 상황
 
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
 
                 if(CollectionUtils.isNotEmpty(reasonList)){
 
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     TransportOrder transportOrder = null;
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
@@ -556,10 +550,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // Type : Relocation Case
         // 6 Released report
         if(StringUtils.equals(SystemName.GAL.getValue(), vo.getRequestSource())){
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
-                Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                 TransportOrder transportOrder = null;
                 if(optionalTransportOrder.isPresent()){
                     transportOrder = optionalTransportOrder.get();
@@ -646,10 +640,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // Type : Outbound Case
         // Type : Relocation Case
         // 2 Accept report
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             TransportOrder transportOrder = null;
             if(optionalTransportOrder.isPresent()){
                 transportOrder = optionalTransportOrder.get();
@@ -794,10 +788,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // Type : Outbound Case
         // Type : Relocation Case
         // 2 Accept report
-        Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
         if(optionalTransportJob.isPresent()){
             TransportJob transportJob = optionalTransportJob.get();
-            Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
             TransportOrder transportOrder = null;
             if(optionalTransportOrder.isPresent()){
                 transportOrder = optionalTransportOrder.get();
@@ -961,13 +955,13 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // 114 internal Relocation report
         TransportOrder transportOrder = null;
         if(StringUtils.isNotBlank(transportJobName)){
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
 
                 if(StringUtils.equals(SystemName.GAL.getValue(), transportJob.getRequestSource())){
                     // GAL order 에 의한 반송
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1270,10 +1264,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             // 가장 최신 변경된 transportOrder 으로 108,90 보고
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1282,7 +1276,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if( ObjectUtils.isEmpty(transportOrder)){
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus);
@@ -1305,10 +1299,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             // transportJobName exists
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1317,7 +1311,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if(ObjectUtils.isEmpty(transportOrder)){
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus);
@@ -1340,10 +1334,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             // transportJobName exists
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1352,7 +1346,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if(ObjectUtils.isEmpty(transportOrder)){
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus);
@@ -1416,10 +1410,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         // transportJobName 은 존재
         TransportOrder transportOrder = null;
         if(StringUtils.isNotBlank(transportJobName)){
-            Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+            Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
             if(optionalTransportJob.isPresent()){
                 TransportJob transportJob = optionalTransportJob.get();
-                Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                 if(optionalTransportOrder.isPresent()){
                     transportOrder = optionalTransportOrder.get();
                 }
@@ -1428,7 +1422,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         if( ObjectUtils.isEmpty(transportOrder)){
             List<String> transportStatus = new ArrayList<>();
             transportStatus.add(TransportOrderStatus.STARTED.getValue());
-            List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+            List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                     carrierName,
                     TransportOrderType.INBOUND.getValue(),
                     transportStatus);
@@ -1497,10 +1491,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
 
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1509,7 +1503,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if( ObjectUtils.isEmpty(transportOrder) ){
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.INBOUND.getValue(),
                         transportStatus);
@@ -1557,10 +1551,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
 
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1571,7 +1565,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.STARTED.getValue());
                 transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus);
@@ -1619,10 +1613,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             log.info("unloadCompleted horseshoe start");
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1632,7 +1626,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.REQUESTED.getValue());
                 transportStatus.add(TransportOrderStatus.STARTED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.INBOUND.getValue(),
                         transportStatus);
@@ -1738,10 +1732,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             // 가장 최신 변경된 transportOrder 으로 108,90 보고
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1750,7 +1744,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if( ObjectUtils.isEmpty(transportOrder)){
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus);
@@ -1842,10 +1836,10 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             // 가장 최신 변경된 transportOrder 으로 108,90 보고
             TransportOrder transportOrder = null;
             if(StringUtils.isNotBlank(transportJobName)){
-                Optional<TransportJob> optionalTransportJob = transportJobService.findByTransportJobName(transportJobName);
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
                 if(optionalTransportJob.isPresent()){
                     TransportJob transportJob = optionalTransportJob.get();
-                    Optional<TransportOrder> optionalTransportOrder = transportOrderService.findByTransportOrderId(transportJob.getOrderId());
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
                     if(optionalTransportOrder.isPresent()){
                         transportOrder = optionalTransportOrder.get();
                     }
@@ -1854,7 +1848,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             if( ObjectUtils.isEmpty(transportOrder)){
                 List<String> transportStatus = new ArrayList<>();
                 transportStatus.add(TransportOrderStatus.COMPLETED.getValue());
-                List<TransportOrder> transportOrders = transportOrderService.findTransportOrderByCondition(
+                List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
                         carrierName,
                         TransportOrderType.OUTBOUND.getValue(),
                         transportStatus);

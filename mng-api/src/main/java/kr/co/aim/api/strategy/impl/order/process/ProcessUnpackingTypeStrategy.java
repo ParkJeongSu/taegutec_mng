@@ -10,6 +10,8 @@ import kr.co.aim.domain.command.AllocatedCommand;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.model.ProductionOrder;
+import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.ProductDefRepository;
 import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,8 +28,8 @@ import java.util.Optional;
 @Slf4j
 public class ProcessUnpackingTypeStrategy implements ProductionOrderProcessStrategy {
 
-    private final LotCarrierMappingService lotCarrierMappingService;
-    private final ProductDefService productDefService;
+    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final ProductDefRepository productDefRepository;
     private final List<SelectStrategy> selectStrategyList;
     private final CarrierSelectionService carrierSelectionService;
     private final LotCarrierMappingMapper lotCarrierMappingMapper;
@@ -45,7 +47,7 @@ public class ProcessUnpackingTypeStrategy implements ProductionOrderProcessStrat
         ProductionOrder productionOrder = context.getProductionOrder();
 
         // 2. ProductDef 조회 (ITEM_NAME으로 TOLERANCE_VAL 가져옴)
-        Optional<ProductDef> optionalProductDef = productDefService.findByProductDefName(productionOrder.getItemName());
+        Optional<ProductDef> optionalProductDef = productDefRepository.findByProductDefName(productionOrder.getItemName());
         BigDecimal toleranceVal = BigDecimal.ZERO;
         if (optionalProductDef.isPresent()) {
             ProductDef productDef = optionalProductDef.get();
@@ -97,7 +99,7 @@ public class ProcessUnpackingTypeStrategy implements ProductionOrderProcessStrat
                                 .productionStatus(ProductionStatus.ALLOCATED.getValue())
                                 .build();
                 mapping.allocated(command);
-                mapping = lotCarrierMappingService.save(mapping);
+                mapping = lotCarrierMappingRepository.save(mapping);
                 LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(mapping);
                 historyService.saveHistory(historyEntity);
             }

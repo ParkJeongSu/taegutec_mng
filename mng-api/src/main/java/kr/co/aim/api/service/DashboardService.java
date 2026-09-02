@@ -8,9 +8,7 @@ import kr.co.aim.common.condition.CarrierSearchCondition;
 import kr.co.aim.common.enums.ProductionOrderState;
 import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.domain.repository.EquipmentDefRepository;
-import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
-import kr.co.aim.domain.repository.EquipmentRepository;
+import kr.co.aim.domain.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
@@ -32,8 +30,8 @@ import java.util.*;
 @Slf4j
 public class DashboardService {
 
-    private final ProductionOrderService productionOrderService;
-    private final TransportJobService transportJobService;
+    private final ProductionOrderRepository productionOrderRepository;
+    private final TransportJobRepository transportJobRepository;
     private final EquipmentRepository equipmentRepository;
     private final EquipmentGroupDefRepository equipmentGroupDefRepository;
     private final EquipmentDefRepository equipmentDefRepository;
@@ -48,12 +46,12 @@ public class DashboardService {
         String completedTransportState = TransportJobState.COMPLETED.getValue();
         String cancelTransportState = TransportJobState.CANCELLED.getValue();
 
-        List<ProductionOrder> todayOrderReceivedOrders = productionOrderService.findByCreateTimeBetween(startOfToday, endOfToday);
-        List<ProductionOrder> todayOrderCompletedOrders = productionOrderService.findByCreateTimeBetweenAndProductionOrderState(startOfToday, endOfToday, completedOrderState);
+        List<ProductionOrder> todayOrderReceivedOrders = productionOrderRepository.findByCreateTimeBetween(startOfToday, endOfToday);
+        List<ProductionOrder> todayOrderCompletedOrders = productionOrderRepository.findByCreateTimeBetweenAndProductionOrderState(startOfToday, endOfToday, completedOrderState);
 
-        List<TransportJob> todayJobTotalList  = transportJobService.findByCreateTimeBetween(startOfToday, endOfToday);
-        List<TransportJob> todayJobSuccessList =  transportJobService.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,completedTransportState);
-        List<TransportJob> todayJobFailList =  transportJobService.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,cancelTransportState);
+        List<TransportJob> todayJobTotalList  = transportJobRepository.findByCreateTimeBetween(startOfToday, endOfToday);
+        List<TransportJob> todayJobSuccessList =  transportJobRepository.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,completedTransportState);
+        List<TransportJob> todayJobFailList =  transportJobRepository.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,cancelTransportState);
 
         DashboardResponseDto dashboardResponseDto = DashboardResponseDto
                 .builder()
@@ -80,12 +78,12 @@ public class DashboardService {
         String completedTransportState = TransportJobState.COMPLETED.getValue();
         String cancelTransportState = TransportJobState.CANCELLED.getValue();
 
-        List<ProductionOrder> todayOrderReceivedOrders = productionOrderService.findByCreateTimeBetween(startOfToday, endOfToday);
-        List<ProductionOrder> todayOrderCompletedOrders = productionOrderService.findByCreateTimeBetweenAndProductionOrderState(startOfToday, endOfToday, completedOrderState);
+        List<ProductionOrder> todayOrderReceivedOrders = productionOrderRepository.findByCreateTimeBetween(startOfToday, endOfToday);
+        List<ProductionOrder> todayOrderCompletedOrders = productionOrderRepository.findByCreateTimeBetweenAndProductionOrderState(startOfToday, endOfToday, completedOrderState);
 
-        List<TransportJob> todayJobTotalList  = transportJobService.findByCreateTimeBetween(startOfToday, endOfToday);
-        List<TransportJob> todayJobSuccessList =  transportJobService.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,completedTransportState);
-        List<TransportJob> todayJobFailList =  transportJobService.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,cancelTransportState);
+        List<TransportJob> todayJobTotalList  = transportJobRepository.findByCreateTimeBetween(startOfToday, endOfToday);
+        List<TransportJob> todayJobSuccessList =  transportJobRepository.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,completedTransportState);
+        List<TransportJob> todayJobFailList =  transportJobRepository.findByCreateTimeBetweenAndTransportJobState(startOfToday, endOfToday,cancelTransportState);
 
         DashboardResponseDto dashboardResponseDto = DashboardResponseDto
                 .builder()
@@ -108,7 +106,7 @@ public class DashboardService {
         List<String> activeStates = new ArrayList<>();
         activeStates.add(ProductionOrderState.CREATED.getValue());
         activeStates.add(ProductionOrderState.RELEASED.getValue());
-        List<ProductionOrder> activeOrders = productionOrderService.findByProductionOrderStateInOrderByCreateTimeAsc(activeStates);
+        List<ProductionOrder> activeOrders = productionOrderRepository.findByProductionOrderStateInOrderByCreateTimeAsc(activeStates);
 
         // 2. 설비별 작업 수 카운팅 (Map 활용)
         Map<String, Long> taskCountMap = new HashMap<>();
