@@ -3,7 +3,7 @@ server:
   servlet:
     context-path: /wcs-web
 factory:
-  type: insert # [ insert | powder ]
+  type: powder # [ insert | powder ]
 spring:
   application:
     name: mng

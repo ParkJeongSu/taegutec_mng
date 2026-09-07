@@ -493,9 +493,12 @@ public class MessageExecuteService {
         return factoryProcessStrategy.loadRequest(message);
     }
 
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> carrierDispatchRequest(BaseMessage<CarrierDispatchRequestBody> message){
         return factoryProcessStrategy.carrierDispatchRequest(message);
     }
+
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<DestinationDispatchRequestBody> unLoadRequest(BaseMessage<UnLoadRequestBody> message){
         return factoryProcessStrategy.unLoadRequest(message);
     }
@@ -505,6 +508,7 @@ public class MessageExecuteService {
         return whereDispatchService.whereDispatchRequest(message);
     }
 
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobRequestBody> transportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
         return factoryProcessStrategy.transportOrderRequest(message);
     }

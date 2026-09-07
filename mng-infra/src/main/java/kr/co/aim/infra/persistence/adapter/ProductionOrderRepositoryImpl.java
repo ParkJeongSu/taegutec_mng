@@ -13,6 +13,9 @@ import kr.co.aim.common.Utils.QueryDslUtils;
 import kr.co.aim.common.condition.ProductionOrderHistorySearchCondition;
 import kr.co.aim.common.condition.ProductionOrderSearchCondition;
 import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
+import kr.co.aim.common.dto.powder.DailyProductionSummaryResponse;
+import kr.co.aim.common.dto.powder.EquipmentProductionCountResponse;
+import kr.co.aim.common.dto.powder.QEquipmentProductionCountResponse;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.model.ProductionOrderHistory;
 import kr.co.aim.domain.model.ProductionOrderSummary;
@@ -23,16 +26,15 @@ import kr.co.aim.infra.persistence.mapper.ProductionOrderHistoryMapper;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import kr.co.aim.infra.persistence.springdatajpa.ProductionOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -120,6 +122,113 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
     @Override
     public List<ProductionOrder> findByCreateTimeBetweenAndProductionOrderState(LocalDateTime startDateTime, LocalDateTime endDateTime, String productionOrderState) {
         return productionOrderJpaRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime,endDateTime,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+    }
+
+    // ==========================================
+    // ✨ 요구사항 1: 금일 전체 Production Order 수량 집계
+    // ==========================================
+    @Override
+    public Page<DailyProductionSummaryResponse> getDailyProductionSummary(LocalDate targetDate) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
+
+        BooleanExpression dateCondition = productionOrderEntity.createTime.goe(startOfDay)
+                .and(productionOrderEntity.createTime.lt(startOfNextDay));
+
+        com.querydsl.core.Tuple tuple = queryFactory
+                .select(
+                        productionOrderEntity.planQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.releasedQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.startedQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.endedQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.scrappedQuantity.sum().coalesce(BigDecimal.ZERO)
+                )
+                .from(productionOrderEntity)
+                .where(dateCondition)
+                .fetchOne();
+
+        DailyProductionSummaryResponse result = null;
+        if (tuple == null) {
+            result = DailyProductionSummaryResponse.builder()
+                    .targetDate(date)
+                    .totalPlanQuantity(BigDecimal.ZERO)
+                    .totalReleasedQuantity(BigDecimal.ZERO)
+                    .totalStartedQuantity(BigDecimal.ZERO)
+                    .totalEndedQuantity(BigDecimal.ZERO)
+                    .totalScrappedQuantity(BigDecimal.ZERO)
+                    .build();
+        }else{
+            BigDecimal totalPlanQuantity = tuple.get(0, BigDecimal.class);
+            BigDecimal totalReleasedQuantity = tuple.get(1, BigDecimal.class);
+            BigDecimal totalStartedQuantity = tuple.get(2, BigDecimal.class);
+            BigDecimal totalEndedQuantity = tuple.get(3, BigDecimal.class);
+            BigDecimal totalScrappedQuantity = tuple.get(4, BigDecimal.class);
+            result = DailyProductionSummaryResponse.builder()
+                    .targetDate(date)
+                    .totalPlanQuantity(totalPlanQuantity != null ? totalPlanQuantity : BigDecimal.ZERO)
+                    .totalReleasedQuantity(totalReleasedQuantity != null ? totalReleasedQuantity : BigDecimal.ZERO)
+                    .totalStartedQuantity(totalStartedQuantity != null ? totalStartedQuantity : BigDecimal.ZERO)
+                    .totalEndedQuantity(totalEndedQuantity != null ? totalEndedQuantity : BigDecimal.ZERO)
+                    .totalScrappedQuantity(totalScrappedQuantity != null ? totalScrappedQuantity : BigDecimal.ZERO)
+                    .build();
+        }
+
+        return new PageImpl<>(
+                Collections.singletonList(result),
+                PageRequest.of(0, 1),
+                1L
+        );
+    }
+
+    // ==========================================
+    // ✨ 요구사항 2: 금일 설비별 Production Order 수량 집계 (페이징)
+    // ==========================================
+    @Override
+    public Page<EquipmentProductionCountResponse> getEquipmentProductionCounts(LocalDate targetDate, Pageable pageable) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
+
+        BooleanExpression whereCondition = productionOrderEntity.equipmentName.isNotNull()
+                .and(productionOrderEntity.createTime.goe(startOfDay))
+                .and(productionOrderEntity.createTime.lt(startOfNextDay));
+
+        JPAQuery<EquipmentProductionCountResponse> query = queryFactory
+                .select(new QEquipmentProductionCountResponse(
+                        com.querydsl.core.types.dsl.Expressions.asDate(date),
+                        productionOrderEntity.equipmentName,
+                        productionOrderEntity.planQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.releasedQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.startedQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.endedQuantity.sum().coalesce(BigDecimal.ZERO),
+                        productionOrderEntity.scrappedQuantity.sum().coalesce(BigDecimal.ZERO)
+                ))
+                .from(productionOrderEntity)
+                .where(whereCondition)
+                .groupBy(productionOrderEntity.equipmentName)
+                .orderBy(productionOrderEntity.equipmentName.asc());
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<EquipmentProductionCountResponse> content = query.fetch();
+
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(productionOrderEntity.equipmentName.countDistinct())
+                    .from(productionOrderEntity)
+                    .where(whereCondition)
+                    .fetchOne();
+            total = (count != null) ? count.longValue() : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(content, pageable, total);
     }
 
     @Override

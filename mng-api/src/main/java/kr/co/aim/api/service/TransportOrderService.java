@@ -3,7 +3,9 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
 import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
 import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.SystemName;
@@ -82,21 +84,6 @@ public class TransportOrderService {
         return savedTransportOrder;
     }
 
-    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public TransportOrder acceptTransportOrder(TransportOrder transportOrder) {
-        TransactionInfo transactionInfo = TransactionInfo.now(TransportOrderStatus.ACCEPTED.getValue(), SystemName.MNG.getValue(), "");
-
-        transportOrder.setTransportStatus(TransportOrderStatus.ACCEPTED.getValue());
-        transportOrder.setEventTime(transactionInfo.eventTime());
-        transportOrder.setEventName(transactionInfo.eventName());
-        transportOrder.setEventUser(transactionInfo.eventUser());
-
-        TransportOrder savedTransportOrder = transportOrderRepository.save(transportOrder);
-        TransportOrderHistoryEntity historyEntity = transportOrderMapper.toHistoryEntity(savedTransportOrder);
-        historyService.saveHistory(historyEntity);
-        return savedTransportOrder;
-    }
-
     @Transactional("mssqlTransactionManager")
     public TransportOrder registerTransportOrder(TransportOrderContext context) {
         TransportOrder transportOrder = createBaseBuilder(context);
@@ -164,6 +151,16 @@ public class TransportOrderService {
     @Transactional("mssqlTransactionManager")
     public Page<WorkStationTransportCountResponse> getWorkStationTransportCounts(LocalDate targetDate, Pageable pageable) {
         return transportOrderRepository.getWorkStationTransportCounts(targetDate, pageable);
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public DailyTransportSummaryResponse getDailyTransportSummary(LocalDate targetDate) {
+        return transportOrderRepository.getDailyTransportSummary(targetDate);
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<WarehouseStationTransportCountResponse> getWarehouseStationTransportCounts(LocalDate targetDate, Pageable pageable) {
+        return transportOrderRepository.getWarehouseStationTransportCounts(targetDate, pageable);
     }
 
 

@@ -9,20 +9,21 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Hidden
 @RestController
 @RequiredArgsConstructor
 @Slf4j
-//@Profile("!simulator")
+@RequestMapping("/api/v1/application")
 public class ControlController {
 
     private final RabbitListenerEndpointRegistry registry;
     private final ApplicationContext applicationContext;
 
-    @PostMapping("/stop")
-    public String stop() {
+    @PostMapping("/shutdown")
+    public String shutdown() {
 
         // 1. 여기서 권한 체크나 로그 기록 (보안 작업)
         log.info("Authorized shutdown request received.");

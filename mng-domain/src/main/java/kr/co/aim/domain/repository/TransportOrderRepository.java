@@ -1,7 +1,9 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
 import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
 import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.domain.model.TransportOrder;
 import org.springframework.data.domain.Page;
@@ -56,4 +58,10 @@ public interface TransportOrderRepository {
     Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit);
 
     Page<WorkStationTransportCountResponse> getWorkStationTransportCounts(LocalDate targetDate, Pageable pageable);
+
+    // ✨ 신규 요구사항 1
+    DailyTransportSummaryResponse getDailyTransportSummary(LocalDate targetDate);
+
+    // ✨ 신규 요구사항 2
+    Page<WarehouseStationTransportCountResponse> getWarehouseStationTransportCounts(LocalDate targetDate, Pageable pageable);
 }

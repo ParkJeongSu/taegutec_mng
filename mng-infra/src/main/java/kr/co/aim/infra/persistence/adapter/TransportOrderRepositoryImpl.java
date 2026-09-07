@@ -1,5 +1,6 @@
 package kr.co.aim.infra.persistence.adapter;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -10,10 +11,7 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
-import kr.co.aim.common.dto.insert.QTransportOrderStatisticsResponse;
-import kr.co.aim.common.dto.insert.QWorkStationTransportCountResponse;
-import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
-import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
+import kr.co.aim.common.dto.insert.*;
 import kr.co.aim.common.enums.TransportOrderStatus;
 import kr.co.aim.common.enums.TransportOrderType;
 import kr.co.aim.domain.model.TransportOrder;
@@ -386,6 +384,137 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                     )
                     .fetchOne();
             total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    // ==========================================
+    // ✨ 요구사항 1: 금일 전체 반송 현황 집계
+    // ==========================================
+    @Override
+    public DailyTransportSummaryResponse getDailyTransportSummary(LocalDate targetDate) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
+
+        BooleanExpression dateCondition = transportOrderEntity.createTime.goe(startOfDay)
+                .and(transportOrderEntity.createTime.lt(startOfNextDay));
+
+        NumberExpression<Long> inboundCase = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.INBOUND.getValue()))
+                .then(1L)
+                .otherwise(0L);
+
+        NumberExpression<Long> outboundCase = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.OUTBOUND.getValue()))
+                .then(1L)
+                .otherwise(0L);
+
+        NumberExpression<Long> relocationCase = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.RELOCATION.getValue()))
+                .then(1L)
+                .otherwise(0L);
+
+        Tuple tuple = queryFactory
+                .select(
+                        transportOrderEntity.count(),
+                        inboundCase.sum().coalesce(0L),
+                        outboundCase.sum().coalesce(0L),
+                        relocationCase.sum().coalesce(0L)
+                )
+                .from(transportOrderEntity)
+                .where(dateCondition)
+                .fetchOne();
+
+        if (tuple == null) {
+            return DailyTransportSummaryResponse.builder()
+                    .totalCount(0L)
+                    .inboundCount(0L)
+                    .outboundCount(0L)
+                    .relocationCount(0L)
+                    .build();
+        }
+
+        Long totalCount = tuple.get(0, Long.class);
+        Long inboundCount = tuple.get(1, Long.class);
+        Long outboundCount = tuple.get(2, Long.class);
+        Long relocationCount = tuple.get(3, Long.class);
+
+        return DailyTransportSummaryResponse.builder()
+                .totalCount(totalCount != null ? totalCount : 0L)
+                .inboundCount(inboundCount != null ? inboundCount : 0L)
+                .outboundCount(outboundCount != null ? outboundCount : 0L)
+                .relocationCount(relocationCount != null ? relocationCount : 0L)
+                .build();
+    }
+
+    // ==========================================
+    // ✨ 요구사항 2: 창고 및 워크스테이션별 반송 수량 집계 (페이징)
+    // ==========================================
+    @Override
+    public Page<WarehouseStationTransportCountResponse> getWarehouseStationTransportCounts(LocalDate targetDate, Pageable pageable) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
+
+        BooleanExpression whereCondition = transportOrderEntity.galWarehouse.isNotNull()
+                .and(transportOrderEntity.workStationId.isNotNull())
+                .and(transportOrderEntity.createTime.goe(startOfDay))
+                .and(transportOrderEntity.createTime.lt(startOfNextDay));
+
+        NumberExpression<Long> inboundCountExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.INBOUND.getValue()))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        NumberExpression<Long> outboundCountExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.OUTBOUND.getValue()))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        NumberExpression<Long> relocationCountExpr = new CaseBuilder()
+                .when(transportOrderEntity.transportType.eq(TransportOrderType.RELOCATION.getValue()))
+                .then(1L)
+                .otherwise(0L)
+                .sum();
+
+        JPAQuery<WarehouseStationTransportCountResponse> query = queryFactory
+                .select(new QWarehouseStationTransportCountResponse(
+                        transportOrderEntity.galWarehouse,
+                        transportOrderEntity.workStationId,
+                        inboundCountExpr.coalesce(0L),
+                        outboundCountExpr.coalesce(0L),
+                        relocationCountExpr.coalesce(0L)
+                ))
+                .from(transportOrderEntity)
+                .where(whereCondition)
+                .groupBy(transportOrderEntity.galWarehouse, transportOrderEntity.workStationId)
+                .orderBy(
+                        transportOrderEntity.galWarehouse.asc(),
+                        transportOrderEntity.workStationId.asc()
+                );
+
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<WarehouseStationTransportCountResponse> content = query.fetch();
+
+        long total;
+        if (pageable.isPaged()) {
+            List<Tuple> countList = queryFactory
+                    .select(transportOrderEntity.galWarehouse, transportOrderEntity.workStationId)
+                    .from(transportOrderEntity)
+                    .where(whereCondition)
+                    .groupBy(transportOrderEntity.galWarehouse, transportOrderEntity.workStationId)
+                    .fetch();
+            total = countList.size();
         } else {
             total = content.size();
         }

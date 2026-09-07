@@ -3,6 +3,8 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.vo.powder.sim.H2TransReportVo;
 import kr.co.aim.api.vo.powder.sim.ProductionOrderContext;
 import kr.co.aim.common.condition.*;
+import kr.co.aim.common.dto.powder.DailyProductionSummaryResponse;
+import kr.co.aim.common.dto.powder.EquipmentProductionCountResponse;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.ProductionOrderCreateCommand;
@@ -27,6 +29,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -214,6 +217,16 @@ public class ProductionOrderService {
     @Transactional(value = "mssqlTransactionManager")
     public ProductionOrder save(ProductionOrder productionOrder){
         return productionOrderRepository.save(productionOrder);
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<DailyProductionSummaryResponse> getDailyProductionSummary(LocalDate targetDate) {
+        return productionOrderRepository.getDailyProductionSummary(targetDate);
+    }
+
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<EquipmentProductionCountResponse> getEquipmentProductionCounts(LocalDate targetDate, Pageable pageable) {
+        return productionOrderRepository.getEquipmentProductionCounts(targetDate, pageable);
     }
 
 

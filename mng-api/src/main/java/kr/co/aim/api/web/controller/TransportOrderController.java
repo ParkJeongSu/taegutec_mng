@@ -6,7 +6,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.TransportOrderService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
 import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
 import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.domain.model.TransportOrder;
 import lombok.RequiredArgsConstructor;
@@ -97,6 +99,31 @@ public class TransportOrderController {
     ) {
         LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
         Page<WorkStationTransportCountResponse> result = transportOrderService.getWorkStationTransportCounts(date, pageable);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "금일 반송 수량 종합 현황 조회", description = "지정된 일자(미입력 시 당일) 기준으로 총 반송 수량 및 Type별(INBOUND, OUTBOUND, RELOCATION) 수량을 조회합니다.")
+    @GetMapping("/statistics/daily-summary")
+    public ResponseEntity<DailyTransportSummaryResponse> getDailyTransportSummary(
+            @Parameter(description = "조회 일자 (미입력 시 당일)", example = "2026-09-04")
+            @RequestParam(name = "target-date", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate
+    ) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        DailyTransportSummaryResponse result = transportOrderService.getDailyTransportSummary(date);
+        return ResponseEntity.ok(result);
+    }
+
+    @Operation(summary = "창고 및 워크스테이션별 반송 수량 집계 조회 (페이징)", description = "지정된 일자(미입력 시 당일) 기준으로 GAL_WAREHOUSE와 WORK_STATION_ID별 INBOUND, OUTBOUND, RELOCATION 수량을 조회합니다.")
+    @GetMapping("/statistics/warehouses/workstations/counts")
+    public ResponseEntity<Page<WarehouseStationTransportCountResponse>> getWarehouseStationTransportCounts(
+            @Parameter(description = "조회 일자 (미입력 시 당일)", example = "2026-09-04")
+            @RequestParam(name = "target-date", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate targetDate,
+            @ParameterObject Pageable pageable
+    ) {
+        LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
+        Page<WarehouseStationTransportCountResponse> result = transportOrderService.getWarehouseStationTransportCounts(date, pageable);
         return ResponseEntity.ok(result);
     }
 

@@ -1,12 +1,15 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.condition.*;
+import kr.co.aim.common.dto.powder.DailyProductionSummaryResponse;
+import kr.co.aim.common.dto.powder.EquipmentProductionCountResponse;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.model.ProductionOrderHistory;
 import kr.co.aim.domain.model.ProductionOrderSummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -73,4 +76,10 @@ public interface ProductionOrderRepository {
             LocalDateTime endDateTime,
             String productionOrderState
     );
+
+    // ✨ 요구사항 1: 금일 전체 수량 집계
+    Page<DailyProductionSummaryResponse> getDailyProductionSummary(LocalDate targetDate);
+
+    // ✨ 요구사항 2: 금일 설비별 수량 집계 (페이징)
+    Page<EquipmentProductionCountResponse> getEquipmentProductionCounts(LocalDate targetDate, Pageable pageable);
 }
