@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.service.MessageExecuteService;
 import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.MessageList;
+import kr.co.aim.common.enums.ResultCode;
+import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.handler.MessageHandler;
@@ -48,6 +50,29 @@ public class RecipeChangedRequestHandler implements MessageHandler<String> {
                 RabbitConfig.EXCHANGE_EAS,
                 RabbitConfig.ROUTING_EAS,
                 request
+        );
+
+        /*
+        * todo: 임시 테스트 코드 manti 랑 테스트 후 지울 예정
+        * */
+        BaseMessage<RecipeChangedReplyForMANTIBody> tmpRequest = new BaseMessage<>();
+        tmpRequest.setMessageName(MessageList.RECIPE_CHANGED_REPLY.getMessageName());
+        tmpRequest.setTransactionId(requestMessage.getTransactionId());
+        tmpRequest.setMessageFrom(SystemName.MNG.getValue());
+        tmpRequest.setMessageOwner(SystemName.MNG.getValue());
+        tmpRequest.setMessageTo(SystemName.EAS.getValue());
+        tmpRequest.setEventTime(requestMessage.getEventTime());
+        tmpRequest.setResultMessage("");
+        tmpRequest.setResultCode(ResultCode.OK.getValue());
+        RecipeBody body = requestMessage.getBody().getRecipe();
+        tmpRequest.getBody().setRecipe(body);
+
+        jsonUtils.writePrettyJson(tmpRequest);
+
+        rabbitTemplate.convertAndSend(
+                RabbitConfig.EXCHANGE_MANTI,
+                RabbitConfig.EXCHANGE_MANTI,
+                tmpRequest
         );
 
         return null;

@@ -105,8 +105,8 @@ public class RabbitConfig {
 
     private Map<String, Object> queueArgs() {
         Map<String, Object> args = new HashMap<>();
-        args.put(DLX_KEY, EXCHANGE_DEAD);
-        args.put(DLK_KEY, ROUTING_DEAD);
+        args.put(DLX_KEY, EXCHANGE_DEAD); // x-dead-letter-exchange , system.direct
+        args.put(DLK_KEY, ROUTING_DEAD); // x-dead-letter-routing-key , DEAD.request.queue
         args.put("x-message-ttl", 600000); // 10분 (600,000ms)
         return args;
     }
