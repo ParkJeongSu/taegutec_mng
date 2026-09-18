@@ -1,9 +1,9 @@
 server:
-  port: 11405
+  port: 11421
   servlet:
     context-path: /wcs-web
 factory:
-  type: powder # [ insert | powder ]
+  type: insert # [ insert | powder ]
 spring:
   application:
     name: mng

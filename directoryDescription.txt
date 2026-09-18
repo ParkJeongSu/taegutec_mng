@@ -1,0 +1,114 @@
+﻿\-- taegutec_mng                                       # 대구텍 MNG 프로젝트 루트 (멀티 모듈 Maven 프로젝트)
++-- asset/                                             # 프로젝트 인프라 설정, DB 스크립트, 배치 명령 등 정적 리소스 모음
+|   +-- batch-command/                                 # 배치 실행 스크립트 및 쉘/배치 커맨드 모음
+|   +-- database/                                      # 데이터베이스 DDL/DML 및 스키마 초기화 스크립트
+|   |   +-- DB2/                                       # DB2 관련 테이블 및 쿼리 스크립트
+|   |   +-- MSSQL/                                     # MSSQL 관련 테이블 및 쿼리 스크립트
+|   |   \-- ShedLock/                                  # ShedLock 분산 락 관리를 위한 테이블 생성 스크립트
+|   +-- docker/                                        # 로컬 및 개발 환경용 Docker 컨테이너 구성 파일
+|   |   +-- DB2/                                       # DB2 도커 환경 구성 파일
+|   |   +-- MSSQL/                                     # MSSQL 도커 환경 구성 파일
+|   |   \-- rabbitmq/                                  # RabbitMQ 브로커 도커 설정 (도커 환경용)
+|   \-- rabbitMQ/                                      # RabbitMQ 교환기/큐 바인딩 정의 및 설정 파일
++-- mng-api/                                           # 외부 통신, REST API 엔드포인트 및 메시징 진입점 모듈
+|   \-- src/
+|       \-- main/
+|           \-- java/
+|               \-- kr/
+|                   \-- co/
+|                       \-- aim/
+|                           \-- api/
+|                               +-- aop/               # 로깅, 트랜잭션, 감사 등 공통 AOP 어드바이스
+|                               +-- application/       # Spring Boot 메인 Application 구동 클래스
+|                               +-- config/            # API 모듈 전용 Spring 설정 (보안, 웹, 비동기 등)
+|                               +-- context/           # 애플리케이션 실행 컨텍스트 및 스레드 로컬 홀더
+|                               +-- dto/               # API 계층 데이터 전송 객체 (Request/Response DTO)
+|                               |   +-- insert/        # Insert(인서트) 공정 관련 API DTO
+|                               |   \-- powder/        # Powder(분말) 공정 관련 API DTO
+|                               +-- filter/            # HTTP 요청/응답 처리용 서블릿 필터
+|                               +-- jwt/               # JWT 토큰 생성, 파싱 및 인증 검증 로직
+|                               +-- rabbitmq/          # RabbitMQ 메시지 리스너 및 큐 수신 처리
+|                               |   \-- controller/    # 큐 메시지 디스패치 및 라우팅 컨트롤러
+|                               |       \-- dispatcher/# 수신 메시지 분석 후 대상 서비스로 분기하는 디스패처
+|                               +-- recorder/          # 메시지 송수신 및 트랜잭션 이력 기록 로직
+|                               +-- schedule/          # 주기적 배치 작업 및 스케줄러 (ShedLock 적용)
+|                               +-- service/           # API 오케스트레이션 및 트랜잭션 제어 서비스 계층
+|                               +-- strategy/          # 업무 공정별 비즈니스 전략 패턴 인터페이스
+|                               |   \-- impl/          # 공정별 전략 상세 구현체
+|                               |       +-- dispatch/  # 장비/작업 분기 및 할당 전략
+|                               |       |   +-- what/  # 분기 대상 판별 로직
+|                               |       |   \-- where/ # 목적지(반송처) 결정 로직
+|                               |       +-- download/  # 작업 지시 및 레시피 데이터 다운로드 전략
+|                               |       +-- order/     # 생산/작업 오더 처리 전략
+|                               |       |   \-- process/# 오더 진행 단계별 처리
+|                               |       +-- process/   # 공정 이벤트(시작/종료) 처리 전략
+|                               |       |   +-- ended/ # 공정 완료 이벤트 처리 로직
+|                               |       |   \-- started/# 공정 시작 이벤트 처리 로직
+|                               |       \-- select/    # 최적 작업/장비 선정 전략
+|                               +-- vo/                # 내부 연산 및 값 전달용 불변 Value Object
+|                               |   +-- carrier/       # 캐리어(Carrier) 관련 VO
+|                               |   +-- insert/        # Insert 공정 VO
+|                               |   |   +-- ops/       # Insert 실제 운영(Operational) 모델
+|                               |   |   \-- sim/       # Insert 시뮬레이터 연동용 모델
+|                               |   +-- port/          # 포트(Port) 상태 및 속성 VO
+|                               |   +-- powder/        # Powder 공정 VO
+|                               |   |   +-- ops/       # Powder 실제 운영 모델
+|                               |   |   \-- sim/       # Powder 시뮬레이터 연동용 모델
+|                               |   \-- transportJob/  # 반송 작업(Transport Job) 관련 VO
+|                               \-- web/               # 일반 웹 통신 계층
+|                                   \-- controller/    # REST API 웹 엔드포인트 컨트롤러
++-- mng-common/                                        # 프로젝트 전역에서 공유되는 공통 유틸 및 기초 모델 모듈
+|   \-- src/
+|       \-- main/
+|           \-- java/
+|               \-- kr/
+|                   \-- co/
+|                       \-- aim/
+|                           \-- common/
+|                               +-- annotation/        # 커스텀 애너테이션 정의
+|                               +-- condition/         # 쿼리 및 로직 분기 조건 클래스
+|                               +-- constants/         # 시스템 공통 상수 모음
+|                               +-- dto/               # 모듈 간 공용 데이터 전송 객체
+|                               |   +-- insert/        # Insert 공정 공통 DTO
+|                               |   \-- powder/        # Powder 공정 공통 DTO
+|                               +-- enums/             # 공정 상태, 메시지 타입 등 공통 Enum 정의
+|                               +-- error/             # 커스텀 예외(Exception) 및 에러 코드 정의
+|                               +-- format/            # 데이터 포맷 변환 및 정규화
+|                               |   +-- request/       # 표준 요청 포맷
+|                               |   \-- response/      # 표준 응답 포맷 (공통 응답 래퍼)
+|                               +-- handler/           # 글로벌 예외 처리기(GlobalExceptionHandler) 등
+|                               +-- payload/           # 메시지 페이로드 공통 구조체
+|                               +-- record/            # Java Record 기반 경량 불변 데이터 객체
+|                               \-- Utils/             # 날짜, 문자열, 파싱 등 순수 공통 유틸리티
++-- mng-domain/                                        # 핵심 비즈니스 규칙 및 도메인 인터페이스 모듈 (의존성 최소화)
+|   \-- src/
+|       \-- main/
+|           \-- java/
+|               \-- kr/
+|                   \-- co/
+|                       \-- aim/
+|                           \-- domain/
+|                               +-- command/           # 도메인 상태 변경 커맨드 객체
+|                               +-- model/             # 핵심 비즈니스 도메인 엔티티 및 애그리거트
+|                               \-- repository/        # 도메인 관점의 레포지토리 인터페이스 (DIP 구현)
+\-- mng-infra/                                         # DB, 외부 시스템 연동 등 영속성 및 기술 세부 구현 모듈
+    \-- src/
+        \-- main/
+            \-- java/
+                \-- kr/
+                    \-- co/
+                        \-- aim/
+                            \-- infra/
+                                +-- config/            # JPA, 다중 DataSource(DB2, MSSQL) 설정
+                                \-- persistence/       # 데이터 영속성 계층 구현
+                                    +-- adapter/       # 도메인 레포지토리를 구현하는 인프라 어댑터
+                                    +-- db2entity/     # DB2 테이블 매핑 전용 JPA Entity
+                                    |   +-- insert/    # DB2용 Insert 공정 엔티티
+                                    |   \-- powder/    # DB2용 Powder 공정 엔티티
+                                    +-- db2springdatajpa/ # DB2 전용 Spring Data JPA 인터페이스
+                                    |   +-- insert/    # DB2 Insert Spring Data 레포지토리
+                                    |   \-- powder/    # DB2 Powder Spring Data 레포지토리
+                                    +-- entity/        # 기본 DB(MSSQL 등) 매핑 JPA Entity
+                                    +-- mapper/        # Entity ↔ Domain Model 간 객체 변환 매퍼
+                                    +-- repository/    # QueryDSL 및 커스텀 쿼리 구현체
+                                    \-- springdatajpa/ # 기본 DB 전용 Spring Data JPA 인터페이스
