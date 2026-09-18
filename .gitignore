@@ -5,6 +5,7 @@ target/
 !**/src/test/**/target/
 
 logs/
+/mng-api/src/main/resources/static/
 
 ### STS ###
 .apt_generated
