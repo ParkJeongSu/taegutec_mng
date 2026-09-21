@@ -31,17 +31,8 @@ public class UserGroupEntity {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "USE_STATE")
+    private String useState;
 
     @Column(name = "EVENT_NAME")
     private String eventName;

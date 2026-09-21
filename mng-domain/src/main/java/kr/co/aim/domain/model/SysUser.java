@@ -11,24 +11,18 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SysUser implements HasTransactionInfo {
-
     private Long id;
     private String factoryName;
     private String userId;
+    private String passwordHash;
     private String userName;
-    private String password;
-    private String departmentName;
+    private Long departmentId;
     private String email;
     private String phoneNumber;
     private String userState;
-    private LocalDateTime passwordChangeTime;
-    private Integer failedLoginAttempts;
+    private Integer failedLoginCount;
     private LocalDateTime lastLoginTime;
-    private String description;
-    private String checkOutState;
-    private LocalDateTime checkOutTime;
-    private String checkOutUser;
-    private String dataState;
+    private LocalDateTime passwordChangeTime;
     private String eventName;
     private LocalDateTime eventTime;
     private String eventUser;

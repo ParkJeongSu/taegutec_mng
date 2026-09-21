@@ -28,14 +28,14 @@ public class SysUserEntity {
     @Column(name = "USER_ID")
     private String userId;
 
+    @Column(name = "PASSWORD_HASH")
+    private String passwordHash;
+
     @Column(name = "USER_NAME")
     private String userName;
 
-    @Column(name = "PASSWORD")
-    private String password;
-
-    @Column(name = "DEPARTMENT_NAME")
-    private String departmentName;
+    @Column(name = "DEPARTMENT_Id")
+    private Long departmentId;
 
     @Column(name = "EMAIL")
     private String email;
@@ -46,29 +46,14 @@ public class SysUserEntity {
     @Column(name = "USER_STATE")
     private String userState;
 
-    @Column(name = "PASSWORD_CHANGE_TIME")
-    private LocalDateTime passwordChangeTime;
-
-    @Column(name = "FAILED_LOGIN_ATTEMPTS")
-    private Integer failedLoginAttempts;
+    @Column(name = "FAILED_LOGIN_COUNT")
+    private Integer failedLoginCount;
 
     @Column(name = "LAST_LOGIN_TIME")
     private LocalDateTime lastLoginTime;
 
-    @Column(name = "DESCRIPTION")
-    private String description;
-
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "PASSWORD_CHANGE_TIME")
+    private LocalDateTime passwordChangeTime;
 
     @Column(name = "EVENT_NAME")
     private String eventName;

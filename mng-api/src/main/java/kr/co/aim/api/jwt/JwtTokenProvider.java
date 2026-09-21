@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Collection;
 import java.util.Date;
-import java.util.stream.Collectors;
+import java.util.List;
 
 @Component
 public class JwtTokenProvider {
@@ -39,21 +39,49 @@ public class JwtTokenProvider {
 
     // Authentication 객체의 권한 정보를 이용해서 Access Token을 생성
     public String createAccessToken(Authentication authentication) {
-        String authorities = authentication.getAuthorities().stream()
-                .map(new java.util.function.Function<GrantedAuthority, String>() {
-                    @Override
-                    public String apply(GrantedAuthority grantedAuthority) {
-                        return grantedAuthority.getAuthority();
+        StringBuilder authorities = new StringBuilder();
+        if (authentication.getAuthorities() != null) {
+            for (GrantedAuthority grantedAuthority : authentication.getAuthorities()) {
+                if (grantedAuthority != null && grantedAuthority.getAuthority() != null) {
+                    if (authorities.length() > 0) {
+                        authorities.append(",");
                     }
-                })
-                .collect(Collectors.joining(","));
+                    authorities.append(grantedAuthority.getAuthority());
+                }
+            }
+        }
 
         long now = (new Date()).getTime();
         Date validity = new Date(now + this.accessTokenValidityInMilliseconds);
 
         return Jwts.builder()
                 .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authorities)
+                .claim(AUTHORITIES_KEY, authorities.toString())
+                .signWith(key, SignatureAlgorithm.HS512)
+                .setExpiration(validity)
+                .compact();
+    }
+
+    // subject(userId)와 roles 목록을 이용해서 Access Token을 생성
+    public String createAccessToken(String subject, List<String> roles) {
+        StringBuilder authorities = new StringBuilder();
+        if (roles != null) {
+            for (String role : roles) {
+                if (role != null && !role.trim().isEmpty()) {
+                    if (authorities.length() > 0) {
+                        authorities.append(",");
+                    }
+                    authorities.append(role.trim());
+                }
+            }
+        }
+
+        long now = (new Date()).getTime();
+        Date validity = new Date(now + this.accessTokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setSubject(subject)
+                .claim(AUTHORITIES_KEY, authorities.toString())
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();
@@ -127,6 +155,17 @@ public class JwtTokenProvider {
         return Jwts.builder()
                 // Refresh Token에는 별다른 Claim 없이 만료 시간만 설정합니다.
                 .setSubject(authentication.getName())
+                .signWith(key, SignatureAlgorithm.HS512)
+                .setExpiration(validity)
+                .compact();
+    }
+
+    public String createRefreshToken(String subject) {
+        long now = (new Date()).getTime();
+        Date validity = new Date(now + this.refreshTokenValidityInMilliseconds);
+
+        return Jwts.builder()
+                .setSubject(subject)
                 .signWith(key, SignatureAlgorithm.HS512)
                 .setExpiration(validity)
                 .compact();

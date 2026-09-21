@@ -25,29 +25,11 @@ public class UserGroupMemberEntity {
     @Column(name = "FACTORY_NAME")
     private String factoryName;
 
-    @Column(name = "USER_GROUP_ID")
-    private Long userGroupId;
-
     @Column(name = "USER_ID")
     private Long userId;
 
-    @Column(name = "USER_GROUP_NAME")
-    private String userGroupName;
-
-    @Column(name = "DESCRIPTION")
-    private String description;
-
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "USER_GROUP_ID")
+    private Long userGroupId;
 
     @Column(name = "EVENT_NAME")
     private String eventName;

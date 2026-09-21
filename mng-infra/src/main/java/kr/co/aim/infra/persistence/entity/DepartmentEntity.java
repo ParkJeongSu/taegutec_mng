@@ -22,26 +22,14 @@ public class DepartmentEntity {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "DEPARTMENT_NAME")
-    private String departmentName;
-
     @Column(name = "FACTORY_NAME")
     private String factoryName;
 
-    @Column(name = "DESCRIPTION")
-    private String description;
+    @Column(name = "DEPARTMENT_NAME")
+    private String departmentName;
 
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "USE_STATE")
+    private String useState;
 
     @Column(name = "EVENT_NAME")
     private String eventName;

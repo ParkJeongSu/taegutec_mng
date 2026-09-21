@@ -11,15 +11,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Department implements HasTransactionInfo {
-
     private Long id;
-    private String departmentName;
     private String factoryName;
-    private String description;
-    private String checkOutState;
-    private LocalDateTime checkOutTime;
-    private String checkOutUser;
-    private String dataState;
+    private String departmentName;
+    private String useState;
     private String eventName;
     private LocalDateTime eventTime;
     private String eventUser;

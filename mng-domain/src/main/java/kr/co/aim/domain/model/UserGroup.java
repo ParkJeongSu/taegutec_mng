@@ -11,15 +11,11 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserGroup implements HasTransactionInfo {
-
     private Long id;
     private String factoryName;
     private String userGroupName;
     private String description;
-    private String checkOutState;
-    private LocalDateTime checkOutTime;
-    private String checkOutUser;
-    private String dataState;
+    private String useState;
     private String eventName;
     private LocalDateTime eventTime;
     private String eventUser;
