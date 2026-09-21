@@ -3,9 +3,11 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.jwt.JwtTokenProvider;
 import kr.co.aim.api.dto.LoginRequestDto;
 import kr.co.aim.api.dto.LoginResponseDto;
+import kr.co.aim.domain.model.Department;
 import kr.co.aim.domain.model.SysUser;
 import kr.co.aim.domain.model.UserGroup;
 import kr.co.aim.domain.model.UserGroupMember;
+import kr.co.aim.domain.repository.DepartmentRepository;
 import kr.co.aim.domain.repository.UserGroupMemberRepository;
 import kr.co.aim.domain.repository.UserGroupRepository;
 import kr.co.aim.domain.repository.UserRepository;
@@ -39,6 +41,9 @@ class AuthServiceTest {
     private UserGroupRepository userGroupRepository;
 
     @Mock
+    private DepartmentRepository departmentRepository;
+
+    @Mock
     private PasswordEncoder passwordEncoder;
 
     @Mock
@@ -56,9 +61,9 @@ class AuthServiceTest {
                 .factoryName("INSERT")
                 .userId("admin")
                 .userName("관리자")
-                .password("{bcrypt}$2a$10$encodedPassword")
-                .departmentName("생산관리팀")
-                .failedLoginAttempts(0)
+                .passwordHash("{bcrypt}$2a$10$encodedPassword")
+                .departmentId(1L)
+                .failedLoginCount(0)
                 .build();
     }
 
@@ -77,18 +82,23 @@ class AuthServiceTest {
                 .id(1L)
                 .userId(100L)
                 .userGroupId(10L)
-                .userGroupName("ADMIN")
                 .build());
         members.add(UserGroupMember.builder()
                 .id(2L)
                 .userId(100L)
                 .userGroupId(20L)
-                .userGroupName("OPERATOR")
                 .build());
 
+        UserGroup g1 = UserGroup.builder().id(10L).userGroupName("ADMIN").build();
+        UserGroup g2 = UserGroup.builder().id(20L).userGroupName("OPERATOR").build();
+        Department dept = Department.builder().id(1L).departmentName("생산관리팀").build();
+
         when(userRepository.findByFactoryNameAndUserId("INSERT", "admin")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("password123", testUser.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("password123", testUser.getPasswordHash())).thenReturn(true);
         when(userGroupMemberRepository.findByUserId(100L)).thenReturn(members);
+        when(userGroupRepository.findById(10L)).thenReturn(Optional.of(g1));
+        when(userGroupRepository.findById(20L)).thenReturn(Optional.of(g2));
+        when(departmentRepository.findById(1L)).thenReturn(Optional.of(dept));
         when(jwtTokenProvider.createAccessToken(eq("admin"), anyList())).thenReturn("mocked-access-token");
         when(jwtTokenProvider.createRefreshToken("admin")).thenReturn("mocked-refresh-token");
         when(userRepository.save(any(SysUser.class))).thenReturn(testUser);
@@ -109,7 +119,7 @@ class AuthServiceTest {
         assertTrue(response.getRoles().contains("ADMIN"));
         assertTrue(response.getRoles().contains("OPERATOR"));
 
-        verify(userRepository).save(argThat(user -> user.getFailedLoginAttempts() == 0 && "Login".equals(user.getEventName())));
+        verify(userRepository).save(argThat(user -> user.getFailedLoginCount() == 0 && "Login".equals(user.getEventName())));
     }
 
     @Test
@@ -140,15 +150,15 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByFactoryNameAndUserId("INSERT", "admin")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("wrongpassword", testUser.getPassword())).thenReturn(false);
+        when(passwordEncoder.matches("wrongpassword", testUser.getPasswordHash())).thenReturn(false);
 
         // when & then
         assertThrows(IllegalArgumentException.class, () -> authService.login(request));
-        verify(userRepository).save(argThat(user -> user.getFailedLoginAttempts() == 1 && "LoginFailed".equals(user.getEventName())));
+        verify(userRepository).save(argThat(user -> user.getFailedLoginCount() == 1 && "LoginFailed".equals(user.getEventName())));
     }
 
     @Test
-    @DisplayName("그룹명 fallback 조회: UserGroupMember에 그룹명이 없을 때 UserGroup에서 조회")
+    @DisplayName("그룹명 조회: UserGroupMember 목록으로 UserGroup 조회")
     void loginGroupFallback() {
         // given
         LoginRequestDto request = LoginRequestDto.builder()
@@ -162,7 +172,6 @@ class AuthServiceTest {
                 .id(1L)
                 .userId(100L)
                 .userGroupId(10L)
-                .userGroupName(null)
                 .build());
 
         UserGroup userGroup = UserGroup.builder()
@@ -171,7 +180,7 @@ class AuthServiceTest {
                 .build();
 
         when(userRepository.findByFactoryNameAndUserId("INSERT", "admin")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("password123", testUser.getPassword())).thenReturn(true);
+        when(passwordEncoder.matches("password123", testUser.getPasswordHash())).thenReturn(true);
         when(userGroupMemberRepository.findByUserId(100L)).thenReturn(members);
         when(userGroupRepository.findById(10L)).thenReturn(Optional.of(userGroup));
         when(jwtTokenProvider.createAccessToken(eq("admin"), anyList())).thenReturn("mocked-access-token");
@@ -186,3 +195,4 @@ class AuthServiceTest {
         assertEquals("SUPER_ADMIN", response.getRoles().get(0));
     }
 }
+

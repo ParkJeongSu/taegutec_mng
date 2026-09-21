@@ -125,6 +125,17 @@ management:
       show-details: always # 상세한 상태 정보를 확인하고 싶을 때 사용
 logging:
   level:
+    # === [필수 추가] 프로젝트 비즈니스 로직 및 컨트롤러 로그 ===
+    kr.co.aim: DEBUG
+
+    # === [필수 추가] Spring MVC 요청 매핑 추적 (어떤 URL이 매핑되는지/404인지 확인) ===
+    org.springframework.web: DEBUG
+    org.springframework.web.servlet.DispatcherServlet: DEBUG
+    org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping: TRACE
+
+    # === [필수 추가] Spring Security 필터 체인 통과 여부 추적 ===
+    org.springframework.security: DEBUG
+
     # === Hibernate (Spring Boot 3/Hibernate 6 기준) ===
     org.hibernate.SQL: DEBUG                     # 실행되는 SQL
     org.hibernate.orm.jdbc.bind: TRACE           # 바인드 파라미터 값
