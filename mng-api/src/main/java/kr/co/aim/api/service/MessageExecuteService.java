@@ -34,8 +34,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static org.springframework.data.jpa.domain.AbstractPersistable_.id;
-
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (DI)
 @Slf4j
