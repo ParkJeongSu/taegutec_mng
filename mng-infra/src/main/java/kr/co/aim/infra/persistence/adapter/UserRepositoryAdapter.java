@@ -1,5 +1,6 @@
 package kr.co.aim.infra.persistence.adapter;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static kr.co.aim.infra.persistence.entity.QDepartmentEntity.departmentEntity;
 import static kr.co.aim.infra.persistence.entity.QSysUserEntity.sysUserEntity;
 
 /**
@@ -50,20 +52,54 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public Optional<SysUser> findById(Long id) {
-        Optional<SysUserEntity> entityOptional = sysUserJpaRepository.findById(id);
-        if (entityOptional.isPresent()) {
-            return Optional.ofNullable(sysUserMapper.toDomain(entityOptional.get()));
+        if (id == null) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        Tuple tuple = queryFactory
+                .select(sysUserEntity, departmentEntity.departmentName)
+                .from(sysUserEntity)
+                .leftJoin(departmentEntity).on(sysUserEntity.departmentId.eq(departmentEntity.id))
+                .where(sysUserEntity.id.eq(id))
+                .fetchOne();
+
+        if (tuple == null) {
+            return Optional.empty();
+        }
+
+        SysUserEntity entity = tuple.get(sysUserEntity);
+        if (entity == null) {
+            return Optional.empty();
+        }
+
+        SysUser domain = sysUserMapper.toDomain(entity);
+        domain.setDepartmentName(tuple.get(departmentEntity.departmentName));
+        return Optional.of(domain);
     }
 
     @Override
     public Optional<SysUser> findByFactoryNameAndUserId(String factoryName, String userId) {
-        Optional<SysUserEntity> entityOptional = sysUserJpaRepository.findByFactoryNameAndUserId(factoryName, userId);
-        if (entityOptional.isPresent()) {
-            return Optional.ofNullable(sysUserMapper.toDomain(entityOptional.get()));
+        Tuple tuple = queryFactory
+                .select(sysUserEntity, departmentEntity.departmentName)
+                .from(sysUserEntity)
+                .leftJoin(departmentEntity).on(sysUserEntity.departmentId.eq(departmentEntity.id))
+                .where(
+                        sysUserEntity.factoryName.eq(factoryName),
+                        sysUserEntity.userId.eq(userId)
+                )
+                .fetchOne();
+
+        if (tuple == null) {
+            return Optional.empty();
         }
-        return Optional.empty();
+
+        SysUserEntity entity = tuple.get(sysUserEntity);
+        if (entity == null) {
+            return Optional.empty();
+        }
+
+        SysUser domain = sysUserMapper.toDomain(entity);
+        domain.setDepartmentName(tuple.get(departmentEntity.departmentName));
+        return Optional.of(domain);
     }
 
     @Override
@@ -80,7 +116,9 @@ public class UserRepositoryAdapter implements UserRepository {
     public SysUser save(SysUser sysUser) {
         SysUserEntity entity = sysUserMapper.toEntity(sysUser);
         SysUserEntity savedEntity = sysUserJpaRepository.save(entity);
-        return sysUserMapper.toDomain(savedEntity);
+        SysUser domain = sysUserMapper.toDomain(savedEntity);
+        domain.setDepartmentName(sysUser.getDepartmentName());
+        return domain;
     }
 
     @Override
@@ -95,8 +133,10 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public Page<SysUser> findUserWithConditions(SysUserSearchCondition condition, Pageable pageable) {
-        JPAQuery<SysUserEntity> query = queryFactory
-                .selectFrom(sysUserEntity)
+        JPAQuery<Tuple> query = queryFactory
+                .select(sysUserEntity, departmentEntity.departmentName)
+                .from(sysUserEntity)
+                .leftJoin(departmentEntity).on(sysUserEntity.departmentId.eq(departmentEntity.id))
                 .where(
                         factoryNameContains(condition.getFactoryName()),
                         userIdContains(condition.getUserId()),
@@ -114,10 +154,15 @@ public class UserRepositoryAdapter implements UserRepository {
             query.limit(pageable.getPageSize());
         }
 
-        List<SysUserEntity> content = query.fetch();
+        List<Tuple> content = query.fetch();
         List<SysUser> converted = new ArrayList<>();
-        for (SysUserEntity entity : content) {
-            converted.add(sysUserMapper.toDomain(entity));
+        for (Tuple tuple : content) {
+            SysUserEntity entity = tuple.get(sysUserEntity);
+            if (entity != null) {
+                SysUser domain = sysUserMapper.toDomain(entity);
+                domain.setDepartmentName(tuple.get(departmentEntity.departmentName));
+                converted.add(domain);
+            }
         }
 
         long total;

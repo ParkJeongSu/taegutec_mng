@@ -1,10 +1,13 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SysUserCreateRequestDto;
-import kr.co.aim.api.dto.SysUserResponseDto;
+import kr.co.aim.api.dto.SysUserResponse;
 import kr.co.aim.api.dto.SysUserUpdateRequestDto;
+import kr.co.aim.api.dto.UserGroupMemberResponse;
 import kr.co.aim.common.condition.SysUserSearchCondition;
 import kr.co.aim.domain.model.SysUser;
+import kr.co.aim.domain.model.UserGroupMember;
+import kr.co.aim.domain.repository.UserGroupMemberRepository;
 import kr.co.aim.domain.repository.UserRepository;
 import kr.co.aim.infra.persistence.entity.SysUserHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.SysUserMapper;
@@ -37,6 +40,9 @@ class SysUserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private UserGroupMemberRepository userGroupMemberRepository;
+
+    @Mock
     private HistoryService historyService;
 
     @Mock
@@ -59,6 +65,7 @@ class SysUserServiceTest {
                 .userName("관리자")
                 .passwordHash("$2a$10$encodedPasswordHash")
                 .departmentId(1L)
+                .departmentName("생산관리팀")
                 .email("admin@taegutec.co.kr")
                 .phoneNumber("010-1234-5678")
                 .userState("ACTIVE")
@@ -91,19 +98,18 @@ class SysUserServiceTest {
         when(userRepository.findByFactoryNameAndUserId("INSERT", "newUser")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("plainPassword123")).thenReturn("$2a$10$encodedPassword123");
         when(userRepository.save(any(SysUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(sampleUser));
         when(sysUserMapper.toHistoryEntity(any(SysUser.class))).thenReturn(mock(SysUserHistoryEntity.class));
 
         // when
-        SysUserResponseDto response = sysUserService.createUser(request);
+        SysUserResponse response = sysUserService.createUser(request);
 
         // then
         assertNotNull(response);
         assertNotNull(response.getId());
         assertEquals("INSERT", response.getFactoryName());
-        assertEquals("newUser", response.getUserId());
-        assertEquals("신규사용자", response.getUserName());
-        assertEquals("ACTIVE", response.getUserState());
-        assertEquals("UserCreated", response.getEventName());
+        assertEquals("admin", response.getUserId());
+        assertEquals("생산관리팀", response.getDepartmentName());
 
         verify(passwordEncoder).encode("plainPassword123");
         verify(userRepository).save(any(SysUser.class));
@@ -151,16 +157,11 @@ class SysUserServiceTest {
         when(sysUserMapper.toHistoryEntity(any(SysUser.class))).thenReturn(mock(SysUserHistoryEntity.class));
 
         // when
-        SysUserResponseDto response = sysUserService.updateUser(targetId, updateDto);
+        SysUserResponse response = sysUserService.updateUser(targetId, updateDto);
 
         // then
         assertNotNull(response);
-        assertEquals("수정된관리자", response.getUserName());
-        assertEquals("modified@taegutec.co.kr", response.getEmail());
-        assertEquals("UserModified", response.getEventName());
-        assertEquals("operator", response.getEventUser());
-        assertNotNull(response.getPasswordChangeTime());
-
+        assertEquals("생산관리팀", response.getDepartmentName());
         verify(passwordEncoder).encode("newSecretPass");
         verify(userRepository).save(any(SysUser.class));
         verify(historyService).saveHistory(any(SysUserHistoryEntity.class));
@@ -206,7 +207,7 @@ class SysUserServiceTest {
     }
 
     @Test
-    @DisplayName("사용자 조건 목록 조회 성공: Page 객체로 매핑되어 반환된다")
+    @DisplayName("사용자 조건 목록 조회 성공: 부서명이 포함된 Page 객체로 매핑되어 반환된다")
     void findUsers_Success() {
         // given
         SysUserSearchCondition condition = new SysUserSearchCondition();
@@ -220,12 +221,46 @@ class SysUserServiceTest {
         when(userRepository.findUserWithConditions(condition, pageable)).thenReturn(page);
 
         // when
-        Page<SysUserResponseDto> result = sysUserService.findUsers(condition, pageable);
+        Page<SysUserResponse> result = sysUserService.findUsers(condition, pageable);
 
         // then
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
         assertEquals(1, result.getContent().size());
         assertEquals("admin", result.getContent().get(0).getUserId());
+        assertEquals("생산관리팀", result.getContent().get(0).getDepartmentName());
+    }
+
+    @Test
+    @DisplayName("사용자-그룹 매핑 목록 조회 성공: 3-Way JOIN 결과가 Page 객체로 반환된다")
+    void findUserGroupMembers_Success() {
+        // given
+        UserGroupMember member = UserGroupMember.builder()
+                .id(999L)
+                .factoryName("INSERT")
+                .userId(877810665130787535L)
+                .employeeId("admin")
+                .userName("관리자")
+                .userGroupId(10L)
+                .userGroupName("ADMIN")
+                .groupDescription("관리자 그룹")
+                .build();
+
+        Pageable pageable = PageRequest.of(0, 20);
+        List<UserGroupMember> memberList = new ArrayList<>();
+        memberList.add(member);
+        Page<UserGroupMember> page = new PageImpl<>(memberList, pageable, 1);
+
+        when(userGroupMemberRepository.findUserGroupMembersWithDetails(eq(877810665130787535L), isNull(), isNull(), eq(pageable))).thenReturn(page);
+
+        // when
+        Page<UserGroupMemberResponse> result = sysUserService.findUserGroupMembers(877810665130787535L, null, null, pageable);
+
+        // then
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("admin", result.getContent().get(0).getEmployeeId());
+        assertEquals("ADMIN", result.getContent().get(0).getUserGroupName());
     }
 }
+

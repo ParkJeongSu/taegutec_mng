@@ -17,17 +17,17 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "사용자 조회 응답 DTO")
-public class SysUserResponseDto {
+@Schema(description = "사용자 조회 응답 DTO (부서명 조인 포함)")
+public class SysUserResponse {
 
-    @Schema(description = "고유 ID", example = "877810665130787535")
+    @Schema(description = "고유 ID (TSID)", example = "877810665130787535")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @Schema(description = "공장 구분", example = "INSERT")
     private String factoryName;
 
-    @Schema(description = "사용자 ID", example = "admin")
+    @Schema(description = "사용자 ID (사번)", example = "admin")
     private String userId;
 
     @Schema(description = "사용자 이름", example = "관리자")
@@ -69,11 +69,11 @@ public class SysUserResponseDto {
     @Schema(description = "이벤트 코멘트", example = "Initial Admin User")
     private String eventComment;
 
-    public static SysUserResponseDto fromDomain(SysUser user) {
+    public static SysUserResponse fromDomain(SysUser user) {
         if (user == null) {
             return null;
         }
-        return SysUserResponseDto.builder()
+        return SysUserResponse.builder()
                 .id(user.getId())
                 .factoryName(user.getFactoryName())
                 .userId(user.getUserId())

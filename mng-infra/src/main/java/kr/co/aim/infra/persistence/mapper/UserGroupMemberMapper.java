@@ -14,6 +14,10 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface UserGroupMemberMapper {
 
+    @Mapping(target = "employeeId", ignore = true)
+    @Mapping(target = "userName", ignore = true)
+    @Mapping(target = "userGroupName", ignore = true)
+    @Mapping(target = "groupDescription", ignore = true)
     UserGroupMember toDomain(UserGroupMemberEntity entity);
 
     UserGroupMemberEntity toEntity(UserGroupMember domain);

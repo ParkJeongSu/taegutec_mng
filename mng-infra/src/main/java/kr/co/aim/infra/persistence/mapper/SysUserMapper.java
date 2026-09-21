@@ -14,6 +14,7 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface SysUserMapper {
 
+    @Mapping(target = "departmentName", ignore = true)
     SysUser toDomain(SysUserEntity entity);
 
     SysUserEntity toEntity(SysUser domain);

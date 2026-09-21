@@ -1,13 +1,16 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.SysUserCreateRequestDto;
-import kr.co.aim.api.dto.SysUserResponseDto;
+import kr.co.aim.api.dto.SysUserResponse;
 import kr.co.aim.api.dto.SysUserUpdateRequestDto;
+import kr.co.aim.api.dto.UserGroupMemberResponse;
 import kr.co.aim.common.condition.SysUserSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.SysUserCreateCommand;
 import kr.co.aim.domain.command.SysUserUpdateCommand;
 import kr.co.aim.domain.model.SysUser;
+import kr.co.aim.domain.model.UserGroupMember;
+import kr.co.aim.domain.repository.UserGroupMemberRepository;
 import kr.co.aim.domain.repository.UserRepository;
 import kr.co.aim.infra.persistence.entity.SysUserHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.SysUserMapper;
@@ -31,33 +34,50 @@ import java.util.Optional;
 public class SysUserService {
 
     private final UserRepository userRepository;
+    private final UserGroupMemberRepository userGroupMemberRepository;
     private final HistoryService historyService;
     private final SysUserMapper sysUserMapper;
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * 조건 및 페이징 기반 사용자 목록 조회
+     * 조건 및 페이징 기반 사용자 목록 조회 (부서명 조인 포함)
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public Page<SysUserResponseDto> findUsers(SysUserSearchCondition condition, Pageable pageable) {
+    public Page<SysUserResponse> findUsers(SysUserSearchCondition condition, Pageable pageable) {
         Page<SysUser> pageResult = userRepository.findUserWithConditions(condition, pageable);
-        List<SysUserResponseDto> content = new ArrayList<>();
+        List<SysUserResponse> content = new ArrayList<>();
         for (SysUser user : pageResult.getContent()) {
-            content.add(SysUserResponseDto.fromDomain(user));
+            content.add(SysUserResponse.fromDomain(user));
         }
         return new PageImpl<>(content, pageable, pageResult.getTotalElements());
     }
 
     /**
-     * ID 기반 사용자 단건 상세 조회
+     * TSID(ID) 기반 사용자 단건 상세 조회 (부서명 조인 포함)
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public SysUserResponseDto findById(Long id) {
+    public SysUserResponse findById(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("조회할 사용자 ID가 유효하지 않습니다.");
+        }
         Optional<SysUser> optionalUser = userRepository.findById(id);
         if (optionalUser.isEmpty()) {
             throw new IllegalArgumentException("해당 사용자가 존재하지 않습니다. ID: " + id);
         }
-        return SysUserResponseDto.fromDomain(optionalUser.get());
+        return SysUserResponse.fromDomain(optionalUser.get());
+    }
+
+    /**
+     * 사용자-그룹 매핑 목록 조회 (3-Way JOIN: USER_GROUP_MEMBER, SYS_USER, USER_GROUP)
+     */
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<UserGroupMemberResponse> findUserGroupMembers(Long userId, Long userGroupId, String factoryName, Pageable pageable) {
+        Page<UserGroupMember> pageResult = userGroupMemberRepository.findUserGroupMembersWithDetails(userId, userGroupId, factoryName, pageable);
+        List<UserGroupMemberResponse> content = new ArrayList<>();
+        for (UserGroupMember member : pageResult.getContent()) {
+            content.add(UserGroupMemberResponse.fromDomain(member));
+        }
+        return new PageImpl<>(content, pageable, pageResult.getTotalElements());
     }
 
     /**
@@ -68,7 +88,7 @@ public class SysUserService {
      * - SYS_USER_HISTORY 동일 트랜잭션 내 자동 적재
      */
     @Transactional(value = "mssqlTransactionManager")
-    public SysUserResponseDto createUser(SysUserCreateRequestDto dto) {
+    public SysUserResponse createUser(SysUserCreateRequestDto dto) {
         if (dto == null) {
             throw new IllegalArgumentException("사용자 등록 정보가 유효하지 않습니다.");
         }
@@ -128,17 +148,22 @@ public class SysUserService {
 
         log.info("SysUser created successfully: [id={}, userId={}, factoryName={}]", savedUser.getId(), savedUser.getUserId(), savedUser.getFactoryName());
 
-        return SysUserResponseDto.fromDomain(savedUser);
+        // 부서 정보 포함 조회
+        Optional<SysUser> reloaded = userRepository.findById(savedUser.getId());
+        if (reloaded.isPresent()) {
+            return SysUserResponse.fromDomain(reloaded.get());
+        }
+        return SysUserResponse.fromDomain(savedUser);
     }
 
     /**
-     * 사용자 정보 수정 (UPDATE)
+     * TSID(ID) 기반 사용자 정보 수정 (UPDATE)
      * - 대상 사용자 존재 검증
      * - 비밀번호 변경 요청 시 PasswordEncoder.encode() 적용 및 passwordChangeTime 갱신
      * - SYS_USER_HISTORY 동일 트랜잭션 내 자동 적재
      */
     @Transactional(value = "mssqlTransactionManager")
-    public SysUserResponseDto updateUser(Long id, SysUserUpdateRequestDto dto) {
+    public SysUserResponse updateUser(Long id, SysUserUpdateRequestDto dto) {
         if (id == null) {
             throw new IllegalArgumentException("수정할 대상 사용자 ID가 누락되었습니다.");
         }
@@ -194,11 +219,16 @@ public class SysUserService {
 
         log.info("SysUser updated successfully: [id={}, userId={}]", updatedUser.getId(), updatedUser.getUserId());
 
-        return SysUserResponseDto.fromDomain(updatedUser);
+        // 부서 정보 포함 재조회
+        Optional<SysUser> reloaded = userRepository.findById(updatedUser.getId());
+        if (reloaded.isPresent()) {
+            return SysUserResponse.fromDomain(reloaded.get());
+        }
+        return SysUserResponse.fromDomain(updatedUser);
     }
 
     /**
-     * 단건 사용자 삭제 (DELETE)
+     * TSID(ID) 기반 단건 사용자 삭제 (DELETE)
      * - 대상 사용자 조회
      * - SYS_USER_HISTORY에 삭제 이력 적재
      * - SYS_USER에서 삭제
@@ -227,14 +257,14 @@ public class SysUserService {
         SysUserHistoryEntity historyEntity = sysUserMapper.toHistoryEntity(sysUser);
         historyService.saveHistory(historyEntity);
 
-        // 3. 사용자 삭제
+        // 3. 사용자 삭제 (TSID 기준)
         userRepository.deleteById(id);
 
         log.info("SysUser deleted successfully: [id={}, userId={}]", id, sysUser.getUserId());
     }
 
     /**
-     * 복수 사용자 벌크 삭제 (DELETE batch)
+     * TSID(ID) 목록 기반 복수 사용자 벌크 삭제 (DELETE batch)
      * - 각 대상 사용자에 대한 삭제 이력 자동 적재
      * - 배치 일괄 삭제
      */
@@ -269,3 +299,4 @@ public class SysUserService {
         log.info("SysUsers batch deleted successfully: [count={}]", ids.size());
     }
 }
+

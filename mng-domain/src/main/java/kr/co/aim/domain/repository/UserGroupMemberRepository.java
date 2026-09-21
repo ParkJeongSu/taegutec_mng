@@ -2,6 +2,9 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.domain.model.UserGroupMember;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -22,4 +25,7 @@ public interface UserGroupMemberRepository {
     void deleteById(Long id);
 
     void deleteAllByIdInBatch(List<Long> ids);
+
+    Page<UserGroupMember> findUserGroupMembersWithDetails(Long userId, Long userGroupId, String factoryName, Pageable pageable);
 }
+

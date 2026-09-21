@@ -20,6 +20,7 @@ public class SysUser implements HasTransactionInfo {
     private String passwordHash;
     private String userName;
     private Long departmentId;
+    private String departmentName;
     private String email;
     private String phoneNumber;
     private String userState;
