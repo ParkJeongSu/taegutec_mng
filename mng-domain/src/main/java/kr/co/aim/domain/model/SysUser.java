@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class User implements HasTransactionInfo {
+public class SysUser implements HasTransactionInfo {
 
     private Long id;
     private String factoryName;

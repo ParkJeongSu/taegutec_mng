@@ -1,10 +1,10 @@
 package kr.co.aim.infra.persistence.adapter;
 
-import kr.co.aim.domain.model.User;
+import kr.co.aim.domain.model.SysUser;
 import kr.co.aim.domain.repository.UserRepository;
-import kr.co.aim.infra.persistence.entity.UserEntity;
-import kr.co.aim.infra.persistence.mapper.UserMapper;
-import kr.co.aim.infra.persistence.springdatajpa.UserJpaRepository;
+import kr.co.aim.infra.persistence.entity.SysUserEntity;
+import kr.co.aim.infra.persistence.mapper.SysUserMapper;
+import kr.co.aim.infra.persistence.springdatajpa.SysUserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -20,61 +20,61 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserRepositoryAdapter implements UserRepository {
 
-    private final UserJpaRepository userJpaRepository;
-    private final UserMapper userMapper;
+    private final SysUserJpaRepository sysUserJpaRepository;
+    private final SysUserMapper sysUserMapper;
 
     @Override
-    public List<User> findAll() {
-        List<UserEntity> entities = userJpaRepository.findAll();
-        List<User> result = new ArrayList<>();
-        for (UserEntity entity : entities) {
-            result.add(userMapper.toDomain(entity));
+    public List<SysUser> findAll() {
+        List<SysUserEntity> entities = sysUserJpaRepository.findAll();
+        List<SysUser> result = new ArrayList<>();
+        for (SysUserEntity entity : entities) {
+            result.add(sysUserMapper.toDomain(entity));
         }
         return result;
     }
 
     @Override
-    public Optional<User> findById(Long id) {
-        Optional<UserEntity> entityOptional = userJpaRepository.findById(id);
+    public Optional<SysUser> findById(Long id) {
+        Optional<SysUserEntity> entityOptional = sysUserJpaRepository.findById(id);
         if (entityOptional.isPresent()) {
-            return Optional.ofNullable(userMapper.toDomain(entityOptional.get()));
+            return Optional.ofNullable(sysUserMapper.toDomain(entityOptional.get()));
         }
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> findByFactoryNameAndUserId(String factoryName, String userId) {
-        Optional<UserEntity> entityOptional = userJpaRepository.findByFactoryNameAndUserId(factoryName, userId);
+    public Optional<SysUser> findByFactoryNameAndUserId(String factoryName, String userId) {
+        Optional<SysUserEntity> entityOptional = sysUserJpaRepository.findByFactoryNameAndUserId(factoryName, userId);
         if (entityOptional.isPresent()) {
-            return Optional.ofNullable(userMapper.toDomain(entityOptional.get()));
+            return Optional.ofNullable(sysUserMapper.toDomain(entityOptional.get()));
         }
         return Optional.empty();
     }
 
     @Override
-    public List<User> findByFactoryName(String factoryName) {
-        List<UserEntity> entities = userJpaRepository.findByFactoryName(factoryName);
-        List<User> result = new ArrayList<>();
-        for (UserEntity entity : entities) {
-            result.add(userMapper.toDomain(entity));
+    public List<SysUser> findByFactoryName(String factoryName) {
+        List<SysUserEntity> entities = sysUserJpaRepository.findByFactoryName(factoryName);
+        List<SysUser> result = new ArrayList<>();
+        for (SysUserEntity entity : entities) {
+            result.add(sysUserMapper.toDomain(entity));
         }
         return result;
     }
 
     @Override
-    public User save(User user) {
-        UserEntity entity = userMapper.toEntity(user);
-        UserEntity savedEntity = userJpaRepository.save(entity);
-        return userMapper.toDomain(savedEntity);
+    public SysUser save(SysUser sysUser) {
+        SysUserEntity entity = sysUserMapper.toEntity(sysUser);
+        SysUserEntity savedEntity = sysUserJpaRepository.save(entity);
+        return sysUserMapper.toDomain(savedEntity);
     }
 
     @Override
     public void deleteById(Long id) {
-        userJpaRepository.deleteById(id);
+        sysUserJpaRepository.deleteById(id);
     }
 
     @Override
     public void deleteAllByIdInBatch(List<Long> ids) {
-        userJpaRepository.deleteAllByIdInBatch(ids);
+        sysUserJpaRepository.deleteAllByIdInBatch(ids);
     }
 }

@@ -1,8 +1,8 @@
 package kr.co.aim.infra.persistence.mapper;
 
-import kr.co.aim.domain.model.User;
-import kr.co.aim.infra.persistence.entity.UserEntity;
-import kr.co.aim.infra.persistence.entity.UserHistoryEntity;
+import kr.co.aim.domain.model.SysUser;
+import kr.co.aim.infra.persistence.entity.SysUserEntity;
+import kr.co.aim.infra.persistence.entity.SysUserHistoryEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
@@ -12,12 +12,12 @@ import org.mapstruct.ReportingPolicy;
         unmappedTargetPolicy = ReportingPolicy.ERROR,
         imports = { kr.co.aim.common.Utils.TsidUtils.class }
 )
-public interface UserMapper {
+public interface SysUserMapper {
 
-    User toDomain(UserEntity entity);
+    SysUser toDomain(SysUserEntity entity);
 
-    UserEntity toEntity(User domain);
+    SysUserEntity toEntity(SysUser domain);
 
     @Mapping(target = "id", expression = "java(TsidUtils.nextId())")
-    UserHistoryEntity toHistoryEntity(User domain);
+    SysUserHistoryEntity toHistoryEntity(SysUser domain);
 }

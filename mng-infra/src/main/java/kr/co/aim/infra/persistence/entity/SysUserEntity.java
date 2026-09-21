@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import kr.co.aim.common.handler.IBaseHistoryEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,9 +14,9 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @AllArgsConstructor
-@Table(name = "USER_HISTORY", catalog = "NEXBEAUTH", schema = "dbo")
+@Table(name = "SYS_USER", catalog = "NEXBEAUTH", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserHistoryEntity implements IBaseHistoryEntity {
+public class SysUserEntity {
 
     @Id
     @Column(name = "ID")
