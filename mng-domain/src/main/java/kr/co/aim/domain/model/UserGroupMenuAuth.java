@@ -1,5 +1,7 @@
 package kr.co.aim.domain.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import kr.co.aim.common.handler.HasTransactionInfo;
 import lombok.*;
 
@@ -16,14 +18,9 @@ public class UserGroupMenuAuth implements HasTransactionInfo {
     private String factoryName;
     private Long userGroupId;
     private Long menuId;
-    private String authLevel;
-    private String readable;
-    private String writable;
-    private String description;
-    private String checkOutState;
-    private LocalDateTime checkOutTime;
-    private String checkOutUser;
-    private String dataState;
+    private String authSelect;
+    private String authSave;
+    private String authDelete;
     private String eventName;
     private LocalDateTime eventTime;
     private String eventUser;

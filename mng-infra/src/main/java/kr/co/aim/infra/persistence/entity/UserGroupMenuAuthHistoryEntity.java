@@ -32,29 +32,14 @@ public class UserGroupMenuAuthHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "MENU_ID")
     private Long menuId;
 
-    @Column(name = "AUTH_LEVEL")
-    private String authLevel;
+    @Column(name = "AUTH_SELECT")
+    private String authSelect;
 
-    @Column(name = "READABLE")
-    private String readable;
+    @Column(name = "AUTH_SAVE")
+    private String authSave;
 
-    @Column(name = "WRITABLE")
-    private String writable;
-
-    @Column(name = "DESCRIPTION")
-    private String description;
-
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "AUTH_DELETE")
+    private String authDelete;
 
     @Column(name = "EVENT_NAME")
     private String eventName;
