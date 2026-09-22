@@ -26,7 +26,7 @@ import java.util.List;
 
 @Tag(name = "MNG System User", description = "기준정보 사용자(SYS_USER) 및 그룹 매핑 관리 API")
 @RestController
-@RequestMapping({"/api/users", "/api/v1/mng/users", "/api/v1/mng/user"})
+@RequestMapping("/api/v1/mng/user")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")
