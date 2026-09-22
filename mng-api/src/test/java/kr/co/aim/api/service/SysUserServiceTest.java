@@ -15,9 +15,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -51,6 +53,9 @@ class SysUserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private PasswordPolicyService passwordPolicyService;
+
     @InjectMocks
     private SysUserService sysUserService;
 
@@ -78,13 +83,13 @@ class SysUserServiceTest {
     }
 
     @Test
-    @DisplayName("사용자 등록 성공: 비밀번호가 암호화되고 TSID와 히스토리가 함께 적재된다")
+    @DisplayName("사용자 등록 성공: 비밀번호 정책 검증 통과 후 암호화되고 TSID와 히스토리가 함께 적재된다")
     void createUser_Success() {
         // given
         SysUserCreateRequestDto request = SysUserCreateRequestDto.builder()
                 .factoryName("INSERT")
                 .userId("newUser")
-                .password("plainPassword123")
+                .password("PlainPass123")
                 .userName("신규사용자")
                 .departmentId(1L)
                 .email("new@taegutec.co.kr")
@@ -96,8 +101,14 @@ class SysUserServiceTest {
                 .build();
 
         when(userRepository.findByFactoryNameAndUserId("INSERT", "newUser")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("plainPassword123")).thenReturn("$2a$10$encodedPassword123");
-        when(userRepository.save(any(SysUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(passwordPolicyService).validatePasswordRules("INSERT", "PlainPass123");
+        when(passwordEncoder.encode("PlainPass123")).thenReturn("$2a$10$encodedPassword123");
+        when(userRepository.save(any(SysUser.class))).thenAnswer(new Answer<SysUser>() {
+            @Override
+            public SysUser answer(org.mockito.invocation.InvocationOnMock invocation) {
+                return invocation.getArgument(0);
+            }
+        });
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(sampleUser));
         when(sysUserMapper.toHistoryEntity(any(SysUser.class))).thenReturn(mock(SysUserHistoryEntity.class));
 
@@ -111,7 +122,8 @@ class SysUserServiceTest {
         assertEquals("admin", response.getUserId());
         assertEquals("생산관리팀", response.getDepartmentName());
 
-        verify(passwordEncoder).encode("plainPassword123");
+        verify(passwordPolicyService).validatePasswordRules("INSERT", "PlainPass123");
+        verify(passwordEncoder).encode("PlainPass123");
         verify(userRepository).save(any(SysUser.class));
         verify(historyService).saveHistory(any(SysUserHistoryEntity.class));
     }
@@ -120,30 +132,36 @@ class SysUserServiceTest {
     @DisplayName("사용자 등록 실패: 동일 공장에 중복된 사용자 ID가 이미 존재할 경우 예외 발생")
     void createUser_DuplicateUserId_ThrowsException() {
         // given
-        SysUserCreateRequestDto request = SysUserCreateRequestDto.builder()
+        final SysUserCreateRequestDto request = SysUserCreateRequestDto.builder()
                 .factoryName("INSERT")
                 .userId("admin")
-                .password("plainPassword123")
+                .password("PlainPass123")
                 .userName("중복관리자")
                 .build();
 
         when(userRepository.findByFactoryNameAndUserId("INSERT", "admin")).thenReturn(Optional.of(sampleUser));
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> sysUserService.createUser(request));
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                sysUserService.createUser(request);
+            }
+        });
+        verify(passwordPolicyService, never()).validatePasswordRules(anyString(), anyString());
         verify(userRepository, never()).save(any(SysUser.class));
         verify(historyService, never()).saveHistory(any());
     }
 
     @Test
-    @DisplayName("사용자 수정 성공: 정보 변경 및 새 비밀번호 암호화 후 히스토리가 적재된다")
+    @DisplayName("사용자 수정 성공: 정보 변경 및 새 비밀번호 정책 검증 후 암호화되고 히스토리가 적재된다")
     void updateUser_Success_WithNewPassword() {
         // given
         Long targetId = sampleUser.getId();
         SysUserUpdateRequestDto updateDto = SysUserUpdateRequestDto.builder()
                 .id(targetId)
                 .factoryName("INSERT")
-                .password("newSecretPass")
+                .password("NewSecretPass1")
                 .userName("수정된관리자")
                 .email("modified@taegutec.co.kr")
                 .eventName("UserModified")
@@ -152,8 +170,14 @@ class SysUserServiceTest {
                 .build();
 
         when(userRepository.findById(targetId)).thenReturn(Optional.of(sampleUser));
-        when(passwordEncoder.encode("newSecretPass")).thenReturn("$2a$10$newSecretPassHash");
-        when(userRepository.save(any(SysUser.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        doNothing().when(passwordPolicyService).validatePasswordRules("INSERT", "NewSecretPass1");
+        when(passwordEncoder.encode("NewSecretPass1")).thenReturn("$2a$10$newSecretPassHash");
+        when(userRepository.save(any(SysUser.class))).thenAnswer(new Answer<SysUser>() {
+            @Override
+            public SysUser answer(org.mockito.invocation.InvocationOnMock invocation) {
+                return invocation.getArgument(0);
+            }
+        });
         when(sysUserMapper.toHistoryEntity(any(SysUser.class))).thenReturn(mock(SysUserHistoryEntity.class));
 
         // when
@@ -162,7 +186,8 @@ class SysUserServiceTest {
         // then
         assertNotNull(response);
         assertEquals("생산관리팀", response.getDepartmentName());
-        verify(passwordEncoder).encode("newSecretPass");
+        verify(passwordPolicyService).validatePasswordRules("INSERT", "NewSecretPass1");
+        verify(passwordEncoder).encode("NewSecretPass1");
         verify(userRepository).save(any(SysUser.class));
         verify(historyService).saveHistory(any(SysUserHistoryEntity.class));
     }
@@ -263,4 +288,3 @@ class SysUserServiceTest {
         assertEquals("ADMIN", result.getContent().get(0).getUserGroupName());
     }
 }
-

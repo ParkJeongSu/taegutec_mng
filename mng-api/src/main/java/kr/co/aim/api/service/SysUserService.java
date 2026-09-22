@@ -38,6 +38,7 @@ public class SysUserService {
     private final HistoryService historyService;
     private final SysUserMapper sysUserMapper;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordPolicyService passwordPolicyService;
 
     /**
      * 조건 및 페이징 기반 사용자 목록 조회 (부서명 조인 포함)
@@ -83,6 +84,7 @@ public class SysUserService {
     /**
      * 신규 사용자 등록 (CREATE)
      * - 중복 검증 (factoryName + userId)
+     * - 비밀번호 복잡도 유효성 검증 (단방향 해싱 이전 평문 상태 검증)
      * - 비밀번호 암호화 (PasswordEncoder.encode)
      * - TSID 사전 발급
      * - SYS_USER_HISTORY 동일 트랜잭션 내 자동 적재
@@ -114,17 +116,20 @@ public class SysUserService {
             throw new IllegalArgumentException("이미 존재하는 사용자 ID입니다: " + userId + " (공장: " + factoryName + ")");
         }
 
-        // 2. 비밀번호 단방향 암호화
+        // 2. 비밀번호 복잡도 정책 검증 (단방향 해싱 이전 평문 상태 검증)
+        passwordPolicyService.validatePasswordRules(factoryName, dto.getPassword().trim());
+
+        // 3. 비밀번호 단방향 암호화
         String encodedPassword = passwordEncoder.encode(dto.getPassword().trim());
 
-        // 3. 트랜잭션 메타데이터 생성
+        // 4. 트랜잭션 메타데이터 생성
         String eventName = (dto.getEventName() != null && !dto.getEventName().trim().isEmpty()) ? dto.getEventName().trim() : "UserCreated";
         String eventUser = (dto.getEventUser() != null && !dto.getEventUser().trim().isEmpty()) ? dto.getEventUser().trim() : "SYSTEM";
         String eventComment = (dto.getEventComment() != null) ? dto.getEventComment().trim() : "User created";
 
         TransactionInfo tx = TransactionInfo.now(eventName, eventUser, eventComment);
 
-        // 4. 도메인 커맨드 객체 구성 및 엔티티 생성 (TSID 내부 자동 발급)
+        // 5. 도메인 커맨드 객체 구성 및 엔티티 생성 (TSID 내부 자동 발급)
         SysUserCreateCommand command = SysUserCreateCommand.builder()
                 .transactionInfo(tx)
                 .factoryName(factoryName)
@@ -139,10 +144,10 @@ public class SysUserService {
 
         SysUser sysUser = SysUser.create(command);
 
-        // 5. SYS_USER 저장
+        // 6. SYS_USER 저장
         SysUser savedUser = userRepository.save(sysUser);
 
-        // 6. 동일 트랜잭션 내 SYS_USER_HISTORY 자동 적재
+        // 7. 동일 트랜잭션 내 SYS_USER_HISTORY 자동 적재
         SysUserHistoryEntity historyEntity = sysUserMapper.toHistoryEntity(savedUser);
         historyService.saveHistory(historyEntity);
 
@@ -159,7 +164,7 @@ public class SysUserService {
     /**
      * TSID(ID) 기반 사용자 정보 수정 (UPDATE)
      * - 대상 사용자 존재 검증
-     * - 비밀번호 변경 요청 시 PasswordEncoder.encode() 적용 및 passwordChangeTime 갱신
+     * - 비밀번호 변경 요청 시 복잡도 정책 검증 후 PasswordEncoder.encode() 적용 및 passwordChangeTime 갱신
      * - SYS_USER_HISTORY 동일 트랜잭션 내 자동 적재
      */
     @Transactional(value = "mssqlTransactionManager")
@@ -179,10 +184,11 @@ public class SysUserService {
 
         SysUser sysUser = optionalUser.get();
 
-        // 2. 비밀번호 변경 여부 확인 및 암호화
+        // 2. 비밀번호 변경 여부 확인 및 복잡도 정책 검증 후 암호화
         String encodedPassword = null;
         LocalDateTime passwordChangeTime = null;
         if (dto.getPassword() != null && !dto.getPassword().trim().isEmpty()) {
+            passwordPolicyService.validatePasswordRules(sysUser.getFactoryName(), dto.getPassword().trim());
             encodedPassword = passwordEncoder.encode(dto.getPassword().trim());
             passwordChangeTime = LocalDateTime.now();
         }
@@ -299,4 +305,3 @@ public class SysUserService {
         log.info("SysUsers batch deleted successfully: [count={}]", ids.size());
     }
 }
-

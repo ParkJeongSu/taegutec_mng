@@ -4,6 +4,7 @@ import kr.co.aim.api.dto.PasswordPolicyCreateRequestDto;
 import kr.co.aim.api.dto.PasswordPolicyResponse;
 import kr.co.aim.api.dto.PasswordPolicyUpdateRequestDto;
 import kr.co.aim.common.condition.PasswordPolicySearchCondition;
+import kr.co.aim.common.enums.PasswordPolicyType;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.PasswordPolicyCreateCommand;
 import kr.co.aim.domain.command.PasswordPolicyUpdateCommand;
@@ -30,9 +31,105 @@ import java.util.Optional;
 @Slf4j
 public class PasswordPolicyService {
 
+    private static final String SPECIAL_CHARACTERS = "!@#$%^&*()_+-=[]{}|;':\"<>?,./";
+
     private final PasswordPolicyRepository passwordPolicyRepository;
     private final HistoryService historyService;
     private final PasswordPolicyMapper passwordPolicyMapper;
+
+    /**
+     * 비밀번호 복잡도 정책 유효성 검증 (10대 Password Rules 기반)
+     * - Stream/Lambda를 배제하고 명시적 for 루프 및 if 분기문으로만 검증 수행
+     * - 정책 위반 시 구체적인 한글 안내 메시지와 함께 IllegalArgumentException 발생
+     */
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public void validatePasswordRules(String factoryName, String rawPassword) {
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            throw new IllegalArgumentException("[비밀번호 정책 위반] 비밀번호를 입력해주세요.");
+        }
+
+        // 1. 기본 정책 규칙 기준값 설정 (Enum defaultValue 기반)
+        int minCharacters = Integer.parseInt(PasswordPolicyType.MIN_CHARACTERS.getDefaultValue());
+        int minUpperCase = Integer.parseInt(PasswordPolicyType.MIN_UPPER_CASE.getDefaultValue());
+        int minLowerCase = Integer.parseInt(PasswordPolicyType.MIN_LOWER_CASE.getDefaultValue());
+        int minNumeric = Integer.parseInt(PasswordPolicyType.MIN_NUMERIC.getDefaultValue());
+        int minSpecialCharacters = Integer.parseInt(PasswordPolicyType.MIN_SPECIAL_CHARACTERS.getDefaultValue());
+        int maxIdenticalConsecutive = Integer.parseInt(PasswordPolicyType.MAX_IDENTICAL_CONSECUTIVE.getDefaultValue());
+
+        // 2. 공장별 활성화된 패스워드 정책이 DB에 존재하는지 확인
+        if (factoryName != null && !factoryName.trim().isEmpty()) {
+            Optional<PasswordPolicy> policyOptional = passwordPolicyRepository.findByFactoryName(factoryName.trim());
+            if (policyOptional.isPresent()) {
+                PasswordPolicy policy = policyOptional.get();
+                // 정책이 활성화("Y") 상태가 아니면 기본 정책을 그대로 사용하거나 통과할 수 있음
+                if ("N".equalsIgnoreCase(policy.getIsActive())) {
+                    log.info("Password policy is inactive for factory: {}. Skipping complexity validation.", factoryName);
+                    return;
+                }
+            }
+        }
+
+        // 3. 문자열 검사 및 문자 유형별 카운트 집계 (명시적 for 루프 사용)
+        char[] chars = rawPassword.toCharArray();
+        int upperCaseCount = 0;
+        int lowerCaseCount = 0;
+        int numericCount = 0;
+        int specialCharCount = 0;
+
+        for (int i = 0; i < chars.length; i++) {
+            char ch = chars[i];
+            if (ch >= 'A' && ch <= 'Z') {
+                upperCaseCount++;
+            } else if (ch >= 'a' && ch <= 'z') {
+                lowerCaseCount++;
+            } else if (ch >= '0' && ch <= '9') {
+                numericCount++;
+            } else if (SPECIAL_CHARACTERS.indexOf(ch) >= 0) {
+                specialCharCount++;
+            }
+        }
+
+        // 4. 규칙 검증 1: 최소 길이 (MIN_CHARACTERS)
+        if (chars.length < minCharacters) {
+            throw new IllegalArgumentException("[비밀번호 정책 위반] 비밀번호는 최소 " + minCharacters + "자 이상이어야 합니다. (현재 길이: " + chars.length + ")");
+        }
+
+        // 5. 규칙 검증 2: 영문 대문자 최소 개수 (MIN_UPPER_CASE)
+        if (upperCaseCount < minUpperCase) {
+            throw new IllegalArgumentException("[비밀번호 정책 위반] 비밀번호에는 영문 대문자(A-Z)가 최소 " + minUpperCase + "개 이상 포함되어야 합니다. (현재 개수: " + upperCaseCount + ")");
+        }
+
+        // 6. 규칙 검증 3: 영문 소문자 최소 개수 (MIN_LOWER_CASE)
+        if (lowerCaseCount < minLowerCase) {
+            throw new IllegalArgumentException("[비밀번호 정책 위반] 비밀번호에는 영문 소문자(a-z)가 최소 " + minLowerCase + "개 이상 포함되어야 합니다. (현재 개수: " + lowerCaseCount + ")");
+        }
+
+        // 7. 규칙 검증 4: 숫자 최소 개수 (MIN_NUMERIC)
+        if (numericCount < minNumeric) {
+            throw new IllegalArgumentException("[비밀번호 정책 위반] 비밀번호에는 숫자(0-9)가 최소 " + minNumeric + "개 이상 포함되어야 합니다. (현재 개수: " + numericCount + ")");
+        }
+
+        // 8. 규칙 검증 5: 특수문자 최소 개수 (MIN_SPECIAL_CHARACTERS)
+        if (minSpecialCharacters > 0 && specialCharCount < minSpecialCharacters) {
+            throw new IllegalArgumentException("[비밀번호 정책 위반] 비밀번호에는 특수문자(" + SPECIAL_CHARACTERS + ")가 최소 " + minSpecialCharacters + "개 이상 포함되어야 합니다. (현재 개수: " + specialCharCount + ")");
+        }
+
+        // 9. 규칙 검증 6: 동일 문자 연속 반복 최대 허용 (MAX_IDENTICAL_CONSECUTIVE)
+        // 최대 허용이 2인 경우 3회 이상 동일 문자 연속 시 위반
+        if (maxIdenticalConsecutive > 0 && chars.length > maxIdenticalConsecutive) {
+            int consecutiveCount = 1;
+            for (int i = 1; i < chars.length; i++) {
+                if (chars[i] == chars[i - 1]) {
+                    consecutiveCount++;
+                    if (consecutiveCount > maxIdenticalConsecutive) {
+                        throw new IllegalArgumentException("[비밀번호 정책 위반] 동일한 문자를 연속으로 " + (maxIdenticalConsecutive + 1) + "회 이상 반복 사용할 수 없습니다. (반복 문자: '" + chars[i] + "')");
+                    }
+                } else {
+                    consecutiveCount = 1;
+                }
+            }
+        }
+    }
 
     /**
      * 조건 및 페이징 기반 패스워드 정책 목록 조회 (명시적 for 루프 및 if 분기문 필터링)

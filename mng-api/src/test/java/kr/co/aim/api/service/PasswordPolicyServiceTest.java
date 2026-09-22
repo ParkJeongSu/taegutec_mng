@@ -62,6 +62,107 @@ class PasswordPolicyServiceTest {
     }
 
     @Test
+    @DisplayName("비밀번호 규칙 검증 성공: 8자 이상, 대문자/소문자/숫자 포함 시 통과")
+    void validatePasswordRules_Success() {
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(samplePolicy));
+
+        assertDoesNotThrow(new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "P@ssword123");
+            }
+        });
+    }
+
+    @Test
+    @DisplayName("비밀번호 규칙 검증 실패: 길이 8자 미만 시 IllegalArgumentException 발생")
+    void validatePasswordRules_LengthUnder_ThrowsException() {
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(samplePolicy));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "Pass12");
+            }
+        });
+        assertTrue(exception.getMessage().contains("최소 8자 이상"));
+    }
+
+    @Test
+    @DisplayName("비밀번호 규칙 검증 실패: 대문자 누락 시 IllegalArgumentException 발생")
+    void validatePasswordRules_NoUpperCase_ThrowsException() {
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(samplePolicy));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "password123");
+            }
+        });
+        assertTrue(exception.getMessage().contains("영문 대문자(A-Z)"));
+    }
+
+    @Test
+    @DisplayName("비밀번호 규칙 검증 실패: 소문자 누락 시 IllegalArgumentException 발생")
+    void validatePasswordRules_NoLowerCase_ThrowsException() {
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(samplePolicy));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "PASSWORD123");
+            }
+        });
+        assertTrue(exception.getMessage().contains("영문 소문자(a-z)"));
+    }
+
+    @Test
+    @DisplayName("비밀번호 규칙 검증 실패: 숫자 누락 시 IllegalArgumentException 발생")
+    void validatePasswordRules_NoNumeric_ThrowsException() {
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(samplePolicy));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "PasswordAbc");
+            }
+        });
+        assertTrue(exception.getMessage().contains("숫자(0-9)"));
+    }
+
+    @Test
+    @DisplayName("비밀번호 규칙 검증 실패: 동일 문자 3회 연속 반복 시 IllegalArgumentException 발생")
+    void validatePasswordRules_IdenticalConsecutive_ThrowsException() {
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(samplePolicy));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "Paaassword123");
+            }
+        });
+        assertTrue(exception.getMessage().contains("연속으로 3회 이상 반복"));
+    }
+
+    @Test
+    @DisplayName("비밀번호 규칙 검증: 정책이 비활성화('N')인 경우 검증 건너뜀")
+    void validatePasswordRules_Inactive_SkipsValidation() {
+        PasswordPolicy inactivePolicy = PasswordPolicy.builder()
+                .factoryName("INSERT")
+                .policyName("INACTIVE_POLICY")
+                .isActive("N")
+                .build();
+        when(passwordPolicyRepository.findByFactoryName("INSERT")).thenReturn(Optional.of(inactivePolicy));
+
+        assertDoesNotThrow(new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                passwordPolicyService.validatePasswordRules("INSERT", "123");
+            }
+        });
+    }
+
+    @Test
     @DisplayName("패스워드 정책 등록 성공: TSID 사전 발급 및 히스토리가 함께 적재된다")
     void createPasswordPolicy_Success() {
         // given
@@ -74,7 +175,7 @@ class PasswordPolicyServiceTest {
                 .eventComment("신규 정책 생성")
                 .build();
 
-        PasswordPolicyHistoryEntity historyEntity = new PasswordPolicyHistoryEntity();
+        PasswordPolicyHistoryEntity historyEntity = mock(PasswordPolicyHistoryEntity.class);
 
         when(passwordPolicyRepository.findByFactoryNameAndPolicyName("INSERT", "DEFAULT_POLICY")).thenReturn(Optional.empty());
         when(passwordPolicyRepository.save(any(PasswordPolicy.class))).thenAnswer(new Answer<PasswordPolicy>() {
@@ -135,7 +236,7 @@ class PasswordPolicyServiceTest {
                 .eventComment("정책 수정")
                 .build();
 
-        PasswordPolicyHistoryEntity historyEntity = new PasswordPolicyHistoryEntity();
+        PasswordPolicyHistoryEntity historyEntity = mock(PasswordPolicyHistoryEntity.class);
 
         when(passwordPolicyRepository.findById(targetId)).thenReturn(Optional.of(samplePolicy));
         when(passwordPolicyRepository.findByFactoryNameAndPolicyName("INSERT", "SECURITY_POLICY_V2")).thenReturn(Optional.empty());
@@ -164,7 +265,7 @@ class PasswordPolicyServiceTest {
     void deletePasswordPolicy_Success() {
         // given
         Long targetId = samplePolicy.getId();
-        PasswordPolicyHistoryEntity historyEntity = new PasswordPolicyHistoryEntity();
+        PasswordPolicyHistoryEntity historyEntity = mock(PasswordPolicyHistoryEntity.class);
 
         when(passwordPolicyRepository.findById(targetId)).thenReturn(Optional.of(samplePolicy));
         when(passwordPolicyMapper.toHistoryEntity(any(PasswordPolicy.class))).thenReturn(historyEntity);
@@ -188,7 +289,7 @@ class PasswordPolicyServiceTest {
 
         PasswordPolicy p1 = PasswordPolicy.builder().id(101L).policyName("정책1").build();
         PasswordPolicy p2 = PasswordPolicy.builder().id(102L).policyName("정책2").build();
-        PasswordPolicyHistoryEntity historyEntity = new PasswordPolicyHistoryEntity();
+        PasswordPolicyHistoryEntity historyEntity = mock(PasswordPolicyHistoryEntity.class);
 
         when(passwordPolicyRepository.findById(101L)).thenReturn(Optional.of(p1));
         when(passwordPolicyRepository.findById(102L)).thenReturn(Optional.of(p2));
