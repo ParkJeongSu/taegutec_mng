@@ -5,15 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import kr.co.aim.common.handler.IBaseHistoryEntity;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
+@Builder
 @AllArgsConstructor
 @Table(name = "USER_GROUP_MEMBER_HISTORY", catalog = "NEXBEAUTH", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
