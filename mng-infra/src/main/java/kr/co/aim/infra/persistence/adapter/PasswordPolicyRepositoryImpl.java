@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 @Repository
 @RequiredArgsConstructor
-public class PasswordPolicyRepositoryAdapter implements PasswordPolicyRepository {
+public class PasswordPolicyRepositoryImpl implements PasswordPolicyRepository {
 
     private final PasswordPolicyJpaRepository passwordPolicyJpaRepository;
     private final PasswordPolicyMapper passwordPolicyMapper;

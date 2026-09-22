@@ -26,41 +26,35 @@ public class MenuHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "FACTORY_NAME")
     private String factoryName;
 
-    @Column(name = "MENU_NAME")
-    private String menuName;
+    @Column(name = "MENU_ID")
+    private String menuId; // 다국어 식별자
 
-    @Column(name = "PARENT_MENU_ID")
-    private Long parentMenuId;
+    @Column(name = "MENU_NAME")
+    private String menuName; // 기본 표시 이름
+
+    @Column(name = "PARENT_ID")
+    private Long parentId; // 부모 메뉴 id
 
     @Column(name = "MENU_LEVEL")
     private Integer menuLevel;
 
-    @Column(name = "DISPLAY_ORDER")
-    private Integer displayOrder;
+    @Column(name = "FILE_PATH")
+    private String filePath; // 실제 vue 파일 위치
 
-    @Column(name = "VIEW_URL")
-    private String viewUrl;
+    @Column(name = "ROUTER_PATH")
+    private String routerPath; // 브라우저의 URL 경로
 
     @Column(name = "ICON_NAME")
     private String iconName;
 
-    @Column(name = "DESCRIPTION")
-    private String description;
+    @Column(name = "DISPLAY_ORDER")
+    private Integer displayOrder;
 
-    @Column(name = "MENU_TYPE")
-    private String menuType;
+    @Column(name = "IS_VISIBLE")
+    private String isVisible;
 
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "USE_STATE")
+    private String useState;
 
     @Column(name = "EVENT_NAME")
     private String eventName;

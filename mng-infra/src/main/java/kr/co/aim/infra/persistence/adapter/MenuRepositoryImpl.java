@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 @Repository
 @RequiredArgsConstructor
-public class MenuRepositoryAdapter implements MenuRepository {
+public class MenuRepositoryImpl implements MenuRepository {
 
     private final MenuJpaRepository menuJpaRepository;
     private final MenuMapper menuMapper;
