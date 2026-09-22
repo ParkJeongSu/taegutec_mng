@@ -34,7 +34,7 @@ import static kr.co.aim.infra.persistence.entity.QUserGroupMemberEntity.userGrou
  */
 @Repository
 @RequiredArgsConstructor
-public class UserGroupMemberRepositoryAdapter implements UserGroupMemberRepository {
+public class UserGroupMemberRepositoryImpl implements UserGroupMemberRepository {
 
     private final UserGroupMemberJpaRepository userGroupMemberJpaRepository;
     private final UserGroupMemberMapper userGroupMemberMapper;

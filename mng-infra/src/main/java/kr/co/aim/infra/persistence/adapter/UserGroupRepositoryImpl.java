@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 @Repository
 @RequiredArgsConstructor
-public class UserGroupRepositoryAdapter implements UserGroupRepository {
+public class UserGroupRepositoryImpl implements UserGroupRepository {
 
     private final UserGroupJpaRepository userGroupJpaRepository;
     private final UserGroupMapper userGroupMapper;

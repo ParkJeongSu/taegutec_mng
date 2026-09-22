@@ -7,13 +7,17 @@ import jakarta.persistence.Table;
 import kr.co.aim.common.handler.IBaseHistoryEntity;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
+@Builder
 @AllArgsConstructor
 @Table(name = "DEPARTMENT_HISTORY", catalog = "NEXBEAUTH", schema = "dbo")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 @Repository
 @RequiredArgsConstructor
-public class UserGroupMenuAuthRepositoryAdapter implements UserGroupMenuAuthRepository {
+public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthRepository {
 
     private final UserGroupMenuAuthJpaRepository userGroupMenuAuthJpaRepository;
     private final UserGroupMenuAuthMapper userGroupMenuAuthMapper;

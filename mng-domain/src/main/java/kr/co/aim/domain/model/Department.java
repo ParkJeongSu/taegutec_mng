@@ -1,6 +1,8 @@
 package kr.co.aim.domain.model;
 
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.handler.HasTransactionInfo;
+import kr.co.aim.domain.command.DepartmentCreateCommand;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -19,4 +21,18 @@ public class Department implements HasTransactionInfo {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
+
+    public static Department create(DepartmentCreateCommand command) {
+        return Department.builder()
+                .id(TsidUtils.nextId())
+                .factoryName(command.getFactoryName())
+                .departmentName(command.getDepartmentName())
+                .useState(command.getUseState())
+                .eventName(command.getTransactionInfo().eventName())
+                .eventTime(command.getTransactionInfo().eventTime())
+                .eventUser(command.getTransactionInfo().eventUser())
+                .eventComment(command.getTransactionInfo().eventComment())
+                .build();
+
+    }
 }

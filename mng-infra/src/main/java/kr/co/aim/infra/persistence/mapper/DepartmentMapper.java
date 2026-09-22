@@ -20,4 +20,7 @@ public interface DepartmentMapper {
 
     @Mapping(target = "id", expression = "java(TsidUtils.nextId())")
     DepartmentHistoryEntity toHistoryEntity(Department domain);
+
+    @Mapping(target = "id", expression = "java(TsidUtils.nextId())")
+    DepartmentHistoryEntity toHistoryEntity(DepartmentEntity entity);
 }

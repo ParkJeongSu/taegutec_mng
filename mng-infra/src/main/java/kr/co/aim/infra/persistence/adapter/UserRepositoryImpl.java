@@ -34,7 +34,7 @@ import static kr.co.aim.infra.persistence.entity.QSysUserEntity.sysUserEntity;
  */
 @Repository
 @RequiredArgsConstructor
-public class UserRepositoryAdapter implements UserRepository {
+public class UserRepositoryImpl implements UserRepository {
 
     private final SysUserJpaRepository sysUserJpaRepository;
     private final SysUserMapper sysUserMapper;
