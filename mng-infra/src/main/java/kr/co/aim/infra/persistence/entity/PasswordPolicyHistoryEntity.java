@@ -29,35 +29,8 @@ public class PasswordPolicyHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "POLICY_NAME")
     private String policyName;
 
-    @Column(name = "MIN_LENGTH")
-    private Integer minLength;
-
-    @Column(name = "MAX_LENGTH")
-    private Integer maxLength;
-
-    @Column(name = "REQUIRE_SPECIAL_CHAR")
-    private String requireSpecialChar;
-
-    @Column(name = "EXPIRATION_DAYS")
-    private Integer expirationDays;
-
-    @Column(name = "MAX_FAILED_ATTEMPTS")
-    private Integer maxFailedAttempts;
-
-    @Column(name = "DESCRIPTION")
-    private String description;
-
-    @Column(name = "CHECK_OUT_STATE")
-    private String checkOutState;
-
-    @Column(name = "CHECK_OUT_TIME")
-    private LocalDateTime checkOutTime;
-
-    @Column(name = "CHECK_OUT_USER")
-    private String checkOutUser;
-
-    @Column(name = "DATA_STATE")
-    private String dataState;
+    @Column(name = "IS_ACTIVE")
+    private String isActive;
 
     @Column(name = "EVENT_NAME")
     private String eventName;
