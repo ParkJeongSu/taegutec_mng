@@ -25,7 +25,7 @@ import java.util.List;
 
 @Tag(name = "MNG Department", description = "기준정보 부서(DEPARTMENT) 관리 API")
 @RestController
-@RequestMapping({"/api/departments", "/api/v1/mng/departments", "/api/v1/mng/department"})
+@RequestMapping("/api/v1/mng/department")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")
