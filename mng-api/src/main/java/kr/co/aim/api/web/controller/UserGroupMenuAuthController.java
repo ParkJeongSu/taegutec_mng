@@ -26,7 +26,7 @@ import java.util.List;
 
 @Tag(name = "MNG User Group Menu Auth", description = "사용자 그룹별 메뉴 권한(USER_GROUP_MENU_AUTH) 관리 API")
 @RestController
-@RequestMapping({"/api/v1/mng/user-group-menu-auth", "/api/v1/mng/user-group-menu-auths", "/api/user-group-menu-auths"})
+@RequestMapping("/api/v1/mng/user-group-menu-auth")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")

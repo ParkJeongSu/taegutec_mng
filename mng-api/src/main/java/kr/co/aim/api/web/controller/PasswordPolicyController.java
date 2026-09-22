@@ -25,7 +25,7 @@ import java.util.List;
 
 @Tag(name = "MNG Password Policy", description = "패스워드 정책(PASSWORD_POLICY) 관리 API")
 @RestController
-@RequestMapping({"/api/v1/mng/password-policy", "/api/v1/mng/password-policies", "/api/password-policies"})
+@RequestMapping("/api/v1/mng/password-policy")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")

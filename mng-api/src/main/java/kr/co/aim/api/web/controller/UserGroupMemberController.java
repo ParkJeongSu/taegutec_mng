@@ -25,7 +25,7 @@ import java.util.List;
 
 @Tag(name = "MNG User Group Member", description = "사용자-그룹 매핑(USER_GROUP_MEMBER) 관리 API")
 @RestController
-@RequestMapping({"/api/v1/mng/user-group-member", "/api/v1/mng/user-group-members", "/api/user-group-members"})
+@RequestMapping("/api/v1/mng/user-group-member")
 @RequiredArgsConstructor
 @Slf4j
 @Profile("web")
