@@ -8,9 +8,7 @@ import kr.co.aim.common.condition.UserGroupMenuAuthSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.UserGroupMenuAuthCreateCommand;
 import kr.co.aim.domain.command.UserGroupMenuAuthUpdateCommand;
-import kr.co.aim.domain.model.Menu;
 import kr.co.aim.domain.model.UserGroupMenuAuth;
-import kr.co.aim.domain.repository.MenuRepository;
 import kr.co.aim.domain.repository.UserGroupMenuAuthRepository;
 import kr.co.aim.infra.persistence.entity.UserGroupMenuAuthHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.UserGroupMenuAuthMapper;
@@ -18,16 +16,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -36,91 +31,28 @@ import java.util.Optional;
 public class UserGroupMenuAuthService {
 
     private final UserGroupMenuAuthRepository userGroupMenuAuthRepository;
-    private final MenuRepository menuRepository;
     private final HistoryService historyService;
     private final UserGroupMenuAuthMapper userGroupMenuAuthMapper;
 
     /**
-     * 조건 및 페이징 기반 사용자 그룹별 메뉴 권한 목록 조회 (명시적 for 루프 및 if 필터링)
+     * 조건 및 페이징 기반 사용자 그룹별 메뉴 권한 목록 조회 (QueryDSL 3-Way JOIN 프로젝션 활용)
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public Page<UserGroupMenuAuthResponse> findUserGroupMenuAuths(UserGroupMenuAuthSearchCondition condition, Pageable pageable) {
-        List<UserGroupMenuAuth> allAuths = userGroupMenuAuthRepository.findAll();
-        List<Menu> allMenus = menuRepository.findAll();
+        Page<UserGroupMenuAuth> pageResult = userGroupMenuAuthRepository.findUserGroupMenuAuthsWithDetails(condition, pageable);
+        List<UserGroupMenuAuthResponse> content = new ArrayList<>();
 
-        Map<Long, Menu> menuMap = new HashMap<>();
-        for (Menu menu : allMenus) {
-            if (menu != null && menu.getId() != null) {
-                menuMap.put(menu.getId(), menu);
+        for (UserGroupMenuAuth auth : pageResult.getContent()) {
+            if (auth != null) {
+                content.add(UserGroupMenuAuthResponse.fromDomain(auth));
             }
         }
 
-        List<UserGroupMenuAuthResponse> filteredList = new ArrayList<>();
-
-        for (UserGroupMenuAuth auth : allAuths) {
-            if (auth == null) {
-                continue;
-            }
-
-            if (condition != null) {
-                if (condition.getFactoryName() != null && !condition.getFactoryName().trim().isEmpty()) {
-                    if (auth.getFactoryName() == null || !auth.getFactoryName().equalsIgnoreCase(condition.getFactoryName().trim())) {
-                        continue;
-                    }
-                }
-                if (condition.getUserGroupId() != null) {
-                    if (auth.getUserGroupId() == null || !condition.getUserGroupId().equals(auth.getUserGroupId())) {
-                        continue;
-                    }
-                }
-                if (condition.getMenuId() != null) {
-                    if (auth.getMenuId() == null || !condition.getMenuId().equals(auth.getMenuId())) {
-                        continue;
-                    }
-                }
-                if (condition.getAuthSelect() != null && !condition.getAuthSelect().trim().isEmpty()) {
-                    if (auth.getAuthSelect() == null || !condition.getAuthSelect().trim().equalsIgnoreCase(auth.getAuthSelect())) {
-                        continue;
-                    }
-                }
-                if (condition.getAuthSave() != null && !condition.getAuthSave().trim().isEmpty()) {
-                    if (auth.getAuthSave() == null || !condition.getAuthSave().trim().equalsIgnoreCase(auth.getAuthSave())) {
-                        continue;
-                    }
-                }
-                if (condition.getAuthDelete() != null && !condition.getAuthDelete().trim().isEmpty()) {
-                    if (auth.getAuthDelete() == null || !condition.getAuthDelete().trim().equalsIgnoreCase(auth.getAuthDelete())) {
-                        continue;
-                    }
-                }
-            }
-
-            Menu menu = null;
-            if (auth.getMenuId() != null) {
-                menu = menuMap.get(auth.getMenuId());
-            }
-
-            filteredList.add(UserGroupMenuAuthResponse.fromDomain(auth, menu));
-        }
-
-        if (pageable == null || pageable.isUnpaged()) {
-            int size = filteredList.isEmpty() ? 1 : filteredList.size();
-            return new PageImpl<>(filteredList, PageRequest.of(0, size), filteredList.size());
-        }
-
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), filteredList.size());
-
-        List<UserGroupMenuAuthResponse> pageContent = new ArrayList<>();
-        if (start <= filteredList.size()) {
-            pageContent = filteredList.subList(start, end);
-        }
-
-        return new PageImpl<>(pageContent, pageable, filteredList.size());
+        return new PageImpl<>(content, pageable, pageResult.getTotalElements());
     }
 
     /**
-     * 특정 사용자 그룹의 전체 메뉴 권한 목록 조회
+     * 특정 사용자 그룹의 전체 메뉴 권한 목록 조회 (3-Way JOIN 프로젝션 결과 반환)
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public List<UserGroupMenuAuthResponse> findByUserGroupId(Long userGroupId) {
@@ -129,23 +61,11 @@ public class UserGroupMenuAuthService {
         }
 
         List<UserGroupMenuAuth> auths = userGroupMenuAuthRepository.findByUserGroupId(userGroupId);
-        List<Menu> allMenus = menuRepository.findAll();
-
-        Map<Long, Menu> menuMap = new HashMap<>();
-        for (Menu menu : allMenus) {
-            if (menu != null && menu.getId() != null) {
-                menuMap.put(menu.getId(), menu);
-            }
-        }
-
         List<UserGroupMenuAuthResponse> result = new ArrayList<>();
+
         for (UserGroupMenuAuth auth : auths) {
             if (auth != null) {
-                Menu menu = null;
-                if (auth.getMenuId() != null) {
-                    menu = menuMap.get(auth.getMenuId());
-                }
-                result.add(UserGroupMenuAuthResponse.fromDomain(auth, menu));
+                result.add(UserGroupMenuAuthResponse.fromDomain(auth));
             }
         }
 
@@ -153,7 +73,7 @@ public class UserGroupMenuAuthService {
     }
 
     /**
-     * TSID(ID) 기반 사용자 그룹별 메뉴 권한 단건 상세 조회
+     * TSID(ID) 기반 사용자 그룹별 메뉴 권한 단건 상세 조회 (3-Way JOIN 프로젝션)
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public UserGroupMenuAuthResponse findById(Long id) {
@@ -166,16 +86,7 @@ public class UserGroupMenuAuthService {
             throw new IllegalArgumentException("해당 메뉴 권한 설정이 존재하지 않습니다. ID: " + id);
         }
 
-        UserGroupMenuAuth auth = optionalAuth.get();
-        Menu menu = null;
-        if (auth.getMenuId() != null) {
-            Optional<Menu> optionalMenu = menuRepository.findById(auth.getMenuId());
-            if (optionalMenu.isPresent()) {
-                menu = optionalMenu.get();
-            }
-        }
-
-        return UserGroupMenuAuthResponse.fromDomain(auth, menu);
+        return UserGroupMenuAuthResponse.fromDomain(optionalAuth.get());
     }
 
     /**
@@ -239,13 +150,13 @@ public class UserGroupMenuAuthService {
         log.info("UserGroupMenuAuth created successfully: [id={}, userGroupId={}, menuId={}, select={}, save={}, delete={}]",
                 savedAuth.getId(), savedAuth.getUserGroupId(), savedAuth.getMenuId(), savedAuth.getAuthSelect(), savedAuth.getAuthSave(), savedAuth.getAuthDelete());
 
-        Menu menu = null;
-        Optional<Menu> optionalMenu = menuRepository.findById(menuId);
-        if (optionalMenu.isPresent()) {
-            menu = optionalMenu.get();
+        // 3-Way JOIN 디테일 포함 재조회
+        Optional<UserGroupMenuAuth> reloaded = userGroupMenuAuthRepository.findById(savedAuth.getId());
+        if (reloaded.isPresent()) {
+            return UserGroupMenuAuthResponse.fromDomain(reloaded.get());
         }
 
-        return UserGroupMenuAuthResponse.fromDomain(savedAuth, menu);
+        return UserGroupMenuAuthResponse.fromDomain(savedAuth);
     }
 
     /**
@@ -298,15 +209,13 @@ public class UserGroupMenuAuthService {
         log.info("UserGroupMenuAuth updated successfully: [id={}, userGroupId={}, menuId={}, select={}, save={}, delete={}]",
                 updatedAuth.getId(), updatedAuth.getUserGroupId(), updatedAuth.getMenuId(), updatedAuth.getAuthSelect(), updatedAuth.getAuthSave(), updatedAuth.getAuthDelete());
 
-        Menu menu = null;
-        if (updatedAuth.getMenuId() != null) {
-            Optional<Menu> optionalMenu = menuRepository.findById(updatedAuth.getMenuId());
-            if (optionalMenu.isPresent()) {
-                menu = optionalMenu.get();
-            }
+        // 3-Way JOIN 디테일 포함 재조회
+        Optional<UserGroupMenuAuth> reloaded = userGroupMenuAuthRepository.findById(updatedAuth.getId());
+        if (reloaded.isPresent()) {
+            return UserGroupMenuAuthResponse.fromDomain(reloaded.get());
         }
 
-        return UserGroupMenuAuthResponse.fromDomain(updatedAuth, menu);
+        return UserGroupMenuAuthResponse.fromDomain(updatedAuth);
     }
 
     /**
@@ -337,16 +246,6 @@ public class UserGroupMenuAuthService {
         String eventComment = (dto.getEventComment() != null) ? dto.getEventComment().trim() : "Batch menu auth saved";
 
         TransactionInfo tx = TransactionInfo.now(eventName, eventUser, eventComment);
-
-        List<Menu> allMenus = menuRepository.findAll();
-        Map<Long, Menu> menuMap = new HashMap<>();
-        for (Menu m : allMenus) {
-            if (m != null && m.getId() != null) {
-                menuMap.put(m.getId(), m);
-            }
-        }
-
-        List<UserGroupMenuAuthResponse> results = new ArrayList<>();
 
         for (UserGroupMenuAuthBatchSaveRequestDto.AuthItem item : dto.getAuthList()) {
             if (item == null || item.getMenuId() == null) {
@@ -387,14 +286,12 @@ public class UserGroupMenuAuthService {
 
             UserGroupMenuAuthHistoryEntity historyEntity = userGroupMenuAuthMapper.toHistoryEntity(saved);
             historyService.saveHistory(historyEntity);
-
-            Menu menu = menuMap.get(menuId);
-            results.add(UserGroupMenuAuthResponse.fromDomain(saved, menu));
         }
 
-        log.info("Batch UserGroupMenuAuth saved successfully: [userGroupId={}, count={}]", userGroupId, results.size());
+        log.info("Batch UserGroupMenuAuth saved successfully: [userGroupId={}, count={}]", userGroupId, dto.getAuthList().size());
 
-        return results;
+        // 3-Way JOIN 적용된 그룹별 전체 목록 반환
+        return findByUserGroupId(userGroupId);
     }
 
     /**

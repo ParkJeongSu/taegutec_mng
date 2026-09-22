@@ -1,6 +1,9 @@
 package kr.co.aim.domain.repository;
 
+import kr.co.aim.common.condition.UserGroupMenuAuthSearchCondition;
 import kr.co.aim.domain.model.UserGroupMenuAuth;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -20,4 +23,6 @@ public interface UserGroupMenuAuthRepository {
     void deleteById(Long id);
 
     void deleteAllByIdInBatch(List<Long> ids);
+
+    Page<UserGroupMenuAuth> findUserGroupMenuAuthsWithDetails(UserGroupMenuAuthSearchCondition condition, Pageable pageable);
 }

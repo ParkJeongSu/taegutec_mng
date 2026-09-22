@@ -3,7 +3,6 @@ package kr.co.aim.api.dto;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
-import kr.co.aim.domain.model.Menu;
 import kr.co.aim.domain.model.UserGroupMenuAuth;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,7 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "사용자 그룹별 메뉴 권한 응답 DTO")
+@Schema(description = "사용자 그룹별 메뉴 권한 응답 DTO (3-Way JOIN 프로젝션)")
 public class UserGroupMenuAuthResponse {
 
     @Schema(description = "권한 고유 ID (TSID)", example = "877810665130787535")
@@ -32,12 +31,12 @@ public class UserGroupMenuAuthResponse {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long userGroupId;
 
+    @Schema(description = "사용자 그룹명 (USER_GROUP.USER_GROUP_NAME)", example = "ADMIN")
+    private String userGroupName;
+
     @Schema(description = "메뉴 고유 ID (MENU.ID 참조키)", example = "877810665130787100")
     @JsonSerialize(using = ToStringSerializer.class)
     private Long menuId;
-
-    @Schema(description = "메뉴 식별자 코드 (MENU.MENU_ID)", example = "MENU_USER_MNG")
-    private String menuCode;
 
     @Schema(description = "메뉴명 (MENU.MENU_NAME)", example = "사용자 관리")
     private String menuName;
@@ -87,7 +86,14 @@ public class UserGroupMenuAuthResponse {
                 .id(domain.getId())
                 .factoryName(domain.getFactoryName())
                 .userGroupId(domain.getUserGroupId())
+                .userGroupName(domain.getUserGroupName())
                 .menuId(domain.getMenuId())
+                .menuName(domain.getMenuName())
+                .parentId(domain.getParentId())
+                .menuLevel(domain.getMenuLevel())
+                .displayOrder(domain.getDisplayOrder())
+                .filePath(domain.getFilePath())
+                .routerPath(domain.getRouterPath())
                 .authSelect(domain.getAuthSelect())
                 .authSave(domain.getAuthSave())
                 .authDelete(domain.getAuthDelete())
@@ -96,22 +102,5 @@ public class UserGroupMenuAuthResponse {
                 .eventUser(domain.getEventUser())
                 .eventComment(domain.getEventComment())
                 .build();
-    }
-
-    public static UserGroupMenuAuthResponse fromDomain(UserGroupMenuAuth domain, Menu menu) {
-        if (domain == null) {
-            return null;
-        }
-        UserGroupMenuAuthResponse response = fromDomain(domain);
-        if (menu != null) {
-            response.setMenuCode(menu.getMenuId());
-            response.setMenuName(menu.getMenuName());
-            response.setParentId(menu.getParentId());
-            response.setMenuLevel(menu.getMenuLevel());
-            response.setDisplayOrder(menu.getDisplayOrder());
-            response.setFilePath(menu.getFilePath());
-            response.setRouterPath(menu.getRouterPath());
-        }
-        return response;
     }
 }

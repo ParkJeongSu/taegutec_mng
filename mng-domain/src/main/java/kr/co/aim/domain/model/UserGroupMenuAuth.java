@@ -18,7 +18,14 @@ public class UserGroupMenuAuth implements HasTransactionInfo {
     private Long id;
     private String factoryName;
     private Long userGroupId;
+    private String userGroupName;
     private Long menuId;
+    private String menuName;
+    private Long parentId;
+    private Integer menuLevel;
+    private Integer displayOrder;
+    private String filePath;
+    private String routerPath;
     private String authSelect;
     private String authSave;
     private String authDelete;

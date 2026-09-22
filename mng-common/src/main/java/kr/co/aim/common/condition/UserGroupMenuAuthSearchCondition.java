@@ -21,8 +21,14 @@ public class UserGroupMenuAuthSearchCondition {
     @Schema(description = "사용자 그룹 고유 ID (USER_GROUP.ID)", example = "877810665130787000")
     private Long userGroupId;
 
+    @Schema(description = "사용자 그룹명 (USER_GROUP.USER_GROUP_NAME)", example = "ADMIN")
+    private String userGroupName;
+
     @Schema(description = "메뉴 고유 ID (MENU.ID)", example = "877810665130787100")
     private Long menuId;
+
+    @Schema(description = "메뉴명 (MENU.MENU_NAME)", example = "사용자 관리")
+    private String menuName;
 
     @Schema(description = "조회 권한 여부 (Y/N)", example = "Y")
     private String authSelect;

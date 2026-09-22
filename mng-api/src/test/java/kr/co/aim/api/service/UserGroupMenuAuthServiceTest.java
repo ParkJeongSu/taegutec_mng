@@ -5,20 +5,22 @@ import kr.co.aim.api.dto.UserGroupMenuAuthCreateRequestDto;
 import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.api.dto.UserGroupMenuAuthUpdateRequestDto;
 import kr.co.aim.common.condition.UserGroupMenuAuthSearchCondition;
-import kr.co.aim.domain.model.Menu;
 import kr.co.aim.domain.model.UserGroupMenuAuth;
-import kr.co.aim.domain.repository.MenuRepository;
 import kr.co.aim.domain.repository.UserGroupMenuAuthRepository;
+import kr.co.aim.infra.persistence.entity.PasswordPolicyHistoryEntity;
 import kr.co.aim.infra.persistence.entity.UserGroupMenuAuthHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.UserGroupMenuAuthMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
@@ -30,15 +32,13 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class UserGroupMenuAuthServiceTest {
 
     @Mock
     private UserGroupMenuAuthRepository userGroupMenuAuthRepository;
-
-    @Mock
-    private MenuRepository menuRepository;
 
     @Mock
     private HistoryService historyService;
@@ -50,7 +50,6 @@ class UserGroupMenuAuthServiceTest {
     private UserGroupMenuAuthService userGroupMenuAuthService;
 
     private UserGroupMenuAuth sampleAuth;
-    private Menu sampleMenu;
 
     @BeforeEach
     void setUp() {
@@ -58,7 +57,14 @@ class UserGroupMenuAuthServiceTest {
                 .id(877810665130787535L)
                 .factoryName("INSERT")
                 .userGroupId(100L)
+                .userGroupName("ADMIN_GROUP")
                 .menuId(200L)
+                .menuName("사용자 관리")
+                .parentId(0L)
+                .menuLevel(1)
+                .displayOrder(10)
+                .filePath("views/system/UserMng.vue")
+                .routerPath("/system/user-mng")
                 .authSelect("Y")
                 .authSave("Y")
                 .authDelete("N")
@@ -67,22 +73,10 @@ class UserGroupMenuAuthServiceTest {
                 .eventUser("SYSTEM")
                 .eventComment("Initial menu auth assignment")
                 .build();
-
-        sampleMenu = Menu.builder()
-                .id(200L)
-                .factoryName("INSERT")
-                .menuId("MENU_USER_MNG")
-                .menuName("사용자 관리")
-                .parentId(0L)
-                .menuLevel(1)
-                .displayOrder(10)
-                .filePath("views/system/UserMng.vue")
-                .routerPath("/system/user-mng")
-                .build();
     }
 
     @Test
-    @DisplayName("메뉴 권한 등록 성공: TSID 사전 발급 및 히스토리가 함께 적재된다")
+    @DisplayName("메뉴 권한 등록 성공: TSID 사전 발급 및 3-Way JOIN 결과가 함께 반환된다")
     void createUserGroupMenuAuth_Success() {
         // given
         UserGroupMenuAuthCreateRequestDto request = UserGroupMenuAuthCreateRequestDto.builder()
@@ -97,13 +91,18 @@ class UserGroupMenuAuthServiceTest {
                 .eventComment("신규 메뉴 권한 부여")
                 .build();
 
-        UserGroupMenuAuthHistoryEntity historyEntity = new UserGroupMenuAuthHistoryEntity();
+        UserGroupMenuAuthHistoryEntity historyEntity = mock(UserGroupMenuAuthHistoryEntity.class);
 
         when(userGroupMenuAuthRepository.findByUserGroupIdAndMenuId(100L, 200L)).thenReturn(Optional.empty());
-        when(userGroupMenuAuthRepository.save(any(UserGroupMenuAuth.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userGroupMenuAuthRepository.save(any(UserGroupMenuAuth.class))).thenAnswer(new Answer<UserGroupMenuAuth>() {
+            @Override
+            public UserGroupMenuAuth answer(org.mockito.invocation.InvocationOnMock invocation) {
+                return invocation.getArgument(0);
+            }
+        });
         when(userGroupMenuAuthMapper.toHistoryEntity(any(UserGroupMenuAuth.class))).thenReturn(historyEntity);
         when(historyService.saveHistory(any(UserGroupMenuAuthHistoryEntity.class))).thenReturn(historyEntity);
-        when(menuRepository.findById(200L)).thenReturn(Optional.of(sampleMenu));
+        when(userGroupMenuAuthRepository.findById(any())).thenReturn(Optional.of(sampleAuth));
 
         // when
         UserGroupMenuAuthResponse response = userGroupMenuAuthService.createUserGroupMenuAuth(request);
@@ -113,11 +112,12 @@ class UserGroupMenuAuthServiceTest {
         assertNotNull(response.getId());
         assertEquals("INSERT", response.getFactoryName());
         assertEquals(100L, response.getUserGroupId());
+        assertEquals("ADMIN_GROUP", response.getUserGroupName());
         assertEquals(200L, response.getMenuId());
+        assertEquals("사용자 관리", response.getMenuName());
         assertEquals("Y", response.getAuthSelect());
         assertEquals("Y", response.getAuthSave());
         assertEquals("N", response.getAuthDelete());
-        assertEquals("사용자 관리", response.getMenuName());
 
         verify(userGroupMenuAuthRepository).save(any(UserGroupMenuAuth.class));
         verify(historyService).saveHistory(any(UserGroupMenuAuthHistoryEntity.class));
@@ -127,7 +127,7 @@ class UserGroupMenuAuthServiceTest {
     @DisplayName("메뉴 권한 등록 실패: 동일 그룹에 동일 메뉴 권한이 이미 존재할 경우 예외 발생")
     void createUserGroupMenuAuth_Duplicate_ThrowsException() {
         // given
-        UserGroupMenuAuthCreateRequestDto request = UserGroupMenuAuthCreateRequestDto.builder()
+        final UserGroupMenuAuthCreateRequestDto request = UserGroupMenuAuthCreateRequestDto.builder()
                 .factoryName("INSERT")
                 .userGroupId(100L)
                 .menuId(200L)
@@ -136,7 +136,12 @@ class UserGroupMenuAuthServiceTest {
         when(userGroupMenuAuthRepository.findByUserGroupIdAndMenuId(100L, 200L)).thenReturn(Optional.of(sampleAuth));
 
         // when & then
-        assertThrows(IllegalArgumentException.class, () -> userGroupMenuAuthService.createUserGroupMenuAuth(request));
+        assertThrows(IllegalArgumentException.class, new Executable() {
+            @Override
+            public void execute() throws Throwable {
+                userGroupMenuAuthService.createUserGroupMenuAuth(request);
+            }
+        });
         verify(userGroupMenuAuthRepository, never()).save(any(UserGroupMenuAuth.class));
         verify(historyService, never()).saveHistory(any());
     }
@@ -155,13 +160,17 @@ class UserGroupMenuAuthServiceTest {
                 .eventComment("저장 권한 회수")
                 .build();
 
-        UserGroupMenuAuthHistoryEntity historyEntity = new UserGroupMenuAuthHistoryEntity();
+        UserGroupMenuAuthHistoryEntity historyEntity = mock(UserGroupMenuAuthHistoryEntity.class);
 
         when(userGroupMenuAuthRepository.findById(targetId)).thenReturn(Optional.of(sampleAuth));
-        when(userGroupMenuAuthRepository.save(any(UserGroupMenuAuth.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userGroupMenuAuthRepository.save(any(UserGroupMenuAuth.class))).thenAnswer(new Answer<UserGroupMenuAuth>() {
+            @Override
+            public UserGroupMenuAuth answer(org.mockito.invocation.InvocationOnMock invocation) {
+                return invocation.getArgument(0);
+            }
+        });
         when(userGroupMenuAuthMapper.toHistoryEntity(any(UserGroupMenuAuth.class))).thenReturn(historyEntity);
         when(historyService.saveHistory(any(UserGroupMenuAuthHistoryEntity.class))).thenReturn(historyEntity);
-        when(menuRepository.findById(200L)).thenReturn(Optional.of(sampleMenu));
 
         // when
         UserGroupMenuAuthResponse response = userGroupMenuAuthService.updateUserGroupMenuAuth(targetId, updateDto);
@@ -194,14 +203,20 @@ class UserGroupMenuAuthServiceTest {
                 .eventComment("전체 권한 부여")
                 .build();
 
-        List<Menu> menus = new ArrayList<>();
-        menus.add(sampleMenu);
+        List<UserGroupMenuAuth> authList = new ArrayList<>();
+        sampleAuth.setAuthDelete("Y");
+        authList.add(sampleAuth);
 
-        when(menuRepository.findAll()).thenReturn(menus);
         when(userGroupMenuAuthRepository.findByUserGroupIdAndMenuId(100L, 200L)).thenReturn(Optional.of(sampleAuth));
-        when(userGroupMenuAuthRepository.save(any(UserGroupMenuAuth.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(userGroupMenuAuthMapper.toHistoryEntity(any(UserGroupMenuAuth.class))).thenReturn(new UserGroupMenuAuthHistoryEntity());
-        when(historyService.saveHistory(any(UserGroupMenuAuthHistoryEntity.class))).thenReturn(new UserGroupMenuAuthHistoryEntity());
+        when(userGroupMenuAuthRepository.save(any(UserGroupMenuAuth.class))).thenAnswer(new Answer<UserGroupMenuAuth>() {
+            @Override
+            public UserGroupMenuAuth answer(org.mockito.invocation.InvocationOnMock invocation) {
+                return invocation.getArgument(0);
+            }
+        });
+        when(userGroupMenuAuthMapper.toHistoryEntity(any(UserGroupMenuAuth.class))).thenReturn(mock(UserGroupMenuAuthHistoryEntity.class));
+        when(historyService.saveHistory(any(UserGroupMenuAuthHistoryEntity.class))).thenReturn(mock(UserGroupMenuAuthHistoryEntity.class));
+        when(userGroupMenuAuthRepository.findByUserGroupId(100L)).thenReturn(authList);
 
         // when
         List<UserGroupMenuAuthResponse> result = userGroupMenuAuthService.saveBatch(batchDto);
@@ -210,6 +225,7 @@ class UserGroupMenuAuthServiceTest {
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("Y", result.get(0).getAuthDelete());
+        assertEquals("ADMIN_GROUP", result.get(0).getUserGroupName());
         verify(userGroupMenuAuthRepository).save(any(UserGroupMenuAuth.class));
         verify(historyService).saveHistory(any(UserGroupMenuAuthHistoryEntity.class));
     }
@@ -219,7 +235,7 @@ class UserGroupMenuAuthServiceTest {
     void deleteUserGroupMenuAuth_Success() {
         // given
         Long targetId = sampleAuth.getId();
-        UserGroupMenuAuthHistoryEntity historyEntity = new UserGroupMenuAuthHistoryEntity();
+        UserGroupMenuAuthHistoryEntity historyEntity = mock(UserGroupMenuAuthHistoryEntity.class);
 
         when(userGroupMenuAuthRepository.findById(targetId)).thenReturn(Optional.of(sampleAuth));
         when(userGroupMenuAuthMapper.toHistoryEntity(any(UserGroupMenuAuth.class))).thenReturn(historyEntity);
@@ -243,7 +259,7 @@ class UserGroupMenuAuthServiceTest {
 
         UserGroupMenuAuth a1 = UserGroupMenuAuth.builder().id(101L).userGroupId(100L).menuId(201L).build();
         UserGroupMenuAuth a2 = UserGroupMenuAuth.builder().id(102L).userGroupId(100L).menuId(202L).build();
-        UserGroupMenuAuthHistoryEntity historyEntity = new UserGroupMenuAuthHistoryEntity();
+        UserGroupMenuAuthHistoryEntity historyEntity = mock(UserGroupMenuAuthHistoryEntity.class);
 
         when(userGroupMenuAuthRepository.findById(101L)).thenReturn(Optional.of(a1));
         when(userGroupMenuAuthRepository.findById(102L)).thenReturn(Optional.of(a2));
@@ -259,22 +275,20 @@ class UserGroupMenuAuthServiceTest {
     }
 
     @Test
-    @DisplayName("메뉴 권한 조건 목록 조회 성공: Page 객체로 매핑되어 반환된다")
+    @DisplayName("메뉴 권한 조건 목록 조회 성공: 3-Way JOIN 프로젝션 기반 Page 객체로 매핑되어 반환된다")
     void findUserGroupMenuAuths_Success() {
         // given
         UserGroupMenuAuthSearchCondition condition = new UserGroupMenuAuthSearchCondition();
         condition.setFactoryName("INSERT");
         condition.setUserGroupId(100L);
+        condition.setUserGroupName("ADMIN");
 
         Pageable pageable = PageRequest.of(0, 20);
         List<UserGroupMenuAuth> authList = new ArrayList<>();
         authList.add(sampleAuth);
+        Page<UserGroupMenuAuth> page = new PageImpl<>(authList, pageable, 1);
 
-        List<Menu> menuList = new ArrayList<>();
-        menuList.add(sampleMenu);
-
-        when(userGroupMenuAuthRepository.findAll()).thenReturn(authList);
-        when(menuRepository.findAll()).thenReturn(menuList);
+        when(userGroupMenuAuthRepository.findUserGroupMenuAuthsWithDetails(condition, pageable)).thenReturn(page);
 
         // when
         Page<UserGroupMenuAuthResponse> result = userGroupMenuAuthService.findUserGroupMenuAuths(condition, pageable);
@@ -284,5 +298,6 @@ class UserGroupMenuAuthServiceTest {
         assertEquals(1, result.getTotalElements());
         assertEquals(1, result.getContent().size());
         assertEquals("사용자 관리", result.getContent().get(0).getMenuName());
+        assertEquals("ADMIN_GROUP", result.getContent().get(0).getUserGroupName());
     }
 }
