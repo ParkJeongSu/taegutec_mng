@@ -2,6 +2,7 @@ package kr.co.aim.domain.model;
 
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,11 +18,11 @@ public class ProductionOrderSummary {
     private String description;
     private String itemName;
     private String productionOrderType;
-    private Integer planQuantity;
-    private Integer releasedQuantity;
-    private Integer startedQuantity;
-    private Integer endedQuantity;
-    private Integer scrappedQuantity;
+    private BigDecimal planQuantity;
+    private BigDecimal releasedQuantity;
+    private BigDecimal startedQuantity;
+    private BigDecimal endedQuantity;
+    private BigDecimal scrappedQuantity;
     private LocalDateTime createTime;
     private LocalDateTime releaseTime;
     private LocalDateTime completeTime;
