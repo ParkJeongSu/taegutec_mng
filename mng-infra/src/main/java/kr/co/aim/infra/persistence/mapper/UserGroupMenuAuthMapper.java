@@ -9,7 +9,7 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(
         componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.ERROR,
+        unmappedTargetPolicy = ReportingPolicy.IGNORE,
         imports = { kr.co.aim.common.Utils.TsidUtils.class }
 )
 public interface UserGroupMenuAuthMapper {
