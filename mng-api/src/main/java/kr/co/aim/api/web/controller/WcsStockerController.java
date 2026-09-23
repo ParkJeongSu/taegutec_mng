@@ -1,4 +1,4 @@
-package kr.co.aim.api.controller;
+package kr.co.aim.api.web.controller;
 
 import jakarta.validation.Valid;
 import kr.co.aim.api.dto.WcsStockerCreateRequestDto;
