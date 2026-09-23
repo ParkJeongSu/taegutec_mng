@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Profile("web")
 @ResponseAnnotation
-@RequestMapping({"/api/v1/wcs/conveyor", "/api/v1/wcs/conveyors"})
+@RequestMapping("/api/v1/wcs/conveyor")
 @RequiredArgsConstructor
 public class WcsConveyorController {
 
