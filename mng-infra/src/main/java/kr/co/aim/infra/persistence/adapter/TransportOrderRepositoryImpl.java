@@ -292,14 +292,18 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                         transportOrderEntity.id.desc()
                 );
 
-        // 3. limit 적용 분기: "I"인 경우에만 limit 설정
+        // 3. limit 설정
         Pageable pageable;
-        if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
-            query.limit(limit);
-            pageable = PageRequest.of(0, limit);
-        } else {
-            pageable = Pageable.unpaged();
-        }
+        query.limit(limit);
+        pageable = PageRequest.of(0, limit);
+
+        // 3. limit 적용 분기: "I"인 경우에만 limit 설정
+//        if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
+//            query.limit(limit);
+//            pageable = PageRequest.of(0, limit);
+//        } else {
+//            pageable = Pageable.unpaged();
+//        }
 
         // 4. 데이터 조회 및 Domain 변환 (람다 미사용)
         List<TransportOrderEntity> entities = query.fetch();

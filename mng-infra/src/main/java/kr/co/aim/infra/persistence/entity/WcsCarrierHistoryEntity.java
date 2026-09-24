@@ -55,7 +55,7 @@ public class WcsCarrierHistoryEntity {
     private String previousCarrierStatus;
 
     @Column(name = "productQuantity")
-    private Integer productQuantity;
+    private String productQuantity;
 
     @Column(name = "zoneName")
     private String zoneName;
@@ -82,7 +82,7 @@ public class WcsCarrierHistoryEntity {
     private String orderId;
 
     @Column(name = "orderLineNumber")
-    private String orderLineNumber;
+    private Integer orderLineNumber;
 
     @Column(name = "productionType")
     private String productionType;
@@ -94,7 +94,7 @@ public class WcsCarrierHistoryEntity {
     private LocalDateTime outboundTime;
 
     @Column(name = "weight")
-    private Double weight;
+    private String weight;
 
     @Column(name = "carrierUseCount")
     private Integer carrierUseCount;

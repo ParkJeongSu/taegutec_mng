@@ -23,14 +23,14 @@ spring:
     active: web # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
   datasource:
     mssql:
-      jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
-      schema-name: dbo  # MSSQL용 스키마
-      username: nexbe # sa
-      password: "!aim123456"
+      #jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
+      #schema-name: dbo  # MSSQL용 스키마
+      #username: nexbe # sa
+      #password: "!aim123456"
       #      office mssql
-      #      jdbc-url: jdbc:sqlserver://192.168.50.135:1433;databaseName=NEXBEMNG;encrypt=false;
-      #      username: nexbe
-      #      password: "!aim123456"
+      jdbc-url: jdbc:sqlserver://192.168.50.135:1433;databaseName=NEXBEMNG;encrypt=false;
+      username: nexbe
+      password: "!aim123456"
       #      taegutec test Server
       #      jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
       #      username: sa

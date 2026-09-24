@@ -25,7 +25,7 @@ public class WcsCarrierResponse {
     private String lotName;
     private String owner;
     private String previousCarrierStatus;
-    private Integer productQuantity;
+    private String productQuantity;
     private String zoneName;
     private String currentEquipmentName;
     private String carrierDetailType;
@@ -34,11 +34,11 @@ public class WcsCarrierResponse {
     private String travelProfile;
     private String itemName;
     private String orderId;
-    private String orderLineNumber;
+    private Integer orderLineNumber;
     private String productionType;
     private LocalDateTime inboundTime;
     private LocalDateTime outboundTime;
-    private Double weight;
+    private String weight;
     private Integer carrierUseCount;
 
     private String lastEventComment;
