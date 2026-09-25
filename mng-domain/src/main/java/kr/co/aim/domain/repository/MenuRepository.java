@@ -20,4 +20,6 @@ public interface MenuRepository {
     void deleteById(Long id);
 
     void deleteAllByIdInBatch(List<Long> ids);
+
+    List<Menu> findAuthorizedMenusByUserId(Long userId);
 }

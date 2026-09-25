@@ -6,6 +6,7 @@ import kr.co.aim.api.dto.DeleteItemListDto;
 import kr.co.aim.api.dto.MenuCreateRequestDto;
 import kr.co.aim.api.dto.MenuResponse;
 import kr.co.aim.api.dto.MenuUpdateRequestDto;
+import kr.co.aim.api.dto.UserAuthorizedMenuResponse;
 import kr.co.aim.api.service.MenuService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.MenuSearchCondition;
@@ -101,5 +102,14 @@ public class MenuController {
             menuService.deleteMenus(deleteDto.getIds(), "SYSTEM", "Batch menus deleted");
         }
         return ResponseEntity.ok("SUCCESS");
+    }
+
+    @Operation(summary = "사용자 권한 메뉴 계층 트리 조회", description = "사용자 ID(TSID) 기준 권한이 부여된 메뉴 목록을 계층 트리 구조로 반환")
+    @GetMapping("/authorized/{userId}")
+    public ResponseEntity<List<UserAuthorizedMenuResponse>> getAuthorizedMenuTree(
+            @PathVariable("userId") Long userId
+    ) {
+        List<UserAuthorizedMenuResponse> tree = menuService.findAuthorizedMenuTree(userId);
+        return ResponseEntity.ok(tree);
     }
 }

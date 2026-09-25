@@ -3,6 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.MenuCreateRequestDto;
 import kr.co.aim.api.dto.MenuResponse;
 import kr.co.aim.api.dto.MenuUpdateRequestDto;
+import kr.co.aim.api.dto.UserAuthorizedMenuResponse;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.condition.MenuSearchCondition;
 import kr.co.aim.domain.model.Menu;
@@ -373,5 +374,56 @@ public class MenuService {
 
         menuRepository.deleteAllByIdInBatch(ids);
         log.info("Menus batch deleted successfully: [count={}]", ids.size());
+    }
+
+    /**
+     * 사용자 ID(TSID) 기준 권한이 있는 메뉴 목록을 계층 트리 구조로 반환
+     * - USER_GROUP_MENU_AUTH 매핑 존재 여부 기준
+     * - MENU.USE_STATE = 'ACTIVE', IS_VISIBLE = 'Y'
+     * - USER_GROUP.USE_STATE = 'ACTIVE'
+     * - 1레벨(대메뉴)의 children에 2레벨(하위메뉴) 트리 구성
+     */
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public List<UserAuthorizedMenuResponse> findAuthorizedMenuTree(Long userId) {
+        if (userId == null) {
+            return new ArrayList<>();
+        }
+
+        List<Menu> authorizedMenus = menuRepository.findAuthorizedMenusByUserId(userId);
+        if (authorizedMenus == null || authorizedMenus.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<UserAuthorizedMenuResponse> level1List = new ArrayList<>();
+        List<UserAuthorizedMenuResponse> level2List = new ArrayList<>();
+
+        for (Menu menu : authorizedMenus) {
+            if (menu == null) {
+                continue;
+            }
+            UserAuthorizedMenuResponse response = UserAuthorizedMenuResponse.fromDomain(menu);
+            if (menu.getMenuLevel() != null && menu.getMenuLevel() == 1) {
+                level1List.add(response);
+            } else {
+                level2List.add(response);
+            }
+        }
+
+        for (UserAuthorizedMenuResponse child : level2List) {
+            if (child == null || child.getParentId() == null) {
+                continue;
+            }
+            for (UserAuthorizedMenuResponse parent : level1List) {
+                if (parent != null && parent.getId() != null && parent.getId().equals(child.getParentId())) {
+                    if (parent.getChildren() == null) {
+                        parent.setChildren(new ArrayList<>());
+                    }
+                    parent.getChildren().add(child);
+                    break;
+                }
+            }
+        }
+
+        return level1List;
     }
 }
