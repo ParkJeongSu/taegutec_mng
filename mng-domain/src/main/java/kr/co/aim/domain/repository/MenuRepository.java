@@ -21,5 +21,5 @@ public interface MenuRepository {
 
     void deleteAllByIdInBatch(List<Long> ids);
 
-    List<Menu> findAuthorizedMenusByUserId(Long userId);
+    List<Menu> findAuthorizedMenusByUserId(String userId);
 }

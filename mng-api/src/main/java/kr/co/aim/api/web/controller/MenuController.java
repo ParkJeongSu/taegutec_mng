@@ -107,7 +107,7 @@ public class MenuController {
     @Operation(summary = "사용자 권한 메뉴 계층 트리 조회", description = "사용자 ID(TSID) 기준 권한이 부여된 메뉴 목록을 계층 트리 구조로 반환")
     @GetMapping("/authorized/{userId}")
     public ResponseEntity<List<UserAuthorizedMenuResponse>> getAuthorizedMenuTree(
-            @PathVariable("userId") Long userId
+            @PathVariable("userId") String userId
     ) {
         List<UserAuthorizedMenuResponse> tree = menuService.findAuthorizedMenuTree(userId);
         return ResponseEntity.ok(tree);

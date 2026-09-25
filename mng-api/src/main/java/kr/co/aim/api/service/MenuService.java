@@ -377,53 +377,70 @@ public class MenuService {
     }
 
     /**
-     * 사용자 ID(TSID) 기준 권한이 있는 메뉴 목록을 계층 트리 구조로 반환
+     * 사용자 ID(사번 문자열) 기준 권한이 있는 메뉴 목록을 계층 트리 구조로 반환
      * - USER_GROUP_MENU_AUTH 매핑 존재 여부 기준
      * - MENU.USE_STATE = 'ACTIVE', IS_VISIBLE = 'Y'
-     * - USER_GROUP.USE_STATE = 'ACTIVE'
-     * - 1레벨(대메뉴)의 children에 2레벨(하위메뉴) 트리 구성
+     * - USER_GROUP.USE_STATE = 'USE' (또는 'ACTIVE')
+     * - 3단계 계층 구조 지원: Level 1(대메뉴) -> Level 2(중메뉴) -> Level 3(소메뉴)
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
-    public List<UserAuthorizedMenuResponse> findAuthorizedMenuTree(Long userId) {
-        if (userId == null) {
+    public List<UserAuthorizedMenuResponse> findAuthorizedMenuTree(String userId) {
+        if (userId == null || userId.trim().isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<Menu> authorizedMenus = menuRepository.findAuthorizedMenusByUserId(userId);
+        List<Menu> authorizedMenus = menuRepository.findAuthorizedMenusByUserId(userId.trim());
         if (authorizedMenus == null || authorizedMenus.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<UserAuthorizedMenuResponse> level1List = new ArrayList<>();
-        List<UserAuthorizedMenuResponse> level2List = new ArrayList<>();
-
+        // 1. 모든 메뉴 응답 객체 생성 및 ID 기준 Map 캐싱 (빠른 부모 탐색용)
+        java.util.Map<Long, UserAuthorizedMenuResponse> menuMap = new java.util.LinkedHashMap<>();
         for (Menu menu : authorizedMenus) {
-            if (menu == null) {
+            if (menu == null || menu.getId() == null) {
                 continue;
             }
             UserAuthorizedMenuResponse response = UserAuthorizedMenuResponse.fromDomain(menu);
-            if (menu.getMenuLevel() != null && menu.getMenuLevel() == 1) {
-                level1List.add(response);
-            } else {
-                level2List.add(response);
+            if (response.getChildren() == null) {
+                response.setChildren(new ArrayList<>());
             }
+            menuMap.put(menu.getId(), response);
         }
 
-        for (UserAuthorizedMenuResponse child : level2List) {
-            if (child == null || child.getParentId() == null) {
+        // 2. 부모-자식 관계 조립 (명시적 for 루프)
+        List<UserAuthorizedMenuResponse> rootMenus = new ArrayList<>();
+
+        for (Menu menu : authorizedMenus) {
+            if (menu == null || menu.getId() == null) {
                 continue;
             }
-            for (UserAuthorizedMenuResponse parent : level1List) {
-                if (parent != null && parent.getId() != null && parent.getId().equals(child.getParentId())) {
+
+            UserAuthorizedMenuResponse current = menuMap.get(menu.getId());
+            if (current == null) {
+                continue;
+            }
+
+            Long parentId = menu.getParentId();
+            Integer menuLevel = menu.getMenuLevel();
+
+            // Level 1이거나 부모 ID가 없는 경우 최상위 루트로 등록
+            if (menuLevel != null && menuLevel == 1 || parentId == null) {
+                rootMenus.add(current);
+            } else {
+                // 부모 노드 검색
+                UserAuthorizedMenuResponse parent = menuMap.get(parentId);
+                if (parent != null) {
                     if (parent.getChildren() == null) {
                         parent.setChildren(new ArrayList<>());
                     }
-                    parent.getChildren().add(child);
-                    break;
+                    parent.getChildren().add(current);
+                } else {
+                    // 권한 목록에 부모가 누락되었을 경우를 대비한 방어 로직 (최상위에 노출)
+                    rootMenus.add(current);
                 }
             }
         }
 
-        return level1List;
+        return rootMenus;
     }
 }

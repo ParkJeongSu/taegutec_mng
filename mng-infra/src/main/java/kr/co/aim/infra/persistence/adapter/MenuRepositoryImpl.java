@@ -4,11 +4,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.domain.model.Menu;
 import kr.co.aim.domain.repository.MenuRepository;
-import kr.co.aim.infra.persistence.entity.MenuEntity;
-import kr.co.aim.infra.persistence.entity.QMenuEntity;
-import kr.co.aim.infra.persistence.entity.QUserGroupEntity;
-import kr.co.aim.infra.persistence.entity.QUserGroupMemberEntity;
-import kr.co.aim.infra.persistence.entity.QUserGroupMenuAuthEntity;
+import kr.co.aim.infra.persistence.entity.*;
 import kr.co.aim.infra.persistence.mapper.MenuMapper;
 import kr.co.aim.infra.persistence.springdatajpa.MenuJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +31,7 @@ public class MenuRepositoryImpl implements MenuRepository {
     private static final QUserGroupMenuAuthEntity menuAuth = QUserGroupMenuAuthEntity.userGroupMenuAuthEntity;
     private static final QUserGroupMemberEntity groupMember = QUserGroupMemberEntity.userGroupMemberEntity;
     private static final QUserGroupEntity userGroup = QUserGroupEntity.userGroupEntity;
+    private static final QSysUserEntity sysUser = QSysUserEntity.sysUserEntity;
 
     @Override
     public List<Menu> findAll() {
@@ -96,30 +93,53 @@ public class MenuRepositoryImpl implements MenuRepository {
     }
 
     @Override
-    public List<Menu> findAuthorizedMenusByUserId(Long userId) {
-        if (userId == null) {
+    public List<Menu> findAuthorizedMenusByUserId(String userId) {
+        if (!StringUtils.hasText(userId)) {
             return new ArrayList<>();
         }
 
-        List<MenuEntity> entities = queryFactory
-                .select(menu)
-                .distinct()
-                .from(menu)
-                .join(menuAuth).on(menuAuth.menuId.eq(menu.id))
-                .join(userGroup).on(userGroup.id.eq(menuAuth.userGroupId))
-                .join(groupMember).on(groupMember.userGroupId.eq(userGroup.id))
-                .where(
-                        groupMemberUserIdEq(userId),
-                        userGroupUseStateEq("ACTIVE"),
-                        menuUseStateEq("ACTIVE"),
-                        menuIsVisibleEq("Y")
-                )
-                .orderBy(
-                        menu.menuLevel.asc(),
-                        menu.displayOrder.asc(),
-                        menu.id.asc()
-                )
-                .fetch();
+        // 1. 해당 사용자가 ADMIN 권한 그룹에 속해 있는지 확인
+        boolean isAdmin = checkUserHasAdminGroup(userId);
+
+        List<MenuEntity> entities;
+
+        if (isAdmin) {
+            // ADMIN 그룹 사용자인 경우: 별도의 권한 테이블 체크 없이 전체 활성 메뉴 조회
+            entities = queryFactory
+                    .selectFrom(menu)
+                    .where(
+                            menuUseStateEq("ACTIVE"),
+                            menuIsVisibleEq("Y")
+                    )
+                    .orderBy(
+                            menu.menuLevel.asc(),
+                            menu.displayOrder.asc(),
+                            menu.id.asc()
+                    )
+                    .fetch();
+        } else {
+            // 일반 사용자 그룹인 경우: USER_GROUP_MENU_AUTH 매핑 기반 조회
+            entities = queryFactory
+                    .select(menu)
+                    .distinct()
+                    .from(menu)
+                    .join(menuAuth).on(menuAuth.menuId.eq(menu.id))
+                    .join(userGroup).on(userGroup.id.eq(menuAuth.userGroupId))
+                    .join(groupMember).on(groupMember.userGroupId.eq(userGroup.id))
+                    .join(sysUser).on(sysUser.id.eq(groupMember.userId)) // 올바른 FK 조인: SYS_USER.ID = USER_GROUP_MEMBER.USER_ID
+                    .where(
+                            sysUserUserIdEq(userId),
+                            userGroupUseStateEq("USE"),
+                            menuUseStateEq("ACTIVE"),
+                            menuIsVisibleEq("Y")
+                    )
+                    .orderBy(
+                            menu.menuLevel.asc(),
+                            menu.displayOrder.asc(),
+                            menu.id.asc()
+                    )
+                    .fetch();
+        }
 
         List<Menu> result = new ArrayList<>();
         if (entities != null) {
@@ -130,6 +150,25 @@ public class MenuRepositoryImpl implements MenuRepository {
             }
         }
         return result;
+    }
+
+    /**
+     * 사용자가 대소문자 무관 'ADMIN'이 포함된 활성 그룹에 속해 있는지 확인
+     */
+    private boolean checkUserHasAdminGroup(String userId) {
+        Integer fetchOne = queryFactory
+                .selectOne()
+                .from(groupMember)
+                .join(userGroup).on(userGroup.id.eq(groupMember.userGroupId))
+                .join(sysUser).on(sysUser.id.eq(groupMember.userId))
+                .where(
+                        sysUserUserIdEq(userId),
+                        userGroupUseStateEq("USE"),
+                        userGroupNameContainsIgnoreCase("ADMIN")
+                )
+                .fetchFirst();
+
+        return fetchOne != null;
     }
 
     // =========================================================================
@@ -144,12 +183,20 @@ public class MenuRepositoryImpl implements MenuRepository {
         return StringUtils.hasText(useState) ? userGroup.useState.equalsIgnoreCase(useState) : null;
     }
 
+    private BooleanExpression userGroupNameContainsIgnoreCase(String groupName) {
+        return StringUtils.hasText(groupName) ? userGroup.userGroupName.containsIgnoreCase(groupName) : null;
+    }
+
     private BooleanExpression menuUseStateEq(String useState) {
         return StringUtils.hasText(useState) ? menu.useState.equalsIgnoreCase(useState) : null;
     }
 
     private BooleanExpression menuIsVisibleEq(String isVisible) {
         return StringUtils.hasText(isVisible) ? menu.isVisible.equalsIgnoreCase(isVisible) : null;
+    }
+
+    private BooleanExpression sysUserUserIdEq(String userId) {
+        return StringUtils.hasText(userId) ? sysUser.userId.eq(userId) : null;
     }
 
     private BooleanExpression menuFactoryNameEq(String factoryName) {
