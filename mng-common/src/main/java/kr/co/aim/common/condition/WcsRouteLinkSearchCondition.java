@@ -12,8 +12,8 @@ public class WcsRouteLinkSearchCondition {
     private String factoryName;
     private Long routeLinkId;
     private String description;
-    private Long fromNodeId;
-    private Long toNodeId;
+    private String fromNodeId;
+    private String toNodeId;
     private String routeLinkType;
     private String processType;
     private String passYn;

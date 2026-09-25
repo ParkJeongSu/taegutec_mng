@@ -114,8 +114,8 @@ public class WcsRouteLinkRepositoryImpl implements WcsRouteLinkRepository {
         String factoryName = (condition != null) ? condition.getFactoryName() : null;
         Long routeLinkId = (condition != null) ? condition.getRouteLinkId() : null;
         String description = (condition != null) ? condition.getDescription() : null;
-        Long fromNodeId = (condition != null) ? condition.getFromNodeId() : null;
-        Long toNodeId = (condition != null) ? condition.getToNodeId() : null;
+        String fromNodeId = (condition != null) ? condition.getFromNodeId() : null;
+        String toNodeId = (condition != null) ? condition.getToNodeId() : null;
         String routeLinkType = (condition != null) ? condition.getRouteLinkType() : null;
         String processType = (condition != null) ? condition.getProcessType() : null;
         String passYn = (condition != null) ? condition.getPassYn() : null;
@@ -129,8 +129,8 @@ public class WcsRouteLinkRepositoryImpl implements WcsRouteLinkRepository {
                         factoryNameContains(factoryName),
                         routeLinkIdEq(routeLinkId),
                         descriptionContains(description),
-                        fromNodeIdEq(fromNodeId),
-                        toNodeIdEq(toNodeId),
+                        fromNodeIdContains(fromNodeId),
+                        toNodeIdContains(toNodeId),
                         routeLinkTypeEq(routeLinkType),
                         processTypeEq(processType),
                         passYnEq(passYn),
@@ -163,8 +163,8 @@ public class WcsRouteLinkRepositoryImpl implements WcsRouteLinkRepository {
                             factoryNameContains(factoryName),
                             routeLinkIdEq(routeLinkId),
                             descriptionContains(description),
-                            fromNodeIdEq(fromNodeId),
-                            toNodeIdEq(toNodeId),
+                            fromNodeIdContains(fromNodeId),
+                            toNodeIdContains(toNodeId),
                             routeLinkTypeEq(routeLinkType),
                             processTypeEq(processType),
                             passYnEq(passYn),
@@ -212,12 +212,12 @@ public class WcsRouteLinkRepositoryImpl implements WcsRouteLinkRepository {
         return StringUtils.hasText(description) ? qRouteLink.description.contains(description) : null;
     }
 
-    private BooleanExpression fromNodeIdEq(Long fromNodeId) {
-        return fromNodeId != null ? qRouteLink.fromNodeId.eq(fromNodeId) : null;
+    private BooleanExpression fromNodeIdContains(String fromNodeId) {
+        return StringUtils.hasText(fromNodeId) ? qRouteLink.fromNodeId.contains(fromNodeId) : null;
     }
 
-    private BooleanExpression toNodeIdEq(Long toNodeId) {
-        return toNodeId != null ? qRouteLink.toNodeId.eq(toNodeId) : null;
+    private BooleanExpression toNodeIdContains(String toNodeId) {
+        return StringUtils.hasText(toNodeId) ? qRouteLink.toNodeId.contains(toNodeId) : null;
     }
 
     private BooleanExpression routeLinkTypeEq(String routeLinkType) {

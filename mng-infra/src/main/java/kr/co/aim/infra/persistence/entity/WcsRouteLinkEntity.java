@@ -26,8 +26,8 @@ public class WcsRouteLinkEntity {
     @Column(name = "description", length = 255)
     private String description;
 
-    @Column(name = "fromNodeId")
-    private Long fromNodeId;
+    @Column(name = "fromNodeId", length = 100)
+    private String fromNodeId;
 
     @Column(name = "[length]")
     private Integer length;
@@ -44,8 +44,8 @@ public class WcsRouteLinkEntity {
     @Column(name = "routeLinkType", length = 30)
     private String routeLinkType;
 
-    @Column(name = "toNodeId")
-    private Long toNodeId;
+    @Column(name = "toNodeId", length = 100)
+    private String toNodeId;
 
     @Column(name = "usableYn", length = 1)
     private String usableYn;

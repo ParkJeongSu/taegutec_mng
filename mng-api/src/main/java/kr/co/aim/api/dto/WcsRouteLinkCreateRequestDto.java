@@ -18,13 +18,13 @@ public class WcsRouteLinkCreateRequestDto {
     private Long routeLinkId;
 
     private String description;
-    private Long fromNodeId;
+    private String fromNodeId;
     private Integer length;
     private String passYn;
     private Integer priority;
     private String processType;
     private String routeLinkType;
-    private Long toNodeId;
+    private String toNodeId;
     private String usableYn;
     private String useYn;
 

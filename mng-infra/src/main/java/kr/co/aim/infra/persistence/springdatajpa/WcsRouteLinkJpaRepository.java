@@ -12,7 +12,7 @@ public interface WcsRouteLinkJpaRepository extends JpaRepository<WcsRouteLinkEnt
 
     List<WcsRouteLinkEntity> findByFactoryName(String factoryName);
 
-    List<WcsRouteLinkEntity> findByFactoryNameAndFromNodeId(String factoryName, Long fromNodeId);
+    List<WcsRouteLinkEntity> findByFactoryNameAndFromNodeId(String factoryName, String fromNodeId);
 
-    List<WcsRouteLinkEntity> findByFactoryNameAndToNodeId(String factoryName, Long toNodeId);
+    List<WcsRouteLinkEntity> findByFactoryNameAndToNodeId(String factoryName, String toNodeId);
 }
