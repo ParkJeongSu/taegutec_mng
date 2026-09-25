@@ -4,10 +4,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.aim.api.dto.WcsTransferCommandCreateRequestDto;
+import kr.co.aim.api.dto.WcsTransferCommandHistoryResponse;
 import kr.co.aim.api.dto.WcsTransferCommandResponse;
 import kr.co.aim.api.dto.WcsTransferCommandUpdateRequestDto;
 import kr.co.aim.api.service.WcsTransferCommandService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
+import kr.co.aim.common.condition.WcsTransferCommandHistorySearchCondition;
 import kr.co.aim.common.condition.WcsTransferCommandSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -26,6 +28,18 @@ import org.springframework.web.bind.annotation.*;
 public class WcsTransferCommandController {
 
     private final WcsTransferCommandService wcsTransferCommandService;
+
+    /**
+     * WCS 반송 명령 이력 조건별 목록 조회 (페이징 지원)
+     */
+    @Operation(summary = "WCS 반송 명령 이력 목록 조회", description = "동적 조건 및 페이징 처리를 통한 WCS 반송 명령 이력 목록 조회")
+    @GetMapping("/history")
+    public ResponseEntity<Page<WcsTransferCommandHistoryResponse>> findHistory(
+            WcsTransferCommandHistorySearchCondition condition,
+            Pageable pageable) {
+        Page<WcsTransferCommandHistoryResponse> response = wcsTransferCommandService.findHistory(condition, pageable);
+        return ResponseEntity.ok(response);
+    }
 
     /**
      * WCS 반송 명령 조건별 목록 조회 (페이징 지원)

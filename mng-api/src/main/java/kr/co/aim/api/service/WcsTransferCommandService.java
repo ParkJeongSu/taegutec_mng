@@ -1,13 +1,16 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.WcsTransferCommandCreateRequestDto;
+import kr.co.aim.api.dto.WcsTransferCommandHistoryResponse;
 import kr.co.aim.api.dto.WcsTransferCommandResponse;
 import kr.co.aim.api.dto.WcsTransferCommandUpdateRequestDto;
+import kr.co.aim.common.condition.WcsTransferCommandHistorySearchCondition;
 import kr.co.aim.common.condition.WcsTransferCommandSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsTransferCommandCreateCommand;
 import kr.co.aim.domain.command.WcsTransferCommandUpdateCommand;
 import kr.co.aim.domain.model.WcsTransferCommand;
+import kr.co.aim.domain.repository.WcsTransferCommandHistoryRepository;
 import kr.co.aim.domain.repository.WcsTransferCommandRepository;
 import kr.co.aim.infra.persistence.entity.WcsTransferCommandHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.WcsTransferCommandMapper;
@@ -32,8 +35,26 @@ import java.util.Optional;
 public class WcsTransferCommandService {
 
     private final WcsTransferCommandRepository wcsTransferCommandRepository;
+    private final WcsTransferCommandHistoryRepository wcsTransferCommandHistoryRepository;
     private final WcsTransferCommandHistoryJpaRepository wcsTransferCommandHistoryJpaRepository;
     private final WcsTransferCommandMapper wcsTransferCommandMapper;
+
+    /**
+     * 조건 및 페이징 기반 WCS 반송 명령 이력 목록 조회
+     */
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public Page<WcsTransferCommandHistoryResponse> findHistory(WcsTransferCommandHistorySearchCondition condition, Pageable pageable) {
+        Page<WcsTransferCommandHistoryEntity> historyPage = wcsTransferCommandHistoryRepository.findHistory(condition, pageable);
+        List<WcsTransferCommandHistoryResponse> content = new ArrayList<>();
+
+        for (WcsTransferCommandHistoryEntity entity : historyPage.getContent()) {
+            if (entity != null) {
+                content.add(WcsTransferCommandHistoryResponse.fromEntity(entity));
+            }
+        }
+
+        return new PageImpl<>(content, pageable, historyPage.getTotalElements());
+    }
 
     /**
      * 조건 및 페이징 기반 WCS 반송 명령 목록 조회
