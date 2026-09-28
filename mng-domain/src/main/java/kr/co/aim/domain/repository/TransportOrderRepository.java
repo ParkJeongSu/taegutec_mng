@@ -1,6 +1,7 @@
 package kr.co.aim.domain.repository;
 
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.RecentTransportOrderResponse;
 import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
 import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
 import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
@@ -55,7 +56,7 @@ public interface TransportOrderRepository {
 
     TransportOrderStatisticsResponse getWorkStationStatistics(String workStationId, LocalDate targetDate);
 
-    Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit);
+    Page<RecentTransportOrderResponse> findRecentTransportOrders(String workStationId, String transportType, int limit);
 
     Page<WorkStationTransportCountResponse> getWorkStationTransportCounts(LocalDate targetDate, Pageable pageable);
 

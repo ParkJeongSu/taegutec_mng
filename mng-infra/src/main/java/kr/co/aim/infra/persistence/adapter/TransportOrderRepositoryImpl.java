@@ -11,6 +11,8 @@ import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.QRecentTransportOrderResponse;
+import kr.co.aim.common.dto.RecentTransportOrderResponse;
 import kr.co.aim.common.dto.insert.*;
 import kr.co.aim.common.enums.TransportOrderStatus;
 import kr.co.aim.common.enums.TransportOrderType;
@@ -30,6 +32,7 @@ import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static kr.co.aim.infra.persistence.entity.QTransportJobEntity.transportJobEntity;
 import static kr.co.aim.infra.persistence.entity.QTransportOrderEntity.transportOrderEntity;
 
 @Repository
@@ -258,7 +261,7 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
     }
 
     @Override
-    public Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit) {
+    public Page<RecentTransportOrderResponse> findRecentTransportOrders(String workStationId, String transportType, int limit) {
         // 1. transportType에 따른 status 조건 목록 분기
         List<String> targetStatuses;
 
@@ -279,9 +282,50 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
             targetStatuses = Collections.emptyList();
         }
 
-        // 2. 기본 쿼리 생성
-        JPAQuery<TransportOrderEntity> query = queryFactory
-                .selectFrom(transportOrderEntity)
+        // 2. limit 설정
+        Pageable pageable = PageRequest.of(0, limit);
+
+        // 3. 데이터 조회 (TransportJob leftJoin 및 QRecentTransportOrderResponse Projection)
+        List<RecentTransportOrderResponse> content = queryFactory
+                .select(new QRecentTransportOrderResponse(
+                        transportOrderEntity.id,
+                        transportOrderEntity.transportOrderId,
+                        transportOrderEntity.idocId,
+                        transportOrderEntity.description,
+                        transportOrderEntity.carrierName,
+                        transportOrderEntity.virtualCarrierName,
+                        transportOrderEntity.transportType,
+                        transportOrderEntity.transportStatus,
+                        transportOrderEntity.lastTransactionCode,
+                        transportOrderEntity.carrierType,
+                        transportOrderEntity.priority,
+                        transportOrderEntity.galId,
+                        transportOrderEntity.galWarehouse,
+                        transportOrderEntity.locationId,
+                        transportOrderEntity.workStationId,
+                        transportOrderEntity.sourceZoneName,
+                        transportOrderEntity.destinationZoneName,
+                        transportOrderEntity.errorText,
+                        transportOrderEntity.actualWeight,
+                        transportOrderEntity.requestedZoneName,
+                        transportOrderEntity.actualZoneName,
+                        transportOrderEntity.actualLocationId,
+                        transportOrderEntity.travelProfile,
+                        transportOrderEntity.createTime,
+                        transportOrderEntity.releaseTime,
+                        transportOrderEntity.completeTime,
+                        transportOrderEntity.retrievalTime,
+                        transportOrderEntity.createUser,
+                        transportOrderEntity.releaseUser,
+                        transportOrderEntity.completeUser,
+                        transportOrderEntity.eventName,
+                        transportOrderEntity.eventTime,
+                        transportOrderEntity.eventUser,
+                        transportOrderEntity.eventComment,
+                        transportJobEntity.transportJobName
+                ))
+                .from(transportOrderEntity)
+                .leftJoin(transportJobEntity).on(transportJobEntity.orderId.eq(transportOrderEntity.transportOrderId))
                 .where(
                         workStationIdEq(workStationId),
                         transportTypeEq(transportType),
@@ -290,29 +334,11 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .orderBy(
                         transportOrderEntity.createTime.desc(),
                         transportOrderEntity.id.desc()
-                );
+                )
+                .limit(limit)
+                .fetch();
 
-        // 3. limit 설정
-        Pageable pageable;
-        query.limit(limit);
-        pageable = PageRequest.of(0, limit);
-
-        // 3. limit 적용 분기: "I"인 경우에만 limit 설정
-//        if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
-//            query.limit(limit);
-//            pageable = PageRequest.of(0, limit);
-//        } else {
-//            pageable = Pageable.unpaged();
-//        }
-
-        // 4. 데이터 조회 및 Domain 변환 (람다 미사용)
-        List<TransportOrderEntity> entities = query.fetch();
-        List<TransportOrder> content = new ArrayList<>();
-        for (TransportOrderEntity entity : entities) {
-            content.add(transportOrderMapper.toDomain(entity));
-        }
-
-        // 5. Total Count 조회
+        // 4. Total Count 조회
         long total;
         if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
             Long count = queryFactory

@@ -3,6 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.RecentTransportOrderResponse;
 import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
 import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
 import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
@@ -144,7 +145,7 @@ public class TransportOrderService {
     }
 
     @Transactional("mssqlTransactionManager")
-    public Page<TransportOrder> findRecentTransportOrders(String workStationId, String transportType, int limit) {
+    public Page<RecentTransportOrderResponse> findRecentTransportOrders(String workStationId, String transportType, int limit) {
         return transportOrderRepository.findRecentTransportOrders(workStationId, transportType, limit);
     }
 

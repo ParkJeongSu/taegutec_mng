@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.TransportOrderService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.TransportOrderSearchCondition;
+import kr.co.aim.common.dto.RecentTransportOrderResponse;
 import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
 import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
 import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
@@ -74,7 +75,7 @@ public class TransportOrderController {
 
     @Operation(summary = "WorkStation별 최신 Transport Order 목록 조회", description = "WorkStation 및 Transport Type(I/O) 기준으로 최신 n개의 오더를 조회합니다.")
     @GetMapping("/recent")
-    public ResponseEntity<Page<TransportOrder>> getRecentTransportOrders(
+    public ResponseEntity<Page<RecentTransportOrderResponse>> getRecentTransportOrders(
             @Parameter(description = "워크스테이션 ID", example = "341", required = true)
             @RequestParam(name = "work-station-id") String workStationId,
 
@@ -84,7 +85,7 @@ public class TransportOrderController {
             @Parameter(description = "조회할 데이터 건수 (n개)", example = "5")
             @RequestParam(name = "limit", defaultValue = "5") int limit
     ) {
-        Page<TransportOrder> result = transportOrderService.findRecentTransportOrders(workStationId, transportType, limit);
+        Page<RecentTransportOrderResponse> result = transportOrderService.findRecentTransportOrders(workStationId, transportType, limit);
         return ResponseEntity.ok(result);
     }
 
