@@ -1,5 +1,6 @@
 package kr.co.aim.api.dto;
 
+import kr.co.aim.domain.model.WcsTransferCommandHistory;
 import kr.co.aim.infra.persistence.entity.WcsTransferCommandHistoryEntity;
 import lombok.*;
 
@@ -55,6 +56,33 @@ public class WcsTransferCommandHistoryResponse {
                 .eventTime(entity.getEventTime())
                 .eventUser(entity.getEventUser())
                 .eventComment(entity.getEventComment())
+                .build();
+    }
+
+    public static WcsTransferCommandHistoryResponse fromDomain(WcsTransferCommandHistory domain) {
+        if (domain == null) {
+            return null;
+        }
+
+        return WcsTransferCommandHistoryResponse.builder()
+                .eventTimeKey(domain.getEventTimeKey())
+                .transferCommandName(domain.getTransferCommandName())
+                .carrierName(domain.getCarrierName())
+                .commandStatus(domain.getCommandStatus())
+                .currentEquipmentName(domain.getCurrentEquipmentName())
+                .orderType(domain.getOrderType())
+                .source(domain.getSource())
+                .target(domain.getTarget())
+                .targetEquipmentName(domain.getTargetEquipmentName())
+                .subCommandJobNo(domain.getSubCommandJobNo())
+                .subCommandStatus(domain.getSubCommandStatus())
+                .jobStartTime(domain.getJobStartTime())
+                .jobCompletedTime(domain.getJobCompletedTime())
+                .createTime(domain.getCreateTime())
+                .eventName(domain.getEventName())
+                .eventTime(domain.getEventTime())
+                .eventUser(domain.getEventUser())
+                .eventComment(domain.getEventComment())
                 .build();
     }
 }

@@ -34,9 +34,9 @@ public class UserGroupMenuAuthResponse {
     @Schema(description = "사용자 그룹명 (USER_GROUP.USER_GROUP_NAME)", example = "ADMIN")
     private String userGroupName;
 
-    @Schema(description = "메뉴 고유 ID (MENU.ID 참조키)", example = "877810665130787100")
+    @Schema(description = "메뉴 TSID (Long)", example = "877810665130787535")
     @JsonSerialize(using = ToStringSerializer.class)
-    private Long menuId;
+    private Long menuId; // 프론트 트리 체크 키로 사용
 
     @Schema(description = "메뉴명 (MENU.MENU_NAME)", example = "사용자 관리")
     private String menuName;

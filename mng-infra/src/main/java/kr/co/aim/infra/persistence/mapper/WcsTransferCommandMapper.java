@@ -1,6 +1,7 @@
 package kr.co.aim.infra.persistence.mapper;
 
 import kr.co.aim.domain.model.WcsTransferCommand;
+import kr.co.aim.domain.model.WcsTransferCommandHistory;
 import kr.co.aim.infra.persistence.entity.WcsTransferCommandEntity;
 import kr.co.aim.infra.persistence.entity.WcsTransferCommandHistoryEntity;
 import org.mapstruct.Mapper;
@@ -23,4 +24,7 @@ public interface WcsTransferCommandMapper {
     @Mapping(target = "eventUser", source = "lastEventUser")
     @Mapping(target = "eventComment", source = "lastEventComment")
     WcsTransferCommandHistoryEntity toHistoryEntity(WcsTransferCommand domain);
+
+    WcsTransferCommandHistory toHistoryDomain(WcsTransferCommandHistoryEntity historyEntity);
+
 }

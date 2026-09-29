@@ -7,9 +7,11 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.condition.WcsTransferCommandHistorySearchCondition;
+import kr.co.aim.domain.model.WcsTransferCommandHistory;
 import kr.co.aim.domain.repository.WcsTransferCommandHistoryRepository;
 import kr.co.aim.infra.persistence.entity.QWcsTransferCommandHistoryEntity;
 import kr.co.aim.infra.persistence.entity.WcsTransferCommandHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.WcsTransferCommandMapper;
 import kr.co.aim.infra.persistence.springdatajpa.WcsTransferCommandHistoryJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,12 +30,13 @@ import java.util.List;
 public class WcsTransferCommandHistoryRepositoryImpl implements WcsTransferCommandHistoryRepository {
 
     private final WcsTransferCommandHistoryJpaRepository wcsTransferCommandHistoryJpaRepository;
+    private final WcsTransferCommandMapper wcsTransferCommandMapper;
     private final JPAQueryFactory queryFactory;
 
     private static final QWcsTransferCommandHistoryEntity qHistory = QWcsTransferCommandHistoryEntity.wcsTransferCommandHistoryEntity;
 
     @Override
-    public Page<WcsTransferCommandHistoryEntity> findHistory(WcsTransferCommandHistorySearchCondition condition, Pageable pageable) {
+    public Page<WcsTransferCommandHistory> findHistory(WcsTransferCommandHistorySearchCondition condition, Pageable pageable) {
         String transferCommandName = (condition != null) ? condition.getTransferCommandName() : null;
         String carrierName = (condition != null) ? condition.getCarrierName() : null;
         String commandStatus = (condition != null) ? condition.getCommandStatus() : null;
@@ -66,6 +69,11 @@ public class WcsTransferCommandHistoryRepositoryImpl implements WcsTransferComma
         if (content == null) {
             content = new ArrayList<>();
         }
+        List<WcsTransferCommandHistory> commandHistoryList = new ArrayList<>();
+        for (WcsTransferCommandHistoryEntity entity : content) {
+            WcsTransferCommandHistory domain = wcsTransferCommandMapper.toHistoryDomain(entity);
+            commandHistoryList.add(domain);
+        }
 
         long total;
         if (pageable != null && pageable.isPaged()) {
@@ -87,7 +95,7 @@ public class WcsTransferCommandHistoryRepositoryImpl implements WcsTransferComma
             total = content.size();
         }
 
-        return new PageImpl<>(content, pageable != null ? pageable : Pageable.unpaged(), total);
+        return new PageImpl<>(commandHistoryList, pageable != null ? pageable : Pageable.unpaged(), total);
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {

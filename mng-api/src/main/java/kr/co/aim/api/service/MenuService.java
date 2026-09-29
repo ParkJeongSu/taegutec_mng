@@ -4,10 +4,13 @@ import kr.co.aim.api.dto.MenuCreateRequestDto;
 import kr.co.aim.api.dto.MenuResponse;
 import kr.co.aim.api.dto.MenuUpdateRequestDto;
 import kr.co.aim.api.dto.UserAuthorizedMenuResponse;
+import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.condition.MenuSearchCondition;
 import kr.co.aim.domain.model.Menu;
+import kr.co.aim.domain.model.UserGroupMenuAuth;
 import kr.co.aim.domain.repository.MenuRepository;
+import kr.co.aim.domain.repository.UserGroupMenuAuthRepository;
 import kr.co.aim.infra.persistence.entity.MenuHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.MenuMapper;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,7 @@ import java.util.Optional;
 public class MenuService {
 
     private final MenuRepository menuRepository;
+    private final UserGroupMenuAuthRepository userGroupMenuAuthRepository;
     private final HistoryService historyService;
     private final MenuMapper menuMapper;
 
@@ -442,5 +446,26 @@ public class MenuService {
         }
 
         return rootMenus;
+    }
+
+    /**
+     * 특정 사용자 그룹의 전체 메뉴 권한 목록 조회
+     */
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public List<UserGroupMenuAuthResponse> findMenuAuthsByUserGroupId(Long userGroupId) {
+        if (userGroupId == null) {
+            return new ArrayList<>();
+        }
+
+        List<UserGroupMenuAuth> authList = userGroupMenuAuthRepository.findByUserGroupId(userGroupId);
+        List<UserGroupMenuAuthResponse> result = new ArrayList<>();
+
+        for (UserGroupMenuAuth auth : authList) {
+            if (auth != null) {
+                result.add(UserGroupMenuAuthResponse.fromDomain(auth));
+            }
+        }
+
+        return result;
     }
 }

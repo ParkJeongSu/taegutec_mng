@@ -1,8 +1,8 @@
 package kr.co.aim.infra.persistence.adapter;
 
-import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
@@ -31,7 +31,7 @@ import static kr.co.aim.infra.persistence.entity.QUserGroupMenuAuthEntity.userGr
 
 /**
  * UserGroupMenuAuthRepository의 JPA 및 QueryDSL 기반 어댑터 구현체.
- * 3-Way JOIN (USER_GROUP_MENU_AUTH + USER_GROUP + MENU) 프로젝션을 제공합니다.
+ * 3-Way JOIN (USER_GROUP_MENU_AUTH + USER_GROUP + MENU) Projections.fields 프로젝션을 제공합니다.
  */
 @Repository
 @RequiredArgsConstructor
@@ -45,8 +45,8 @@ public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthReposit
     public List<UserGroupMenuAuth> findAll() {
         List<UserGroupMenuAuthEntity> entities = userGroupMenuAuthJpaRepository.findAll();
         List<UserGroupMenuAuth> result = new ArrayList<>();
-        for (UserGroupMenuAuthEntity entity : entities) {
-            result.add(userGroupMenuAuthMapper.toDomain(entity));
+        for (int i = 0; i < entities.size(); i++) {
+            result.add(userGroupMenuAuthMapper.toDomain(entities.get(i)));
         }
         return result;
     }
@@ -57,28 +57,34 @@ public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthReposit
             return Optional.empty();
         }
 
-        Tuple tuple = queryFactory
-                .select(
-                        userGroupMenuAuthEntity,
+        UserGroupMenuAuth result = queryFactory
+                .select(Projections.fields(UserGroupMenuAuth.class,
+                        userGroupMenuAuthEntity.id,
+                        userGroupMenuAuthEntity.factoryName,
+                        userGroupMenuAuthEntity.userGroupId,
                         userGroupEntity.userGroupName,
+                        menuEntity.id.as("menuId"),            // 메뉴 PK (Long)
                         menuEntity.menuName,
                         menuEntity.parentId,
                         menuEntity.menuLevel,
                         menuEntity.displayOrder,
                         menuEntity.filePath,
-                        menuEntity.routerPath
-                )
+                        menuEntity.routerPath,
+                        userGroupMenuAuthEntity.authSelect,
+                        userGroupMenuAuthEntity.authSave,
+                        userGroupMenuAuthEntity.authDelete,
+                        userGroupMenuAuthEntity.eventName,
+                        userGroupMenuAuthEntity.eventTime,
+                        userGroupMenuAuthEntity.eventUser,
+                        userGroupMenuAuthEntity.eventComment
+                ))
                 .from(userGroupMenuAuthEntity)
                 .leftJoin(userGroupEntity).on(userGroupMenuAuthEntity.userGroupId.eq(userGroupEntity.id))
                 .leftJoin(menuEntity).on(userGroupMenuAuthEntity.menuId.eq(menuEntity.id))
                 .where(userGroupMenuAuthEntity.id.eq(id))
                 .fetchOne();
 
-        if (tuple == null) {
-            return Optional.empty();
-        }
-
-        return Optional.ofNullable(mapTupleToDomain(tuple));
+        return Optional.ofNullable(result);
     }
 
     @Override
@@ -87,31 +93,38 @@ public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthReposit
             return new ArrayList<>();
         }
 
-        List<Tuple> tuples = queryFactory
-                .select(
-                        userGroupMenuAuthEntity,
+        List<UserGroupMenuAuth> result = queryFactory
+                .select(Projections.fields(UserGroupMenuAuth.class,
+                        userGroupMenuAuthEntity.id,
+                        userGroupMenuAuthEntity.factoryName,
+                        userGroupMenuAuthEntity.userGroupId,
                         userGroupEntity.userGroupName,
+                        menuEntity.id.as("menuId"),            // 메뉴 PK (Long) -> UserGroupMenuAuth.menuId
                         menuEntity.menuName,
                         menuEntity.parentId,
                         menuEntity.menuLevel,
                         menuEntity.displayOrder,
                         menuEntity.filePath,
-                        menuEntity.routerPath
-                )
+                        menuEntity.routerPath,
+                        userGroupMenuAuthEntity.authSelect,
+                        userGroupMenuAuthEntity.authSave,
+                        userGroupMenuAuthEntity.authDelete,
+                        userGroupMenuAuthEntity.eventName,
+                        userGroupMenuAuthEntity.eventTime,
+                        userGroupMenuAuthEntity.eventUser,
+                        userGroupMenuAuthEntity.eventComment
+                ))
                 .from(userGroupMenuAuthEntity)
                 .leftJoin(userGroupEntity).on(userGroupMenuAuthEntity.userGroupId.eq(userGroupEntity.id))
                 .leftJoin(menuEntity).on(userGroupMenuAuthEntity.menuId.eq(menuEntity.id))
                 .where(userGroupMenuAuthEntity.userGroupId.eq(userGroupId))
-                .orderBy(menuEntity.menuLevel.asc().nullsLast(), menuEntity.displayOrder.asc().nullsLast(), userGroupMenuAuthEntity.id.desc())
+                .orderBy(
+                        menuEntity.menuLevel.asc().nullsLast(),
+                        menuEntity.displayOrder.asc().nullsLast(),
+                        userGroupMenuAuthEntity.id.desc()
+                )
                 .fetch();
 
-        List<UserGroupMenuAuth> result = new ArrayList<>();
-        for (Tuple tuple : tuples) {
-            UserGroupMenuAuth domain = mapTupleToDomain(tuple);
-            if (domain != null) {
-                result.add(domain);
-            }
-        }
         return result;
     }
 
@@ -160,17 +173,27 @@ public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthReposit
         String authSave = condition != null ? condition.getAuthSave() : null;
         String authDelete = condition != null ? condition.getAuthDelete() : null;
 
-        JPAQuery<Tuple> query = queryFactory
-                .select(
-                        userGroupMenuAuthEntity,
+        JPAQuery<UserGroupMenuAuth> query = queryFactory
+                .select(Projections.fields(UserGroupMenuAuth.class,
+                        userGroupMenuAuthEntity.id,
+                        userGroupMenuAuthEntity.factoryName,
+                        userGroupMenuAuthEntity.userGroupId,
                         userGroupEntity.userGroupName,
+                        menuEntity.id.as("menuId"),            // 메뉴 PK (Long)
                         menuEntity.menuName,
                         menuEntity.parentId,
                         menuEntity.menuLevel,
                         menuEntity.displayOrder,
                         menuEntity.filePath,
-                        menuEntity.routerPath
-                )
+                        menuEntity.routerPath,
+                        userGroupMenuAuthEntity.authSelect,
+                        userGroupMenuAuthEntity.authSave,
+                        userGroupMenuAuthEntity.authDelete,
+                        userGroupMenuAuthEntity.eventName,
+                        userGroupMenuAuthEntity.eventTime,
+                        userGroupMenuAuthEntity.eventUser,
+                        userGroupMenuAuthEntity.eventComment
+                ))
                 .from(userGroupMenuAuthEntity)
                 .leftJoin(userGroupEntity).on(userGroupMenuAuthEntity.userGroupId.eq(userGroupEntity.id))
                 .leftJoin(menuEntity).on(userGroupMenuAuthEntity.menuId.eq(menuEntity.id))
@@ -192,14 +215,7 @@ public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthReposit
             query.limit(pageable.getPageSize());
         }
 
-        List<Tuple> content = query.fetch();
-        List<UserGroupMenuAuth> converted = new ArrayList<>();
-        for (Tuple tuple : content) {
-            UserGroupMenuAuth domain = mapTupleToDomain(tuple);
-            if (domain != null) {
-                converted.add(domain);
-            }
-        }
+        List<UserGroupMenuAuth> content = query.fetch();
 
         long total;
         if (pageable != null && pageable.isPaged()) {
@@ -222,29 +238,11 @@ public class UserGroupMenuAuthRepositoryImpl implements UserGroupMenuAuthReposit
 
             total = (count != null) ? count.longValue() : 0L;
         } else {
-            total = converted.size();
+            total = content.size();
         }
 
-        return new PageImpl<>(converted, pageable != null ? pageable : Pageable.unpaged(), total);
-    }
-
-    private UserGroupMenuAuth mapTupleToDomain(Tuple tuple) {
-        if (tuple == null) {
-            return null;
-        }
-        UserGroupMenuAuthEntity entity = tuple.get(userGroupMenuAuthEntity);
-        if (entity == null) {
-            return null;
-        }
-        UserGroupMenuAuth domain = userGroupMenuAuthMapper.toDomain(entity);
-        domain.setUserGroupName(tuple.get(userGroupEntity.userGroupName));
-        domain.setMenuName(tuple.get(menuEntity.menuName));
-        domain.setParentId(tuple.get(menuEntity.parentId));
-        domain.setMenuLevel(tuple.get(menuEntity.menuLevel));
-        domain.setDisplayOrder(tuple.get(menuEntity.displayOrder));
-        domain.setFilePath(tuple.get(menuEntity.filePath));
-        domain.setRouterPath(tuple.get(menuEntity.routerPath));
-        return domain;
+        Page<UserGroupMenuAuth> result = new PageImpl<>(content, pageable != null ? pageable : Pageable.unpaged(), total);
+        return result;
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {

@@ -7,6 +7,7 @@ import kr.co.aim.api.dto.MenuCreateRequestDto;
 import kr.co.aim.api.dto.MenuResponse;
 import kr.co.aim.api.dto.MenuUpdateRequestDto;
 import kr.co.aim.api.dto.UserAuthorizedMenuResponse;
+import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.api.service.MenuService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.MenuSearchCondition;
@@ -111,5 +112,14 @@ public class MenuController {
     ) {
         List<UserAuthorizedMenuResponse> tree = menuService.findAuthorizedMenuTree(userId);
         return ResponseEntity.ok(tree);
+    }
+
+    @Operation(summary = "사용자 그룹별 메뉴 권한 목록 조회", description = "특정 사용자 그룹 ID(userGroupId) 기준 부여된 메뉴 권한 목록을 조회합니다.")
+    @GetMapping("/auth/group/{userGroupId}")
+    public ResponseEntity<List<UserGroupMenuAuthResponse>> getMenuAuthsByUserGroup(
+            @PathVariable("userGroupId") Long userGroupId
+    ) {
+        List<UserGroupMenuAuthResponse> result = menuService.findMenuAuthsByUserGroupId(userGroupId);
+        return ResponseEntity.ok(result);
     }
 }

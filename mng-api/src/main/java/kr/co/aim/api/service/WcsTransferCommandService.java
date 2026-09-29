@@ -10,6 +10,7 @@ import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsTransferCommandCreateCommand;
 import kr.co.aim.domain.command.WcsTransferCommandUpdateCommand;
 import kr.co.aim.domain.model.WcsTransferCommand;
+import kr.co.aim.domain.model.WcsTransferCommandHistory;
 import kr.co.aim.domain.repository.WcsTransferCommandHistoryRepository;
 import kr.co.aim.domain.repository.WcsTransferCommandRepository;
 import kr.co.aim.infra.persistence.entity.WcsTransferCommandHistoryEntity;
@@ -44,12 +45,12 @@ public class WcsTransferCommandService {
      */
     @Transactional(value = "mssqlTransactionManager", readOnly = true)
     public Page<WcsTransferCommandHistoryResponse> findHistory(WcsTransferCommandHistorySearchCondition condition, Pageable pageable) {
-        Page<WcsTransferCommandHistoryEntity> historyPage = wcsTransferCommandHistoryRepository.findHistory(condition, pageable);
+        Page<WcsTransferCommandHistory> historyPage = wcsTransferCommandHistoryRepository.findHistory(condition, pageable);
         List<WcsTransferCommandHistoryResponse> content = new ArrayList<>();
 
-        for (WcsTransferCommandHistoryEntity entity : historyPage.getContent()) {
-            if (entity != null) {
-                content.add(WcsTransferCommandHistoryResponse.fromEntity(entity));
+        for (WcsTransferCommandHistory domain : historyPage.getContent()) {
+            if (domain != null) {
+                content.add(WcsTransferCommandHistoryResponse.fromDomain(domain));
             }
         }
 
