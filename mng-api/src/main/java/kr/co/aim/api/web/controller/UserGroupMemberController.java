@@ -2,10 +2,8 @@ package kr.co.aim.api.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.aim.api.dto.DeleteItemListDto;
-import kr.co.aim.api.dto.UserGroupMemberCreateRequestDto;
-import kr.co.aim.api.dto.UserGroupMemberResponse;
-import kr.co.aim.api.dto.UserGroupMemberUpdateRequestDto;
+import jakarta.validation.Valid;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.UserGroupMemberService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
 import kr.co.aim.common.condition.UserGroupMemberSearchCondition;
@@ -112,5 +110,14 @@ public class UserGroupMemberController {
             userGroupMemberService.deleteUserGroupMembers(deleteDto.getIds(), "SYSTEM", "Batch user group members deleted");
         }
         return ResponseEntity.ok("SUCCESS");
+    }
+
+    @Operation(summary = "사용자 그룹 매핑 일괄 저장", description = "특정 그룹의 기존 멤버를 전체 삭제 후 전달받은 사용자 목록으로 재등록하고 이력 적재")
+    @PostMapping("/batch-save")
+    public ResponseEntity<List<UserGroupMemberResponse>> saveBatchUserGroupMembers(
+            @RequestBody @Valid UserGroupMemberBatchSaveRequestDto dto
+    ) {
+        List<UserGroupMemberResponse> result = userGroupMemberService.saveBatchUserGroupMembers(dto);
+        return ResponseEntity.ok(result);
     }
 }

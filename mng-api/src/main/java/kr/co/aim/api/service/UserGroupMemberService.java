@@ -1,5 +1,6 @@
 package kr.co.aim.api.service;
 
+import kr.co.aim.api.dto.UserGroupMemberBatchSaveRequestDto;
 import kr.co.aim.api.dto.UserGroupMemberCreateRequestDto;
 import kr.co.aim.api.dto.UserGroupMemberResponse;
 import kr.co.aim.api.dto.UserGroupMemberUpdateRequestDto;
@@ -313,5 +314,93 @@ public class UserGroupMemberService {
 
         userGroupMemberRepository.deleteAllByIdInBatch(ids);
         log.info("UserGroupMembers batch deleted successfully: [count={}]", ids.size());
+    }
+
+    /**
+     * 특정 사용자 그룹의 기존 멤버를 전체 삭제한 후 신규 멤버를 일괄 등록 (CLEAR & REPOPULATE)
+     * - 기존 매핑 전체 조회 및 삭제 이력 적재 후 일괄 삭제
+     * - 신규 사용자 목록에 대해 도메인 팩토리(TSID 자동 발급)를 통한 생성 및 등록 이력 적재
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public List<UserGroupMemberResponse> saveBatchUserGroupMembers(UserGroupMemberBatchSaveRequestDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("사용자 그룹 매핑 일괄 저장 정보가 유효하지 않습니다.");
+        }
+        if (dto.getUserGroupId() == null) {
+            throw new IllegalArgumentException("사용자 그룹 ID(userGroupId)는 필수 항목입니다.");
+        }
+        String factoryName = (dto.getFactoryName() != null && !dto.getFactoryName().trim().isEmpty())
+                ? dto.getFactoryName().trim() : "INSERT";
+        String eventUser = (dto.getEventUser() != null && !dto.getEventUser().trim().isEmpty())
+                ? dto.getEventUser().trim() : "SYSTEM";
+        String eventComment = (dto.getEventComment() != null && !dto.getEventComment().trim().isEmpty())
+                ? dto.getEventComment().trim() : "Batch user group members updated";
+
+        LocalDateTime now = LocalDateTime.now();
+
+        // 1. 해당 그룹의 기존 멤버 전체 조회
+        Page<UserGroupMember> existingPage = userGroupMemberRepository.findUserGroupMembersWithDetails(
+                null, dto.getUserGroupId(), null, Pageable.unpaged()
+        );
+        List<UserGroupMember> existingMembers = existingPage.getContent();
+
+        // 2. 기존 멤버 삭제 이력 적재 및 ID 수집
+        List<Long> idsToDelete = new ArrayList<>();
+        for (UserGroupMember oldMember : existingMembers) {
+            if (oldMember != null && oldMember.getId() != null) {
+                idsToDelete.add(oldMember.getId());
+
+                oldMember.setEventName("UserGroupMemberDeleted");
+                oldMember.setEventTime(now);
+                oldMember.setEventUser(eventUser);
+                oldMember.setEventComment(eventComment + " (Clear for batch save)");
+
+                UserGroupMemberHistoryEntity historyEntity = userGroupMemberMapper.toHistoryEntity(oldMember);
+                historyService.saveHistory(historyEntity);
+            }
+        }
+
+        // 3. 기존 멤버 일괄 삭제
+        if (!idsToDelete.isEmpty()) {
+            userGroupMemberRepository.deleteAllByIdInBatch(idsToDelete);
+            log.info("Cleared existing members for userGroupId: [count={}]", idsToDelete.size());
+        }
+
+        // 4. 신규 멤버 일괄 생성 및 등록 (명시적 for 루프 사용)
+        List<UserGroupMemberResponse> resultList = new ArrayList<>();
+        List<Long> newUserIdList = dto.getUserIdList();
+
+        if (newUserIdList != null && !newUserIdList.isEmpty()) {
+            String createEventName = (dto.getEventName() != null && !dto.getEventName().trim().isEmpty())
+                    ? dto.getEventName().trim() : "UserGroupMembersBatchSaved";
+
+            TransactionInfo tx = TransactionInfo.now(createEventName, eventUser, eventComment);
+
+            for (Long userId : newUserIdList) {
+                if (userId == null) {
+                    continue;
+                }
+
+                UserGroupMemberCreateCommand command = UserGroupMemberCreateCommand.builder()
+                        .transactionInfo(tx)
+                        .factoryName(factoryName)
+                        .userId(userId)
+                        .userGroupId(dto.getUserGroupId())
+                        .build();
+
+                // 도메인 팩토리 호출 (TSID 자동 발급)
+                UserGroupMember newMember = UserGroupMember.create(command);
+                UserGroupMember savedMember = userGroupMemberRepository.save(newMember);
+
+                // 생성 이력 적재
+                UserGroupMemberHistoryEntity historyEntity = userGroupMemberMapper.toHistoryEntity(savedMember);
+                historyService.saveHistory(historyEntity);
+
+                resultList.add(UserGroupMemberResponse.fromDomain(savedMember));
+            }
+            log.info("Batch saved new members for userGroupId: [count={}]", resultList.size());
+        }
+
+        return resultList;
     }
 }
