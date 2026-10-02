@@ -1,19 +1,22 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.api.dto.WcsShelfCreateRequestDto;
-import kr.co.aim.api.dto.WcsShelfResponse;
-import kr.co.aim.api.dto.WcsShelfUpdateRequestDto;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.common.condition.WcsShelfSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
+import kr.co.aim.domain.command.UserGroupMenuAuthCreateCommand;
+import kr.co.aim.domain.command.UserGroupMenuAuthUpdateCommand;
 import kr.co.aim.domain.command.WcsShelfCreateCommand;
 import kr.co.aim.domain.command.WcsShelfUpdateCommand;
+import kr.co.aim.domain.model.UserGroupMenuAuth;
 import kr.co.aim.domain.model.WcsShelf;
 import kr.co.aim.domain.repository.WcsShelfRepository;
+import kr.co.aim.infra.persistence.entity.UserGroupMenuAuthHistoryEntity;
 import kr.co.aim.infra.persistence.entity.WcsShelfHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.WcsShelfMapper;
 import kr.co.aim.infra.persistence.springdatajpa.WcsShelfHistoryJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +37,8 @@ public class WcsShelfService {
     private final WcsShelfRepository wcsShelfRepository;
     private final WcsShelfHistoryJpaRepository wcsShelfHistoryJpaRepository;
     private final WcsShelfMapper wcsShelfMapper;
+    private final HistoryService historyService;
+    private final WcsShelfHistoryJpaRepository historyJpaRepository;
 
     /**
      * 조건 및 페이징 기반 WCS 셸프 목록 조회
@@ -238,4 +243,67 @@ public class WcsShelfService {
 
         log.info("WcsShelf deleted successfully: [factoryName={}, stockerName={}, shelfName={}]", factoryName, stockerName, shelfName);
     }
+
+    /**
+     * 사용자 그룹별 메뉴 권한 일괄 저장 (BATCH SAVE/UPDATE)
+     * - MES 권한 매트릭스 화면에서 그룹 단위로 여러 메뉴 권한을 한 번에 등록/수정
+     * - 기존 매핑이 존재하면 update, 없으면 create 수행
+     */
+    @Transactional(value = "mssqlTransactionManager")
+    public List<WcsShelfResponse> saveBatch(WcsShelfBatchSaveRequestDto dto) {
+        if (dto == null) {
+            throw new IllegalArgumentException("일괄 저장 정보가 유효하지 않습니다.");
+        }
+        if (dto.getFactoryName() == null || dto.getFactoryName().trim().isEmpty()) {
+            throw new IllegalArgumentException("공장 구분은 필수 입력 항목입니다.");
+        }
+        if (dto.getZoneName() == null) {
+            throw new IllegalArgumentException("ZoneName 는 필수 입력 항목입니다.");
+        }
+
+        List<WcsShelfResponse> result = new ArrayList<>();
+
+        String factoryName = dto.getFactoryName().trim();
+        String zoneName = dto.getZoneName();
+
+        String eventName = (dto.getEventName() != null && !dto.getEventName().trim().isEmpty()) ? dto.getEventName().trim() : "UserGroupMenuAuthBatchSaved";
+        String eventUser = (dto.getEventUser() != null && !dto.getEventUser().trim().isEmpty()) ? dto.getEventUser().trim() : "SYSTEM";
+        String eventComment = (dto.getEventComment() != null) ? dto.getEventComment().trim() : "Batch menu auth saved";
+
+        TransactionInfo tx = TransactionInfo.now(eventName, eventUser, eventComment);
+
+        if(!ObjectUtils.isEmpty(dto.getShelfList())){
+            for (WcsShelfBatchSaveRequestDto.Shelf item : dto.getShelfList()) {
+                if (item == null || item.getShelfName() == null) {
+                    continue;
+                }
+                String shelfFactoryName = item.getFactoryName();
+                String shelfName = item.getShelfName();
+                String stockerName = item.getStockerName();
+
+                Optional<WcsShelf> existingShelf = wcsShelfRepository.findById(shelfFactoryName, stockerName, shelfName);
+
+                WcsShelf targetShelf;
+                if (existingShelf.isPresent()) {
+                    targetShelf = existingShelf.get();
+                    WcsShelfUpdateCommand updateCommand = WcsShelfUpdateCommand.builder()
+                            .transactionInfo(tx)
+                            .zoneName(zoneName)
+                            .build();
+                    targetShelf.update(updateCommand);
+                } else {
+                    throw new RuntimeException("존재하지 않는 Shelf 입니다.");
+                }
+
+                WcsShelf saved = wcsShelfRepository.save(targetShelf);
+                WcsShelfHistoryEntity historyEntity = wcsShelfMapper.toHistoryEntity(saved);
+                historyJpaRepository.save(historyEntity);
+
+                result.add(WcsShelfResponse.fromDomain(saved));
+            }
+        }
+        return result;
+    }
+
+
 }

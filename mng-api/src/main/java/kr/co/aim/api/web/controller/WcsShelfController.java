@@ -3,9 +3,7 @@ package kr.co.aim.api.web.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import kr.co.aim.api.dto.WcsShelfCreateRequestDto;
-import kr.co.aim.api.dto.WcsShelfResponse;
-import kr.co.aim.api.dto.WcsShelfUpdateRequestDto;
+import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.WcsShelfService;
 import kr.co.aim.common.condition.WcsShelfSearchCondition;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +12,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Tag(name = "WCS Shelf", description = "WCS 셸프(SHELF) 설비 위치 및 상태 관리 API")
 @RestController
@@ -86,5 +86,12 @@ public class WcsShelfController {
             @RequestParam(required = false) String eventComment) {
         wcsShelfService.deleteShelf(factoryName, stockerName, shelfName, eventUser, eventComment);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "WCS Shelf 일괄 저장", description = "Shelf 에 대한 정보를 일괄 등록/수정하고 이력을 적재")
+    @PostMapping("/batch-save")
+    public ResponseEntity<List<WcsShelfResponse>> saveBatch(@RequestBody WcsShelfBatchSaveRequestDto dto) {
+        List<WcsShelfResponse> result = wcsShelfService.saveBatch(dto);
+        return ResponseEntity.ok(result);
     }
 }

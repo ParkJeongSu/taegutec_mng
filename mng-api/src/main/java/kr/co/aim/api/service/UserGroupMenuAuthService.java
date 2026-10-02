@@ -14,6 +14,7 @@ import kr.co.aim.infra.persistence.entity.UserGroupMenuAuthHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.UserGroupMenuAuthMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -234,9 +235,6 @@ public class UserGroupMenuAuthService {
         if (dto.getUserGroupId() == null) {
             throw new IllegalArgumentException("사용자 그룹 ID는 필수 입력 항목입니다.");
         }
-        if (dto.getAuthList() == null || dto.getAuthList().isEmpty()) {
-            return new ArrayList<>();
-        }
 
         String factoryName = dto.getFactoryName().trim();
         Long userGroupId = dto.getUserGroupId();
@@ -247,46 +245,55 @@ public class UserGroupMenuAuthService {
 
         TransactionInfo tx = TransactionInfo.now(eventName, eventUser, eventComment);
 
-        for (UserGroupMenuAuthBatchSaveRequestDto.AuthItem item : dto.getAuthList()) {
-            if (item == null || item.getMenuId() == null) {
-                continue;
-            }
+        List<UserGroupMenuAuth> userGroupMenuAuthList = userGroupMenuAuthRepository.findByUserGroupId(userGroupId);
 
-            Long menuId = item.getMenuId();
-            String authSelect = item.getAuthSelect() != null ? item.getAuthSelect().trim() : "N";
-            String authSave = item.getAuthSave() != null ? item.getAuthSave().trim() : "N";
-            String authDelete = item.getAuthDelete() != null ? item.getAuthDelete().trim() : "N";
-
-            Optional<UserGroupMenuAuth> existing = userGroupMenuAuthRepository.findByUserGroupIdAndMenuId(userGroupId, menuId);
-
-            UserGroupMenuAuth targetAuth;
-            if (existing.isPresent()) {
-                targetAuth = existing.get();
-                UserGroupMenuAuthUpdateCommand updateCommand = UserGroupMenuAuthUpdateCommand.builder()
-                        .transactionInfo(tx)
-                        .authSelect(authSelect)
-                        .authSave(authSave)
-                        .authDelete(authDelete)
-                        .build();
-                targetAuth.update(updateCommand);
-            } else {
-                UserGroupMenuAuthCreateCommand createCommand = UserGroupMenuAuthCreateCommand.builder()
-                        .transactionInfo(tx)
-                        .factoryName(factoryName)
-                        .userGroupId(userGroupId)
-                        .menuId(menuId)
-                        .authSelect(authSelect)
-                        .authSave(authSave)
-                        .authDelete(authDelete)
-                        .build();
-                targetAuth = UserGroupMenuAuth.create(createCommand);
-            }
-
-            UserGroupMenuAuth saved = userGroupMenuAuthRepository.save(targetAuth);
-
-            UserGroupMenuAuthHistoryEntity historyEntity = userGroupMenuAuthMapper.toHistoryEntity(saved);
-            historyService.saveHistory(historyEntity);
+        for(UserGroupMenuAuth userGroupMenuAuth : userGroupMenuAuthList){
+            userGroupMenuAuthRepository.deleteById(userGroupMenuAuth.getId());
         }
+
+        if(!ObjectUtils.isEmpty(dto.getAuthList())){
+            for (UserGroupMenuAuthBatchSaveRequestDto.AuthItem item : dto.getAuthList()) {
+                if (item == null || item.getMenuId() == null) {
+                    continue;
+                }
+
+                Long menuId = item.getMenuId();
+                String authSelect = item.getAuthSelect() != null ? item.getAuthSelect().trim() : "N";
+                String authSave = item.getAuthSave() != null ? item.getAuthSave().trim() : "N";
+                String authDelete = item.getAuthDelete() != null ? item.getAuthDelete().trim() : "N";
+
+                Optional<UserGroupMenuAuth> existing = userGroupMenuAuthRepository.findByUserGroupIdAndMenuId(userGroupId, menuId);
+
+                UserGroupMenuAuth targetAuth;
+                if (existing.isPresent()) {
+                    targetAuth = existing.get();
+                    UserGroupMenuAuthUpdateCommand updateCommand = UserGroupMenuAuthUpdateCommand.builder()
+                            .transactionInfo(tx)
+                            .authSelect(authSelect)
+                            .authSave(authSave)
+                            .authDelete(authDelete)
+                            .build();
+                    targetAuth.update(updateCommand);
+                } else {
+                    UserGroupMenuAuthCreateCommand createCommand = UserGroupMenuAuthCreateCommand.builder()
+                            .transactionInfo(tx)
+                            .factoryName(factoryName)
+                            .userGroupId(userGroupId)
+                            .menuId(menuId)
+                            .authSelect(authSelect)
+                            .authSave(authSave)
+                            .authDelete(authDelete)
+                            .build();
+                    targetAuth = UserGroupMenuAuth.create(createCommand);
+                }
+
+                UserGroupMenuAuth saved = userGroupMenuAuthRepository.save(targetAuth);
+
+                UserGroupMenuAuthHistoryEntity historyEntity = userGroupMenuAuthMapper.toHistoryEntity(saved);
+                historyService.saveHistory(historyEntity);
+            }
+        }
+
 
         log.info("Batch UserGroupMenuAuth saved successfully: [userGroupId={}, count={}]", userGroupId, dto.getAuthList().size());
 
