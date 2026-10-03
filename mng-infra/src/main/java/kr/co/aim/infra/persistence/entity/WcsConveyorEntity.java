@@ -16,115 +16,136 @@ import java.time.LocalDateTime;
 public class WcsConveyorEntity {
 
     @Id
-    @Column(name = "conveyorGroup")
+    @Column(name = "conveyorGroup", length = 64, nullable = false)
     private String conveyorGroup;
 
     @Id
-    @Column(name = "conveyorName")
+    @Column(name = "conveyorName", length = 64, nullable = false)
     private String conveyorName;
 
     @Id
-    @Column(name = "conveyorNumber")
+    @Column(name = "conveyorNumber", nullable = false)
     private Integer conveyorNumber;
 
     @Id
-    @Column(name = "factoryName")
+    @Column(name = "factoryName", length = 32, nullable = false)
     private String factoryName;
 
     @Id
-    @Column(name = "localNo")
+    @Column(name = "localNo", nullable = false)
     private Integer localNo;
 
-    @Column(name = "autoRunStatus")
+    @Column(name = "autoRunStatus", length = 30)
     private String autoRunStatus;
 
-    @Column(name = "carrierExist")
+    @Column(name = "carrierExist", length = 30)
     private String carrierExist;
 
-    @Column(name = "carrierName")
+    @Column(name = "carrierName", length = 64)
     private String carrierName;
 
-    @Column(name = "conveyorGroupNumber")
-    private Integer conveyorGroupNumber;
+    @Column(name = "conveyorGroupNumber", nullable = false)
+    @Builder.Default
+    private Integer conveyorGroupNumber = 0;
 
-    @Column(name = "conveyorType")
+    @Column(name = "conveyorType", length = 30)
     private String conveyorType;
 
-    @Column(name = "currentCmdData")
+    @Column(name = "currentCmdData", length = 30)
     private String currentCmdData;
 
-    @Column(name = "direction")
+    @Column(name = "direction", length = 30)
     private String direction;
 
-    @Column(name = "dispatchingPriority")
+    @Column(name = "dispatchingPriority", length = 20)
     private String dispatchingPriority;
 
-    @Column(name = "errorHappen")
+    @Column(name = "errorHappen", length = 64)
     private String errorHappen;
 
-    @Column(name = "jobCompleteState")
+    @Column(name = "jobCompleteState", length = 30)
     private String jobCompleteState;
 
-    @Column(name = "onlineControlStatus")
+    @Column(name = "onlineControlStatus", length = 10)
     private String onlineControlStatus;
 
-    @Column(name = "operationMode")
+    @Column(name = "operationMode", length = 10)
     private String operationMode;
 
-    @Column(name = "preStatus")
+    @Column(name = "preStatus", length = 30)
     private String preStatus;
 
-    @Column(name = "rtvNumber")
-    private Integer rtvNumber;
+    @Column(name = "rtvNumber", nullable = false)
+    @Builder.Default
+    private Integer rtvNumber = 0;
 
-    @Column(name = "status")
+    @Column(name = "status", length = 30)
     private String status;
 
-    @Column(name = "touchPanelNumber")
-    private Integer touchPanelNumber;
+    @Column(name = "touchPanelNumber", nullable = false)
+    @Builder.Default
+    private Integer touchPanelNumber = 0;
 
-    @Column(name = "serverName")
-    private String serverName;
-
-    @Column(name = "mode")
-    private String mode;
-
-    @Column(name = "downConveyorCount")
-    private Integer downConveyorCount;
-
-    @Column(name = "onCarrierCount")
-    private Integer onCarrierCount;
-
-    @Column(name = "totalConveyorCount")
-    private Integer totalConveyorCount;
-
-    @Column(name = "runConveyorCount")
-    private Integer runConveyorCount;
-
-    @Column(name = "machineTypeName")
-    private String machineTypeName;
-
-    @Column(name = "readingEnableMode")
-    private String readingEnableMode;
-
-    @Column(name = "eqRouteKey")
-    private String eqRouteKey;
-
-    @Column(name = "conveyorConnectionStatus")
-    private String conveyorConnectionStatus;
-
-    @Column(name = "areaName")
-    private String areaName;
-
-    @Column(name = "lastEventComment")
+    @Column(name = "lastEventComment", length = 255)
     private String lastEventComment;
 
-    @Column(name = "lastEventName")
+    @Column(name = "lastEventName", length = 64)
     private String lastEventName;
 
     @Column(name = "lastEventTime")
     private LocalDateTime lastEventTime;
 
-    @Column(name = "lastEventUser")
+    @Column(name = "lastEventUser", length = 64)
     private String lastEventUser;
+
+    @Column(name = "serverName", length = 64)
+    private String serverName;
+
+    @Column(name = "mode", length = 30)
+    private String mode;
+
+    @Column(name = "downConveyorCount", nullable = false)
+    @Builder.Default
+    private Integer downConveyorCount = 0;
+
+    @Column(name = "onCarrierCount", nullable = false)
+    @Builder.Default
+    private Integer onCarrierCount = 0;
+
+    @Column(name = "totalConveyorCount", nullable = false)
+    @Builder.Default
+    private Integer totalConveyorCount = 0;
+
+    @Column(name = "runConveyorCount", nullable = false)
+    @Builder.Default
+    private Integer runConveyorCount = 0;
+
+    @Column(name = "machineTypeName", length = 100)
+    private String machineTypeName;
+
+    @Column(name = "readingEnableMode", length = 30)
+    private String readingEnableMode;
+
+    @Column(name = "eqRouteKey", length = 64)
+    private String eqRouteKey;
+
+    @Column(name = "conveyorConnectionStatus", length = 20)
+    private String conveyorConnectionStatus;
+
+    @Column(name = "areaName", length = 64)
+    private String areaName;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (this.conveyorNumber == null) this.conveyorNumber = 0;
+        if (this.localNo == null) this.localNo = 0;
+        if (this.conveyorGroupNumber == null) this.conveyorGroupNumber = 0;
+        if (this.rtvNumber == null) this.rtvNumber = 0;
+        if (this.touchPanelNumber == null) this.touchPanelNumber = 0;
+        if (this.downConveyorCount == null) this.downConveyorCount = 0;
+        if (this.onCarrierCount == null) this.onCarrierCount = 0;
+        if (this.totalConveyorCount == null) this.totalConveyorCount = 0;
+        if (this.runConveyorCount == null) this.runConveyorCount = 0;
+    }
 }

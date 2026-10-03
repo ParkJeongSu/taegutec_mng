@@ -11,9 +11,6 @@ import java.io.Serializable;
 @EqualsAndHashCode
 @Builder
 public class WcsConveyorId implements Serializable {
-
-    private static final long serialVersionUID = 1L;
-
     private String conveyorGroup;
     private String conveyorName;
     private Integer conveyorNumber;

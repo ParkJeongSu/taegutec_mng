@@ -11,80 +11,80 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "CARRIER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
+@Table(name = "W_CARRIER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
 public class WcsCarrierHistoryEntity {
 
     @Id
-    @Column(name = "eventTimeKey", length = 30)
+    @Column(name = "eventTimeKey", length = 30, nullable = false)
     private String eventTimeKey;
 
-    @Column(name = "carrierName")
+    @Column(name = "carrierName", length = 64, nullable = false)
     private String carrierName;
 
-    @Column(name = "factoryName")
+    @Column(name = "factoryName", length = 32)
     private String factoryName;
 
-    @Column(name = "afterProcess")
+    @Column(name = "afterProcess", length = 64)
     private String afterProcess;
 
-    @Column(name = "beforeProcess")
+    @Column(name = "beforeProcess", length = 64)
     private String beforeProcess;
 
-    @Column(name = "carrierGroup")
+    @Column(name = "carrierDetailType", length = 64)
+    private String carrierDetailType;
+
+    @Column(name = "carrierGroup", length = 64)
     private String carrierGroup;
 
-    @Column(name = "carrierStatus")
+    @Column(name = "carrierStatus", length = 20)
     private String carrierStatus;
+
+    @Column(name = "carrierType", length = 32)
+    private String carrierType;
 
     @Column(name = "createTime")
     private LocalDateTime createTime;
 
-    @Column(name = "currentPositionName")
-    private String currentPositionName;
-
-    @Column(name = "hotLot")
-    private String hotLot;
-
-    @Column(name = "lotName")
-    private String lotName;
-
-    @Column(name = "owner")
-    private String owner;
-
-    @Column(name = "previousCarrierStatus")
-    private String previousCarrierStatus;
-
-    @Column(name = "productQuantity")
-    private String productQuantity;
-
-    @Column(name = "zoneName")
-    private String zoneName;
-
-    @Column(name = "currentEquipmentName")
+    @Column(name = "currentEquipmentName", length = 64)
     private String currentEquipmentName;
 
-    @Column(name = "carrierDetailType")
-    private String carrierDetailType;
+    @Column(name = "currentPositionName", length = 64)
+    private String currentPositionName;
 
-    @Column(name = "carrierType")
-    private String carrierType;
+    @Column(name = "hotLot", length = 64)
+    private String hotLot;
 
-    @Column(name = "transferCommandName")
+    @Column(name = "lotName", length = 64)
+    private String lotName;
+
+    @Column(name = "owner", length = 64)
+    private String owner;
+
+    @Column(name = "previousCarrierStatus", length = 20)
+    private String previousCarrierStatus;
+
+    @Column(name = "productQuantity", length = 64)
+    private String productQuantity;
+
+    @Column(name = "transferCommandName", length = 64)
     private String transferCommandName;
 
-    @Column(name = "travelProfile")
-    private Integer travelProfile;
+    @Column(name = "travelProfile", length = 20)
+    private String travelProfile;
 
-    @Column(name = "itemName")
+    @Column(name = "zoneName", length = 64)
+    private String zoneName;
+
+    @Column(name = "itemName", length = 64)
     private String itemName;
 
-    @Column(name = "orderId")
+    @Column(name = "orderId", length = 64)
     private String orderId;
 
     @Column(name = "orderLineNumber")
     private Integer orderLineNumber;
 
-    @Column(name = "productionType")
+    @Column(name = "productionType", length = 20)
     private String productionType;
 
     @Column(name = "inboundTime")
@@ -93,51 +93,30 @@ public class WcsCarrierHistoryEntity {
     @Column(name = "outboundTime")
     private LocalDateTime outboundTime;
 
-    @Column(name = "weight")
+    @Column(name = "weight", length = 20)
     private String weight;
 
-    @Column(name = "carrierUseCount")
-    private Integer carrierUseCount;
+    @Column(name = "carrierUseCount", nullable = false)
+    @Builder.Default
+    private Integer carrierUseCount = 0;
 
-    @Column(name = "carrierNo")
-    private String carrierNo;
-
-    @Column(name = "carrierQTime")
-    private String carrierQTime;
-
-    @Column(name = "carrierStatusTime")
-    private LocalDateTime carrierStatusTime;
-
-    @Column(name = "machineRecipeName")
-    private String machineRecipeName;
-
-    @Column(name = "portName")
-    private String portName;
-
-    @Column(name = "processPriority")
-    private String processPriority;
-
-    @Column(name = "subUnitName")
-    private String subUnitName;
-
-    @Column(name = "substrateQuantity")
-    private Integer substrateQuantity;
-
-    @Column(name = "substrateSlotMap")
-    private String substrateSlotMap;
-
-    @Column(name = "unitName")
-    private String unitName;
-
-    @Column(name = "eventComment")
+    @Column(name = "eventComment", length = 255)
     private String eventComment;
 
-    @Column(name = "eventName")
+    @Column(name = "eventName", length = 40)
     private String eventName;
 
     @Column(name = "eventTime")
     private LocalDateTime eventTime;
 
-    @Column(name = "eventUser")
+    @Column(name = "eventUser", length = 40)
     private String eventUser;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (this.carrierUseCount == null) {
+            this.carrierUseCount = 0;
+        }
+    }
 }

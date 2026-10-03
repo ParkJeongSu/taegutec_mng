@@ -22,17 +22,5 @@ public interface WcsCarrierMapper {
     @Mapping(target = "eventTime", source = "lastEventTime")
     @Mapping(target = "eventUser", source = "lastEventUser")
     @Mapping(target = "eventComment", source = "lastEventComment")
-    @Mapping(target = "travelProfile", expression = "java(parseTravelProfile(domain.getTravelProfile()))")
     WcsCarrierHistoryEntity toHistoryEntity(WcsCarrier domain);
-
-    default int parseTravelProfile(String value) {
-        if (value == null || value.trim().isEmpty()) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(value.trim());
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
 }

@@ -15,6 +15,7 @@ import kr.co.aim.infra.persistence.entity.WcsStockerId;
 import kr.co.aim.infra.persistence.mapper.WcsStockerMapper;
 import kr.co.aim.infra.persistence.springdatajpa.WcsStockerJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -108,7 +109,7 @@ public class WcsStockerRepositoryImpl implements WcsStockerRepository {
         String operationMode = condition != null ? condition.getOperationMode() : null;
         String serverName = condition != null ? condition.getServerName() : null;
         String stockerConnectionStatus = condition != null ? condition.getStockerConnectionStatus() : null;
-        String stockerNumber = condition != null ? condition.getStockerNumber() : null;
+        Integer stockerNumber = condition != null ? condition.getStockerNumber() : null;
         String machineTypeName = condition != null ? condition.getMachineTypeName() : null;
         String eqRouteKey = condition != null ? condition.getEqRouteKey() : null;
         String areaName = condition != null ? condition.getAreaName() : null;
@@ -242,8 +243,8 @@ public class WcsStockerRepositoryImpl implements WcsStockerRepository {
         return StringUtils.hasText(stockerConnectionStatus) ? qStocker.stockerConnectionStatus.equalsIgnoreCase(stockerConnectionStatus) : null;
     }
 
-    private BooleanExpression stockerNumberContains(String stockerNumber) {
-        return StringUtils.hasText(stockerNumber) ? qStocker.stockerNumber.contains(stockerNumber) : null;
+    private BooleanExpression stockerNumberContains(Integer stockerNumber) {
+        return ObjectUtils.isNotEmpty(stockerNumber) ? qStocker.stockerNumber.eq(stockerNumber) : null;
     }
 
     private BooleanExpression machineTypeNameContains(String machineTypeName) {

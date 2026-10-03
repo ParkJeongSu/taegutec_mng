@@ -18,7 +18,7 @@ public class WcsStockerSearchCondition {
     private String operationMode;
     private String serverName;
     private String stockerConnectionStatus;
-    private String stockerNumber;
+    private Integer stockerNumber;
     private String machineTypeName;
     private String eqRouteKey;
     private String areaName;

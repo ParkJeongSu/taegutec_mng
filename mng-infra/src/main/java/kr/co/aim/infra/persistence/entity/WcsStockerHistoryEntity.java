@@ -11,109 +11,121 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "STOCKER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
+@Table(name = "W_STOCKER_HISTORY", catalog = "NEXBEWCSHT", schema = "dbo")
 public class WcsStockerHistoryEntity {
 
     @Id
-    @Column(name = "eventTimeKey", length = 30)
+    @Column(name = "eventTimeKey", length = 30, nullable = false)
     private String eventTimeKey;
 
-    @Column(name = "factoryName")
+    @Column(name = "factoryName", length = 32)
     private String factoryName;
 
-    @Column(name = "stockerName")
+    @Column(name = "stockerName", length = 64, nullable = false)
     private String stockerName;
 
-    @Column(name = "dispatchingPriority")
+    @Column(name = "dispatchingPriority", length = 20)
     private String dispatchingPriority;
 
-    @Column(name = "onlineControlStatus")
+    @Column(name = "onlineControlStatus", length = 10)
     private String onlineControlStatus;
 
-    @Column(name = "operationMode")
+    @Column(name = "operationMode", length = 10)
     private String operationMode;
 
-    @Column(name = "serverName")
+    @Column(name = "serverName", length = 64)
     private String serverName;
 
-    @Column(name = "stockerConnectionStatus")
+    @Column(name = "stockerConnectionStatus", length = 20)
     private String stockerConnectionStatus;
 
-    @Column(name = "stockerMode")
+    @Column(name = "stockerMode", length = 16)
     private String stockerMode;
 
     @Column(name = "stockerNumber")
-    private String stockerNumber;
+    private Integer stockerNumber;
 
-    @Column(name = "stockerStatus")
+    @Column(name = "stockerStatus", length = 20)
     private String stockerStatus;
 
-    @Column(name = "stockerType")
+    @Column(name = "stockerType", length = 40)
     private String stockerType;
 
-    @Column(name = "machineTypeName")
+    @Column(name = "machineTypeName", length = 100)
     private String machineTypeName;
 
-    @Column(name = "eqRouteKey")
+    @Column(name = "eqRouteKey", length = 64)
     private String eqRouteKey;
 
-    @Column(name = "areaName")
+    @Column(name = "areaName", length = 64)
     private String areaName;
 
-    @Column(name = "abnormalShelfCount")
-    private Integer abnormalShelfCount;
+    @Column(name = "abnormalShelfCount", nullable = false)
+    @Builder.Default
+    private Integer abnormalShelfCount = 0;
 
-    @Column(name = "emptyShelfCount")
-    private Integer emptyShelfCount;
+    @Column(name = "emptyShelfCount", nullable = false)
+    @Builder.Default
+    private Integer emptyShelfCount = 0;
 
-    @Column(name = "normalShelfCount")
-    private Integer normalShelfCount;
+    @Column(name = "normalShelfCount", nullable = false)
+    @Builder.Default
+    private Integer normalShelfCount = 0;
 
-    @Column(name = "reservedShelfCount")
-    private Integer reservedShelfCount;
+    @Column(name = "reservedShelfCount", nullable = false)
+    @Builder.Default
+    private Integer reservedShelfCount = 0;
 
-    @Column(name = "totalShelfCount")
-    private Integer totalShelfCount;
+    @Column(name = "totalShelfCount", nullable = false)
+    @Builder.Default
+    private Integer totalShelfCount = 0;
 
-    @Column(name = "useShelfCount")
-    private Integer useShelfCount;
+    @Column(name = "useShelfCount", nullable = false)
+    @Builder.Default
+    private Integer useShelfCount = 0;
 
     @Column(name = "lastStockerArrangeExecuteTime")
     private LocalDateTime lastStockerArrangeExecuteTime;
 
-    @Column(name = "stockerArrangeDailyTime")
+    @Column(name = "stockerArrangeDailyTime", length = 5)
     private String stockerArrangeDailyTime;
 
-    @Column(name = "stockerArrangeEnabled")
-    private Boolean stockerArrangeEnabled;
+    @Column(name = "stockerArrangeEnabled", nullable = false)
+    @Builder.Default
+    private Boolean stockerArrangeEnabled = false;
 
     @Column(name = "stockerArrangeExecuteTime")
     private LocalDateTime stockerArrangeExecuteTime;
 
-    @Column(name = "stockerArrangeMaxCommandCount")
-    private Integer stockerArrangeMaxCommandCount;
+    @Column(name = "stockerArrangeMaxCommandCount", nullable = false)
+    @Builder.Default
+    private Integer stockerArrangeMaxCommandCount = 1;
 
-    @Column(name = "stockerArrangeMode")
-    private String stockerArrangeMode;
+    @Column(name = "stockerArrangeMode", length = 30, nullable = false)
+    @Builder.Default
+    private String stockerArrangeMode = "DEFAULT";
 
-    @Column(name = "stockerArrangeScheduleType")
-    private String stockerArrangeScheduleType;
+    @Column(name = "stockerArrangeScheduleType", length = 20, nullable = false)
+    @Builder.Default
+    private String stockerArrangeScheduleType = "ONCE";
 
-    @Column(name = "stockerArrangeState")
-    private String stockerArrangeState;
+    @Column(name = "stockerArrangeState", length = 30, nullable = false)
+    @Builder.Default
+    private String stockerArrangeState = "READY";
 
-    @Column(name = "carrierUseCountThreshold")
-    private Integer carrierUseCountThreshold;
+    @Column(name = "carrierUseCountThreshold", nullable = false)
+    @Builder.Default
+    private Integer carrierUseCountThreshold = 0;
 
-    @Column(name = "eventComment")
+    @Column(name = "eventComment", length = 255)
     private String eventComment;
 
-    @Column(name = "eventName")
+    @Column(name = "eventName", length = 64)
     private String eventName;
 
     @Column(name = "eventTime")
     private LocalDateTime eventTime;
 
-    @Column(name = "eventUser")
+    @Column(name = "eventUser", length = 64)
     private String eventUser;
 }
