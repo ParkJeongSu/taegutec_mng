@@ -1,5 +1,6 @@
 package kr.co.aim.api.simulator;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -10,11 +11,10 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-@Component
+//@Component
 @EnableScheduling
+@Slf4j
 public class AlarmSimulator {
-
-    private static final Logger log = LoggerFactory.getLogger(AlarmSimulator.class);
 
     private final SimpMessagingTemplate messagingTemplate;
     private final Random random;

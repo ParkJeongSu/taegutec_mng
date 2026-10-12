@@ -16,6 +16,8 @@ public interface WcsCarrierRepository {
 
     List<WcsCarrier> findByFactoryName(String factoryName);
 
+    Optional<WcsCarrier> findByCarrierNameAndFactoryName(String carrierName, String factoryName);
+
     boolean existsById(String carrierName, String factoryName);
 
     WcsCarrier save(WcsCarrier carrier);

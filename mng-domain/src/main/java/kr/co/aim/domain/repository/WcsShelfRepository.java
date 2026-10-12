@@ -16,6 +16,8 @@ public interface WcsShelfRepository {
 
     List<WcsShelf> findByFactoryNameAndStockerName(String factoryName, String stockerName);
 
+    Optional<WcsShelf> findByFactoryNameAndStockerNameAndShelfName(String factoryName, String stockerName, String shelfName);
+
     boolean existsById(String factoryName, String stockerName, String shelfName);
 
     WcsShelf save(WcsShelf shelf);

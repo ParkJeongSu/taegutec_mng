@@ -83,6 +83,11 @@ public class WcsPortRepositoryImpl implements WcsPortRepository {
     }
 
     @Override
+    public Optional<WcsPort> findByEquipmentNameAndPortName(String equipmentName, String portName) {
+        return wcsPortJpaRepository.findByEquipmentNameAndPortName(equipmentName,portName).map(wcsPortMapper::toDomain);
+    }
+
+    @Override
     public boolean existsById(String factoryName, String equipmentName, Integer localNo, Integer portNumber) {
         if (!StringUtils.hasText(factoryName) || !StringUtils.hasText(equipmentName)
                 || localNo == null || portNumber == null) {

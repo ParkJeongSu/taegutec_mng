@@ -16,6 +16,8 @@ public interface WcsPortRepository {
 
     List<WcsPort> findByFactoryNameAndEquipmentName(String factoryName, String equipmentName);
 
+    Optional<WcsPort> findByEquipmentNameAndPortName(String equipmentName, String portName );
+
     boolean existsById(String factoryName, String equipmentName, Integer localNo, Integer portNumber);
 
     WcsPort save(WcsPort port);

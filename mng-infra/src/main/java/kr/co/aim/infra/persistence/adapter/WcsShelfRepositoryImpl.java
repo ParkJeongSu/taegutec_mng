@@ -76,6 +76,11 @@ public class WcsShelfRepositoryImpl implements WcsShelfRepository {
     }
 
     @Override
+    public Optional<WcsShelf> findByFactoryNameAndStockerNameAndShelfName(String factoryName, String stockerName, String shelfName) {
+        return wcsShelfJpaRepository.findByFactoryNameAndStockerNameAndShelfName(factoryName,stockerName,shelfName).map(wcsShelfMapper::toDomain);
+    }
+
+    @Override
     public boolean existsById(String factoryName, String stockerName, String shelfName) {
         if (!StringUtils.hasText(factoryName) || !StringUtils.hasText(stockerName) || !StringUtils.hasText(shelfName)) {
             return false;

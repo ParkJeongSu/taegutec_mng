@@ -1,5 +1,6 @@
 package kr.co.aim.api.simulator;
 
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -12,11 +13,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-@Component
+//@Component
 @EnableScheduling
+@Slf4j
 public class CraneMovementSimulator {
 
-    private static final Logger log = LoggerFactory.getLogger(CraneMovementSimulator.class);
 
     private final SimpMessagingTemplate messagingTemplate;
     private final Random random;

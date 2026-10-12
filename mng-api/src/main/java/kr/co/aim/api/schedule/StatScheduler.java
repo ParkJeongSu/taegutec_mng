@@ -1,30 +1,15 @@
 package kr.co.aim.api.schedule;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.service.PortService;
 import kr.co.aim.api.service.StatService;
-import kr.co.aim.common.Utils.FormatUtils;
-import kr.co.aim.common.Utils.JsonUtils;
-import kr.co.aim.common.enums.MessageList;
-import kr.co.aim.common.enums.PortTransportState;
-import kr.co.aim.common.enums.ResultCode;
-import kr.co.aim.common.enums.SystemName;
-import kr.co.aim.common.format.LoadRequestBody;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.domain.model.Port;
-import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Component
 @Slf4j

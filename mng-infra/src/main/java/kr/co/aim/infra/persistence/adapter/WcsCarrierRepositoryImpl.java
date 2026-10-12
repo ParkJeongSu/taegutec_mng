@@ -76,6 +76,11 @@ public class WcsCarrierRepositoryImpl implements WcsCarrierRepository {
     }
 
     @Override
+    public Optional<WcsCarrier> findByCarrierNameAndFactoryName(String carrierName, String factoryName) {
+        return wcsCarrierJpaRepository.findByCarrierNameAndFactoryName(carrierName,factoryName).map(wcsCarrierMapper::toDomain);
+    }
+
+    @Override
     public boolean existsById(String carrierName, String factoryName) {
         if (!StringUtils.hasText(carrierName) || !StringUtils.hasText(factoryName)) {
             return false;
