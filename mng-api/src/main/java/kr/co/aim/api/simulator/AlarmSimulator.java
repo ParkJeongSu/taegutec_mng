@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-//@Component
+@Component
 @EnableScheduling
 @Slf4j
 public class AlarmSimulator {

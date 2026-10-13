@@ -29,6 +29,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -41,10 +43,12 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-//@Component
+@Component
 @EnableScheduling
 @RequiredArgsConstructor
 @Slf4j
+@Profile({"web"})
+@ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class AutoInsertInboundSimulator {
 
     private final InsertAutoTestRepository insertAutoTestRepository;
