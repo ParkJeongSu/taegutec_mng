@@ -43,7 +43,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Component
+//@Component
 @EnableScheduling
 @RequiredArgsConstructor
 @Slf4j

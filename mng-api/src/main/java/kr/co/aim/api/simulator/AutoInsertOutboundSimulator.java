@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
-@Component
+//@Component
 @EnableScheduling
 @RequiredArgsConstructor
 @Slf4j

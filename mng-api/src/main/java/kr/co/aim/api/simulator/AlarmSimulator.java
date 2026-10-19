@@ -3,6 +3,7 @@ package kr.co.aim.api.simulator;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -11,9 +12,10 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.Random;
 
-@Component
+//@Component
 @EnableScheduling
 @Slf4j
+@Profile({"web"})
 public class AlarmSimulator {
 
     private final SimpMessagingTemplate messagingTemplate;

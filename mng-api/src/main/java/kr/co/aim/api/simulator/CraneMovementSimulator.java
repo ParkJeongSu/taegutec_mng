@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-@Component
+//@Component
 @EnableScheduling
 @Slf4j
 @Profile({"web"})

@@ -20,7 +20,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s # 30초 동안은 안 죽고 기다려줌 (로직 길면 늘려야 함)
   profiles:
-    active: web # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
+    active: simulator,tex,scheduler # scheduler,tex | pex | tex | simulator | web 등으로 설정 가능
   datasource:
     mssql:
       jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=NEXBEMNG;encrypt=false;
@@ -46,23 +46,39 @@ spring:
         leak-detection-threshold: 2000   # ← ms 단위
         connection-test-query: SELECT 1  # 풀에서 커넥션을 가져올 때 유효성 검사
         validation-timeout: 3000         # 검사 타임아웃 (3초)
-    db2:
-      jdbc-url: jdbc:db2://localhost:50000/testdb:currentSchema=AIMTESTTK; # 실제 DB2 URL로 변경해주세요
-      schema-name: AIMTESTTK # Db2용 스키마 (운영 환경에서는 라이브러리명)
-      username: db2inst1 # 실제 DB2 계정으로 변경해주세요
-      password: 1234 # 실제 DB2 비밀번호로 변경해주세요
-      driver-class-name: com.ibm.db2.jcc.DB2Driver
-      # ★ 로컬 DB2 LUW용 방언 설정 추가
-      dialect: org.hibernate.dialect.DB2Dialect
+    db2: # 임시 MSSQL
+      jdbc-url: jdbc:sqlserver://localhost:1433;databaseName=GAL;encrypt=false;
+      schema-name: dbo  # MSSQL용 스키마
+      username: nexbe # sa
+      password: "!aim123456"
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+      dialect: org.hibernate.dialect.SQLServerDialect
       hikari:
         pool-name: db2-pool
         maximum-pool-size: 10          # ← 최대 커넥션 수
         minimum-idle: 10               # ← 최소 유휴 커넥션 수
         connection-timeout: 30000      # ← 커넥션 획득 대기시간
-        connection-test-query: "SELECT 1 FROM SYSIBM.SYSDUMMY1"
+        connection-test-query: "SELECT 1"
         idle-timeout: 600000
         max-lifetime: 1800000
         leak-detection-threshold: 2000   # ← ms 단위
+#    db2:
+#      jdbc-url: jdbc:db2://localhost:50000/testdb:currentSchema=AIMTESTTK; # 실제 DB2 URL로 변경해주세요
+#      schema-name: AIMTESTTK # Db2용 스키마 (운영 환경에서는 라이브러리명)
+#      username: db2inst1 # 실제 DB2 계정으로 변경해주세요
+#      password: 1234 # 실제 DB2 비밀번호로 변경해주세요
+#      driver-class-name: com.ibm.db2.jcc.DB2Driver
+#      # ★ 로컬 DB2 LUW용 방언 설정 추가
+#      dialect: org.hibernate.dialect.DB2Dialect
+#      hikari:
+#        pool-name: db2-pool
+#        maximum-pool-size: 10          # ← 최대 커넥션 수
+#        minimum-idle: 10               # ← 최소 유휴 커넥션 수
+#        connection-timeout: 30000      # ← 커넥션 획득 대기시간
+#        connection-test-query: "SELECT 1 FROM SYSIBM.SYSDUMMY1"
+#        idle-timeout: 600000
+#        max-lifetime: 1800000
+#        leak-detection-threshold: 2000   # ← ms 단위
   #    db2:
   #      # 1. 프리픽스가 jdbc:as400 으로 바뀝니다.
   #      # 2. 뒤에 옵션들(naming=sql 등)은 JPA를 쓸 때 필수입니다.
