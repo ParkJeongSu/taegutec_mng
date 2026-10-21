@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsConveyorCreateRequestDto;
 import kr.co.aim.api.dto.WcsConveyorResponse;
 import kr.co.aim.api.dto.WcsConveyorUpdateRequestDto;
-import kr.co.aim.common.condition.WcsConveyorSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsConveyorSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsConveyorCreateCommand;
 import kr.co.aim.domain.command.WcsConveyorUpdateCommand;

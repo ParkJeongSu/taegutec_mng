@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.DepartmentResponse;
 import kr.co.aim.api.dto.DepartmentUpdateRequestDto;
 import kr.co.aim.api.service.DepartmentService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.DepartmentSearchCondition;
+import kr.co.aim.domain.repository.condition.DepartmentSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

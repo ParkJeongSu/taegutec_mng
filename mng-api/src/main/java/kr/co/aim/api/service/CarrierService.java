@@ -1,11 +1,9 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.common.condition.CarrierLotSearchCondition;
-import kr.co.aim.common.condition.CarrierSearchCondition;
-import kr.co.aim.common.dto.CarrierLotSearchResultDto;
-import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.*;
+import kr.co.aim.domain.repository.condition.CarrierLotSearchCondition;
+import kr.co.aim.domain.repository.condition.CarrierSearchCondition;
+import kr.co.aim.domain.repository.dto.CarrierLotSearchResultDto;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import lombok.RequiredArgsConstructor;

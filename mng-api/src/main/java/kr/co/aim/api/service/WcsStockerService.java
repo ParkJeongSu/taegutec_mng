@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsStockerCreateRequestDto;
 import kr.co.aim.api.dto.WcsStockerResponse;
 import kr.co.aim.api.dto.WcsStockerUpdateRequestDto;
-import kr.co.aim.common.condition.WcsStockerSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsStockerSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsStockerCreateCommand;
 import kr.co.aim.domain.command.WcsStockerUpdateCommand;

@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsTransferCommandSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsTransferCommandSearchCondition;
 import kr.co.aim.domain.model.WcsTransferCommand;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

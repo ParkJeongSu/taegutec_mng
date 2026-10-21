@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsZoneCreateRequestDto;
 import kr.co.aim.api.dto.WcsZoneResponse;
 import kr.co.aim.api.dto.WcsZoneUpdateRequestDto;
-import kr.co.aim.common.condition.WcsZoneSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsZoneSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsZoneCreateCommand;
 import kr.co.aim.domain.command.WcsZoneUpdateCommand;

@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.condition.WcsSubTransferCommandSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsSubTransferCommandSearchCondition;
 import kr.co.aim.domain.model.WcsSubTransferCommand;
 import kr.co.aim.domain.repository.WcsSubTransferCommandRepository;
 import kr.co.aim.infra.persistence.entity.QWcsSubTransferCommandEntity;

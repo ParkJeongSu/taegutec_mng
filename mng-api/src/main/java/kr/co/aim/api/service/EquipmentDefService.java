@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.EquipmentDefSaveRequestDto;
-import kr.co.aim.common.condition.EquipmentDefSearchCondition;
+import kr.co.aim.domain.repository.dto.EquipmentDefSaveRequestDto;
+import kr.co.aim.domain.repository.condition.EquipmentDefSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.EquipmentDefCreateCommand;
 import kr.co.aim.domain.command.EquipmentDefUpdateCommand;

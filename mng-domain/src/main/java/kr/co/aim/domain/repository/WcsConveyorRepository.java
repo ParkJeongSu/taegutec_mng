@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsConveyorSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsConveyorSearchCondition;
 import kr.co.aim.domain.model.WcsConveyor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

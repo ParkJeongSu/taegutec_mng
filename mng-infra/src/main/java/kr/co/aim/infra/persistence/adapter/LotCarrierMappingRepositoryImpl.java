@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.condition.LotCarrierMappingSearchCondition;
+import kr.co.aim.domain.repository.condition.LotCarrierMappingSearchCondition;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import kr.co.aim.domain.model.LotCarrierMappingHistory;
 import kr.co.aim.domain.repository.LotCarrierMappingRepository;

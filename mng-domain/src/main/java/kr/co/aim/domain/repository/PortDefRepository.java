@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.PortDefSearchCondition;
+import kr.co.aim.domain.repository.condition.PortDefSearchCondition;
 import kr.co.aim.domain.model.PortDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -6,7 +6,7 @@ import kr.co.aim.api.vo.powder.sim.H2TransReportVo;
 import kr.co.aim.api.vo.powder.sim.ProductionOrderContext;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.Utils.JsonUtils;
-import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
+import kr.co.aim.domain.repository.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.enums.GALProductionStatus;
 import kr.co.aim.common.enums.MessageList;
 import kr.co.aim.common.enums.SystemName;

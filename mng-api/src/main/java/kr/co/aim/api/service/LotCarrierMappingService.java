@@ -1,8 +1,7 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.condition.LotCarrierMappingSearchCondition;
+import kr.co.aim.domain.repository.condition.LotCarrierMappingSearchCondition;
 import kr.co.aim.domain.model.LotCarrierMapping;
-import kr.co.aim.domain.model.LotCarrierMappingHistory;
 import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsStockerSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsStockerSearchCondition;
 import kr.co.aim.domain.model.WcsStocker;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

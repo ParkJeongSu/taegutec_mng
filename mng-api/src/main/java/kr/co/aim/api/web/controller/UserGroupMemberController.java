@@ -6,7 +6,7 @@ import jakarta.validation.Valid;
 import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.UserGroupMemberService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.UserGroupMemberSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupMemberSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.LotSearchCondition;
+import kr.co.aim.domain.repository.condition.LotSearchCondition;
 import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.LotHistory;
 import org.springframework.data.domain.Page;

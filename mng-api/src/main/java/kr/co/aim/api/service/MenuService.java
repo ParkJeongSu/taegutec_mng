@@ -6,7 +6,7 @@ import kr.co.aim.api.dto.MenuUpdateRequestDto;
 import kr.co.aim.api.dto.UserAuthorizedMenuResponse;
 import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.common.Utils.TsidUtils;
-import kr.co.aim.common.condition.MenuSearchCondition;
+import kr.co.aim.domain.repository.condition.MenuSearchCondition;
 import kr.co.aim.domain.model.Menu;
 import kr.co.aim.domain.model.UserGroupMenuAuth;
 import kr.co.aim.domain.repository.MenuRepository;

@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.condition.WcsZoneSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsZoneSearchCondition;
 import kr.co.aim.domain.model.WcsZone;
 import kr.co.aim.domain.repository.WcsZoneRepository;
 import kr.co.aim.infra.persistence.entity.QWcsZoneEntity;

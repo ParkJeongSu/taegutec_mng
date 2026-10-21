@@ -7,7 +7,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.condition.SysUserSearchCondition;
+import kr.co.aim.domain.repository.condition.SysUserSearchCondition;
 import kr.co.aim.domain.model.SysUser;
 import kr.co.aim.domain.repository.UserRepository;
 import kr.co.aim.infra.persistence.entity.SysUserEntity;

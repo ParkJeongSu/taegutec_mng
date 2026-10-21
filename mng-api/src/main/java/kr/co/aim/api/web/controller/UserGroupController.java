@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.UserGroupResponse;
 import kr.co.aim.api.dto.UserGroupUpdateRequestDto;
 import kr.co.aim.api.service.UserGroupService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.UserGroupSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

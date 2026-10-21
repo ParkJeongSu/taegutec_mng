@@ -3,7 +3,7 @@ package kr.co.aim.api.web.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.SysUserService;
-import kr.co.aim.common.condition.SysUserSearchCondition;
+import kr.co.aim.domain.repository.condition.SysUserSearchCondition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

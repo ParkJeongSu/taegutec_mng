@@ -7,7 +7,7 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
-import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
+import kr.co.aim.domain.repository.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportJobHistory;
 import kr.co.aim.domain.repository.TransportJobRepository;

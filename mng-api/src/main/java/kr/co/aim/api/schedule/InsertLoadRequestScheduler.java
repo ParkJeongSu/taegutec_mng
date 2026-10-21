@@ -52,8 +52,11 @@ public class InsertLoadRequestScheduler {
         List<Port> portList = portService.findEarliestPortPerWorkCenter(PortTransportState.READY_TO_LOAD.getValue(),detailPortTypes);
 
         if(CollectionUtils.isNotEmpty(portList)){
+            String baseTime = FormatUtils.generateTransactionId();
+            int i = 0;
             for(Port port : portList){
-                String transactionId = FormatUtils.generateTransactionId();
+                i++;
+                String transactionId = String.format("%s_%02d", baseTime, i);
                 BaseMessage<LoadRequestBody> request = new BaseMessage<>();
 
                 request.setMessageName(MessageList.LOAD_REQUEST.getMessageName());
@@ -61,7 +64,7 @@ public class InsertLoadRequestScheduler {
                 request.setMessageFrom(SystemName.MNG.getValue());
                 request.setMessageOwner(SystemName.MNG.getValue());
                 request.setMessageTo(SystemName.MNG.getValue());
-                request.setEventTime(transactionId);
+                request.setEventTime(baseTime);
                 request.setResultMessage("");
                 request.setResultCode(ResultCode.OK.getValue());
                 LoadRequestBody body = LoadRequestBody.builder()

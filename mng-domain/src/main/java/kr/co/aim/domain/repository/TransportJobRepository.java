@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
+import kr.co.aim.domain.repository.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.domain.model.TransportJob;
 import kr.co.aim.domain.model.TransportJobHistory;
 import org.springframework.data.domain.Page;

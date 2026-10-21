@@ -3,6 +3,7 @@ package kr.co.aim.infra.persistence.adapter;
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.CaseBuilder;
 import com.querydsl.core.types.dsl.NumberExpression;
@@ -10,27 +11,36 @@ import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
-import kr.co.aim.common.condition.TransportOrderSearchCondition;
-import kr.co.aim.common.dto.QRecentTransportOrderResponse;
-import kr.co.aim.common.dto.RecentTransportOrderResponse;
-import kr.co.aim.common.dto.insert.*;
+import kr.co.aim.domain.repository.dto.RecentTransportOrderResponse;
+import kr.co.aim.domain.repository.dto.insert.DailyTransportSummaryResponse;
+import kr.co.aim.domain.repository.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.domain.repository.dto.insert.WarehouseStationTransportCountResponse;
+import kr.co.aim.domain.repository.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.common.enums.TransportOrderStatus;
 import kr.co.aim.common.enums.TransportOrderType;
 import kr.co.aim.domain.model.TransportOrder;
 import kr.co.aim.domain.repository.TransportOrderRepository;
+import kr.co.aim.domain.repository.condition.TransportOrderSearchCondition;
 import kr.co.aim.infra.persistence.entity.TransportOrderEntity;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
 import kr.co.aim.infra.persistence.springdatajpa.TransportOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static kr.co.aim.infra.persistence.entity.QTransportJobEntity.transportJobEntity;
 import static kr.co.aim.infra.persistence.entity.QTransportOrderEntity.transportOrderEntity;
@@ -38,70 +48,83 @@ import static kr.co.aim.infra.persistence.entity.QTransportOrderEntity.transport
 @Repository
 @RequiredArgsConstructor
 public class TransportOrderRepositoryImpl implements TransportOrderRepository {
-    // Spring Data JPA가 자동으로 구현해주는 JPA 리포지토리. UserEntity를 다룬다.
 
     private final TransportOrderJpaRepository transportOrderJpaRepository;
     private final TransportOrderMapper transportOrderMapper;
-    private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
+    private final JPAQueryFactory queryFactory;
 
     @Override
     public TransportOrder save(TransportOrder transportOrder) {
-        // 1. Domain -> Entity 변환
         TransportOrderEntity entity = transportOrderMapper.toEntity(transportOrder);
-        // 2. JPA 리포지토리를 통해 DB에 저장
         TransportOrderEntity savedEntity = transportOrderJpaRepository.save(entity);
-        // 3. 저장된 Entity -> Domain 변환 후 반환
         return transportOrderMapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<TransportOrder> findById(Long id) {
-        // 1. JPA 리포지토리를 통해 ID로 Entity 조회
         Optional<TransportOrderEntity> entityOptional = transportOrderJpaRepository.findById(id);
-        // 2. 조회된 Optional<Entity>를 Optional<Domain>으로 변환하여 반환
-        return entityOptional.map(transportOrderMapper::toDomain);
+        if (entityOptional.isPresent()) {
+            return Optional.of(transportOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public List<TransportOrder> findByTransportTypeInAndTransportStatus(List<String> types, String status) {
-        return transportOrderJpaRepository.findByTransportTypeInAndTransportStatus(types,status).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+        List<TransportOrderEntity> entities = transportOrderJpaRepository.findByTransportTypeInAndTransportStatus(types, status);
+        List<TransportOrder> domainList = new ArrayList<>();
+        for (TransportOrderEntity entity : entities) {
+            domainList.add(transportOrderMapper.toDomain(entity));
+        }
+        return domainList;
     }
 
     @Override
     public Optional<TransportOrder> findWithLockById(Long id) {
-        return transportOrderJpaRepository.findWithLockById(id).map(transportOrderMapper::toDomain);
+        Optional<TransportOrderEntity> entityOptional = transportOrderJpaRepository.findWithLockById(id);
+        if (entityOptional.isPresent()) {
+            return Optional.of(transportOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public Optional<TransportOrder> findByTransportOrderId(String transportOrderId) {
-        return transportOrderJpaRepository.findByTransportOrderId(transportOrderId).map(transportOrderMapper::toDomain);
+        Optional<TransportOrderEntity> entityOptional = transportOrderJpaRepository.findByTransportOrderId(transportOrderId);
+        if (entityOptional.isPresent()) {
+            return Optional.of(transportOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public List<TransportOrder> findTransportOrderByCondition(String carrierName, String transportType, List<String> transportStatus) {
-        return transportOrderJpaRepository.findTransportOrderByCondition(
-                carrierName,
-                transportType,
-                transportStatus
-        ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+        List<TransportOrderEntity> entities = transportOrderJpaRepository.findTransportOrderByCondition(carrierName, transportType, transportStatus);
+        List<TransportOrder> domainList = new ArrayList<>();
+        for (TransportOrderEntity entity : entities) {
+            domainList.add(transportOrderMapper.toDomain(entity));
+        }
+        return domainList;
     }
 
     @Override
     public List<TransportOrder> findOutboundOrderForTransportRequest(String transportType, String transportStatus, String workStationId) {
-        return transportOrderJpaRepository.findOutboundOrderForTransportRequest(
-                transportType,
-                transportStatus,
-                workStationId
-        ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+        List<TransportOrderEntity> entities = transportOrderJpaRepository.findOutboundOrderForTransportRequest(transportType, transportStatus, workStationId);
+        List<TransportOrder> domainList = new ArrayList<>();
+        for (TransportOrderEntity entity : entities) {
+            domainList.add(transportOrderMapper.toDomain(entity));
+        }
+        return domainList;
     }
 
     @Override
     public List<TransportOrder> findOutboundOrderForTransportRequest(String transportType, List<String> transportStatus, String workStationId) {
-        return transportOrderJpaRepository.findOutboundOrderForTransportRequest(
-                transportType,
-                transportStatus,
-                workStationId
-        ).stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+        List<TransportOrderEntity> entities = transportOrderJpaRepository.findOutboundOrderForTransportRequest(transportType, transportStatus, workStationId);
+        List<TransportOrder> domainList = new ArrayList<>();
+        for (TransportOrderEntity entity : entities) {
+            domainList.add(transportOrderMapper.toDomain(entity));
+        }
+        return domainList;
     }
 
     @Override
@@ -148,7 +171,10 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
         }
 
         List<TransportOrderEntity> content = query.fetch();
-        List<TransportOrder> converted = content.stream().map(transportOrderMapper::toDomain).collect(Collectors.toList());
+        List<TransportOrder> converted = new ArrayList<>();
+        for (TransportOrderEntity entity : content) {
+            converted.add(transportOrderMapper.toDomain(entity));
+        }
 
         long total;
         if (pageable.isPaged()) {
@@ -214,14 +240,12 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 TransportOrderStatus.STARTED.getValue()
         );
 
-        // 1) 완료 수량 집계
         NumberExpression<Long> completedCountExpr = new CaseBuilder()
                 .when(transportOrderEntity.transportStatus.eq(TransportOrderStatus.COMPLETED.getValue()))
                 .then(1L)
                 .otherwise(0L)
                 .sum();
 
-        // 2) 진행 중 Inbound 집계
         NumberExpression<Long> inboundProgressExpr = new CaseBuilder()
                 .when(transportOrderEntity.transportType.eq(TransportOrderType.INBOUND.getValue())
                         .and(transportOrderEntity.transportStatus.in(inProgressStatuses)))
@@ -229,7 +253,6 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .otherwise(0L)
                 .sum();
 
-        // 3) 진행 중 Outbound 집계
         NumberExpression<Long> outboundProgressExpr = new CaseBuilder()
                 .when(transportOrderEntity.transportType.eq(TransportOrderType.OUTBOUND.getValue())
                         .and(transportOrderEntity.transportStatus.in(inProgressStatuses)))
@@ -238,11 +261,11 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .sum();
 
         TransportOrderStatisticsResponse response = queryFactory
-                .select(new QTransportOrderStatisticsResponse(
-                        transportOrderEntity.workStationId,
-                        completedCountExpr,
-                        inboundProgressExpr,
-                        outboundProgressExpr
+                .select(Projections.fields(TransportOrderStatisticsResponse.class,
+                        transportOrderEntity.workStationId.as("workStationId"),
+                        completedCountExpr.coalesce(0L).as("completedCount"),
+                        inboundProgressExpr.coalesce(0L).as("inboundProgressCount"),
+                        outboundProgressExpr.coalesce(0L).as("outboundProgressCount")
                 ))
                 .from(transportOrderEntity)
                 .where(
@@ -252,17 +275,25 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .groupBy(transportOrderEntity.workStationId)
                 .fetchOne();
 
-        // 데이터가 없는 경우 0으로 초기화된 기본 객체 반환
         if (response == null) {
-            return new TransportOrderStatisticsResponse(workStationId, 0L, 0L, 0L);
+            TransportOrderStatisticsResponse defaultResponse = new TransportOrderStatisticsResponse();
+            defaultResponse.setWorkStationId(workStationId);
+            defaultResponse.setCompletedCount(0L);
+            defaultResponse.setInboundProgressCount(0L);
+            defaultResponse.setOutboundProgressCount(0L);
+            defaultResponse.setTotalProgressCount(0L);
+            return defaultResponse;
         }
+
+        long inbound = response.getInboundProgressCount() != null ? response.getInboundProgressCount() : 0L;
+        long outbound = response.getOutboundProgressCount() != null ? response.getOutboundProgressCount() : 0L;
+        response.setTotalProgressCount(inbound + outbound);
 
         return response;
     }
 
     @Override
     public Page<RecentTransportOrderResponse> findRecentTransportOrders(String workStationId, String transportType, int limit) {
-        // 1. transportType에 따른 status 조건 목록 분기
         List<String> targetStatuses;
 
         if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
@@ -282,47 +313,45 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
             targetStatuses = Collections.emptyList();
         }
 
-        // 2. limit 설정
         Pageable pageable = PageRequest.of(0, limit);
 
-        // 3. 데이터 조회 (TransportJob leftJoin 및 QRecentTransportOrderResponse Projection)
         List<RecentTransportOrderResponse> content = queryFactory
-                .select(new QRecentTransportOrderResponse(
-                        transportOrderEntity.id,
-                        transportOrderEntity.transportOrderId,
-                        transportOrderEntity.idocId,
-                        transportOrderEntity.description,
-                        transportOrderEntity.carrierName,
-                        transportOrderEntity.virtualCarrierName,
-                        transportOrderEntity.transportType,
-                        transportOrderEntity.transportStatus,
-                        transportOrderEntity.lastTransactionCode,
-                        transportOrderEntity.carrierType,
-                        transportOrderEntity.priority,
-                        transportOrderEntity.galId,
-                        transportOrderEntity.galWarehouse,
-                        transportOrderEntity.locationId,
-                        transportOrderEntity.workStationId,
-                        transportOrderEntity.sourceZoneName,
-                        transportOrderEntity.destinationZoneName,
-                        transportOrderEntity.errorText,
-                        transportOrderEntity.actualWeight,
-                        transportOrderEntity.requestedZoneName,
-                        transportOrderEntity.actualZoneName,
-                        transportOrderEntity.actualLocationId,
-                        transportOrderEntity.travelProfile,
-                        transportOrderEntity.createTime,
-                        transportOrderEntity.releaseTime,
-                        transportOrderEntity.completeTime,
-                        transportOrderEntity.retrievalTime,
-                        transportOrderEntity.createUser,
-                        transportOrderEntity.releaseUser,
-                        transportOrderEntity.completeUser,
-                        transportOrderEntity.eventName,
-                        transportOrderEntity.eventTime,
-                        transportOrderEntity.eventUser,
-                        transportOrderEntity.eventComment,
-                        transportJobEntity.transportJobName
+                .select(Projections.fields(RecentTransportOrderResponse.class,
+                        transportOrderEntity.id.as("id"),
+                        transportOrderEntity.transportOrderId.as("transportOrderId"),
+                        transportOrderEntity.idocId.as("idocId"),
+                        transportOrderEntity.description.as("description"),
+                        transportOrderEntity.carrierName.as("carrierName"),
+                        transportOrderEntity.virtualCarrierName.as("virtualCarrierName"),
+                        transportOrderEntity.transportType.as("transportType"),
+                        transportOrderEntity.transportStatus.as("transportStatus"),
+                        transportOrderEntity.lastTransactionCode.as("lastTransactionCode"),
+                        transportOrderEntity.carrierType.as("carrierType"),
+                        transportOrderEntity.priority.as("priority"),
+                        transportOrderEntity.galId.as("galId"),
+                        transportOrderEntity.galWarehouse.as("galWarehouse"),
+                        transportOrderEntity.locationId.as("locationId"),
+                        transportOrderEntity.workStationId.as("workStationId"),
+                        transportOrderEntity.sourceZoneName.as("sourceZoneName"),
+                        transportOrderEntity.destinationZoneName.as("destinationZoneName"),
+                        transportOrderEntity.errorText.as("errorText"),
+                        transportOrderEntity.actualWeight.as("actualWeight"),
+                        transportOrderEntity.requestedZoneName.as("requestedZoneName"),
+                        transportOrderEntity.actualZoneName.as("actualZoneName"),
+                        transportOrderEntity.actualLocationId.as("actualLocationId"),
+                        transportOrderEntity.travelProfile.as("travelProfile"),
+                        transportOrderEntity.createTime.as("createTime"),
+                        transportOrderEntity.releaseTime.as("releaseTime"),
+                        transportOrderEntity.completeTime.as("completeTime"),
+                        transportOrderEntity.retrievalTime.as("retrievalTime"),
+                        transportOrderEntity.createUser.as("createUser"),
+                        transportOrderEntity.releaseUser.as("releaseUser"),
+                        transportOrderEntity.completeUser.as("completeUser"),
+                        transportOrderEntity.eventName.as("eventName"),
+                        transportOrderEntity.eventTime.as("eventTime"),
+                        transportOrderEntity.eventUser.as("eventUser"),
+                        transportOrderEntity.eventComment.as("eventComment"),
+                        transportJobEntity.transportJobName.as("transportJobName")
                 ))
                 .from(transportOrderEntity)
                 .leftJoin(transportJobEntity).on(transportJobEntity.orderId.eq(transportOrderEntity.transportOrderId))
@@ -338,7 +367,6 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .limit(limit)
                 .fetch();
 
-        // 4. Total Count 조회
         long total;
         if (TransportOrderType.INBOUND.getValue().equalsIgnoreCase(transportType)) {
             Long count = queryFactory
@@ -364,26 +392,27 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
         LocalDateTime startOfDay = date.atStartOfDay();
         LocalDateTime startOfNextDay = date.plusDays(1).atStartOfDay();
 
-        // 1. Inbound 집계 표현식
         NumberExpression<Long> inboundCountExpr = new CaseBuilder()
                 .when(transportOrderEntity.transportType.eq(TransportOrderType.INBOUND.getValue()))
                 .then(1L)
                 .otherwise(0L)
                 .sum();
 
-        // 2. Outbound 집계 표현식
         NumberExpression<Long> outboundCountExpr = new CaseBuilder()
                 .when(transportOrderEntity.transportType.eq(TransportOrderType.OUTBOUND.getValue()))
                 .then(1L)
                 .otherwise(0L)
                 .sum();
 
-        // 3. 페이징 데이터 쿼리
+        // inbound + outbound 합산 표현식
+        NumberExpression<Long> totalCountExpr = inboundCountExpr.add(outboundCountExpr);
+
         JPAQuery<WorkStationTransportCountResponse> query = queryFactory
-                .select(new QWorkStationTransportCountResponse(
-                        transportOrderEntity.workStationId,
-                        inboundCountExpr,
-                        outboundCountExpr
+                .select(Projections.fields(WorkStationTransportCountResponse.class,
+                        transportOrderEntity.workStationId.as("workStationId"),
+                        inboundCountExpr.coalesce(0L).as("inboundCount"),
+                        outboundCountExpr.coalesce(0L).as("outboundCount"),
+                        totalCountExpr.coalesce(0L).as("totalCount")
                 ))
                 .from(transportOrderEntity)
                 .where(
@@ -401,7 +430,6 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
 
         List<WorkStationTransportCountResponse> content = query.fetch();
 
-        // 4. 총 그룹 개수(distinct workStationId) 조회
         long total;
         if (pageable.isPaged()) {
             Long count = queryFactory
@@ -421,9 +449,6 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
         return new PageImpl<>(content, pageable, total);
     }
 
-    // ==========================================
-    // ✨ 요구사항 1: 금일 전체 반송 현황 집계
-    // ==========================================
     @Override
     public DailyTransportSummaryResponse getDailyTransportSummary(LocalDate targetDate) {
         LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
@@ -481,9 +506,6 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .build();
     }
 
-    // ==========================================
-    // ✨ 요구사항 2: 창고 및 워크스테이션별 반송 수량 집계 (페이징)
-    // ==========================================
     @Override
     public Page<WarehouseStationTransportCountResponse> getWarehouseStationTransportCounts(LocalDate targetDate, Pageable pageable) {
         LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
@@ -514,12 +536,12 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
                 .sum();
 
         JPAQuery<WarehouseStationTransportCountResponse> query = queryFactory
-                .select(new QWarehouseStationTransportCountResponse(
-                        transportOrderEntity.galWarehouse,
-                        transportOrderEntity.workStationId,
-                        inboundCountExpr.coalesce(0L),
-                        outboundCountExpr.coalesce(0L),
-                        relocationCountExpr.coalesce(0L)
+                .select(Projections.fields(WarehouseStationTransportCountResponse.class,
+                        transportOrderEntity.galWarehouse.as("galWarehouse"),
+                        transportOrderEntity.workStationId.as("workStationId"),
+                        inboundCountExpr.coalesce(0L).as("inboundCount"),
+                        outboundCountExpr.coalesce(0L).as("outboundCount"),
+                        relocationCountExpr.coalesce(0L).as("relocationCount")
                 ))
                 .from(transportOrderEntity)
                 .where(whereCondition)
@@ -696,12 +718,10 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
         return StringUtils.hasText(transportType) ? transportOrderEntity.transportType.eq(transportType) : null;
     }
 
-    // status IN 절 동적 쿼리 헬퍼 메소드
     private BooleanExpression transportStatusIn(List<String> statuses) {
         if (statuses == null || statuses.isEmpty()) {
             return null;
         }
         return transportOrderEntity.transportStatus.in(statuses);
     }
-
 }

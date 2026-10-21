@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.TransportJobService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
+import kr.co.aim.domain.repository.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.domain.model.TransportJobHistory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsShelfSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsShelfSearchCondition;
 import kr.co.aim.domain.model.WcsShelf;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

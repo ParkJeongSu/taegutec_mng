@@ -2,12 +2,12 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.api.vo.insert.sim.TransportOrderContext;
-import kr.co.aim.common.condition.TransportOrderSearchCondition;
-import kr.co.aim.common.dto.RecentTransportOrderResponse;
-import kr.co.aim.common.dto.insert.DailyTransportSummaryResponse;
-import kr.co.aim.common.dto.insert.TransportOrderStatisticsResponse;
-import kr.co.aim.common.dto.insert.WarehouseStationTransportCountResponse;
-import kr.co.aim.common.dto.insert.WorkStationTransportCountResponse;
+import kr.co.aim.domain.repository.condition.TransportOrderSearchCondition;
+import kr.co.aim.domain.repository.dto.RecentTransportOrderResponse;
+import kr.co.aim.domain.repository.dto.insert.DailyTransportSummaryResponse;
+import kr.co.aim.domain.repository.dto.insert.TransportOrderStatisticsResponse;
+import kr.co.aim.domain.repository.dto.insert.WarehouseStationTransportCountResponse;
+import kr.co.aim.domain.repository.dto.insert.WorkStationTransportCountResponse;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.enums.TransportOrderStatus;

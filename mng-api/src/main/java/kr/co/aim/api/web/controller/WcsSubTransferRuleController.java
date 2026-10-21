@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsSubTransferRuleResponse;
 import kr.co.aim.api.dto.WcsSubTransferRuleUpdateRequestDto;
 import kr.co.aim.api.service.WcsSubTransferRuleService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsSubTransferRuleSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsSubTransferRuleSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

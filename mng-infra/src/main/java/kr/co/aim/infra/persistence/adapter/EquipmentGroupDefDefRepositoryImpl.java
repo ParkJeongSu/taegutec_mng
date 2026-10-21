@@ -6,7 +6,7 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import kr.co.aim.common.condition.EquipmentGroupDefSearchCondition;
+import kr.co.aim.domain.repository.condition.EquipmentGroupDefSearchCondition;
 import kr.co.aim.domain.model.EquipmentGroupDef;
 import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
 import kr.co.aim.infra.persistence.entity.EquipmentGroupDefEntity;

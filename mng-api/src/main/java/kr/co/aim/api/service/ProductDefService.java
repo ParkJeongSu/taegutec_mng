@@ -1,8 +1,8 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.condition.ProductDefSearchCondition;
-import kr.co.aim.common.dto.ProductDefSaveRequestDto;
-import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
+import kr.co.aim.domain.repository.condition.ProductDefSearchCondition;
+import kr.co.aim.domain.repository.dto.ProductDefSaveRequestDto;
+import kr.co.aim.domain.repository.dto.powder.IdocH2PartMResponseDto;
 import kr.co.aim.common.enums.EventName;
 import kr.co.aim.common.enums.SystemName;
 import kr.co.aim.common.record.TransactionInfo;

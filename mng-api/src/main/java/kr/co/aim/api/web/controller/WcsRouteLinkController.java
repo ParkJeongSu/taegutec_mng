@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsRouteLinkResponse;
 import kr.co.aim.api.dto.WcsRouteLinkUpdateRequestDto;
 import kr.co.aim.api.service.WcsRouteLinkService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsRouteLinkSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsRouteLinkSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

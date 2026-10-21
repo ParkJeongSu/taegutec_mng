@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsPortCreateRequestDto;
 import kr.co.aim.api.dto.WcsPortResponse;
 import kr.co.aim.api.dto.WcsPortUpdateRequestDto;
-import kr.co.aim.common.condition.WcsPortSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsPortSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsPortCreateCommand;
 import kr.co.aim.domain.command.WcsPortUpdateCommand;

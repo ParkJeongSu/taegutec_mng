@@ -1,12 +1,12 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.common.condition.GALDetailInterfaceSearchCondition;
-import kr.co.aim.common.condition.GALInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
 import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.strategy.FactoryGALInterfaceStrategy;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
-import kr.co.aim.common.condition.GALPartSearchCondition;
+import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
 import kr.co.aim.domain.model.GALInterfaceResponse;

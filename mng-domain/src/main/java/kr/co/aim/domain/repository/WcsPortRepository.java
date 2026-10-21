@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsPortSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsPortSearchCondition;
 import kr.co.aim.domain.model.WcsPort;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

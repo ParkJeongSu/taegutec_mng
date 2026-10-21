@@ -2,11 +2,9 @@ package kr.co.aim.api.web.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import kr.co.aim.api.dto.EquipmentGroupDashboard;
-import kr.co.aim.api.service.DashboardService;
 import kr.co.aim.api.service.EquipmentService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.EquipmentSearchCondition;
+import kr.co.aim.domain.repository.condition.EquipmentSearchCondition;
 import kr.co.aim.domain.model.Equipment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

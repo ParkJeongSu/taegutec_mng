@@ -4,7 +4,7 @@ import kr.co.aim.api.dto.UserGroupMenuAuthBatchSaveRequestDto;
 import kr.co.aim.api.dto.UserGroupMenuAuthCreateRequestDto;
 import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.api.dto.UserGroupMenuAuthUpdateRequestDto;
-import kr.co.aim.common.condition.UserGroupMenuAuthSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupMenuAuthSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.UserGroupMenuAuthCreateCommand;
 import kr.co.aim.domain.command.UserGroupMenuAuthUpdateCommand;

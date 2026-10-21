@@ -1,8 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.CarrierSearchCondition;
-import kr.co.aim.common.condition.EquipmentSearchCondition;
-import kr.co.aim.domain.model.Carrier;
+import kr.co.aim.domain.repository.condition.EquipmentSearchCondition;
 import kr.co.aim.domain.model.Equipment;
 import kr.co.aim.domain.model.EquipmentHistory;
 import org.springframework.data.domain.Page;

@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.PasswordPolicyCreateRequestDto;
 import kr.co.aim.api.dto.PasswordPolicyResponse;
 import kr.co.aim.api.dto.PasswordPolicyUpdateRequestDto;
-import kr.co.aim.common.condition.PasswordPolicySearchCondition;
+import kr.co.aim.domain.repository.condition.PasswordPolicySearchCondition;
 import kr.co.aim.domain.model.PasswordPolicy;
 import kr.co.aim.domain.repository.PasswordPolicyRepository;
 import kr.co.aim.infra.persistence.entity.PasswordPolicyHistoryEntity;

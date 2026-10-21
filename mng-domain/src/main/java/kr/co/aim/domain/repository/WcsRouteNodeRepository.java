@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsRouteNodeSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsRouteNodeSearchCondition;
 import kr.co.aim.domain.model.WcsRouteNode;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import kr.co.aim.api.dto.*;
 import kr.co.aim.api.service.WcsShelfService;
-import kr.co.aim.common.condition.WcsShelfSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsShelfSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -5,7 +5,7 @@ import kr.co.aim.api.dto.WcsStockerCreateRequestDto;
 import kr.co.aim.api.dto.WcsStockerResponse;
 import kr.co.aim.api.dto.WcsStockerUpdateRequestDto;
 import kr.co.aim.api.service.WcsStockerService;
-import kr.co.aim.common.condition.WcsStockerSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsStockerSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

@@ -10,7 +10,7 @@ import kr.co.aim.api.dto.UserAuthorizedMenuResponse;
 import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.api.service.MenuService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.MenuSearchCondition;
+import kr.co.aim.domain.repository.condition.MenuSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

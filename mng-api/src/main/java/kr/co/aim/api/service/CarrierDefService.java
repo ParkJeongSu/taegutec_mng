@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.CarrierDefSaveRequestDto;
-import kr.co.aim.common.condition.CarrierDefSearchCondition;
+import kr.co.aim.domain.repository.dto.CarrierDefSaveRequestDto;
+import kr.co.aim.domain.repository.condition.CarrierDefSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.CarrierDefCreateCommand;
 import kr.co.aim.domain.command.CarrierDefUpdateCommand;

@@ -9,7 +9,7 @@ import kr.co.aim.api.dto.UserGroupMenuAuthResponse;
 import kr.co.aim.api.dto.UserGroupMenuAuthUpdateRequestDto;
 import kr.co.aim.api.service.UserGroupMenuAuthService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.UserGroupMenuAuthSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupMenuAuthSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

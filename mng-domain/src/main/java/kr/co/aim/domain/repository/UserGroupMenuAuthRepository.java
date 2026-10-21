@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.UserGroupMenuAuthSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupMenuAuthSearchCondition;
 import kr.co.aim.domain.model.UserGroupMenuAuth;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

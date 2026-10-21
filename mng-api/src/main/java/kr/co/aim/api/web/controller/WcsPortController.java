@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsPortResponse;
 import kr.co.aim.api.dto.WcsPortUpdateRequestDto;
 import kr.co.aim.api.service.WcsPortService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsPortSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsPortSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

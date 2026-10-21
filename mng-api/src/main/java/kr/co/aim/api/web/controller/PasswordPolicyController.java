@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.PasswordPolicyResponse;
 import kr.co.aim.api.dto.PasswordPolicyUpdateRequestDto;
 import kr.co.aim.api.service.PasswordPolicyService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.PasswordPolicySearchCondition;
+import kr.co.aim.domain.repository.condition.PasswordPolicySearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

@@ -9,7 +9,7 @@ import kr.co.aim.api.dto.SysUserUpdateRequestDto;
 import kr.co.aim.api.dto.UserGroupMemberResponse;
 import kr.co.aim.api.service.SysUserService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.SysUserSearchCondition;
+import kr.co.aim.domain.repository.condition.SysUserSearchCondition;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;

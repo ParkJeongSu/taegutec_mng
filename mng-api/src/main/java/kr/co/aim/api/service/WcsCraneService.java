@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsCraneCreateRequestDto;
 import kr.co.aim.api.dto.WcsCraneResponse;
 import kr.co.aim.api.dto.WcsCraneUpdateRequestDto;
-import kr.co.aim.common.condition.WcsCraneSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsCraneSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsCraneCreateCommand;
 import kr.co.aim.domain.command.WcsCraneUpdateCommand;

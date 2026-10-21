@@ -4,7 +4,7 @@ import kr.co.aim.api.dto.SysUserCreateRequestDto;
 import kr.co.aim.api.dto.SysUserResponse;
 import kr.co.aim.api.dto.SysUserUpdateRequestDto;
 import kr.co.aim.api.dto.UserGroupMemberResponse;
-import kr.co.aim.common.condition.SysUserSearchCondition;
+import kr.co.aim.domain.repository.condition.SysUserSearchCondition;
 import kr.co.aim.domain.model.SysUser;
 import kr.co.aim.domain.model.UserGroupMember;
 import kr.co.aim.domain.repository.UserGroupMemberRepository;

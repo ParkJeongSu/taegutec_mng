@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.UserGroupCreateRequestDto;
 import kr.co.aim.api.dto.UserGroupResponse;
 import kr.co.aim.api.dto.UserGroupUpdateRequestDto;
-import kr.co.aim.common.condition.UserGroupSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.UserGroupCreateCommand;
 import kr.co.aim.domain.command.UserGroupUpdateCommand;

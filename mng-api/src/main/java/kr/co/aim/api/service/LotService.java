@@ -1,8 +1,7 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.condition.LotSearchCondition;
+import kr.co.aim.domain.repository.condition.LotSearchCondition;
 import kr.co.aim.domain.model.Lot;
-import kr.co.aim.domain.model.LotHistory;
 import kr.co.aim.domain.repository.LotRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,7 +10,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.DepartmentSearchCondition;
+import kr.co.aim.domain.repository.condition.DepartmentSearchCondition;
 import kr.co.aim.domain.model.Department;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

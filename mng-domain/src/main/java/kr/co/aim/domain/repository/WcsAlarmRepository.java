@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.WcsAlarmSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsAlarmSearchCondition;
 import kr.co.aim.domain.model.WcsAlarm;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

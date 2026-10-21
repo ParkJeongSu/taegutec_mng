@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.DepartmentCreateRequestDto;
 import kr.co.aim.api.dto.DepartmentResponse;
 import kr.co.aim.api.dto.DepartmentUpdateRequestDto;
-import kr.co.aim.common.condition.DepartmentSearchCondition;
+import kr.co.aim.domain.repository.condition.DepartmentSearchCondition;
 import kr.co.aim.domain.model.Department;
 import kr.co.aim.domain.repository.DepartmentRepository;
 import kr.co.aim.infra.persistence.entity.DepartmentEntity;

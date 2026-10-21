@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsCarrierCreateRequestDto;
 import kr.co.aim.api.dto.WcsCarrierResponse;
 import kr.co.aim.api.dto.WcsCarrierUpdateRequestDto;
-import kr.co.aim.common.condition.WcsCarrierSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsCarrierSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsCarrierCreateCommand;
 import kr.co.aim.domain.command.WcsCarrierUpdateCommand;

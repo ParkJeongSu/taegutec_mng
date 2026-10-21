@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsSubTransferRuleCreateRequestDto;
 import kr.co.aim.api.dto.WcsSubTransferRuleResponse;
 import kr.co.aim.api.dto.WcsSubTransferRuleUpdateRequestDto;
-import kr.co.aim.common.condition.WcsSubTransferRuleSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsSubTransferRuleSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsSubTransferRuleCreateCommand;
 import kr.co.aim.domain.command.WcsSubTransferRuleUpdateCommand;

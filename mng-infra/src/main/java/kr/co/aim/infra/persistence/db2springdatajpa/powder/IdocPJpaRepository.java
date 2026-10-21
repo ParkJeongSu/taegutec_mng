@@ -1,8 +1,8 @@
 package kr.co.aim.infra.persistence.db2springdatajpa.powder;
 
-import kr.co.aim.common.dto.powder.IdocH2PartMResponseDto;
-import kr.co.aim.common.dto.powder.IdocH2TransResponseDto;
-import kr.co.aim.common.dto.powder.IdocOrderMasterResponseDto;
+import kr.co.aim.domain.repository.dto.powder.IdocH2PartMResponseDto;
+import kr.co.aim.domain.repository.dto.powder.IdocH2TransResponseDto;
+import kr.co.aim.domain.repository.dto.powder.IdocOrderMasterResponseDto;
 import kr.co.aim.infra.persistence.db2entity.powder.IdocPEntity;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
@@ -12,8 +12,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 

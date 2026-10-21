@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsZoneResponse;
 import kr.co.aim.api.dto.WcsZoneUpdateRequestDto;
 import kr.co.aim.api.service.WcsZoneService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsZoneSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsZoneSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

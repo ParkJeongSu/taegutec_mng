@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsAlarmCreateRequestDto;
 import kr.co.aim.api.dto.WcsAlarmResponse;
 import kr.co.aim.api.dto.WcsAlarmUpdateRequestDto;
-import kr.co.aim.common.condition.WcsAlarmSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsAlarmSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsAlarmCreateCommand;
 import kr.co.aim.domain.command.WcsAlarmUpdateCommand;

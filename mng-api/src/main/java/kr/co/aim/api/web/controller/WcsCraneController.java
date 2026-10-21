@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsCraneResponse;
 import kr.co.aim.api.dto.WcsCraneUpdateRequestDto;
 import kr.co.aim.api.service.WcsCraneService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsCraneSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsCraneSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

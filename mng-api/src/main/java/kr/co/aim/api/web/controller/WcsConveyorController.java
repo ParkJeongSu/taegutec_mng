@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsConveyorResponse;
 import kr.co.aim.api.dto.WcsConveyorUpdateRequestDto;
 import kr.co.aim.api.service.WcsConveyorService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsConveyorSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsConveyorSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

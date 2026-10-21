@@ -935,6 +935,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
+    @Transactional(value = "mssqlTransactionManager")
     public BaseMessage<TransportJobValidationRequestBody> transportOrderValidationRequest(BaseMessage<TransportOrderRequestBody> message) {
         // 1. TransportOrder 비관적 Lock 조회
         // 2. Created 상태인지 체크

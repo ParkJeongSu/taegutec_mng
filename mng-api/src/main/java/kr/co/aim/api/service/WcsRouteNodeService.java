@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsRouteNodeCreateRequestDto;
 import kr.co.aim.api.dto.WcsRouteNodeResponse;
 import kr.co.aim.api.dto.WcsRouteNodeUpdateRequestDto;
-import kr.co.aim.common.condition.WcsRouteNodeSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsRouteNodeSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsRouteNodeCreateCommand;
 import kr.co.aim.domain.command.WcsRouteNodeUpdateCommand;

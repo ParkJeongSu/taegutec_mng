@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
-import kr.co.aim.common.condition.TransportJobHistorySearchCondition;
+import kr.co.aim.domain.repository.condition.TransportJobHistorySearchCondition;
 import kr.co.aim.common.enums.TransportJobState;
 import kr.co.aim.common.format.*;
 import kr.co.aim.domain.command.*;

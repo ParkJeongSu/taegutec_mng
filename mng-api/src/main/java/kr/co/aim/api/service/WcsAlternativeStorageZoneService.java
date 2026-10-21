@@ -3,7 +3,7 @@ package kr.co.aim.api.service;
 import kr.co.aim.api.dto.WcsAlternativeStorageZoneCreateRequestDto;
 import kr.co.aim.api.dto.WcsAlternativeStorageZoneResponse;
 import kr.co.aim.api.dto.WcsAlternativeStorageZoneUpdateRequestDto;
-import kr.co.aim.common.condition.WcsAlternativeStorageZoneSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsAlternativeStorageZoneSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.WcsAlternativeStorageZoneCreateCommand;
 import kr.co.aim.domain.command.WcsAlternativeStorageZoneUpdateCommand;

@@ -1,11 +1,8 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.condition.EquipmentSearchCondition;
+import kr.co.aim.domain.repository.condition.EquipmentSearchCondition;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.domain.repository.EquipmentDefRepository;
-import kr.co.aim.domain.repository.EquipmentGroupDefRepository;
 import kr.co.aim.domain.repository.EquipmentRepository;
-import kr.co.aim.infra.persistence.mapper.EquipmentMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;

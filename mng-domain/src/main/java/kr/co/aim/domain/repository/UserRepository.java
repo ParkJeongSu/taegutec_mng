@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.SysUserSearchCondition;
+import kr.co.aim.domain.repository.condition.SysUserSearchCondition;
 import kr.co.aim.domain.model.SysUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

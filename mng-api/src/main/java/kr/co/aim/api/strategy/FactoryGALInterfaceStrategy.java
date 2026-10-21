@@ -1,8 +1,8 @@
 package kr.co.aim.api.strategy;
 
-import kr.co.aim.common.condition.GALDetailInterfaceSearchCondition;
-import kr.co.aim.common.condition.GALInterfaceSearchCondition;
-import kr.co.aim.common.condition.GALPartSearchCondition;
+import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
 import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;

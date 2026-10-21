@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.common.dto.PortDefSaveRequestDto;
-import kr.co.aim.common.condition.PortDefSearchCondition;
+import kr.co.aim.domain.repository.dto.PortDefSaveRequestDto;
+import kr.co.aim.domain.repository.condition.PortDefSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.PortDefCreateCommand;
 import kr.co.aim.domain.command.PortDefUpdateCommand;

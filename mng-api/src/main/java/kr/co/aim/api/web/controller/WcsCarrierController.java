@@ -7,7 +7,7 @@ import kr.co.aim.api.dto.WcsCarrierCreateRequestDto;
 import kr.co.aim.api.dto.WcsCarrierResponse;
 import kr.co.aim.api.dto.WcsCarrierUpdateRequestDto;
 import kr.co.aim.api.service.WcsCarrierService;
-import kr.co.aim.common.condition.WcsCarrierSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsCarrierSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

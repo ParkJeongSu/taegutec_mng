@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.EquipmentDefSearchCondition;
+import kr.co.aim.domain.repository.condition.EquipmentDefSearchCondition;
 import kr.co.aim.domain.model.EquipmentDef;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

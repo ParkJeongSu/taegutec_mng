@@ -1,6 +1,6 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.InsertAutoTestSearchCondition;
+import kr.co.aim.domain.repository.condition.InsertAutoTestSearchCondition;
 import kr.co.aim.domain.model.InsertAutoTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

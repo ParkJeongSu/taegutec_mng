@@ -1,17 +1,13 @@
 package kr.co.aim.domain.repository;
 
-import kr.co.aim.common.condition.GALDetailInterfaceSearchCondition;
-import kr.co.aim.common.condition.GALInterfaceSearchCondition;
-import kr.co.aim.common.condition.GALPartSearchCondition;
+import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
 import kr.co.aim.domain.model.GALInterfaceResponse;
 import kr.co.aim.domain.model.GALPartResponse;
-import kr.co.aim.domain.model.IfEventQueue;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * 사용자 저장소의 기능을 정의하는 인터페이스.

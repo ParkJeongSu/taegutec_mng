@@ -1,16 +1,12 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.api.dto.*;
-import kr.co.aim.common.condition.WcsShelfSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsShelfSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.UserGroupMenuAuthCreateCommand;
-import kr.co.aim.domain.command.UserGroupMenuAuthUpdateCommand;
 import kr.co.aim.domain.command.WcsShelfCreateCommand;
 import kr.co.aim.domain.command.WcsShelfUpdateCommand;
-import kr.co.aim.domain.model.UserGroupMenuAuth;
 import kr.co.aim.domain.model.WcsShelf;
 import kr.co.aim.domain.repository.WcsShelfRepository;
-import kr.co.aim.infra.persistence.entity.UserGroupMenuAuthHistoryEntity;
 import kr.co.aim.infra.persistence.entity.WcsShelfHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.WcsShelfMapper;
 import kr.co.aim.infra.persistence.springdatajpa.WcsShelfHistoryJpaRepository;

@@ -5,28 +5,32 @@ import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparablePath;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.NumberPath;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import kr.co.aim.common.Utils.QueryDslUtils;
-import kr.co.aim.common.condition.ProductionOrderHistorySearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSearchCondition;
-import kr.co.aim.common.condition.ProductionOrderSummarySearchCondition;
-import kr.co.aim.common.dto.powder.DailyProductionSummaryResponse;
-import kr.co.aim.common.dto.powder.EquipmentProductionCountResponse;
-import kr.co.aim.common.dto.powder.QEquipmentProductionCountResponse;
+import kr.co.aim.domain.repository.dto.powder.DailyProductionSummaryResponse;
+import kr.co.aim.domain.repository.dto.powder.EquipmentProductionCountResponse;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.model.ProductionOrderHistory;
 import kr.co.aim.domain.model.ProductionOrderSummary;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
+import kr.co.aim.domain.repository.condition.ProductionOrderHistorySearchCondition;
+import kr.co.aim.domain.repository.condition.ProductionOrderSearchCondition;
+import kr.co.aim.domain.repository.condition.ProductionOrderSummarySearchCondition;
 import kr.co.aim.infra.persistence.entity.ProductionOrderEntity;
 import kr.co.aim.infra.persistence.entity.ProductionOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderHistoryMapper;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import kr.co.aim.infra.persistence.springdatajpa.ProductionOrderJpaRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -37,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QProductionOrderEntity.productionOrderEntity;
 import static kr.co.aim.infra.persistence.entity.QProductionOrderHistoryEntity.productionOrderHistoryEntity;
@@ -45,12 +48,11 @@ import static kr.co.aim.infra.persistence.entity.QProductionOrderHistoryEntity.p
 @Repository
 @RequiredArgsConstructor
 public class ProductionOrderRepositoryImpl implements ProductionOrderRepository {
-    // Spring Data JPA가 자동으로 구현해주는 JPA 리포지토리. UserEntity를 다룬다.
 
     private final ProductionOrderJpaRepository productionOrderJpaRepository;
     private final ProductionOrderMapper productionOrderMapper;
     private final ProductionOrderHistoryMapper productionOrderHistoryMapper;
-    private final JPAQueryFactory queryFactory; // ✨ JPAQueryFactory 주입
+    private final JPAQueryFactory queryFactory;
 
     @Override
     public ProductionOrder save(ProductionOrder productionOrder) {
@@ -61,12 +63,21 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
 
     @Override
     public Optional<ProductionOrder> findById(Long id) {
-        return productionOrderJpaRepository.findById(id).map(productionOrderMapper::toDomain);
+        Optional<ProductionOrderEntity> entityOptional = productionOrderJpaRepository.findById(id);
+        if (entityOptional.isPresent()) {
+            return Optional.of(productionOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public List<ProductionOrder> findAll() {
-        return productionOrderJpaRepository.findAll().stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findAll();
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
@@ -76,57 +87,101 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
 
     @Override
     public Optional<ProductionOrder> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber) {
-        return productionOrderJpaRepository.findByOrderIdAndOrderLineNumber(orderId,orderLineNumber).map(productionOrderMapper::toDomain);
+        Optional<ProductionOrderEntity> entityOptional = productionOrderJpaRepository.findByOrderIdAndOrderLineNumber(orderId, orderLineNumber);
+        if (entityOptional.isPresent()) {
+            return Optional.of(productionOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public Optional<ProductionOrder> findByGalKey(String galKey) {
-        return productionOrderJpaRepository.findByGalKey(galKey).map(productionOrderMapper::toDomain);
+        Optional<ProductionOrderEntity> entityOptional = productionOrderJpaRepository.findByGalKey(galKey);
+        if (entityOptional.isPresent()) {
+            return Optional.of(productionOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public Optional<ProductionOrder> findByH2OrderDpLineId(Long h2orderDPLineId) {
-        return productionOrderJpaRepository.findByH2OrderDpLineId(h2orderDPLineId).map(productionOrderMapper::toDomain);
+        Optional<ProductionOrderEntity> entityOptional = productionOrderJpaRepository.findByH2OrderDpLineId(h2orderDPLineId);
+        if (entityOptional.isPresent()) {
+            return Optional.of(productionOrderMapper.toDomain(entityOptional.get()));
+        }
+        return Optional.empty();
     }
 
     @Override
     public List<ProductionOrder> findByEquipmentNameAndProductionOrderState(String equipmentName, String productionOrderState) {
-        return productionOrderJpaRepository.findByEquipmentNameAndProductionOrderState(equipmentName,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByEquipmentNameAndProductionOrderState(equipmentName, productionOrderState);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
     public List<ProductionOrder> findByEquipmentNameAndProductionOrderTypeAndProductionOrderState(String equipmentName, String productionOrderType, String productionOrderState) {
-        return productionOrderJpaRepository.findByEquipmentNameAndProductionOrderTypeAndProductionOrderState(equipmentName,productionOrderType,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByEquipmentNameAndProductionOrderTypeAndProductionOrderState(equipmentName, productionOrderType, productionOrderState);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
     public List<ProductionOrder> findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(String productionOrderState, List<String> productionOrderType) {
-        return productionOrderJpaRepository.findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(productionOrderState,productionOrderType).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByProductionOrderStateAndProductionOrderTypeInOrderByCreateTimeAsc(productionOrderState, productionOrderType);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
     public List<ProductionOrder> findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(String equipmentName, List<String> productionOrderState) {
-        return productionOrderJpaRepository.findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(equipmentName,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByEquipmentNameAndProductionOrderStateInOrderByCreateTimeAsc(equipmentName, productionOrderState);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
     public List<ProductionOrder> findByProductionOrderStateInOrderByCreateTimeAsc(List<String> productionOrderState) {
-        return productionOrderJpaRepository.findByProductionOrderStateInOrderByCreateTimeAsc(productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByProductionOrderStateInOrderByCreateTimeAsc(productionOrderState);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
     public List<ProductionOrder> findByCreateTimeBetween(LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return productionOrderJpaRepository.findByCreateTimeBetween(startDateTime,endDateTime).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByCreateTimeBetween(startDateTime, endDateTime);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
     @Override
     public List<ProductionOrder> findByCreateTimeBetweenAndProductionOrderState(LocalDateTime startDateTime, LocalDateTime endDateTime, String productionOrderState) {
-        return productionOrderJpaRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime,endDateTime,productionOrderState).stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
+        List<ProductionOrderEntity> entities = productionOrderJpaRepository.findByCreateTimeBetweenAndProductionOrderState(startDateTime, endDateTime, productionOrderState);
+        List<ProductionOrder> resultList = new ArrayList<>();
+        for (ProductionOrderEntity entity : entities) {
+            resultList.add(productionOrderMapper.toDomain(entity));
+        }
+        return resultList;
     }
 
-    // ==========================================
-    // ✨ 요구사항 1: 금일 전체 Production Order 수량 집계
-    // ==========================================
     @Override
     public Page<DailyProductionSummaryResponse> getDailyProductionSummary(LocalDate targetDate) {
         LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
@@ -148,7 +203,7 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                 .where(dateCondition)
                 .fetchOne();
 
-        DailyProductionSummaryResponse result = null;
+        DailyProductionSummaryResponse result;
         if (tuple == null) {
             result = DailyProductionSummaryResponse.builder()
                     .targetDate(date)
@@ -158,12 +213,13 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                     .totalEndedQuantity(BigDecimal.ZERO)
                     .totalScrappedQuantity(BigDecimal.ZERO)
                     .build();
-        }else{
+        } else {
             BigDecimal totalPlanQuantity = tuple.get(0, BigDecimal.class);
             BigDecimal totalReleasedQuantity = tuple.get(1, BigDecimal.class);
             BigDecimal totalStartedQuantity = tuple.get(2, BigDecimal.class);
             BigDecimal totalEndedQuantity = tuple.get(3, BigDecimal.class);
             BigDecimal totalScrappedQuantity = tuple.get(4, BigDecimal.class);
+
             result = DailyProductionSummaryResponse.builder()
                     .targetDate(date)
                     .totalPlanQuantity(totalPlanQuantity != null ? totalPlanQuantity : BigDecimal.ZERO)
@@ -181,9 +237,6 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
         );
     }
 
-    // ==========================================
-    // ✨ 요구사항 2: 금일 설비별 Production Order 수량 집계 (페이징)
-    // ==========================================
     @Override
     public Page<EquipmentProductionCountResponse> getEquipmentProductionCounts(LocalDate targetDate, Pageable pageable) {
         LocalDate date = (targetDate != null) ? targetDate : LocalDate.now();
@@ -194,15 +247,16 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                 .and(productionOrderEntity.createTime.goe(startOfDay))
                 .and(productionOrderEntity.createTime.lt(startOfNextDay));
 
+        // Projections.fields 사용: QEquipmentProductionCountResponse 의존성 제거
         JPAQuery<EquipmentProductionCountResponse> query = queryFactory
-                .select(new QEquipmentProductionCountResponse(
-                        com.querydsl.core.types.dsl.Expressions.asDate(date),
-                        productionOrderEntity.equipmentName,
-                        productionOrderEntity.planQuantity.sum().coalesce(BigDecimal.ZERO),
-                        productionOrderEntity.releasedQuantity.sum().coalesce(BigDecimal.ZERO),
-                        productionOrderEntity.startedQuantity.sum().coalesce(BigDecimal.ZERO),
-                        productionOrderEntity.endedQuantity.sum().coalesce(BigDecimal.ZERO),
-                        productionOrderEntity.scrappedQuantity.sum().coalesce(BigDecimal.ZERO)
+                .select(Projections.fields(EquipmentProductionCountResponse.class,
+                        Expressions.asDate(date).as("targetDate"),
+                        productionOrderEntity.equipmentName.as("equipmentName"),
+                        productionOrderEntity.planQuantity.sum().coalesce(BigDecimal.ZERO).as("planQuantity"),
+                        productionOrderEntity.releasedQuantity.sum().coalesce(BigDecimal.ZERO).as("releasedQuantity"),
+                        productionOrderEntity.startedQuantity.sum().coalesce(BigDecimal.ZERO).as("startedQuantity"),
+                        productionOrderEntity.endedQuantity.sum().coalesce(BigDecimal.ZERO).as("endedQuantity"),
+                        productionOrderEntity.scrappedQuantity.sum().coalesce(BigDecimal.ZERO).as("scrappedQuantity")
                 ))
                 .from(productionOrderEntity)
                 .where(whereCondition)
@@ -223,7 +277,7 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                     .from(productionOrderEntity)
                     .where(whereCondition)
                     .fetchOne();
-            total = (count != null) ? count.longValue() : 0L;
+            total = (count != null) ? count : 0L;
         } else {
             total = content.size();
         }
@@ -233,72 +287,61 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
 
     @Override
     public Page<ProductionOrderSummary> findProductionOrderSummaryByCondition(ProductionOrderSummarySearchCondition condition, Pageable pageable) {
-        //1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductionOrderSummary> query = queryFactory
                 .select(
                         Projections.constructor(ProductionOrderSummary.class,
-                        productionOrderEntity.id.max(),
-                        productionOrderEntity.orderId,
-                        productionOrderEntity.lotName.max(),
-                        productionOrderEntity.description.max(),
-                        productionOrderEntity.itemName.max(),
-                        productionOrderEntity.productionOrderType.max(),
-                        productionOrderEntity.planQuantity.sum(),
-                        productionOrderEntity.releasedQuantity.sum(),
-                        productionOrderEntity.startedQuantity.sum(),
-                        productionOrderEntity.endedQuantity.sum(),
-                        productionOrderEntity.scrappedQuantity.sum(),
-                        productionOrderEntity.createTime.max(),
-                        productionOrderEntity.releaseTime.max(),
-                        productionOrderEntity.completeTime.max(),
-                        productionOrderEntity.createUser.max(),
-                        productionOrderEntity.releaseUser.max(),
-                        productionOrderEntity.completeUser.max(),
-                        productionOrderEntity.dueDate.max()
-                ))
+                                productionOrderEntity.id.max(),
+                                productionOrderEntity.orderId,
+                                productionOrderEntity.lotName.max(),
+                                productionOrderEntity.description.max(),
+                                productionOrderEntity.itemName.max(),
+                                productionOrderEntity.productionOrderType.max(),
+                                productionOrderEntity.planQuantity.sum(),
+                                productionOrderEntity.releasedQuantity.sum(),
+                                productionOrderEntity.startedQuantity.sum(),
+                                productionOrderEntity.endedQuantity.sum(),
+                                productionOrderEntity.scrappedQuantity.sum(),
+                                productionOrderEntity.createTime.max(),
+                                productionOrderEntity.releaseTime.max(),
+                                productionOrderEntity.completeTime.max(),
+                                productionOrderEntity.createUser.max(),
+                                productionOrderEntity.releaseUser.max(),
+                                productionOrderEntity.completeUser.max(),
+                                productionOrderEntity.dueDate.max()
+                        ))
                 .from(productionOrderEntity)
-                .groupBy(productionOrderEntity.orderId)
                 .where(
-                        // (WHERE 조건이 있다면 여기에 추가)
                         orderIdContains(condition.getOrderId())
-                );
+                )
+                .groupBy(productionOrderEntity.orderId);
 
-        // 2. 정렬 적용
         query.orderBy(getOrderSpecifiersGroupByOrderId(pageable.getSort()));
 
-        // 3. 페이징 적용 (isPaged()로 분기)
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset());
             query.limit(pageable.getPageSize());
         }
 
-        // 4. 데이터 조회
         List<ProductionOrderSummary> content = query.fetch();
 
-        // 5. 카운트 조회 (isPaged()로 분기)
         long total;
         if (pageable.isPaged()) {
-            // [페이징 O] 별도 카운트 쿼리 실행
             Long count = queryFactory
                     .select(productionOrderEntity.orderId.countDistinct())
                     .from(productionOrderEntity)
                     .where(orderIdContains(condition.getOrderId()))
                     .fetchOne();
 
-            total = (count != null) ? count.longValue() : 0L;
-
+            total = (count != null) ? count : 0L;
         } else {
-            // [페이징 X] .unpaged() 일 때
             total = content.size();
         }
 
-        // 6. PageImpl 반환
         return new PageImpl<>(content, pageable, total);
     }
 
     @Override
     public Page<ProductionOrder> findProductionOrderByCondition(ProductionOrderSearchCondition condition, Pageable pageable) {
-        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductionOrderEntity> query = queryFactory
                 .selectFrom(productionOrderEntity)
                 .where(
@@ -334,24 +377,21 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                         dueDateEq(condition.getDueDate())
                 );
 
-        // 2. 정렬 적용
         query.orderBy(getOrderSpecifiersByOrderId(pageable.getSort()));
 
-        // 3. 페이징 적용 (isPaged()로 분기)
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset());
             query.limit(pageable.getPageSize());
         }
 
-        // 4. 데이터 조회
         List<ProductionOrderEntity> content = query.fetch();
+        List<ProductionOrder> converted = new ArrayList<>();
+        for (ProductionOrderEntity entity : content) {
+            converted.add(productionOrderMapper.toDomain(entity));
+        }
 
-        List<ProductionOrder> converted = content.stream().map(productionOrderMapper::toDomain).collect(Collectors.toList());
-
-        // 5. 카운트 조회 (isPaged()로 분기)
         long total;
         if (pageable.isPaged()) {
-            // [페이징 O] 별도 카운트 쿼리 실행
             Long count = queryFactory
                     .select(productionOrderEntity.count())
                     .from(productionOrderEntity)
@@ -389,20 +429,16 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                     )
                     .fetchOne();
 
-            total = (count != null) ? count.longValue() : 0L;
-
+            total = (count != null) ? count : 0L;
         } else {
-            // [페이징 X] .unpaged() 일 때
             total = content.size();
         }
 
-        // 6. PageImpl 반환
         return new PageImpl<>(converted, pageable, total);
     }
 
     @Override
     public Page<ProductionOrderHistory> findProductionOrderHistoryByCondition(ProductionOrderHistorySearchCondition condition, Pageable pageable) {
-        // 1. 공통 쿼리 빌더 생성 (SELECT, FROM, JOIN, WHERE)
         JPAQuery<ProductionOrderHistoryEntity> query = queryFactory
                 .selectFrom(productionOrderHistoryEntity)
                 .where(
@@ -435,24 +471,21 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                         historyEventTimeBetween(condition.getFromEventTime(), condition.getToEventTime())
                 );
 
-        // 2. 정렬 적용
         query.orderBy(getOrderHistorySpecifiersByOrderId(pageable.getSort()));
 
-        // 3. 페이징 적용 (isPaged()로 분기)
         if (pageable.isPaged()) {
             query.offset(pageable.getOffset());
             query.limit(pageable.getPageSize());
         }
 
-        // 4. 데이터 조회
         List<ProductionOrderHistoryEntity> content = query.fetch();
+        List<ProductionOrderHistory> converted = new ArrayList<>();
+        for (ProductionOrderHistoryEntity entity : content) {
+            converted.add(productionOrderHistoryMapper.toDomain(entity));
+        }
 
-        List<ProductionOrderHistory> converted = content.stream().map(productionOrderHistoryMapper::toDomain).collect(Collectors.toList());
-
-        // 5. 카운트 조회 (isPaged()로 분기)
         long total;
         if (pageable.isPaged()) {
-            // [페이징 O] 별도 카운트 쿼리 실행
             Long count = queryFactory
                     .select(productionOrderHistoryEntity.count())
                     .from(productionOrderHistoryEntity)
@@ -481,26 +514,20 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                             historyValidationTimeEq(condition.getValidationTime()),
                             historyCreateUserContains(condition.getCreateUser()),
                             historyReleaseUserContains(condition.getReleaseUser()),
-                            historyCompleteUserContains(condition.getCompleteUser()),
+                            completeUserContains(condition.getCompleteUser()),
                             historyDueDateEq(condition.getDueDate()),
                             historyEventTimeBetween(condition.getFromEventTime(), condition.getToEventTime())
                     )
                     .fetchOne();
 
-            total = (count != null) ? count.longValue() : 0L;
-
+            total = (count != null) ? count : 0L;
         } else {
-            // [페이징 X] .unpaged() 일 때
             total = content.size();
         }
 
-        // 6. PageImpl 반환
         return new PageImpl<>(converted, pageable, total);
     }
 
-    /**
-     * Pageable의 Sort 객체를 Querydsl의 OrderSpecifier 배열로 변환합니다.
-     */
     private OrderSpecifier<?>[] getOrderSpecifiersGroupByOrderId(Sort sort) {
         List<OrderSpecifier> orders = new ArrayList<>();
 
@@ -511,23 +538,18 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
                 if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
                     Order direction = order.isAscending() ? Order.ASC : Order.DESC;
 
-                    // PathBuilder를 통해 표현식 생성
                     PathBuilder<ProductionOrderEntity> pathBuilder = new PathBuilder<>(
                             productionOrderEntity.getType(),
                             productionOrderEntity.getMetadata()
                     );
 
-                    // 정렬 대상 필드가 orderId(GROUP BY 기준)가 아닌 경우 집계 함수 적용
                     if (property.equals("orderId")) {
                         orders.add(new OrderSpecifier(direction, pathBuilder.get(property)));
                     } else {
-                        // 수량 관련 필드는 sum으로 정렬하고 싶다면 별도 처리가 가능합니다.
-                        // 여기서는 질문하신 대로 대다수의 필드에 max()를 적용하는 방식을 사용합니다.
                         if (isQuantityField(property)) {
                             NumberPath<Long> numberPath = pathBuilder.getNumber(property, Long.class);
                             orders.add(new OrderSpecifier(direction, numberPath.sum()));
                         } else {
-                            // 날짜(CREATE_TIME 등) 및 기타 필드는 max() 적용
                             ComparablePath<Comparable> comparablePath = pathBuilder.getComparable(property, Comparable.class);
                             orders.add(new OrderSpecifier(direction, comparablePath.max()));
                         }
@@ -536,7 +558,6 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
             }
         }
 
-        // 기본 정렬값 설정 (여기서도 집계가 필요할 수 있음)
         if (orders.isEmpty()) {
             orders.add(new OrderSpecifier(Order.DESC, productionOrderEntity.orderId));
         }
@@ -544,9 +565,6 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
         return orders.toArray(new OrderSpecifier[0]);
     }
 
-    /**
-     * 수량 관련 필드인지 확인하는 헬퍼 메서드
-     */
     private boolean isQuantityField(String property) {
         return property.contains("Quantity");
     }
@@ -558,7 +576,6 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
             for (Sort.Order order : sort) {
                 String property = order.getProperty();
 
-                // [핵심] property가 null이 아니고, 공백이 아닐 때만 정렬을 추가합니다.
                 if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
                     Order direction = order.isAscending() ? Order.ASC : Order.DESC;
 
@@ -572,7 +589,6 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
             }
         }
 
-        // 유효한 정렬 필드가 하나도 없었다면 (스웨거에서 잘못 보낸 경우 포함) 기본값 적용
         if (orders.isEmpty()) {
             orders.add(new OrderSpecifier(Order.DESC, productionOrderEntity.id));
         }
@@ -587,7 +603,6 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
             for (Sort.Order order : sort) {
                 String property = order.getProperty();
 
-                // [핵심] property가 null이 아니고, 공백이 아닐 때만 정렬을 추가합니다.
                 if (StringUtils.hasText(property) && QueryDslUtils.isValidProperty(property)) {
                     Order direction = order.isAscending() ? Order.ASC : Order.DESC;
 
@@ -601,16 +616,12 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
             }
         }
 
-        // 유효한 정렬 필드가 하나도 없었다면 (스웨거에서 잘못 보낸 경우 포함) 기본값 적용
         if (orders.isEmpty()) {
             orders.add(new OrderSpecifier(Order.DESC, productionOrderHistoryEntity.id));
         }
 
         return orders.toArray(new OrderSpecifier[0]);
     }
-
-
-    // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
 
     // == ProductionOrder 동적 쿼리를 위한 BooleanExpression 메소드들 ==
 
@@ -788,23 +799,23 @@ public class ProductionOrderRepositoryImpl implements ProductionOrderRepository 
         return StringUtils.hasText(equipmentName) ? productionOrderHistoryEntity.equipmentName.contains(equipmentName) : null;
     }
 
-    private BooleanExpression historyPlanQuantityEq(BigDecimal  planQuantity) {
+    private BooleanExpression historyPlanQuantityEq(BigDecimal planQuantity) {
         return planQuantity != null ? productionOrderHistoryEntity.planQuantity.eq(planQuantity) : null;
     }
 
-    private BooleanExpression historyReleasedQuantityEq(BigDecimal  releasedQuantity) {
+    private BooleanExpression historyReleasedQuantityEq(BigDecimal releasedQuantity) {
         return releasedQuantity != null ? productionOrderHistoryEntity.releasedQuantity.eq(releasedQuantity) : null;
     }
 
-    private BooleanExpression historyStartedQuantityEq(BigDecimal  startedQuantity) {
+    private BooleanExpression historyStartedQuantityEq(BigDecimal startedQuantity) {
         return startedQuantity != null ? productionOrderHistoryEntity.startedQuantity.eq(startedQuantity) : null;
     }
 
-    private BooleanExpression historyEndedQuantityEq(BigDecimal  endedQuantity) {
+    private BooleanExpression historyEndedQuantityEq(BigDecimal endedQuantity) {
         return endedQuantity != null ? productionOrderHistoryEntity.endedQuantity.eq(endedQuantity) : null;
     }
 
-    private BooleanExpression historyScrappedQuantityEq(BigDecimal  scrappedQuantity) {
+    private BooleanExpression historyScrappedQuantityEq(BigDecimal scrappedQuantity) {
         return scrappedQuantity != null ? productionOrderHistoryEntity.scrappedQuantity.eq(scrappedQuantity) : null;
     }
 

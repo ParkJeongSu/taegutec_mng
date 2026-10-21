@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.service.LotCarrierMappingService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.LotCarrierMappingSearchCondition;
+import kr.co.aim.domain.repository.condition.LotCarrierMappingSearchCondition;
 import kr.co.aim.domain.model.LotCarrierMapping;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;

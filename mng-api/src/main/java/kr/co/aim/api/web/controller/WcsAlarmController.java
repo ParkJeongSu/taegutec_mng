@@ -8,7 +8,7 @@ import kr.co.aim.api.dto.WcsAlarmResponse;
 import kr.co.aim.api.dto.WcsAlarmUpdateRequestDto;
 import kr.co.aim.api.service.WcsAlarmService;
 import kr.co.aim.common.annotation.ResponseAnnotation;
-import kr.co.aim.common.condition.WcsAlarmSearchCondition;
+import kr.co.aim.domain.repository.condition.WcsAlarmSearchCondition;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;

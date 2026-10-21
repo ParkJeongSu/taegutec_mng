@@ -4,7 +4,7 @@ import kr.co.aim.api.dto.UserGroupMemberBatchSaveRequestDto;
 import kr.co.aim.api.dto.UserGroupMemberCreateRequestDto;
 import kr.co.aim.api.dto.UserGroupMemberResponse;
 import kr.co.aim.api.dto.UserGroupMemberUpdateRequestDto;
-import kr.co.aim.common.condition.UserGroupMemberSearchCondition;
+import kr.co.aim.domain.repository.condition.UserGroupMemberSearchCondition;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.UserGroupMemberCreateCommand;
 import kr.co.aim.domain.command.UserGroupMemberUpdateCommand;
