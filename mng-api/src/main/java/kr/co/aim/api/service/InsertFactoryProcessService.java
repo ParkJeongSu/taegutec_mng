@@ -130,6 +130,8 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                                         .transportJobState(TransportJobState.START_REQUEST.getValue())
                                         .destinationEquipmentName(port.getEquipmentName())
                                         .destinationPortName(port.getPortName())
+                                        .destinationPositionTypeName(PositionTypeName.PORT.getValue())
+                                        .destinationPositionName(port.getPortName())
                                         .transactionInfo(tx)
                                         .build();
 
