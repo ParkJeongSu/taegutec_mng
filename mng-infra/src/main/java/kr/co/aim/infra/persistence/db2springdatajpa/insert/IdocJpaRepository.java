@@ -45,15 +45,27 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
             @Param("errorCode") Integer errorCode
     );
 
-    @Query("SELECT COALESCE(MAX(i.lineId), 0) +1 FROM IdocEntity i " +
-            "WHERE i.lineId BETWEEN 1 AND 499999999"
-    )
-    Long findMaxLineId();
+    /**
+     * 지정된 범위(:minId ~ :maxId) 내에서
+     * 바로 다음 번호가 아직 사용되지 않은 가장 큰 번호 + 1을 채번
+     */
+    @Query("SELECT COALESCE(MAX(a.lineId + 1), :minId) FROM IdocEntity a " +
+            "WHERE a.lineId >= :minId AND a.lineId < :maxId " +
+            "  AND NOT EXISTS (" +
+            "      SELECT 1 FROM IdocEntity b " +
+            "      WHERE b.lineId = a.lineId + 1" +
+            "  )")
+    Long findNextAvailableLineId(@Param("minId") Long minId, @Param("maxId") Long maxId);
 
-    @Query("SELECT COALESCE(MAX(i.lineId), 499999999) + 1 FROM IdocEntity i " +
-            "WHERE i.lineId BETWEEN 500000000 AND 999999999"
-    )
-    Long findMaxLineIdForCreateOrder();
+    // 1) 내가 사용하는 채번 (1 ~ 499,999,999)
+    default Long findMaxLineId() {
+        return findNextAvailableLineId(1L, 499999999L);
+    }
+
+    // 2) 상대편 시스템 채번 대역 (500,000,000 ~ 999,999,999)
+    default Long findMaxLineIdForCreateOrder() {
+        return findNextAvailableLineId(500000000L, 999999999L);
+    }
 
     @Query("SELECT COUNT(i) > 0 FROM IdocEntity i WHERE i.lineId = 1")
     boolean existsByLineIdOne();

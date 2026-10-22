@@ -49,12 +49,12 @@ public class InsertReportScheduler {
 
         if(CollectionUtils.isNotEmpty(ifEventQueues)){
             for(IfEventQueue ifEventQueue : ifEventQueues){
-                sendMessageToTEX(ifEventQueue);
+                sendMessageToScheduler(ifEventQueue);
             }
         }
     }
 
-    private void sendMessageToTEX(IfEventQueue ifEventQueue){
+    private void sendMessageToScheduler(IfEventQueue ifEventQueue){
         String transactionId = FormatUtils.generateTransactionId();
         BaseMessage<EventQueueReportBody> request = new BaseMessage<>();
 
