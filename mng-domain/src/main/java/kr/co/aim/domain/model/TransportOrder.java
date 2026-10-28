@@ -112,6 +112,11 @@ public class TransportOrder implements HasTransactionInfo {
         this.setTransportStatus(TransportOrderStatus.COMPLETED.getValue());
     }
 
+    public void closed(TransportOrderStatusChangeCommand command){
+        this.apply(command.getTransactionInfo());
+        this.setTransportStatus(TransportOrderStatus.CLOSED.getValue());
+    }
+
     public void rejected(TransportOrderStatusChangeCommand command){
         this.apply(command.getTransactionInfo());
         this.setTransportStatus(TransportOrderStatus.REJECTED.getValue());

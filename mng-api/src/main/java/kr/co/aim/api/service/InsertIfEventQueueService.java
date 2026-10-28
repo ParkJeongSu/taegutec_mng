@@ -9,10 +9,12 @@ import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.IfEventQueueCreateCommand;
+import kr.co.aim.domain.command.TransportOrderStatusChangeCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.IfEventQueueRepository;
 import kr.co.aim.domain.repository.TransportJobRepository;
 import kr.co.aim.domain.repository.TransportOrderRepository;
+import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import kr.co.aim.infra.persistence.mapper.TransportOrderMapper;
@@ -41,6 +43,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
     private final TransportJobRepository transportJobRepository;
     private final TransportOrderRepository transportOrderRepository;
     private final IfEventQueueRepository ifEventQueueRepository;
+    private final HistoryService historyService;
+    private final TransportOrderMapper transportOrderMapper;
 
     @Override
     @Transactional(value = "mssqlTransactionManager",propagation = Propagation.REQUIRES_NEW)
@@ -80,6 +84,12 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                                     .build();
                     IfEventQueue interfaceEventLog = IfEventQueue.create(command);
                     ifEventQueueRepository.save(interfaceEventLog);
+                    try {
+                        Thread.sleep(100L);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        log.warn("Thread sleep interrupted: {}", e.getMessage());
+                    }
                 }
             }
         }else {
@@ -1744,6 +1754,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         String errorText = "";
         String actualLocationId = vo.getActualRackLocationId();
         String actualWorkStationId = "";
+        TransactionInfo tx = TransactionInfo.now(messageName,portDef.getEquipmentName()+ "-" + portDef.getPortName(),"");
 
         if( ObjectUtils.isNotEmpty(portDef)){
         }else{
@@ -2069,6 +2080,16 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         .actualWorkStationId(actualWorkStationId)
                         .build();
                 ifEventQueueDtoList.add(dto2);
+
+                TransportOrderStatusChangeCommand completedCommand =
+                        TransportOrderStatusChangeCommand
+                                .builder()
+                                .transactionInfo(tx)
+                                .build();
+                transportOrder.closed(completedCommand);
+                transportOrder = transportOrderRepository.save(transportOrder);
+                TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+                historyService.saveHistory(transportOrderHistoryEntity);
             }
         }
         else{

@@ -32,7 +32,7 @@ public class InsertReportScheduler {
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
+    @Scheduled(fixedDelay = 3000) // 3초마다 실행
     @SchedulerLock(name = "insertReportH2Trans",
             lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
             lockAtLeastFor = "PT5S")    // 최소 간격(선택)
@@ -50,6 +50,12 @@ public class InsertReportScheduler {
         if(CollectionUtils.isNotEmpty(ifEventQueues)){
             for(IfEventQueue ifEventQueue : ifEventQueues){
                 sendMessageToScheduler(ifEventQueue);
+                try {
+                    Thread.sleep(100L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn("Thread sleep interrupted: {}", e.getMessage());
+                }
             }
         }
     }
