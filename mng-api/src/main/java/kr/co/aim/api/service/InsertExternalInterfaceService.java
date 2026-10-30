@@ -1,17 +1,15 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALH2TransInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
 import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.strategy.FactoryGALInterfaceStrategy;
 import kr.co.aim.api.vo.insert.sim.H2TransReportVo;
 import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.domain.model.GALDetailInterfaceResponse;
-import kr.co.aim.domain.model.GALInterfaceResponse;
-import kr.co.aim.domain.model.GALPartResponse;
-import kr.co.aim.domain.model.IfEventQueue;
 import kr.co.aim.domain.repository.GALInterfaceRepository;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
@@ -221,6 +219,12 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     @Transactional(value = "db2TransactionManager")
     public Page<GALDetailInterfaceResponse> getDetailInterfaceList(GALDetailInterfaceSearchCondition condition, Pageable pageable) {
         return galInterfaceRepository.getDetailInterfaceList(condition,pageable);
+    }
+
+    @Override
+    @Transactional(value = "db2TransactionManager")
+    public Page<GALH2TransInterfaceResponse> getH2TransInterfaceList(GALH2TransInterfaceSearchCondition condition, Pageable pageable) {
+        return galInterfaceRepository.getH2TransInterfaceList(condition,pageable);
     }
 
     @Override

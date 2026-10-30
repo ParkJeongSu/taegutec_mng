@@ -4,7 +4,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import kr.co.aim.api.strategy.FactoryGALInterfaceStrategy;
 import kr.co.aim.common.annotation.ResponseAnnotation;
+import kr.co.aim.domain.model.GALH2TransInterfaceResponse;
 import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALH2TransInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
@@ -50,6 +52,17 @@ public class GALInterfaceController {
             Pageable pageable
     ) {
         Page<GALDetailInterfaceResponse> reuslt = factoryGALInterfaceStrategy.getDetailInterfaceList(condition,pageable);
+        return ResponseEntity.ok(reuslt);
+    }
+
+    @Operation(summary = "GAL H2Trans List", description = "GAL H2Trans 조회")
+    @GetMapping("/h2trans")
+    public ResponseEntity<Page<GALH2TransInterfaceResponse>> getInterfaceList(
+            GALH2TransInterfaceSearchCondition condition,
+            @org.springdoc.core.annotations.ParameterObject
+            Pageable pageable
+    ) {
+        Page<GALH2TransInterfaceResponse> reuslt = factoryGALInterfaceStrategy.getH2TransInterfaceList(condition,pageable);
         return ResponseEntity.ok(reuslt);
     }
 

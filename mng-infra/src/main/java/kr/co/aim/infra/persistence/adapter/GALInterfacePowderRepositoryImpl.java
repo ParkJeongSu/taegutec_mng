@@ -7,7 +7,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import kr.co.aim.domain.model.GALH2TransInterfaceResponse;
 import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALH2TransInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
@@ -178,6 +180,11 @@ public class GALInterfacePowderRepositoryImpl implements GALInterfaceRepository 
         }
 
         return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
+    public Page<GALH2TransInterfaceResponse> getH2TransInterfaceList(GALH2TransInterfaceSearchCondition condition, Pageable pageable) {
+        return null;
     }
 
     @Override

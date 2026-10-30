@@ -7,7 +7,9 @@ import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.PathBuilder;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import kr.co.aim.domain.model.GALH2TransInterfaceResponse;
 import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALH2TransInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
@@ -199,6 +201,70 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
     }
 
     @Override
+    public Page<GALH2TransInterfaceResponse> getH2TransInterfaceList(GALH2TransInterfaceSearchCondition condition, Pageable pageable) {
+
+        // H2ORDERD 상세 조회 로직 (필요 시 유사한 방식으로 구현)
+        JPAQuery<GALH2TransInterfaceResponse> query = queryFactory
+                .select(Projections.fields(GALH2TransInterfaceResponse.class,
+                        h2TransEntity.lineId.as("lineId"),
+                        h2TransEntity.idocId.as("idocId"),
+                        h2TransEntity.dtimeCre.as("dtimeCre"),
+                        h2TransEntity.dtimeMod.as("dtimeMod"),
+                        h2TransEntity.usrMod.as("usrMod"),
+                        h2TransEntity.pgmMod.as("pgmMod"),
+                        h2TransEntity.modCnt.longValue().as("modCnt"),
+                        h2TransEntity.dataCode.as("dataCode"),
+                        h2TransEntity.cTransTy.as("cTransTy"),
+                        h2TransEntity.cClient.as("cClient"),
+                        h2TransEntity.cOrderId.as("cOrderId"),
+                        h2TransEntity.cOrderTy.as("cOrderTy"),
+                        h2TransEntity.cErrId.as("cErrId"),
+                        h2TransEntity.cText1.as("cText1"),
+                        h2TransEntity.cTCode.as("cTCode"),
+                        h2TransEntity.cOrderLn.as("cOrderLn"),
+                        h2TransEntity.cGalId.as("cGalId"),
+                        h2TransEntity.cGalWhs.as("cGalWhs"),
+                        h2TransEntity.cCoId.as("cCoId"),
+                        h2TransEntity.cGrWgAct.as("cGrWgAct"),
+                        h2TransEntity.cReqZone.as("cReqZone"),
+                        h2TransEntity.cZone.as("cZone"),
+                        h2TransEntity.cLocId.as("cLocId"),
+                        h2TransEntity.cErrDsc.as("cErrDsc"),
+                        h2TransEntity.cWcId.as("cWcId")
+                ))
+                .from(h2TransEntity)
+                .where(
+                        IdocIdEqualForH2Trans(condition.getIdocId())
+                );
+
+        // 2. 정렬 및 페이징 적용
+        query.orderBy(getOrderSpecifiersH2Trans(pageable.getSort()));
+        if (pageable.isPaged()) {
+            query.offset(pageable.getOffset());
+            query.limit(pageable.getPageSize());
+        }
+
+        List<GALH2TransInterfaceResponse> content = query.fetch();
+
+        // 3. 전체 카운트 조회
+        long total;
+        if (pageable.isPaged()) {
+            Long count = queryFactory
+                    .select(h2TransEntity.lineId.count())
+                    .from(h2TransEntity)
+                    .where(
+                            IdocIdEqualForH2Trans(condition.getIdocId())
+                    )
+                    .fetchOne();
+            total = (count != null) ? count : 0L;
+        } else {
+            total = content.size();
+        }
+
+        return new PageImpl<>(content, pageable, total);
+    }
+
+    @Override
     public Page<GALPartResponse> getPartList(GALPartSearchCondition condition, Pageable pageable) {
         return null;
     }
@@ -221,7 +287,7 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
 
         // 기본 정렬 조건 (만약 정렬 조건이 없다면 id 내림차순)
         if (orders.isEmpty()) {
-            orders.add(new OrderSpecifier(Order.DESC, idocEntity.lineId));
+            orders.add(new OrderSpecifier(Order.DESC, idocEntity.dtimeCre));
         }
 
         return orders.toArray(new OrderSpecifier[0]);
@@ -243,6 +309,22 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
         return orders.toArray(new OrderSpecifier[0]);
     }
 
+    private OrderSpecifier<?>[] getOrderSpecifiersH2Trans(Sort sort) {
+        List<OrderSpecifier> orders = new ArrayList<>();
+        if (sort.isSorted()) {
+            // 람다식을 사용하지 않는 표준 for 루프 사용
+            for (Sort.Order order : sort) {
+                Order direction = order.isAscending() ? Order.ASC : Order.DESC;
+                PathBuilder pathBuilder = new PathBuilder<>(h2TransEntity.getType(), h2TransEntity.getMetadata());
+                orders.add(new OrderSpecifier(direction, pathBuilder.get(order.getProperty())));
+            }
+        }
+        if (orders.isEmpty()) {
+            orders.add(new OrderSpecifier(Order.DESC, h2TransEntity.lineId));
+        }
+        return orders.toArray(new OrderSpecifier[0]);
+    }
+
 
     // == 동적 쿼리를 위한 BooleanExpression 메소드들 ==
 
@@ -254,4 +336,9 @@ public class GALInterfaceInsertRepositoryImpl implements GALInterfaceRepository 
     private BooleanExpression IdocIdEqualForDetail(Long idocId) {
         return ObjectUtils.isNotEmpty(idocId) ? h2OrderDEntity.idocId.eq(idocId) : null;
     }
+    private BooleanExpression IdocIdEqualForH2Trans(Long idocId) {
+        return ObjectUtils.isNotEmpty(idocId) ? h2TransEntity.idocId.eq(idocId) : null;
+    }
+
+
 }

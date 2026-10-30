@@ -27,7 +27,7 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
     @Query(value = "SELECT NEXT VALUE FOR AIMTESTTK.IDOCP_AIM FROM SYSIBM.SYSDUMMY1", nativeQuery = true)
     Long findMaxLineId();
 
-    @Query("SELECT new kr.co.aim.common.dto.powder.IdocOrderMasterResponseDto(" +
+    @Query("SELECT new kr.co.aim.domain.repository.dto.powder.IdocOrderMasterResponseDto(" +
             "i.lineId, " +
             "i.idocTypId, " +
             "i.state, " +
@@ -52,7 +52,7 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             Pageable pageable                    // 3. 페이징 구조 결합
     );
 
-    @Query("SELECT new kr.co.aim.common.dto.powder.IdocH2TransResponseDto(" +
+    @Query("SELECT new kr.co.aim.domain.repository.dto.powder.IdocH2TransResponseDto(" +
             "i.lineId, " +
             "i.idocTypId, " +
             "i.state, " +
@@ -88,7 +88,7 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "WHERE d.galKey = :galKey") // 1. WHERE 조건 절 추가
     Page<IdocH2TransResponseDto> findIdocWithH2TransByGalKey(@Param("galKey")String galKey, Pageable pageable);
 
-    @Query("SELECT new kr.co.aim.common.dto.powder.IdocH2TransResponseDto(" +
+    @Query("SELECT new kr.co.aim.domain.repository.dto.powder.IdocH2TransResponseDto(" +
             "i.lineId, " +
             "i.idocTypId, " +
             "i.state, " +
@@ -124,7 +124,7 @@ public interface IdocPJpaRepository extends JpaRepository<IdocPEntity, Long> {
             "WHERE d.cPartId is not null") // 1. WHERE 조건 절 추가
     Page<IdocH2TransResponseDto> findIdocWithH2TransByPartIsNotNull(Pageable pageable);
 
-    @Query("SELECT new kr.co.aim.common.dto.powder.IdocH2PartMResponseDto(" +
+    @Query("SELECT new kr.co.aim.domain.repository.dto.powder.IdocH2PartMResponseDto(" +
             "i.lineId, " +
             "i.idocTypId, " +
             "i.state, " +

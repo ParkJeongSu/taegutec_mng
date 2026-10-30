@@ -1,6 +1,8 @@
 package kr.co.aim.api.strategy;
 
+import kr.co.aim.domain.model.GALH2TransInterfaceResponse;
 import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
+import kr.co.aim.domain.repository.condition.GALH2TransInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALPartSearchCondition;
 import kr.co.aim.domain.model.GALDetailInterfaceResponse;
@@ -13,5 +15,6 @@ import org.springframework.data.domain.Pageable;
 public interface FactoryGALInterfaceStrategy {
     public Page<GALInterfaceResponse> getInterfaceList(GALInterfaceSearchCondition condition, Pageable pageable);
     public Page<GALDetailInterfaceResponse> getDetailInterfaceList(GALDetailInterfaceSearchCondition condition, Pageable pageable);
+    public Page<GALH2TransInterfaceResponse> getH2TransInterfaceList(GALH2TransInterfaceSearchCondition condition, Pageable pageable) ;
     public Page<GALPartResponse> getPartList(GALPartSearchCondition condition, Pageable pageable);
 }
