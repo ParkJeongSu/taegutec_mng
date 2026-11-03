@@ -231,20 +231,75 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             String sourcePositionTypeName = "";
             String sourcePositionName = "";
             String destinationEquipmentName = "";
-            if(StringUtils.isNotEmpty(locationId)){
-                Optional<PortDef> optionalPortDef = portDefRepository.findByLocationId(locationId);
-                if(optionalPortDef.isPresent()){
-                    PortDef portDef = optionalPortDef.get();
+            String destinationPortName = "";
+            String destinationPositionTypeName = "";
+            String destinationPositionName = "";
 
-                    sourceEquipmentName = portDef.getEquipmentName();
-                    sourcePortName = portDef.getPortName();
-                    sourcePositionTypeName = PositionTypeName.PORT.getValue();
-                    sourcePositionName = portDef.getPortName();
+
+            // INBOUND CASE
+            if(StringUtils.equals(TransportOrderType.INBOUND.getValue(),transportType)){
+                if(StringUtils.isNotEmpty(locationId)){
+                    Optional<PortDef> optionalPortDef = portDefRepository.findByLocationId(locationId);
+                    if(optionalPortDef.isPresent()){
+                        PortDef portDef = optionalPortDef.get();
+
+                        sourceEquipmentName = portDef.getEquipmentName();
+                        sourcePortName = portDef.getPortName();
+                        sourcePositionTypeName = PositionTypeName.PORT.getValue();
+                        sourcePositionName = portDef.getPortName();
+                        destinationPositionTypeName = PositionTypeName.ZONE.getValue();
+                    }
                 }
             }
-            if(StringUtils.isNotEmpty(galWarehouse)){
-                //destinationEquipmentName = galWarehouse;
+            // RELOCATION CASE
+            else if(StringUtils.equals(TransportOrderType.RELOCATION.getValue(),transportType)){
+                sourceEquipmentName = "";
+                sourcePortName = "";
+                sourcePositionTypeName = PositionTypeName.ZONE.getValue();
+                sourcePositionName = "";
+                destinationEquipmentName = "";
+                destinationPortName =  "";
+                destinationZoneName = "";
+                destinationPositionTypeName = PositionTypeName.ZONE.getValue();
+                destinationPositionName = "";
             }
+            // OUTBOUND CASE
+            else if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(),transportType)){
+
+                List<String> detailPortTypes = new ArrayList<>();
+                List<String> portTypes = new ArrayList<>();
+
+                detailPortTypes.add(DetailPortType.CRANE_BOTH_PND.getValue());
+                detailPortTypes.add(DetailPortType.CRANE_OUT_PND.getValue());
+
+                portTypes.add(PortType.BOTH.getValue());
+                portTypes.add(PortType.OUTPUT.getValue());
+
+                List<PortDef> portDefList = portDefRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
+                        workStationId,
+                        detailPortTypes,
+                        portTypes
+                );
+
+                if(CollectionUtils.isEmpty(portDefList)){
+                    log.info("workCenter not found : workCenterName : {}" , workStationId);
+                    return null;
+                }
+                PortDef portDef = portDefList.get(0);
+
+                sourceEquipmentName = "";
+                sourcePortName = "";
+                sourcePositionTypeName = PositionTypeName.ZONE.getValue();
+                sourcePositionName = locationId;
+                destinationEquipmentName = portDef.getEquipmentName();
+                destinationPortName =  portDef.getPortName();
+                destinationZoneName = "";
+                requestedZoneName = "";
+                destinationPositionTypeName = PositionTypeName.PORT.getValue();
+                destinationPositionName = portDef.getPortName();
+            }
+
+
             // transportOrder 를 REQUESTED 상태로 변경해서 다시 보내는 로직이 없도록 수정
             transportOrder.setTransportStatus(TransportOrderStatus.REQUESTED.getValue());
             transportOrder = transportOrderRepository.save(transportOrder);
@@ -263,7 +318,10 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                             .sourcePositionTypeName(sourcePositionTypeName)
                             .sourcePositionName(sourcePositionName)
                             .destinationEquipmentName(destinationEquipmentName)
+                            .destinationPortName(destinationPortName)
                             .destinationZoneName(requestedZoneName)
+                            .destinationPositionTypeName(destinationPositionTypeName)
+                            .destinationPositionName(destinationPositionName)
                             .priority(priority)
                             .requestSource(TransportJobRequestType.GAL.getValue())
                             .createTime(tx.eventTime())
@@ -466,7 +524,7 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         List<TransportJobCancelCompletedReasonBody> reasons = message.getBody().getReasons();
 
         if(StringUtils.equals(PositionTypeName.PORT.getValue(),currentPositionType)){
-            currentPortName =currentPositionName;
+            currentPortName = currentPositionName;
         }
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);

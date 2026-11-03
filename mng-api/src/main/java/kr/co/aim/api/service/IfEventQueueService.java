@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,14 +23,23 @@ public class IfEventQueueService {
     private final IfEventQueueRepository ifEventQueueRepository;
 
     @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
-    public List<IfEventQueue> findByIfStatusOrderByCreateTimeAscAndToProcessing(String ifStatus){
+    public List<IfEventQueue> findByIfStatusOrderByCreateTimeAscAndToProcessing(String ifStatus) {
         List<IfEventQueue> ifEventQueues = ifEventQueueRepository.findByIfStatusOrderByCreateTimeAsc(ifStatus);
-        if(CollectionUtils.isNotEmpty(ifEventQueues)){
-            for(IfEventQueue ifEventQueue : ifEventQueues){
-                ifEventQueue.setIfStatus(IfEventQueueState.PROCESSING.getValue());
+
+        if (CollectionUtils.isNotEmpty(ifEventQueues)) {
+            List<Long> ids = new ArrayList<>();
+            String processingStatus = IfEventQueueState.PROCESSING.getValue();
+            LocalDateTime now = LocalDateTime.now().withNano(0);
+
+            for (IfEventQueue ifEventQueue : ifEventQueues) {
+                ids.add(ifEventQueue.getId());
+                ifEventQueue.setIfStatus(processingStatus);
+                ifEventQueue.setUpdateTime(now);
             }
-            ifEventQueues = ifEventQueueRepository.save(ifEventQueues);
+
+            ifEventQueueRepository.bulkUpdateIfStatus(ids, processingStatus, now);
         }
+
         return ifEventQueues;
     }
 
@@ -74,6 +84,31 @@ public class IfEventQueueService {
             // Success 로 변경
             ifEventQueue = ifEventQueueRepository.save(ifEventQueue);
             return Optional.ofNullable(ifEventQueue);
+        }
+        return Optional.empty();
+    }
+
+    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public Optional<IfEventQueue> increaseRetryCnt(Long id, int maxRetryLimit) {
+        Optional<IfEventQueue> optionalIfEventQueue = ifEventQueueRepository.findById(id);
+        if (optionalIfEventQueue.isPresent()) {
+            LocalDateTime now = LocalDateTime.now().withNano(0);
+            IfEventQueue ifEventQueue = optionalIfEventQueue.get();
+
+            int nextRetryCnt = ifEventQueue.getRetryCNT() + 1;
+            ifEventQueue.setRetryCNT(nextRetryCnt);
+            ifEventQueue.setUpdateTime(now);
+
+            // 임계치를 넘으면 즉시 FAIL, 아니면 READY로 전환
+            if (nextRetryCnt > maxRetryLimit) {
+                log.error("[EventQueue id={}] 최대 재시도 횟수({}회) 초과로 FAIL 처리", id, maxRetryLimit);
+                ifEventQueue.setIfStatus(IfEventQueueState.FAIL.getValue());
+            } else {
+                ifEventQueue.setIfStatus(IfEventQueueState.READY.getValue());
+            }
+
+            ifEventQueue = ifEventQueueRepository.save(ifEventQueue);
+            return Optional.of(ifEventQueue);
         }
         return Optional.empty();
     }

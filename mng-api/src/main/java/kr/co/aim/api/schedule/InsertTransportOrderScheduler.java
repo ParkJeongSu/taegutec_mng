@@ -24,7 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-@Component
+//@Component
 @Slf4j
 @RequiredArgsConstructor
 @Profile({"scheduler"})

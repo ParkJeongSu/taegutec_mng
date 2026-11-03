@@ -2,6 +2,7 @@ package kr.co.aim.domain.repository;
 
 import kr.co.aim.domain.model.IfEventQueue;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,5 +20,7 @@ public interface IfEventQueueRepository {
     List<IfEventQueue> save(List<IfEventQueue> ifEventQueueList);
 
     List<IfEventQueue> findByIfStatusOrderByCreateTimeAsc(String ifStatus);
+
+    int bulkUpdateIfStatus(List<Long> ids, String newStatus, LocalDateTime updateTime);
 
 }

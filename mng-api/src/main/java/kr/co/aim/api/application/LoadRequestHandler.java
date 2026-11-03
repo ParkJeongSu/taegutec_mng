@@ -47,17 +47,17 @@ public class LoadRequestHandler implements MessageHandler<String> {
         // 3. 만일 서비스 호출 후 reply 메시지 반환
         BaseMessage<CarrierDispatchRequestBody> carrierDispatchRequestMessage = messageExecuteService.loadRequest(request);
 
-        jsonUtils.writePrettyJson(carrierDispatchRequestMessage);
-
-        if(ObjectUtils.isEmpty(carrierDispatchRequestMessage)){
-            log.info("carrierDispatchRequestMessage is null");
-        }
-        else if(ObjectUtils.isNotEmpty(carrierDispatchRequestMessage)){
-            rabbitTemplate.convertAndSend(
-                    RabbitConfig.EXCHANGE_TEX,
-                    RabbitConfig.ROUTING_TEX,
-                    carrierDispatchRequestMessage );
-        }
+//        jsonUtils.writePrettyJson(carrierDispatchRequestMessage);
+//
+//        if(ObjectUtils.isEmpty(carrierDispatchRequestMessage)){
+//            log.info("carrierDispatchRequestMessage is null");
+//        }
+//        else if(ObjectUtils.isNotEmpty(carrierDispatchRequestMessage)){
+//            rabbitTemplate.convertAndSend(
+//                    RabbitConfig.EXCHANGE_TEX,
+//                    RabbitConfig.ROUTING_TEX,
+//                    carrierDispatchRequestMessage );
+//        }
 
         return null;
     }

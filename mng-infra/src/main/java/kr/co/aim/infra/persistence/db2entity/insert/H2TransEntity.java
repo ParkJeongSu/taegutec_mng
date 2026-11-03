@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -24,9 +26,11 @@ public class H2TransEntity {
     @Column(name = "IDOCID", nullable = false)
     private Long idocId;
 
-    @Column(name = "DTIMECRE")
+    @CreationTimestamp
+    @Column(name = "DTIMECRE", updatable = false)
     private LocalDateTime dtimeCre;
 
+    @UpdateTimestamp
     @Column(name = "DTIMEMOD")
     private LocalDateTime dtimeMod;
 

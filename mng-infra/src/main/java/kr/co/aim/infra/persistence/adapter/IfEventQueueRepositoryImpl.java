@@ -9,6 +9,7 @@ import kr.co.aim.infra.persistence.springdatajpa.IfEventQueueJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -52,5 +53,10 @@ public class IfEventQueueRepositoryImpl implements IfEventQueueRepository {
     @Override
     public List<IfEventQueue> findByIfStatusOrderByCreateTimeAsc(String ifStatus) {
         return ifEventQueueJpaRepository.findByIfStatusOrderByCreateTimeAsc(ifStatus).stream().map(ifEventQueueMapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public int bulkUpdateIfStatus(List<Long> ids, String newStatus, LocalDateTime updateTime) {
+        return ifEventQueueJpaRepository.bulkUpdateIfStatus(ids, newStatus, updateTime);
     }
 }

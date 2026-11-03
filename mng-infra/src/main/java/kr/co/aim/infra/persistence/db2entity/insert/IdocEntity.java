@@ -4,9 +4,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import kr.co.aim.common.enums.IdocMachine;
-import kr.co.aim.common.enums.IdocTypeId;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.GenerationTime;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -61,9 +63,11 @@ public class IdocEntity {
     @Column(name = "ARCKEY")
     private String arcKey;
 
-    @Column(name = "DTIMECRE")
+    @CreationTimestamp
+    @Column(name = "DTIMECRE", updatable = false)
     private LocalDateTime dtimeCre;
 
+    @UpdateTimestamp
     @Column(name = "DTIMEMOD")
     private LocalDateTime dtimeMod;
 

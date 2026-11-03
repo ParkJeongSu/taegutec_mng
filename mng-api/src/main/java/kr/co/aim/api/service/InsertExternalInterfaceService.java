@@ -1,6 +1,7 @@
 package kr.co.aim.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import kr.co.aim.common.error.PreconditionNotMetException;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.condition.GALDetailInterfaceSearchCondition;
 import kr.co.aim.domain.repository.condition.GALH2TransInterfaceSearchCondition;
@@ -32,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -51,7 +53,6 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
     // --- [Helper Methods] ---
 
     private IdocEntity buildBaseIdoc(LocalDateTime now) {
-        //TODO : max 값 시퀀스로 수정하기
         return IdocEntity.builder()
                 .lineId(idocJpaRepository.findMaxLineId())
                 .idocTypId(IdocTypeId.CONFIRMATION.getValue())
@@ -59,14 +60,13 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                 .errorCode(IdocErrorCode.INIT.getValue())
                 .source(IdocMachine.MNG.getValue())
                 .destination( IdocMachine.GAL.getValue())
-                .dtimeCre(now)
-                .dtimeMod(now)
+                //.dtimeCre(now)
+                //.dtimeMod(now)
                 .modCnt(0)
                 .build();
     }
 
     private H2TransEntity buildBaseH2Trans(H2TransReportVo vo) {
-        // TODO: max 값 시퀀스로 수정
         return H2TransEntity.builder()
                 .lineId(h2TransJpaRepository.findMaxLineId())
                 .idocId(vo.getNewIdoc().getLineId())
@@ -116,6 +116,37 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         return idocJpaRepository.findByIdocTypIdsAndStateAndErrorCode(idocTypIds,state,errorCode);
     }
 
+    @Transactional(value = "db2TransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public List<IdocEntity> selectAndMarkInProcess(List<Long> idocTypIds, Integer initialState, Integer errorCode) {
+        // 1. 대상 조회 (건수가 많을 수 있다면 Repository에 Top 100 등 Limit 적용 권장)
+        List<IdocEntity> idocEntities = idocJpaRepository.findByIdocTypIdsAndStateAndErrorCode(
+                idocTypIds, initialState, errorCode
+        );
+
+        if (idocEntities == null || idocEntities.isEmpty()) {
+            return idocEntities;
+        }
+
+        // 2. 벌크 업데이트를 위한 ID 리스트 추출 및 반환할 객체의 메모리 상태 동기화
+        List<Long> lineIds = new ArrayList<>();
+        Long inProcessState = IdocState.IN_PROCESS.getValue();
+
+        for (IdocEntity idoc : idocEntities) {
+            lineIds.add(idoc.getLineId());
+
+            // 스케줄러로 반환될 객체 자체에도 변경된 값을 맞춰줌
+            idoc.setState(inProcessState);
+            Integer currentCnt = idoc.getModCnt();
+            int baseCnt = (currentCnt == null) ? 0 : currentCnt;
+            idoc.setModCnt(baseCnt + 1);
+        }
+
+        // 3. 단 1번의 UPDATE ... WHERE LINEID IN (...) 쿼리로 DB2 일괄 반영!
+        int result = idocJpaRepository.bulkUpdateStateToInProcess(lineIds, inProcessState);
+        log.info("Bulk update state to InProcess Status count: {} ", result);
+        return idocEntities;
+    }
+
     @Transactional(value = "db2TransactionManager")
     public List<H2OrderMEntity> selectH2OrderMEntityByIdocId(Long idocId) {
         return h2OrderMJpaRepository.findByIdocId(idocId);
@@ -132,7 +163,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
         idoc.setState(IdocState.COMPLETED.getValue());
         idoc.setErrorCode(IdocErrorCode.PROCESSED.getValue());
-        idoc.setDtimeMod(LocalDateTime.now().withNano(0));
+        //idoc.setDtimeMod(LocalDateTime.now().withNano(0));
 
         Integer currentCnt = idoc.getModCnt();
         int baseCnt = (currentCnt == null) ? 0 : currentCnt;
@@ -146,7 +177,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         IdocEntity idoc = idocJpaRepository.findByLineId(idocId)
                 .orElseThrow(() -> new RuntimeException("IDOC을 찾을 수 없습니다."));
         idoc.setErrorCode(IdocErrorCode.ERROR.getValue());
-        idoc.setDtimeMod(LocalDateTime.now().withNano(0));
+        //idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         idocJpaRepository.save(idoc);
     }
 
@@ -162,12 +193,31 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
             log.error("IfEventQueue 페이로드 역직렬화 중 에러 발생. payload: {}", ifEventQueue.getPayload(), e);
             throw new RuntimeException(e);
         }
+
+        Long currentTransCode = Long.parseLong(dto.getTransactionCode());
+        String orderId = ifEventQueue.getOrderId();
+
+        // 1. 선행 이벤트 존재 여부 동적 검증
+        if (GALTransportStatusRule.hasPrecondition(currentTransCode)) {
+            List<Long> requiredPreCodes = GALTransportStatusRule.getRequiredPreTransCodes(currentTransCode);
+            boolean existsPreCondition = h2TransJpaRepository.existsByCTransTyInAndCOrderId(requiredPreCodes, orderId);
+
+            if (!existsPreCondition) {
+                log.warn("[보고 대기] 선행 데이터 미존재. currentTransCode: {}, required: {}, orderId: {}",
+                        currentTransCode, requiredPreCodes, orderId);
+                throw new PreconditionNotMetException(
+                        String.format("선행 트랜잭션%s이 존재하지 않습니다. (cOrderId: %s)", requiredPreCodes, orderId)
+                );
+            }
+        }
+
         String virtualCarrierName = dto.getVirtualCarrierName();
         BigDecimal actualWeight = null;
 
         if (dto.getActualWeight() != null && !dto.getActualWeight().trim().isEmpty()) {
             actualWeight = new BigDecimal(dto.getActualWeight());
         }
+
 
         //LocalDateTime now = LocalDateTime.now().withNano(0);
         LocalDateTime now = ifEventQueue.getCreateTime();
@@ -183,8 +233,8 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .builder()
                         .lineId(h2TransJpaRepository.findMaxLineId())
                         .idocId(newIdoc.getLineId())
-                        .dtimeCre(now)
-                        .dtimeMod(now)
+                        //.dtimeCre(now)
+                        //.dtimeMod(now)
                         .usrMod(SystemName.MNG.getValue())
                         .pgmMod(SystemName.MNG.getValue())
                         .modCnt(0)

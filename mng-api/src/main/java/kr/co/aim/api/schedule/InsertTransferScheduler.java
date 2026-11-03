@@ -42,10 +42,14 @@ public class InsertTransferScheduler {
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
-    @Scheduled(fixedDelay = 3000) // 5초마다 실행
+//    @Scheduled(fixedDelay = 1000) // 3초마다 실행
+//    @SchedulerLock(name = "insertOrderDB2ToMSSQL",
+//            lockAtMostFor = "PT1M",     // 작업 최장 소요시간 + 버퍼
+//            lockAtLeastFor = "PT5S")    // 최소 간격(선택)
+    @Scheduled(fixedRate = 1000)
     @SchedulerLock(name = "insertOrderDB2ToMSSQL",
-            lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
-            lockAtLeastFor = "PT5S")    // 최소 간격(선택)
+            lockAtMostFor = "PT10S",
+            lockAtLeastFor = "PT0.9S") // 1초 주기에 맞춰 잠금이 풀리도록 0.9초 설정
     public void insertOrderDB2ToMSSQL() {
         // 1단계 DB2에서 idocList를 가져온다. (DB2 트랜잭션)
 
@@ -67,7 +71,7 @@ public class InsertTransferScheduler {
         idocTypIds.add(IdocTypeId.OUTBOUND.getValue());
         idocTypIds.add(IdocTypeId.RELOCATION.getValue());
 
-        List<IdocEntity> idocEntities = insertExternalInterfaceService.selectByIdocTypIdsAndStateAndErrorCode(idocTypIds,state,errorCode);
+        List<IdocEntity> idocEntities = insertExternalInterfaceService.selectAndMarkInProcess(idocTypIds,state,errorCode);
 
         if(CollectionUtils.isEmpty(idocEntities)){
             return;
@@ -121,19 +125,9 @@ public class InsertTransferScheduler {
                 insertExternalInterfaceService.transferCompleted(idocEntity.getLineId());
 
                 // 메시지 전송
-                if(
-                        StringUtils.equals( StringUtils.trimToEmpty(master.getCOrderTy())  , TransportOrderType.INBOUND.getValue())
-                        || StringUtils.equals(StringUtils.trimToEmpty(master.getCOrderTy()) , TransportOrderType.RELOCATION.getValue())
-                ) {
-                    sendTransportOrderRequest(transactionInfo,transportOrder);
-                }
-                else if(
-                        StringUtils.equals(StringUtils.trimToEmpty(master.getCOrderTy()) , TransportOrderType.OUTBOUND.getValue())
-                ){
-                    // send To TEX
-                    // TransportJobValidationRequest
-                    sendTransportJobValidationRequest(transactionInfo,transportOrder);
-                }
+                sendTransportOrderRequest(transactionInfo,transportOrder);
+                log.info("transport orderId created = {}", transportOrder.getTransportOrderId());
+
             } catch (Exception e) {
                 // 만일 transfer 도중 문제가 생겼다면
                 // errorcode 99 dtimemode를 수정
@@ -157,33 +151,6 @@ public class InsertTransferScheduler {
         request.setResultCode(ResultCode.OK.getValue());
         request.setTransactionId(transactionId);
         request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
-        TransportOrderRequestBody body =
-                TransportOrderRequestBody
-                        .builder()
-                        .id(transportOrder.getId())
-                        .build();
-
-        request.setBody(body);
-        jsonUtils.writePrettyJson(request);
-
-        // 5. String 으로 변환된 메시지 reply
-        rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
-        log.info("Send Completed");
-    }
-
-    private void sendTransportJobValidationRequest(TransactionInfo transactionInfo,TransportOrder transportOrder){
-        // 메시지 전송
-        String transactionId = FormatUtils.getTransactionId(transactionInfo.eventTime());
-
-        BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
-        request.setMessageFrom(SystemName.MNG.getValue());
-        request.setMessageOwner(SystemName.MNG.getValue());
-        request.setMessageTo(SystemName.MNG.getValue());
-        request.setEventTime(transactionId);
-        request.setResultMessage("");
-        request.setResultCode(ResultCode.OK.getValue());
-        request.setTransactionId(transactionId);
-        request.setMessageName(MessageList.TRANSPORT_ORDER_VALIDATION_REQUEST.getMessageName());
         TransportOrderRequestBody body =
                 TransportOrderRequestBody
                         .builder()

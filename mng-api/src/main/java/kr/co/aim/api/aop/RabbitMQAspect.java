@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Aspect
 @Component
 @RequiredArgsConstructor
-@Profile({"pex","tex"})
+@Profile({"pex","tex","scheduler"})
 @Slf4j
 public class RabbitMQAspect {
     private final ObjectMapper objectMapper;

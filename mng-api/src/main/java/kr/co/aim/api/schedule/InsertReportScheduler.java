@@ -32,10 +32,14 @@ public class InsertReportScheduler {
     private final RabbitTemplate rabbitTemplate;
     private final JsonUtils jsonUtils;
 
-    @Scheduled(fixedDelay = 3000) // 3초마다 실행
+//    @Scheduled(fixedDelay = 1000) // 3초마다 실행
+//    @SchedulerLock(name = "insertReportH2Trans",
+//            lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
+//            lockAtLeastFor = "PT5S")    // 최소 간격(선택)
+    @Scheduled(fixedRate = 1000)
     @SchedulerLock(name = "insertReportH2Trans",
-            lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
-            lockAtLeastFor = "PT5S")    // 최소 간격(선택)
+            lockAtMostFor = "PT10S",
+            lockAtLeastFor = "PT0.9S") // 1초 주기에 딱 맞춰 잠금이 풀리도록 0.9초 설정
     public void insertReportH2Trans() {
 
         // 1단계 : EventLog 조회 MSSQL 트랜잭션 Ready 상태 조회후 PROCESSING 상태로 변경
@@ -50,12 +54,6 @@ public class InsertReportScheduler {
         if(CollectionUtils.isNotEmpty(ifEventQueues)){
             for(IfEventQueue ifEventQueue : ifEventQueues){
                 sendMessageToScheduler(ifEventQueue);
-                try {
-                    Thread.sleep(100L);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.warn("Thread sleep interrupted: {}", e.getMessage());
-                }
             }
         }
     }
@@ -97,33 +95,5 @@ public class InsertReportScheduler {
                 RabbitConfig.ROUTING_SCHEDULER,
                 request );
     }
-
-    /*
-    * try {
-                    // DB2 H2transReport
-                    insertExternalInterfaceService.reportH2trans(ifEventQueue);
-                    // ifEventQueue 상태를 Success 로 변경
-                    ifEventQueueService.reportCompleted(ifEventQueue.getId());
-
-                } catch (Exception e) {
-                    // retry cnt ++
-                    // 만일 3초과면, ready -> fail 로 데이터 변경
-                    log.error("reportFail id {} ",ifEventQueue.getId());
-                    try {
-                        Optional<IfEventQueue> optionalIfEventQueue
-                                = ifEventQueueService.increaseRetryCnt(ifEventQueue.getId());
-                        if(optionalIfEventQueue.isPresent()){
-                            if(optionalIfEventQueue.get().getRetryCNT() > 3){
-                                ifEventQueueService.reportFailed(ifEventQueue.getId());
-                            }
-                        }
-                    } catch (Exception e1){
-                        log.error("final report error", e1);
-                        log.error("increase & reportFail id {} ",ifEventQueue.getId());
-                    }
-                }
-    *
-    * */
-
 
 }

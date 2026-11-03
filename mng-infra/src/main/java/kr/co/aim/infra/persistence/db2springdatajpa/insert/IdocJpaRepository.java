@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -58,13 +59,22 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
     Long findNextAvailableLineId(@Param("minId") Long minId, @Param("maxId") Long maxId);
 
     // 1) 내가 사용하는 채번 (1 ~ 499,999,999)
-    default Long findMaxLineId() {
-        return findNextAvailableLineId(1L, 499999999L);
-    }
+//    default Long findMaxLineId() {
+//        return findNextAvailableLineId(1L, 499999999L);
+//    }
 
     // 2) 상대편 시스템 채번 대역 (500,000,000 ~ 999,999,999)
     default Long findMaxLineIdForCreateOrder() {
         return findNextAvailableLineId(500000000L, 999999999L);
+    }
+
+    // 1) 내가 사용하는 시퀀스 채번 (1 ~ 499,999,999 대역)
+    @Query(value = "SELECT NEXT VALUE FOR AIM_C_TST.IDOC_AIM FROM SYSIBM.SYSDUMMY1", nativeQuery = true)
+    Long findNextLineId();
+
+    // 기존 호출부 호환용 default 메서드 (필요시)
+    default Long findMaxLineId() {
+        return findNextLineId();
     }
 
     @Query("SELECT COUNT(i) > 0 FROM IdocEntity i WHERE i.lineId = 1")
@@ -78,4 +88,13 @@ public interface IdocJpaRepository extends JpaRepository<IdocEntity, Long> {
             "    WHERE sub.lineId = i.lineId + 1" +
             ")")
     Long findMinAvailableLineIdAfterOne();
+
+    // IdocJpaRepository 인터페이스 내부에 추가
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("UPDATE IdocEntity i " +
+            "SET i.state = :newState, " +
+            "    i.modCnt = COALESCE(i.modCnt, 0) + 1 " +
+            "WHERE i.lineId IN :lineIds")
+    int bulkUpdateStateToInProcess(@Param("lineIds") List<Long> lineIds, @Param("newState") Long newState);
+
 }

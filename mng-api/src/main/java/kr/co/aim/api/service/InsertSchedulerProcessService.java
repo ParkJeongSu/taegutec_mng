@@ -2,6 +2,7 @@ package kr.co.aim.api.service;
 
 import kr.co.aim.api.strategy.SchedulerProcessStrategy;
 import kr.co.aim.common.enums.*;
+import kr.co.aim.common.error.PreconditionNotMetException;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.command.*;
@@ -52,23 +53,23 @@ public class InsertSchedulerProcessService implements SchedulerProcessStrategy {
             // ifEventQueue 상태를 Success 로 변경
             ifEventQueueService.reportCompleted(ifEventQueue.getId());
 
-        } catch (Exception e) {
-            // retry cnt ++
-            // 만일 3초과면, ready -> fail 로 데이터 변경
-            log.error("reportFail id {} ",ifEventQueue.getId());
+        } catch (PreconditionNotMetException pe) {
+            // 110 선행 데이터 미존재로 인한 대기: 최대 10회까지 재시도 허용
+            log.warn("[id={}] 선행 데이터 대기: {}", ifEventQueue.getId(), pe.getMessage());
             try {
-                Optional<IfEventQueue> optionalIfEventQueue
-                        = ifEventQueueService.increaseRetryCnt(ifEventQueue.getId());
-                if(optionalIfEventQueue.isPresent()){
-                    if(optionalIfEventQueue.get().getRetryCNT() > 3){
-                        ifEventQueueService.reportFailed(ifEventQueue.getId());
-                    }
-                }
-            } catch (Exception e1){
-                log.error("final report error", e1);
-                log.error("increase & reportFail id {} ",ifEventQueue.getId());
+                ifEventQueueService.increaseRetryCnt(ifEventQueue.getId(), 10);
+            } catch (Exception ex) {
+                log.error("대기 처리 중 에러 발생", ex);
+            }
+
+        } catch (Exception e) {
+            // DB 장애, 파싱 에러 등 일반 시스템 에러: 3회 초과 시 FAIL 처리
+            log.error("reportFail id {} ", ifEventQueue.getId(), e);
+            try {
+                ifEventQueueService.increaseRetryCnt(ifEventQueue.getId(), 3);
+            } catch (Exception e1) {
+                log.error("시스템 에러 후 retry 처리 실패 id {} ", ifEventQueue.getId(), e1);
             }
         }
     }
-
 }
