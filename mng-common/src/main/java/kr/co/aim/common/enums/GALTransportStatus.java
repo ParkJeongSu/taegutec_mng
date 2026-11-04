@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum GALTransportStatus implements MetaDataEnum {
     CREATED("CREATED"),
+    ERROR("0"),
     ACCEPT("2"),
     RELEASED("6"),
     INTERNAL_RELOCATION("114"),

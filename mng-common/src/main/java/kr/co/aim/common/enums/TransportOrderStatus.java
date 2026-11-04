@@ -11,6 +11,7 @@ public enum TransportOrderStatus implements MetaDataEnum {
     REQUESTED("REQUESTED"),
     ACCEPTED("ACCEPTED"),
     STARTED("STARTED"),
+    STARTED_REPORTED("STARTED_REPORTED"),
     REJECTED("REJECTED"),
     COMPLETED("COMPLETED"),
     CLOSED("CLOSED"),

@@ -457,6 +457,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
             return null;
         }
         Port port = optionalPorts.get();
+
+        if(StringUtils.equals(PortTransportState.READY_TO_PROCESS.getValue(),port.getTransportState())){
+            return null;
+        }
+
         port.loadCompleted(command);
         port = portRepository.save(port);
         PortHistoryEntity portHistoryEntity = portMapper.toHistoryEntity(port);
@@ -721,6 +726,13 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 transportJobState = TransportJobState.ACCEPTED.getValue();
             }else{
                 transportJobState = TransportJobState.REJECTED.getValue();
+            }
+            if(
+                    StringUtils.equals(TransportJobState.ACCEPTED.getValue(),transportJob.getTransportJobState())
+                    || StringUtils.equals(TransportJobState.REJECTED.getValue(),transportJob.getTransportJobState())
+            ){
+                // 이미 reply 를 받은 상태
+                return;
             }
             TransportJobUpdateCommand command =
                     TransportJobUpdateCommand
