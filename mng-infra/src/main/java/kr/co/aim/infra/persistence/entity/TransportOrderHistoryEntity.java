@@ -120,4 +120,7 @@ public class TransportOrderHistoryEntity implements IBaseHistoryEntity {
 
     @Column(name = "EVENT_COMMENT")
     private String eventComment;
+
+    @Column(name = "RETRY_CNT")
+    private Integer retryCnt;
 }

@@ -1,83 +1,73 @@
 package kr.co.aim.api.schedule;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import kr.co.aim.api.service.TransportOrderService;
-import kr.co.aim.common.Utils.FormatUtils;
-import kr.co.aim.common.Utils.JsonUtils;
-import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.TransportOrderRequestBody;
-import kr.co.aim.common.format.request.BaseMessage;
+import kr.co.aim.api.service.TransportOrderDispatcherService;
+import kr.co.aim.common.enums.TransportOrderStatus;
+import kr.co.aim.common.enums.TransportOrderType;
 import kr.co.aim.domain.model.TransportOrder;
-import kr.co.aim.infra.config.RabbitConfig;
+import kr.co.aim.domain.repository.TransportOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
-//@Component
+@Component
 @Slf4j
 @RequiredArgsConstructor
 @Profile({"scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class InsertTransportOrderScheduler {
 
-    private final TransportOrderService transportOrderService;
-    private final ObjectMapper objectMapper;
-    private final RabbitTemplate rabbitTemplate;
-    private final JsonUtils jsonUtils;
+    private final TransportOrderRepository transportOrderRepository;
+    private final TransportOrderDispatcherService transportOrderDispatcherService;
 
-    @Scheduled(fixedDelay = 5000) // 5초마다 실행
-    @SchedulerLock(name = "insertTransportOrderRequest",
-            lockAtMostFor = "PT2M",     // 작업 최장 소요시간 + 버퍼
-            lockAtLeastFor = "PT5S")    // 최소 간격(선택)
+    private static final int MAX_RETRY_COUNT = 3;
+    private static final int BATCH_SIZE = 50;
+
+    @Scheduled(fixedDelay = 1000)
+    @SchedulerLock(
+            name = "insertTransportOrderRequest",
+            lockAtMostFor = "PT1M",
+            lockAtLeastFor = "PT0.9S"
+    )
     public void insertTransportOrderRequest() {
-        // 1 단계 : TransportOrder 에서 Inbound,relocation order Created 상태 조회
+        List<String> transportTypes = List.of(
+                TransportOrderType.INBOUND.getValue(),
+                TransportOrderType.OUTBOUND.getValue(),
+                TransportOrderType.RELOCATION.getValue()
+        );
 
-        // 2단계 메시지 전송
-        List<String> transportTypes = new ArrayList<>();
-        transportTypes.add(TransportOrderType.INBOUND.getValue());
-        transportTypes.add(TransportOrderType.RELOCATION.getValue());
-        List<TransportOrder> transportOrders =
-                transportOrderService.findByTransportTypeInAndTransportStatus(transportTypes,TransportOrderStatus.CREATED.getValue());
+        // 1. PK 오름차순(id ASC)으로 정렬하여 최대 50건 조회
+        List<TransportOrder> transportOrders = transportOrderRepository.findPendingOrders(
+                transportTypes,
+                TransportOrderStatus.CREATED.getValue(),
+                MAX_RETRY_COUNT,
+                PageRequest.of(0, BATCH_SIZE)
+        );
 
-        if(CollectionUtils.isNotEmpty(transportOrders)){
-            for(TransportOrder transportOrder : transportOrders){
-                try {
-                    // 메시지 전송
-                    String transactionId = FormatUtils.generateTransactionId();
-                    BaseMessage<TransportOrderRequestBody> request = new BaseMessage<>();
-                    request.setMessageName(MessageList.TRANSPORT_ORDER_REQUEST.getMessageName());
-                    request.setMessageFrom(SystemName.MNG.getValue());
-                    request.setMessageOwner(SystemName.MNG.getValue());
-                    request.setMessageTo(SystemName.MNG.getValue());
-                    request.setEventTime(transactionId);
-                    request.setResultMessage("");
-                    request.setResultCode(ResultCode.OK.getValue());
-                    request.setTransactionId(transactionId);
-                    TransportOrderRequestBody body =
-                            TransportOrderRequestBody
-                                    .builder()
-                                    .id(transportOrder.getId())
-                                    .build();
+        if (CollectionUtils.isEmpty(transportOrders)) {
+            return;
+        }
 
-                    request.setBody(body);
+        // 2. 단일 루프 순차 처리
+        for (TransportOrder transportOrder : transportOrders) {
+            try {
+                transportOrderDispatcherService.processAndSendOrder(transportOrder.getId());
+                log.info("TransportOrder WCS 발송 성공 : OrderId={}", transportOrder.getTransportOrderId());
 
-                    jsonUtils.writePrettyJson(request);
-                    rabbitTemplate.convertAndSend( RabbitConfig.EXCHANGE_TEX,RabbitConfig.ROUTING_TEX, request );
-                    log.info("Send Completed");
-                } catch (Exception e) {
-                    log.error("transportOrder id error {}",transportOrder.getId());
-                }
+            } catch (Exception e) {
+                // 실패 건 카운트 증가 처리 (별도 트랜잭션)
+                transportOrderDispatcherService.handleFailure(transportOrder.getId(), MAX_RETRY_COUNT, e);
+
+                // 순서 보장을 위해 후속 작업 즉시 중단 (다음 주기에서 재시도)
+                log.error("❌ [발송 중단] OrderId={} 오류로 후속 발송을 중단합니다.", transportOrder.getTransportOrderId());
+                break;
             }
         }
     }

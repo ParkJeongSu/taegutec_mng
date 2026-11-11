@@ -119,4 +119,7 @@ public class TransportOrderEntity {
 
     @Column(name = "EVENT_COMMENT")
     private String eventComment;
+
+    @Column(name = "RETRY_CNT")
+    private Integer retryCnt;
 }

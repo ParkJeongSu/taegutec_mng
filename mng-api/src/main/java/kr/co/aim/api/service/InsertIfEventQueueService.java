@@ -6,6 +6,7 @@ import kr.co.aim.api.dto.insert.IfEventQueueDto;
 import kr.co.aim.api.strategy.FactoryIfEventQueueStrategy;
 import kr.co.aim.api.vo.insert.ops.InsertEventQueueReportVo;
 import kr.co.aim.api.vo.insert.ops.TransportCancelReasonVo;
+import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.IfEventQueueCreateCommand;
@@ -56,13 +57,13 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
         if (vo instanceof InsertEventQueueReportVo reportVo) {
             List<IfEventQueueDto> ifEventQueueDtoList = createEventQueueDto(reportVo);
             if(CollectionUtils.isNotEmpty(ifEventQueueDtoList)){
+                Long groupId = null;
+                int index = 1;
+                if(ifEventQueueDtoList.size() > 1){
+                    groupId = TsidUtils.nextId();
+                }
                 for(IfEventQueueDto  dto : ifEventQueueDtoList){
-                    try {
-                        Thread.sleep(100L);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        log.warn("Thread sleep interrupted: {}", e.getMessage());
-                    }
+
                     TransactionInfo tx = TransactionInfo.now(EventName.SAVE_INTERFACE_EVENT_LOG.getValue(),SystemName.MNG.getValue(), "");
                     // DTO 객체를 JSON 문자열로 직접 변환합니다.
                     String jsonPayload = "";
@@ -89,15 +90,12 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                                     .retryCNT(0)
                                     .errMSG("")
                                     .createTime(tx.eventTime())
+                                    .groupId(groupId)
+                                    .groupSeq(index)
                                     .build();
                     IfEventQueue interfaceEventLog = IfEventQueue.create(command);
                     ifEventQueueRepository.save(interfaceEventLog);
-                    try {
-                        Thread.sleep(100L);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        log.warn("Thread sleep interrupted: {}", e.getMessage());
-                    }
+                    index++;
                 }
             }
         }else {
@@ -435,7 +433,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                         .build();
                 ifEventQueueDtoList.add(dto2);
 
-                // 82 report
+                // 90 report
                 eventType = GALTransportStatus.ORDER_DONE_OUTBOUND.name();
                 transactionCode = GALTransportStatus.ORDER_DONE_OUTBOUND.getValue();
 
@@ -508,74 +506,97 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     ifEventQueueDtoList.add(dto);
                     // error code 만큼 111 Report
                     for(TransportCancelReasonVo reason : reasonList){
-                        errorText = reason.getCode();
-                        if(
-                                StringUtils.equals("IDMISMATCH",errorText)
-                                    ||StringUtils.equals("ID_MISMATCH",errorText)
-                        ){
-                            errorText = "Mismatch of barcode and scanned container number.";
+
+                        if(StringUtils.equals(DetailPortType.HORSESHOE_INBOUND.getValue(),portDef.getDetailPortType())){
+                            errorText = reason.getMessage();
+
+                            eventType = GALTransportStatus.ERROR_TEXT.name();
+                            transactionCode = GALTransportStatus.ERROR_TEXT.getValue();
+                            IfEventQueueDto dto2 = IfEventQueueDto
+                                    .builder()
+                                    .messageName(messageName)
+                                    .eventType(eventType)
+                                    .transactionCode(transactionCode)
+                                    .carrierName(carrierName)
+                                    .idocId(idocId)
+                                    .orderId(orderId)
+                                    .orderLineNumber(orderLineNumber)
+                                    .orderType(orderType)
+                                    .errorText(errorText)
+                                    .actualWeight(vo.getActualWeight())
+                                    .actualZoneName(vo.getActualZoneName())
+                                    .actualWorkStationId(portDef.getWorkCenterName())
+                                    .actualLocationId(port.getPortName())
+                                    .build();
+                            ifEventQueueDtoList.add(dto2);
                         }
-                        eventType = GALTransportStatus.ERROR_TEXT.name();
-                        transactionCode = GALTransportStatus.ERROR_TEXT.getValue();
+                        else {
+                            errorText = reason.getMessage();
 
-                        List<String> detailPortTypes = new ArrayList<>();
-                        List<String> portTypes = new ArrayList<>();
+                            eventType = GALTransportStatus.ERROR_TEXT.name();
+                            transactionCode = GALTransportStatus.ERROR_TEXT.getValue();
 
-                        detailPortTypes.add(DetailPortType.HORSESHOE_INBOUND.getValue());
-                        detailPortTypes.add(DetailPortType.INBOUND.getValue());
+                            List<String> detailPortTypes = new ArrayList<>();
+                            List<String> portTypes = new ArrayList<>();
 
-                        portTypes.add(PortType.INPUT.getValue());
-                        String workStationId = "";
-                        if(StringUtils.isBlank(transportOrder.getWorkStationId())){
-                            workStationId = portDef.getWorkCenterName();
+                            detailPortTypes.add(DetailPortType.HORSESHOE_INBOUND.getValue());
+                            detailPortTypes.add(DetailPortType.INBOUND.getValue());
+
+                            portTypes.add(PortType.INPUT.getValue());
+                            String workStationId = "";
+                            if(StringUtils.isBlank(transportOrder.getWorkStationId())){
+                                workStationId = portDef.getWorkCenterName();
+                            }
+                            else{
+                                workStationId = transportOrder.getWorkStationId();
+                            }
+                            ;
+                            List<PortDef> sourcePortDefList = portDefRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
+                                    workStationId,
+                                    detailPortTypes,
+                                    portTypes
+                            );
+
+                            PortDef sourcePortDef = sourcePortDefList.get(0);
+
+                            IfEventQueueDto dto1 = IfEventQueueDto
+                                    .builder()
+                                    .messageName(messageName)
+                                    .eventType(eventType)
+                                    .transactionCode(transactionCode)
+                                    .carrierName(carrierName)
+                                    .idocId(idocId)
+                                    .orderId(orderId)
+                                    .orderLineNumber(orderLineNumber)
+                                    .orderType(orderType)
+                                    .errorText(errorText)
+                                    .actualWeight(vo.getActualWeight())
+                                    .actualZoneName(vo.getActualZoneName())
+                                    .actualWorkStationId(sourcePortDef.getWorkCenterName())
+                                    .actualLocationId(sourcePortDef.getPortName())
+                                    .build();
+                            ifEventQueueDtoList.add(dto1);
+
+                            IfEventQueueDto dto2 = IfEventQueueDto
+                                    .builder()
+                                    .messageName(messageName)
+                                    .eventType(eventType)
+                                    .transactionCode(transactionCode)
+                                    .carrierName(carrierName)
+                                    .idocId(idocId)
+                                    .orderId(orderId)
+                                    .orderLineNumber(orderLineNumber)
+                                    .orderType(orderType)
+                                    .errorText(errorText)
+                                    .actualWeight(vo.getActualWeight())
+                                    .actualZoneName(vo.getActualZoneName())
+                                    .actualWorkStationId(portDef.getWorkCenterName())
+                                    .actualLocationId(port.getPortName())
+                                    .build();
+                            ifEventQueueDtoList.add(dto2);
                         }
-                        else{
-                            workStationId = transportOrder.getWorkStationId();
-                        }
-                        ;
-                        List<PortDef> sourcePortDefList = portDefRepository.findByWorkCenterNameAndDetailPortTypeInAndPortTypeIn(
-                                workStationId,
-                                detailPortTypes,
-                                portTypes
-                        );
 
-                        PortDef sourcePortDef = sourcePortDefList.get(0);
 
-                        IfEventQueueDto dto1 = IfEventQueueDto
-                                .builder()
-                                .messageName(messageName)
-                                .eventType(eventType)
-                                .transactionCode(transactionCode)
-                                .carrierName(carrierName)
-                                .idocId(idocId)
-                                .orderId(orderId)
-                                .orderLineNumber(orderLineNumber)
-                                .orderType(orderType)
-                                .errorText(errorText)
-                                .actualWeight(vo.getActualWeight())
-                                .actualZoneName(vo.getActualZoneName())
-                                .actualWorkStationId(sourcePortDef.getWorkCenterName())
-                                .actualLocationId(sourcePortDef.getPortName())
-                                .build();
-                        ifEventQueueDtoList.add(dto1);
-
-                        IfEventQueueDto dto2 = IfEventQueueDto
-                                .builder()
-                                .messageName(messageName)
-                                .eventType(eventType)
-                                .transactionCode(transactionCode)
-                                .carrierName(carrierName)
-                                .idocId(idocId)
-                                .orderId(orderId)
-                                .orderLineNumber(orderLineNumber)
-                                .orderType(orderType)
-                                .errorText(errorText)
-                                .actualWeight(vo.getActualWeight())
-                                .actualZoneName(vo.getActualZoneName())
-                                .actualWorkStationId(portDef.getWorkCenterName())
-                                .actualLocationId(port.getPortName())
-                                .build();
-                        ifEventQueueDtoList.add(dto2);
                     }
                 }
             }else{
@@ -903,7 +924,7 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                                 .orderId(orderId)
                                 .orderLineNumber(orderLineNumber)
                                 .orderType(orderType)
-                                .errorText(errorText)
+                                .errorText(resultMessage)
                                 .actualWeight(vo.getActualWeight())
                                 .actualZoneName(vo.getActualZoneName())
                                 .actualLocationId(actualLocationId)
@@ -2298,9 +2319,9 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 idocId = transportOrder.getIdocId().toString();
                 orderId = transportOrder.getTransportOrderId();
                 orderLineNumber = "";
-                orderType = TransportOrderType.OUTBOUND.getValue();
-                actualWorkStationId = "";
+                orderType = transportOrder.getTransportType();
                 actualLocationId = portDef.getLocationId();
+                actualWorkStationId = portDef.getWorkCenterName();
 
                 galId = transportOrder.getGalId();
                 IfEventQueueDto dto = IfEventQueueDto

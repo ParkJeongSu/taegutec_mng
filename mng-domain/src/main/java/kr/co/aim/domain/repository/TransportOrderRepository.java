@@ -49,6 +49,13 @@ public interface TransportOrderRepository {
             String workStationId
     );
 
+    List<TransportOrder> findPendingOrders(
+            List<String> types,
+            String status,
+            int maxRetryCount,
+            Pageable pageable
+    );
+
     Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable);
 
     Long findMaxOrderId();

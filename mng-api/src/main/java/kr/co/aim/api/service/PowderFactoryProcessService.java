@@ -159,6 +159,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
+    public BaseMessage<TransportJobRequestBody> cancelTransportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
+        return null;
+    }
+
+    @Override
     @Transactional(value = "mssqlTransactionManager")
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message) {
         String messageName = message.getMessageName();
@@ -442,6 +447,11 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
             TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
             historyService.saveHistory(transportJobHistoryEntity);
         }
+    }
+
+    @Override
+    public void transportJobCancelReply(BaseMessage<TransportJobReplyBody> message) {
+
     }
 
     @Override

@@ -125,7 +125,7 @@ public class InsertTransferScheduler {
                 insertExternalInterfaceService.transferCompleted(idocEntity.getLineId());
 
                 // 메시지 전송
-                sendTransportOrderRequest(transactionInfo,transportOrder);
+                //sendTransportOrderRequest(transactionInfo,transportOrder);
                 log.info("transport orderId created = {}", transportOrder.getTransportOrderId());
 
             } catch (Exception e) {

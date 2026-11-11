@@ -22,4 +22,6 @@ public class EventQueueReportBody {
     private String errMSG;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long groupId;
+    private Integer groupSeq;
 }

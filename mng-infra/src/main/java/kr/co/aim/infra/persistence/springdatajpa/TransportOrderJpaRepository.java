@@ -57,6 +57,18 @@ public interface TransportOrderJpaRepository extends JpaRepository<TransportOrde
             @Param("workStationId") String workStationId
     );
 
+    @Query("SELECT t FROM TransportOrderEntity t " +
+            "WHERE t.transportType IN :types " +
+            "AND t.transportStatus = :status " +
+            "AND (t.retryCnt IS NULL OR t.retryCnt < :maxRetryCount) " +
+            "ORDER BY t.id ASC")
+    List<TransportOrderEntity> findPendingOrders(
+            @Param("types") List<String> types,
+            @Param("status") String status,
+            @Param("maxRetryCount") int maxRetryCount,
+            Pageable pageable
+    );
+
     // 2. 비관적 락 조회 (FOR UPDATE)
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({

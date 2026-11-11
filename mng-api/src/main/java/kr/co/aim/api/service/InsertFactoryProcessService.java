@@ -355,6 +355,72 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
+    public BaseMessage<TransportJobRequestBody> cancelTransportOrderRequest(BaseMessage<TransportOrderRequestBody> message) {
+        // 1. TransportOrder 비관적 Lock 조회
+        // 2. Created 상태인지 체크
+        // 3. Created 상태라면, TransportJob 생성 후 TEX 로 전송
+        // 4. 전송 후 Request 상태로 변경
+        Long id = message.getBody().getId();
+        Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findWithLockById(id);
+
+        if(optionalTransportOrder.isEmpty()){
+            return null;
+        }
+        TransportOrder transportOrder = optionalTransportOrder.get();
+
+        String transportOrderId = transportOrder.getTransportOrderId();
+        String carrierName = transportOrder.getCarrierName();
+        String transportType = transportOrder.getTransportType();
+        String carrierType = transportOrder.getCarrierType();
+        Integer priority = transportOrder.getPriority();
+        String galWarehouse = transportOrder.getGalWarehouse();
+        String locationId = transportOrder.getLocationId();
+        String workStationId = transportOrder.getWorkStationId();
+        String sourceZoneName = transportOrder.getSourceZoneName();
+        String destinationZoneName = transportOrder.getDestinationZoneName();
+        String requestedZoneName = transportOrder.getRequestedZoneName();
+        String actualZoneName = transportOrder.getActualZoneName();
+        String actualLocationId = transportOrder.getActualLocationId();
+        String travelProfile = transportOrder.getTravelProfile();
+        LocalDateTime createTime = transportOrder.getCreateTime();
+        LocalDateTime retrievalTime = transportOrder.getRetrievalTime();
+        String createUser = transportOrder.getCreateUser();
+        String eventName = transportOrder.getEventName();
+        LocalDateTime eventTime = transportOrder.getEventTime();
+        String eventUser = transportOrder.getEventUser();
+        String eventComment = transportOrder.getEventComment();
+
+        TransactionInfo tx = TransactionInfo.now(EventName.CANCEL_TRANSFER.getValue(),eventUser,eventComment);
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByOrderId(transportOrderId);
+        TransportJob transportJob = null;
+        if(optionalTransportJob.isEmpty()){
+            transportJob = optionalTransportJob.get();
+        }else{
+            throw new RuntimeException("transportJob is Not found.");
+        }
+        transportJob.setEventName(tx.eventName());
+        TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+        historyService.saveHistory(transportOrderHistoryEntity);
+
+        // create message
+        BaseMessage<TransportJobRequestBody> request = new BaseMessage<>();
+
+        request.setMessageName(MessageList.TRANSPORT_JOB_CANCEL_REQUEST.getMessageName());
+        request.setTransactionId(message.getTransactionId());
+        request.setMessageFrom(SystemName.MNG.getValue());
+        request.setMessageOwner(SystemName.MNG.getValue());
+        request.setMessageTo(SystemName.WCS.getValue());
+        request.setEventTime(message.getEventTime());
+        request.setResultCode(ResultCode.OK.getValue());
+        request.setResultMessage("");
+
+        TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
+        request.setBody(body);
+
+        return request;
+    }
+
+    @Override
     @Transactional(value = "mssqlTransactionManager")
     public void unLoadCompleted(BaseMessage<UnLoadCompletedBody> message) {
         String messageName = message.getMessageName();
@@ -458,9 +524,9 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
         }
         Port port = optionalPorts.get();
 
-        if(StringUtils.equals(PortTransportState.READY_TO_PROCESS.getValue(),port.getTransportState())){
-            return null;
-        }
+//        if(StringUtils.equals(PortTransportState.READY_TO_PROCESS.getValue(),port.getTransportState())){
+//            return null;
+//        }
 
         port.loadCompleted(command);
         port = portRepository.save(port);
@@ -576,10 +642,31 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                 if(CollectionUtils.isNotEmpty(reasons)){
                     List<TransportCancelReasonVo> cancelReasonVoList = new ArrayList<>();
                     for(TransportJobCancelCompletedReasonBody reason : reasons){
+                        String code =  reason.getCode();
+                        String errorMessage = reason.getMessage();
+                        if (StringUtils.contains(code, "WEIGHT")) {
+                            errorMessage = "Weight limit exceeded.";
+                        } else if (StringUtils.contains(code, "HEIGHT")) {
+                            errorMessage = "Height limit exceeded.";
+                        } else if (StringUtils.contains(code, "READ")) {
+                            errorMessage = "RFID read failed.";
+                        } else if (StringUtils.contains(code, "EMPTY")) {
+                            errorMessage = "Source bin is empty.";
+                        } else if (StringUtils.contains(code, "EXIST")) {
+                            errorMessage = "Carrier already exists in destination.";
+                        } else if (StringUtils.contains(code, "DATA")) {
+                            errorMessage = "Equipment data error.";
+                        } else if (StringUtils.contains(code, "SPACE")) {
+                            errorMessage = "No available space in destination zone.";
+                        } else if (StringUtils.contains(code, "MISMATCH")) {
+                            errorMessage = "Mismatch of barcode and scanned container number.";
+                        } else if (StringUtils.contains(code, "ELSE")) {
+                            errorMessage = "Unspecified transport error.";
+                        }
                         TransportCancelReasonVo reasonVo = TransportCancelReasonVo
                                 .builder()
-                                .code(reason.getCode())
-                                .message(reason.getMessage())
+                                .code(code)
+                                .message(errorMessage)
                                 .build();
                         cancelReasonVoList.add(reasonVo);
                     }
@@ -787,6 +874,59 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
     }
 
     @Override
+    public void transportJobCancelReply(BaseMessage<TransportJobReplyBody> message) {
+        String messageName = message.getMessageName();
+        String messageOwner = message.getMessageOwner();
+        String resultMessage =  message.getResultMessage();
+        String resultCode = message.getResultCode();
+
+        TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
+
+        String transportJobName = message.getBody().getTransportJobName();
+        String carrierName = message.getBody().getCarrierName();
+        String sourceEquipmentName = message.getBody().getSourceEquipmentName();
+        String sourcePortName = message.getBody().getSourcePositionName();
+        Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
+
+        if(optionalTransportJob.isPresent()){
+            TransportJob transportJob = optionalTransportJob.get();
+            String transportJobState = "";
+            if(StringUtils.equals(resultCode,ResultCode.OK.getValue())){
+                transportJobState = TransportJobState.CANCELLED.getValue();
+            }else{
+                throw new RuntimeException("Cancel Reject");
+            }
+
+            TransportJobUpdateCommand command =
+                    TransportJobUpdateCommand
+                            .builder()
+                            .transportJobState(transportJobState)
+                            .transactionInfo(tx)
+                            .build();
+            transportJob.changeTransportJob(command);
+            transportJob = transportJobRepository.save(transportJob);
+            TransportJobHistoryEntity transportJobHistoryEntity = transportJobMapper.toHistoryEntity(transportJob);
+            historyService.saveHistory(transportJobHistoryEntity);
+
+            Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
+            if(optionalTransportOrder.isPresent()){
+                TransportOrder transportOrder = optionalTransportOrder.get();
+                TransportOrderStatusChangeCommand acceptCommand =
+                        TransportOrderStatusChangeCommand
+                                .builder()
+                                .transactionInfo(tx)
+                                .transportStatus(TransportOrderStatus.CANCEL_COMPLETED.getValue())
+                                .build();
+                transportOrder.cancelCompleted(acceptCommand);
+
+                transportOrder = transportOrderRepository.save(transportOrder);
+                TransportOrderHistoryEntity transportOrderHistoryEntity = transportOrderMapper.toHistoryEntity(transportOrder);
+                historyService.saveHistory(transportOrderHistoryEntity);
+            }
+        }
+    }
+
+    @Override
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobStarted(BaseMessage<TransportJobStartedBody> message) {
         String messageName = message.getMessageName();
@@ -825,6 +965,11 @@ public class InsertFactoryProcessService implements FactoryProcessStrategy {
                         TransportJobUpdateCommand
                                 .builder()
                                 .transportJobState(TransportJobState.STARTED.getValue())
+                                .destinationEquipmentName(destinationEquipmentName)
+                                .destinationPortName(destinationPositionName)
+                                .destinationZoneName(destinationZoneName)
+                                .destinationPositionTypeName(destinationPositionTypeName)
+                                .destinationPositionName(destinationPositionName)
                                 .transactionInfo(tx)
                                 .build();
                 transportJob.changeTransportJob(command);

@@ -10,6 +10,7 @@ public enum TransportOrderStatus implements MetaDataEnum {
     CREATED("CREATED"),
     REQUESTED("REQUESTED"),
     ACCEPTED("ACCEPTED"),
+    FAILED("FAILED"),
     STARTED("STARTED"),
     STARTED_REPORTED("STARTED_REPORTED"),
     REJECTED("REJECTED"),

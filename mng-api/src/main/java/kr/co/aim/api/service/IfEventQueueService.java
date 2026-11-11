@@ -56,6 +56,23 @@ public class IfEventQueueService {
             ifEventQueueRepository.save(ifEventQueue);
         }
     }
+    // --- [List 일괄 reportCompleted] ---
+    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void reportCompleted(List<Long> ids) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        LocalDateTime now = LocalDateTime.now().withNano(0);
+        for (Long id : ids) {
+            Optional<IfEventQueue> optionalIfEventQueue = ifEventQueueRepository.findById(id);
+            if (optionalIfEventQueue.isPresent()) {
+                IfEventQueue ifEventQueue = optionalIfEventQueue.get();
+                ifEventQueue.setIfStatus(IfEventQueueState.SUCCESS.getValue());
+                ifEventQueue.setUpdateTime(now);
+                ifEventQueueRepository.save(ifEventQueue);
+            }
+        }
+    }
 
     @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW) // 독립 트랜잭션 생성
     public void reportFailed(Long id) {
@@ -111,6 +128,17 @@ public class IfEventQueueService {
             return Optional.of(ifEventQueue);
         }
         return Optional.empty();
+    }
+
+    // --- [List 일괄 increaseRetryCnt] ---
+    @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void increaseRetryCnt(List<Long> ids, int maxRetryLimit) {
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+        for (Long id : ids) {
+            this.increaseRetryCnt(id, maxRetryLimit);
+        }
     }
 
     @Transactional(value = "mssqlTransactionManager")

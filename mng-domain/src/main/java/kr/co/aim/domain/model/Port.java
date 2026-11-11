@@ -49,6 +49,7 @@ public class Port implements HasTransactionInfo {
     public void unloadCompleted(UnLoadCompletedCommand command){
         this.apply(command.getTransactionInfo());
         setCarrierName("");
+        setTransportState(PortTransportState.READY_TO_LOAD.getValue());
     }
 
     public void unloadRequest(UnLoadRequestCommand command){

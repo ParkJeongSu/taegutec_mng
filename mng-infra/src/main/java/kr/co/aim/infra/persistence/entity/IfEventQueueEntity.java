@@ -53,4 +53,10 @@ public class IfEventQueueEntity {
     @Column(name = "UPDATE_TIME")
     private LocalDateTime updateTime;
 
+    @Column(name = "GROUP_ID")
+    private Long groupId;
+
+    @Column(name = "GROUP_SEQ")
+    private Integer groupSeq;
+
 }

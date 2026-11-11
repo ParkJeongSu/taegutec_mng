@@ -511,6 +511,11 @@ public class MessageExecuteService {
         return factoryProcessStrategy.transportOrderRequest(message);
     }
 
+    @Transactional(value = "mssqlTransactionManager")
+    public BaseMessage<TransportJobRequestBody> cancelTransportOrderRequest(BaseMessage<TransportOrderRequestBody> message){
+        return factoryProcessStrategy.cancelTransportOrderRequest(message);
+    }
+
     public void productionOrderProcessRequest(BaseMessage<ProductionOrderProcessRequestBody> message){
         productionOrderProcessService.productionOrderProcessRequest(message);
     }
@@ -1330,6 +1335,11 @@ public class MessageExecuteService {
     @Transactional(value = "mssqlTransactionManager")
     public void transportJobReply(BaseMessage<TransportJobReplyBody> message) {
         factoryProcessStrategy.transportJobReply(message);
+    }
+
+    @Transactional(value = "mssqlTransactionManager")
+    public void transportJobCancelReply(BaseMessage<TransportJobReplyBody> message) {
+        factoryProcessStrategy.transportJobCancelReply(message);
     }
 
     @Transactional(value = "mssqlTransactionManager")

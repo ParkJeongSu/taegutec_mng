@@ -7,4 +7,5 @@ import org.springframework.context.annotation.Profile;
 @Profile({"scheduler"})
 public interface SchedulerProcessStrategy {
     public void eventQueueReport(BaseMessage<EventQueueReportBody> message) ;
+    public void eventQueueListReport(BaseMessage<EventQueueListReportBody> message);
 }

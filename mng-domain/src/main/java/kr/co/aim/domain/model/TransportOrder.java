@@ -50,6 +50,7 @@ public class TransportOrder implements HasTransactionInfo {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
+    private Integer retryCnt;
 
     public static TransportOrder create (TransportOrderCreateCommand command){
         return
@@ -89,6 +90,7 @@ public class TransportOrder implements HasTransactionInfo {
                         .eventTime(command.getTransactionInfo().eventTime())
                         .eventUser(command.getTransactionInfo().eventUser())
                         .eventComment(command.getTransactionInfo().eventComment())
+                        .retryCnt(0)
                         .build();
     }
 

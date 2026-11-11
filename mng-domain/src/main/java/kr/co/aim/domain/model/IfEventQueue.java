@@ -24,6 +24,8 @@ public class IfEventQueue {
     private String errMSG;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private Long groupId;
+    private Integer groupSeq;
 
     public static IfEventQueue create(IfEventQueueCreateCommand command) {
         return IfEventQueue
@@ -39,6 +41,8 @@ public class IfEventQueue {
                 .retryCNT(command.getRetryCNT())
                 .errMSG(command.getErrMSG())
                 .createTime(command.getTransactionInfo().eventTime())
+                .groupId(command.getGroupId())
+                .groupSeq(command.getGroupSeq())
                 .build();
     }
 

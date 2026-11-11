@@ -25,4 +25,8 @@ public class MessageSchedulerExecuteService {
         schedulerProcessStrategy.eventQueueReport(message);
     }
 
+    public void eventQueueListReport(BaseMessage<EventQueueListReportBody> message) {
+        schedulerProcessStrategy.eventQueueListReport(message);
+    }
+
 }

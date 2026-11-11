@@ -22,6 +22,7 @@ import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2TransJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
@@ -180,15 +181,28 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
         //idoc.setDtimeMod(LocalDateTime.now().withNano(0));
         idocJpaRepository.save(idoc);
     }
-
-    @Transactional(value = "db2TransactionManager",propagation = Propagation.REQUIRES_NEW)
+    // --- [단건 H2trans 보고] ---
+    @Transactional(value = "db2TransactionManager", propagation = Propagation.REQUIRES_NEW)
     public void reportH2trans(IfEventQueue ifEventQueue) {
-        // 1단계 ifEventQueue 를 역직렬화를 통해 dto객체로 변경
-        // idoc, h2orderM, h2orderd 조회 후 로직 처리
-        // 결국 idoc , h2trans 데이터 생성
+        processSingleH2trans(ifEventQueue);
+    }
+
+    // --- [복수건 H2trans 보고: 단일 트랜잭션으로 All-or-Nothing 보장] ---
+    @Transactional(value = "db2TransactionManager", propagation = Propagation.REQUIRES_NEW)
+    public void reportH2trans(List<IfEventQueue> ifEventQueueList) {
+        if (CollectionUtils.isEmpty(ifEventQueueList)) {
+            return;
+        }
+        for (IfEventQueue ifEventQueue : ifEventQueueList) {
+            processSingleH2trans(ifEventQueue);
+        }
+    }
+
+    // --- [공통 단건 H2trans 처리 내부 메서드] ---
+    private void processSingleH2trans(IfEventQueue ifEventQueue) {
         IfEventQueueDto dto = null;
         try {
-            dto = objectMapper.readValue(ifEventQueue.getPayload(),IfEventQueueDto.class);
+            dto = objectMapper.readValue(ifEventQueue.getPayload(), IfEventQueueDto.class);
         } catch (Exception e) {
             log.error("IfEventQueue 페이로드 역직렬화 중 에러 발생. payload: {}", ifEventQueue.getPayload(), e);
             throw new RuntimeException(e);
@@ -218,12 +232,7 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
             actualWeight = new BigDecimal(dto.getActualWeight());
         }
 
-
-        //LocalDateTime now = LocalDateTime.now().withNano(0);
         LocalDateTime now = ifEventQueue.getCreateTime();
-
-        // 단 하나의 report 만 하면 되는 경우
-        // 이 경우는 단순히 ifEventQueue 의 값에서 h2Trans로 report 하면 된다.
 
         IdocEntity newIdoc = buildBaseIdoc(now);
         newIdoc = idocJpaRepository.save(newIdoc);
@@ -233,13 +242,11 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .builder()
                         .lineId(h2TransJpaRepository.findMaxLineId())
                         .idocId(newIdoc.getLineId())
-                        //.dtimeCre(now)
-                        //.dtimeMod(now)
                         .usrMod(SystemName.MNG.getValue())
                         .pgmMod(SystemName.MNG.getValue())
                         .modCnt(0)
                         .dataCode(IdocDataCode.DATA_CODE01.getValue())
-                        .cTransTy( Long.parseLong(dto.getTransactionCode()))
+                        .cTransTy(Long.parseLong(dto.getTransactionCode()))
                         .cClient(IdocClient.MNG.getValue())
                         .cOrderId(ifEventQueue.getOrderId())
                         .cOrderTy(dto.getOrderType())
@@ -251,12 +258,13 @@ public class InsertExternalInterfaceService implements FactoryGALInterfaceStrate
                         .cReqZone(dto.getRequestedZoneName())
                         .cZone(dto.getActualZoneName())
                         .cLocId(dto.getActualLocationId())
-                        .cErrDsc(dto.getErrorText()) // n개의 보고
+                        .cErrDsc(dto.getErrorText())
                         .cWcId(dto.getActualWorkStationId())
                         .build();
-        h2TransJpaRepository.save(h2TransEntity);
 
+        h2TransJpaRepository.save(h2TransEntity);
     }
+
 
 
     @Override

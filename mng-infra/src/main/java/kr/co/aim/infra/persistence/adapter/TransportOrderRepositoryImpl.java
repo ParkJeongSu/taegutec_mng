@@ -128,6 +128,16 @@ public class TransportOrderRepositoryImpl implements TransportOrderRepository {
     }
 
     @Override
+    public List<TransportOrder> findPendingOrders(List<String> types, String status, int maxRetryCount, Pageable pageable) {
+        List<TransportOrderEntity> entities = transportOrderJpaRepository.findPendingOrders(types,status,maxRetryCount,pageable);
+        List<TransportOrder> domainList = new ArrayList<>();
+        for (TransportOrderEntity entity : entities) {
+            domainList.add(transportOrderMapper.toDomain(entity));
+        }
+        return domainList;
+    }
+
+    @Override
     public Page<TransportOrder> findTransportOrderWithConditions(TransportOrderSearchCondition condition, Pageable pageable) {
         JPAQuery<TransportOrderEntity> query = queryFactory
                 .selectFrom(transportOrderEntity)

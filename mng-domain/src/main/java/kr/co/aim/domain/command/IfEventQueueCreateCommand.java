@@ -24,4 +24,6 @@ public class IfEventQueueCreateCommand {
     private final String errMSG;
     private final LocalDateTime createTime;
     private final LocalDateTime updateTime;
+    private final Long groupId;
+    private final Integer groupSeq;
 }

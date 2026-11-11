@@ -46,4 +46,5 @@ public class TransportOrderCreateCommand {
     private final LocalDateTime eventTime;
     private final String eventUser;
     private final String eventComment;
+    private final Integer retryCnt;
 }

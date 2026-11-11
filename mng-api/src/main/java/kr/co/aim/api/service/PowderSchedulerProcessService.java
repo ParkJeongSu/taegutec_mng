@@ -71,4 +71,9 @@ public class PowderSchedulerProcessService implements SchedulerProcessStrategy {
             }
         }
     }
+
+    @Override
+    public void eventQueueListReport(BaseMessage<EventQueueListReportBody> message) {
+
+    }
 }
