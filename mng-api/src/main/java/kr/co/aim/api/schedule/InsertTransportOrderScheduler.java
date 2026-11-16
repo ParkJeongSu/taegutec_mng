@@ -61,6 +61,13 @@ public class InsertTransportOrderScheduler {
                 transportOrderDispatcherService.processAndSendOrder(transportOrder.getId());
                 log.info("TransportOrder WCS 발송 성공 : OrderId={}", transportOrder.getTransportOrderId());
 
+                try {
+                    Thread.sleep(10L);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.warn("Thread sleep interrupted: {}", e.getMessage());
+                }
+
             } catch (Exception e) {
                 // 실패 건 카운트 증가 처리 (별도 트랜잭션)
                 transportOrderDispatcherService.handleFailure(transportOrder.getId(), MAX_RETRY_COUNT, e);

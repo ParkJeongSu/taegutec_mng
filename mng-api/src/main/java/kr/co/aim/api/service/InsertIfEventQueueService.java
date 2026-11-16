@@ -1697,6 +1697,92 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                 return ifEventQueueDtoList;
             }
         }
+        else if(StringUtils.equals(DetailPortType.BOTH_WORKSTATION.getValue(), portDef.getDetailPortType())){
+            if(StringUtils.isBlank(transportJobName)){
+                // INBOUND Port에서 사용자가 들어올렸을때
+                eventType = GALTransportStatus.TAKE_OFF.name();
+                transactionCode = GALTransportStatus.TAKE_OFF.getValue();
+                actualWorkStationId = portDef.getWorkCenterName();
+                actualLocationId = portDef.getPortName();
+                IfEventQueueDto dto = IfEventQueueDto
+                        .builder()
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .orderId(orderId)
+                        .galId(galId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(errorText)
+                        .actualWorkStationId(actualWorkStationId)
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZoneName())
+                        .actualLocationId(actualLocationId)
+                        .build();
+                ifEventQueueDtoList.add(dto);
+
+                return ifEventQueueDtoList;
+            }
+            else{
+                // Inbound Workstation empty
+                // 105 repot
+                // transportJobName 은 존재
+                // 만일 주지 않더라도, inbound 가 시작된 가장 느린 carrier 를 기준으로 transportOrder find
+
+                TransportOrder transportOrder = null;
+                if(StringUtils.isNotBlank(transportJobName)){
+                    Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
+                    if(optionalTransportJob.isPresent()){
+                        TransportJob transportJob = optionalTransportJob.get();
+                        Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
+                        if(optionalTransportOrder.isPresent()){
+                            transportOrder = optionalTransportOrder.get();
+                        }
+                    }
+                }
+                if( ObjectUtils.isEmpty(transportOrder) ){
+                    List<String> transportStatus = new ArrayList<>();
+                    transportStatus.add(TransportOrderStatus.STARTED.getValue());
+                    List<TransportOrder> transportOrders = transportOrderRepository.findTransportOrderByCondition(
+                            carrierName,
+                            TransportOrderType.INBOUND.getValue(),
+                            transportStatus);
+                    if(transportOrders.isEmpty()){
+                        throw new RuntimeException("Not Exists TransportOrder");
+                    }
+                    transportOrder = transportOrders.get(0);
+                }
+                eventType = GALTransportStatus.WORKSTATION_EMPTY.name();
+                transactionCode = GALTransportStatus.WORKSTATION_EMPTY.getValue();
+                idocId = transportOrder.getIdocId().toString();
+                orderId = transportOrder.getTransportOrderId();
+                orderLineNumber = "";
+                orderType = TransportOrderType.INBOUND.getValue();
+                actualWorkStationId = portDef.getWorkCenterName();
+                galId = transportOrder.getGalId();
+                IfEventQueueDto dto = IfEventQueueDto
+                        .builder()
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .galId(galId)
+                        .orderId(orderId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(errorText)
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZoneName())
+                        .actualLocationId(actualLocationId)
+                        .actualWorkStationId(actualWorkStationId)
+                        .build();
+                ifEventQueueDtoList.add(dto);
+                return ifEventQueueDtoList;
+            }
+        }
         else if (StringUtils.equals(DetailPortType.HORSESHOE_INBOUND.getValue(), portDef.getDetailPortType())) {
             // Inbound Workstation empty
             // 105 repot
@@ -1907,7 +1993,8 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
             return ifEventQueueDtoList;
         }
 
-        if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())) {
+        if (StringUtils.equals(DetailPortType.INBOUND.getValue(), portDef.getDetailPortType())
+        ) {
             // Inbound Station Occupied case
             // 106 report
             eventType = GALTransportStatus.STATION_OCCUPIED.name();
@@ -1938,7 +2025,125 @@ public class InsertIfEventQueueService implements FactoryIfEventQueueStrategy {
                     .actualWorkStationId(actualWorkStationId)
                     .build();
             ifEventQueueDtoList.add(dto);
-        } else if (StringUtils.equals(DetailPortType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
+        }
+        else if(StringUtils.equals(DetailPortType.BOTH_WORKSTATION.getValue(), portDef.getDetailPortType())){
+            // 반송잡이 있으면 해당 반송잡으로 아래보고
+            // outbound case
+            // 108 Outbound Arrival At workStation report
+            // 90 outbound order Done report
+            // 반송잡이 없다면,
+            // 가장 최신 변경된 transportOrder 으로 108,90 보고
+            TransportOrder transportOrder = null;
+            if(StringUtils.isNotBlank(transportJobName)){
+                Optional<TransportJob> optionalTransportJob = transportJobRepository.findByTransportJobName(transportJobName);
+                if(optionalTransportJob.isPresent()){
+                    TransportJob transportJob = optionalTransportJob.get();
+                    Optional<TransportOrder> optionalTransportOrder = transportOrderRepository.findByTransportOrderId(transportJob.getOrderId());
+                    if(optionalTransportOrder.isPresent()){
+                        transportOrder = optionalTransportOrder.get();
+                    }
+                }
+            }
+            if( ObjectUtils.isEmpty(transportOrder)){
+                // Inbound Station Occupied case
+                // 106 report
+                eventType = GALTransportStatus.STATION_OCCUPIED.name();
+                transactionCode = GALTransportStatus.STATION_OCCUPIED.getValue();
+                idocId = "";
+                orderId = "";
+                orderLineNumber = "";
+                orderType = TransportOrderType.INBOUND.getValue();
+                actualLocationId = portDef.getLocationId();
+                actualWorkStationId = portDef.getWorkCenterName();
+
+                IfEventQueueDto dto = IfEventQueueDto
+                        .builder()
+                        .transportJobName(transportJobName)
+                        .messageName(messageName)
+                        .eventType(eventType)
+                        .transactionCode(transactionCode)
+                        .carrierName(carrierName)
+                        .idocId(idocId)
+                        .galId(galId)
+                        .orderId(orderId)
+                        .orderLineNumber(orderLineNumber)
+                        .orderType(orderType)
+                        .errorText(errorText)
+                        .actualWeight(vo.getActualWeight())
+                        .actualZoneName(vo.getActualZoneName())
+                        .actualLocationId(actualLocationId)
+                        .actualWorkStationId(actualWorkStationId)
+                        .build();
+                ifEventQueueDtoList.add(dto);
+            }
+            else {
+                if(StringUtils.equals(TransportOrderType.OUTBOUND.getValue(), transportOrder.getTransportType())){
+                    eventType = GALTransportStatus.ARRIVED_AT_WORK_STATION.name();
+                    transactionCode = GALTransportStatus.ARRIVED_AT_WORK_STATION.getValue();
+                    idocId = transportOrder.getIdocId().toString();
+                    orderId = transportOrder.getTransportOrderId();
+                    orderLineNumber = "";
+                    orderType = transportOrder.getTransportType();
+                    galId = transportOrder.getGalId();
+                    actualLocationId = portDef.getLocationId();
+                    actualWorkStationId = portDef.getWorkCenterName();
+
+                    IfEventQueueDto dto = IfEventQueueDto
+                            .builder()
+                            .transportJobName(transportJobName)
+                            .messageName(messageName)
+                            .eventType(eventType)
+                            .transactionCode(transactionCode)
+                            .carrierName(carrierName)
+                            .idocId(idocId)
+                            .galId(galId)
+                            .orderId(orderId)
+                            .orderLineNumber(orderLineNumber)
+                            .orderType(orderType)
+                            .errorText(errorText)
+                            .actualWeight(vo.getActualWeight())
+                            .actualZoneName(vo.getActualZoneName())
+                            .actualLocationId(actualLocationId)
+                            .actualWorkStationId(actualWorkStationId)
+                            .build();
+                    ifEventQueueDtoList.add(dto);
+
+                    eventType = GALTransportStatus.ORDER_DONE_OUTBOUND.name();
+                    transactionCode = GALTransportStatus.ORDER_DONE_OUTBOUND.getValue();
+                    idocId = transportOrder.getIdocId().toString();
+                    orderId = transportOrder.getTransportOrderId();
+                    orderLineNumber = "";
+                    orderType = transportOrder.getTransportType();
+                    galId = transportOrder.getGalId();
+                    actualLocationId = portDef.getLocationId();
+                    actualWorkStationId = portDef.getWorkCenterName();
+
+                    IfEventQueueDto dto2 = IfEventQueueDto
+                            .builder()
+                            .transportJobName(transportJobName)
+                            .messageName(messageName)
+                            .eventType(eventType)
+                            .transactionCode(transactionCode)
+                            .carrierName(carrierName)
+                            .idocId(idocId)
+                            .galId(galId)
+                            .orderId(orderId)
+                            .orderLineNumber(orderLineNumber)
+                            .orderType(orderType)
+                            .errorText(errorText)
+                            .actualWeight(vo.getActualWeight())
+                            .actualZoneName(vo.getActualZoneName())
+                            .actualLocationId(actualLocationId)
+                            .actualWorkStationId(actualWorkStationId)
+                            .build();
+                    ifEventQueueDtoList.add(dto2);
+
+                }
+            }
+
+
+        }
+        else if (StringUtils.equals(DetailPortType.WORKSTATION.getValue(), portDef.getDetailPortType())) {
             // 반송잡이 있으면 해당 반송잡으로 아래보고
             // outbound case
             // 108 Outbound Arrival At workStation report

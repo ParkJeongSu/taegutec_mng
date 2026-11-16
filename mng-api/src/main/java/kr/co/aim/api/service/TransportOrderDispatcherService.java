@@ -1,6 +1,7 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.Utils.FormatUtils;
+import kr.co.aim.common.Utils.JsonUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
@@ -39,6 +40,7 @@ public class TransportOrderDispatcherService {
     private final HistoryService historyService;
     private final RabbitTemplate rabbitTemplate;
     private final TransportOrderMapper transportOrderMapper;
+    private final JsonUtils jsonUtils;
 
     // 1건 단위로 완전히 독립된 트랜잭션 보장
     @Transactional(value = "mssqlTransactionManager", propagation = Propagation.REQUIRES_NEW)
@@ -77,13 +79,13 @@ public class TransportOrderDispatcherService {
         request.setMessageFrom(SystemName.MNG.getValue());
         request.setMessageOwner(SystemName.MNG.getValue());
         request.setMessageTo(SystemName.WCS.getValue());
-        request.setEventTime(LocalDateTime.now().toString());
+        request.setEventTime(FormatUtils.getTransactionId(tx.eventTime()));
         request.setResultCode(ResultCode.OK.getValue());
         request.setResultMessage("");
 
         TransportJobRequestBody body = transportJobService.createTransportJobMessage(transportJob);
         request.setBody(body);
-
+        jsonUtils.writePrettyJson(request);
         // 6. MQ 전송
         rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_WCS, RabbitConfig.ROUTING_WCS, request);
     }
