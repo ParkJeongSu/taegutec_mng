@@ -1,37 +1,23 @@
 package kr.co.aim.api.simulator;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import kr.co.aim.api.dto.InsertAutoTestResultCreateRequestDto;
-import kr.co.aim.api.service.HistoryService;
+import kr.co.aim.api.dto.InsertAutoTestUpdateRequestDto;
 import kr.co.aim.api.service.InsertAutoTestService;
-import kr.co.aim.api.service.NamingRuleService;
-import kr.co.aim.api.service.TransportJobService;
-import kr.co.aim.api.vo.insert.sim.OrderCreateVo;
 import kr.co.aim.common.enums.*;
-import kr.co.aim.common.format.TransportJobRequestBody;
-import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
-import kr.co.aim.infra.config.RabbitConfig;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderDEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.H2OrderMEntity;
 import kr.co.aim.infra.persistence.db2entity.insert.IdocEntity;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2OrderDJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2OrderMJpaRepository;
-import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2TransJpaRepository;
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
-import kr.co.aim.infra.persistence.entity.TransportOrderHistoryEntity;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -40,14 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
-//@Component
+@Component
 @EnableScheduling
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"web"})
+@Profile({"scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class AutoInsertInboundSimulator {
 
@@ -65,10 +50,11 @@ public class AutoInsertInboundSimulator {
      * 10초마다 inbound 상태가 가능하다면 inbound 명령을 시작
      */
     @Scheduled(fixedRate = 10000)
+    @SchedulerLock(name = "autoInsertInboundSimulator",
+            lockAtMostFor = "PT10S",
+            lockAtLeastFor = "PT0.9S") // 1초 주기에 맞춰 잠금이 풀리도록 0.9초 설정
     public void autoInsertInboundSimulator() {
         // 최초 inbound 가능 상태가 된다면, InsertAutoTestResult 에 시작 상태로 만든다
-
-        //
 
         List<InsertAutoTest> insertAutoTestList = insertAutoTestRepository.findAll();
         for(InsertAutoTest  insertAutoTest : insertAutoTestList){
@@ -109,8 +95,22 @@ public class AutoInsertInboundSimulator {
                             .build();
             insertAutoTestService.addTestResult(insertAutoTest.getId(),dto);
 
-            // db2 inbound order Create
+            InsertAutoTestUpdateRequestDto insertAutoTestUpdateRequestDto =
+                    InsertAutoTestUpdateRequestDto
+                            .builder()
+                            .id(insertAutoTest.getId())
+                            .wareHouseName(insertAutoTest.getWareHouseName())
+                            .workStationId(insertAutoTest.getWorkStationId())
+                            .carrierName(insertAutoTest.getCarrierName())
+                            .zoneName(insertAutoTest.getZoneName())
+                            .inboundPortName(insertAutoTest.getInboundPortName())
+                            .travelProfile(insertAutoTest.getTravelProfile())
+                            .state(AutoTestState.INBOUND_REQUESTED.getValue())
+                            .build();
+            insertAutoTestService.updateAutoTest(insertAutoTest.getId(),insertAutoTestUpdateRequestDto);
 
+
+            // db2 inbound order Create
             createInbound(insertAutoTest,wcsPort,wcsCarrier);
         }
 

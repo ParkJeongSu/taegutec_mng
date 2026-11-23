@@ -15,7 +15,7 @@ import java.util.Optional;
 
 @Repository
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
-public interface H2TransJpaRepository extends JpaRepository<H2TransEntity, Long> {
+public interface H2TransJpaRepository extends JpaRepository<H2TransEntity, Long>,H2TransJpaRepositoryCustom {
 
     // 1. IN 절 존재 여부 확인 (@Query 사용으로 CTransTy 파싱 에러 완벽 방지)
     @Query("SELECT COUNT(h) > 0 FROM H2TransEntity h WHERE h.cTransTy IN :cTransTys AND h.cOrderId = :cOrderId")
@@ -46,13 +46,13 @@ public interface H2TransJpaRepository extends JpaRepository<H2TransEntity, Long>
 //    Long findMaxLineId();
 
     // 1) 내가 사용하는 시퀀스 채번 (1 ~ 499,999,999 대역)
-    @Query(value = "SELECT NEXT VALUE FOR AIM_C_TST.H2TRANS_L FROM SYSIBM.SYSDUMMY1", nativeQuery = true)
-    Long findNextLineId();
-
-    // 기존 호출부 호환용 default 메서드 (필요시)
-    default Long findMaxLineId() {
-        return findNextLineId();
-    }
+//    @Query(value = "SELECT NEXT VALUE FOR AIM_C_TST.H2TRANS_L FROM SYSIBM.SYSDUMMY1", nativeQuery = true)
+//    Long findNextLineId();
+//
+//    // 기존 호출부 호환용 default 메서드 (필요시)
+//    default Long findMaxLineId() {
+//        return findNextLineId();
+//    }
 
     @Query("SELECT COUNT(h) > 0 FROM H2TransEntity h WHERE h.lineId = 1")
     boolean existsByLineIdOne();

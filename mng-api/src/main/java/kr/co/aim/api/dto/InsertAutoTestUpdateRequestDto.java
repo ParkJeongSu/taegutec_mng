@@ -44,4 +44,8 @@ public class InsertAutoTestUpdateRequestDto {
 
     @Schema(description = "이벤트 코멘트", example = "Auto test scenario modified")
     private String eventComment;
+
+    @Schema(description = "테스트 진행현황", example = "[ OUTBOUND_REQUESTED , INBOUND_REQUESTED ]")
+    private String state;
+
 }

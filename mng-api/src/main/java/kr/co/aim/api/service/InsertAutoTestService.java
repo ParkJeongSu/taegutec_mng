@@ -135,6 +135,7 @@ public class InsertAutoTestService {
                 .zoneName(dto.getZoneName())
                 .inboundPortName(dto.getInboundPortName())
                 .travelProfile(dto.getTravelProfile())
+                .state(dto.getState())
                 .build();
 
         insertAutoTest.update(command);

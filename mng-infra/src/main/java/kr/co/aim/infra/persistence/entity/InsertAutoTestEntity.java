@@ -51,4 +51,7 @@ public class InsertAutoTestEntity {
 
     @Column(name = "EVENT_COMMENT")
     private String eventComment;
+
+    @Column(name = "STATE")
+    private String state;
 }

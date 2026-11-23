@@ -16,4 +16,5 @@ public class InsertAutoTestUpdateCommand {
     private final String zoneName;
     private final String inboundPortName;
     private final String travelProfile;
+    private final String state;
 }

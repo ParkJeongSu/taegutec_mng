@@ -25,6 +25,7 @@ public class InsertAutoTest implements HasTransactionInfo {
     private LocalDateTime eventTime;
     private String eventUser;
     private String eventComment;
+    private String state;
 
     public static InsertAutoTest create(InsertAutoTestCreateCommand command) {
         InsertAutoTest test = InsertAutoTest.builder()
@@ -65,6 +66,9 @@ public class InsertAutoTest implements HasTransactionInfo {
         }
         if (command.getInboundPortName() != null) {
             setInboundPortName(command.getInboundPortName());
+        }
+        if (command.getState() != null) {
+            setState(command.getState());
         }
         if (command.getTransactionInfo() != null) {
             setEventName(command.getTransactionInfo().eventName());

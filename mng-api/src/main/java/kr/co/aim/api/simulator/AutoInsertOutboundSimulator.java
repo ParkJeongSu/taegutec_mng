@@ -1,6 +1,6 @@
 package kr.co.aim.api.simulator;
-
 import kr.co.aim.api.dto.InsertAutoTestResultCreateRequestDto;
+import kr.co.aim.api.dto.InsertAutoTestUpdateRequestDto;
 import kr.co.aim.api.service.InsertAutoTestService;
 import kr.co.aim.api.service.NamingRuleService;
 import kr.co.aim.api.service.TransportJobService;
@@ -24,6 +24,7 @@ import kr.co.aim.infra.persistence.db2springdatajpa.insert.H2OrderMJpaRepository
 import kr.co.aim.infra.persistence.db2springdatajpa.insert.IdocJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,11 +39,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
 
-//@Component
+@Component
 @EnableScheduling
 @RequiredArgsConstructor
 @Slf4j
-@Profile({"web"})
+@Profile({"scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class AutoInsertOutboundSimulator {
 
@@ -59,14 +60,19 @@ public class AutoInsertOutboundSimulator {
      * 10초마다 outbound 상태가 가능하다면 outbound 명령을 시작
      */
     @Scheduled(fixedRate = 10000)
+    @SchedulerLock(name = "autoInsertOutboundSimulator",
+            lockAtMostFor = "PT10S",
+            lockAtLeastFor = "PT0.9S") // 1초 주기에 맞춰 잠금이 풀리도록 0.9초 설정
     public void autoInsertOutboundSimulator() {
 
         // 최초 inbound 가능 상태가 된다면, InsertAutoTestResult 에 시작 상태로 만든다
 
-        //
-
         List<InsertAutoTest> insertAutoTestList = insertAutoTestRepository.findAll();
-        for(InsertAutoTest  insertAutoTest : insertAutoTestList){
+        for(InsertAutoTest insertAutoTest : insertAutoTestList){
+
+            if(StringUtils.equals(AutoTestState.OUTBOUND_REQUESTED.getValue(), insertAutoTest.getState())){
+                continue;
+            }
 
             // wcs 캐리어 조회
             Optional<WcsCarrier> optionalWcsCarrier = wcsCarrierRepository.findByCarrierNameAndFactoryName(insertAutoTest.getCarrierName(),"insert");
@@ -101,6 +107,20 @@ public class AutoInsertOutboundSimulator {
                             .result("inbound-completed")
                             .build();
             insertAutoTestService.addTestResult(insertAutoTest.getId(),dto);
+
+            InsertAutoTestUpdateRequestDto insertAutoTestUpdateRequestDto =
+                    InsertAutoTestUpdateRequestDto
+                    .builder()
+                    .id(insertAutoTest.getId())
+                    .wareHouseName(insertAutoTest.getWareHouseName())
+                    .workStationId(insertAutoTest.getWorkStationId())
+                    .carrierName(insertAutoTest.getCarrierName())
+                    .zoneName(insertAutoTest.getZoneName())
+                    .inboundPortName(insertAutoTest.getInboundPortName())
+                    .travelProfile(insertAutoTest.getTravelProfile())
+                    .state(AutoTestState.OUTBOUND_REQUESTED.getValue())
+                    .build();
+            insertAutoTestService.updateAutoTest(insertAutoTest.getId(),insertAutoTestUpdateRequestDto);
 
             // db2 create outbound order
             createOutbound(insertAutoTest,wcsShelf,wcsCarrier);
