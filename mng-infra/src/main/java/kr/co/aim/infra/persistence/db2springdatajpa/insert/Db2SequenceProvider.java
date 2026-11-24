@@ -4,9 +4,11 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile({"web", "simulator","scheduler"})
 @ConditionalOnProperty(name = "factory.type", havingValue = "insert")
 public class Db2SequenceProvider {
 

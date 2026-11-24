@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum AutoTestState implements MetaDataEnum {
     OUTBOUND_REQUESTED("OUTBOUND_REQUESTED"),
+    RELOCATION_REQUESTED1("RELOCATION_REQUESTED1"),
+    RELOCATION_REQUESTED2("RELOCATION_REQUESTED2"),
     INBOUND_REQUESTED("INBOUND_REQUESTED");
     private final String value;
 }

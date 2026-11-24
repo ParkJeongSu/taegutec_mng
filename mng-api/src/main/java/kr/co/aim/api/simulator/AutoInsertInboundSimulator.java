@@ -59,6 +59,10 @@ public class AutoInsertInboundSimulator {
         List<InsertAutoTest> insertAutoTestList = insertAutoTestRepository.findAll();
         for(InsertAutoTest  insertAutoTest : insertAutoTestList){
 
+            if(StringUtils.equals(AutoTestState.INBOUND_REQUESTED.getValue(), insertAutoTest.getState())){
+                continue;
+            }
+
             // wcs 캐리어 조회
             Optional<WcsCarrier> optionalWcsCarrier = wcsCarrierRepository.findByCarrierNameAndFactoryName(insertAutoTest.getCarrierName(),"insert");
             WcsCarrier wcsCarrier;
@@ -91,7 +95,7 @@ public class AutoInsertInboundSimulator {
                             .builder()
                             .autoTestId(insertAutoTest.getId())
                             .state("success")
-                            .result("outbound-completed")
+                            .result("inbound-completed")
                             .build();
             insertAutoTestService.addTestResult(insertAutoTest.getId(),dto);
 

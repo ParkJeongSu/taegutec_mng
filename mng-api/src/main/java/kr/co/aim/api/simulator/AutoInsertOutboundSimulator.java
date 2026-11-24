@@ -104,7 +104,7 @@ public class AutoInsertOutboundSimulator {
                             .builder()
                             .autoTestId(insertAutoTest.getId())
                             .state("success")
-                            .result("inbound-completed")
+                            .result("outbound-completed")
                             .build();
             insertAutoTestService.addTestResult(insertAutoTest.getId(),dto);
 
