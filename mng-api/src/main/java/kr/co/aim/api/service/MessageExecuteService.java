@@ -9,6 +9,7 @@ import kr.co.aim.api.vo.powder.ops.PowderEventQueueReportVo;
 import kr.co.aim.api.vo.transportJob.CreateTransportJobVo;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
+import kr.co.aim.common.format.MaterialBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.*;
@@ -1711,7 +1712,7 @@ public class MessageExecuteService {
         String carrierName = message.getBody().getCarrierName();
         Long productionOrderId = message.getBody().getId();
         String orderId = message.getBody().getOrderId();
-        List<Material> materialList = message.getBody().getMaterialList();
+        List<MaterialBody> materialBodyList = message.getBody().getMaterialBodyList();
 
         Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(productionOrderId);
 
@@ -1722,7 +1723,7 @@ public class MessageExecuteService {
                         .id(productionOrderId)
                         .carrierName(carrierName)
                         .orderId(orderId)
-                        .materialList(materialList)
+                        .materialBodyList(materialBodyList)
                         .build();
 
         // [검증 1] 데이터가 없는 경우 -> 비즈니스 NG 반환 (롤백 불필요)
@@ -1732,7 +1733,7 @@ public class MessageExecuteService {
 
         Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
 
-        if(materialList.isEmpty()){
+        if(materialBodyList.isEmpty()){
             return createReplyMessage(message,ResultCode.NG,"CarrierName 을 찾을수 없습니다.",replyBody);
         }
 
@@ -1740,12 +1741,12 @@ public class MessageExecuteService {
 
         ProductionOrder productionOrder = optionalProductionOrder.get();
         TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(),resultMessage);
-        for(Material material : materialList){
-            String materialName = material.getMaterialName();
-            String materialType = material.getMaterialType();
-            String quantityStr = material.getQuantity();
-            String item = material.getItem();
-            String lotName = material.getLotName();
+        for(MaterialBody materialBody : materialBodyList){
+            String materialName = materialBody.getMaterialName();
+            String materialType = materialBody.getMaterialType();
+            String quantityStr = materialBody.getQuantity();
+            String item = materialBody.getItem();
+            String lotName = materialBody.getLotName();
             BigDecimal quantity = null;
 
             if (quantityStr != null && !quantityStr.trim().isEmpty()) {

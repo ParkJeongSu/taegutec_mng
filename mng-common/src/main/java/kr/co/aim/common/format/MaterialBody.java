@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Material {
+public class MaterialBody {
     private String materialName;
     private String materialType;
     private String quantity;

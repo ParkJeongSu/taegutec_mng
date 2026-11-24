@@ -13,5 +13,5 @@ public class MaterialAssignCarrierRequestBody {
     private Long id;
     private String carrierName;
     private String orderId;
-    private List<Material> materialList;
+    private List<MaterialBody> materialBodyList;
 }
