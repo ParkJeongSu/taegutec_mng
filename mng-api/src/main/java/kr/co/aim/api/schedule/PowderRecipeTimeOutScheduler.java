@@ -1,12 +1,12 @@
 package kr.co.aim.api.schedule;
 
 import kr.co.aim.api.service.CarrierService;
-import kr.co.aim.api.service.LotCarrierMappingService;
+import kr.co.aim.api.service.LotService;
 import kr.co.aim.common.Utils.FormatUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.*;
 import kr.co.aim.common.format.request.BaseMessage;
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.util.List;
 public class PowderRecipeTimeOutScheduler {
 
     private final RabbitTemplate rabbitTemplate;
-    private final LotCarrierMappingService lotCarrierMappingService;
+    private final LotService lotService;
     private final CarrierService carrierService;
 
     /**
@@ -47,7 +47,7 @@ public class PowderRecipeTimeOutScheduler {
         LocalDateTime thresholdTime = LocalDateTime.now().minusMinutes(2);
 
         // WAIT 상태이면서 요청한 지 2분이 지났고, REPLY 시간은 비어있는 타겟 추출
-        List<LotCarrierMapping> timeoutList = lotCarrierMappingService.findMantiTimeoutTargets(
+        List<Lot> timeoutList = lotService.findMantiTimeoutTargets(
                 MantiRequestState.WAIT.getValue(),
                 thresholdTime
         );
@@ -55,7 +55,7 @@ public class PowderRecipeTimeOutScheduler {
         if (CollectionUtils.isNotEmpty(timeoutList)) {
             log.warn("[MANTI TIMEOUT] 무응답 타겟 {} 건 발견.", timeoutList.size());
 
-            for (LotCarrierMapping mapping : timeoutList) {
+            for (Lot mapping : timeoutList) {
                 try {
                     log.warn("-> 타임아웃 디테일 - Carrier: {}, Lot: {}, MNG_KEY: {}, RequestTime: {}",
                             mapping.getCarrierName(), mapping.getLotName(), mapping.getMngKey(), mapping.getMantiRequestTime());

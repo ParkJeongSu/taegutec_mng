@@ -1,6 +1,6 @@
 package kr.co.aim.api.service;
 
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -27,35 +27,35 @@ public class CarrierSelectionService {
     /**
      * 일반 수량(Quantity) 기반 캐리어 최적 조합 선택
      */
-    public List<LotCarrierMapping> selectBestCarriers(
-            List<LotCarrierMapping> availablePool,
+    public List<Lot> selectBestCarriers(
+            List<Lot> availablePool,
             BigDecimal targetQuantity,
             BigDecimal toleranceQuantity
     ) {
         BigDecimal safeTolerance = (toleranceQuantity != null) ? toleranceQuantity : BigDecimal.ZERO;
-        return runKnapsack(availablePool, targetQuantity, safeTolerance, LotCarrierMapping::getQuantity);
+        return runKnapsack(availablePool, targetQuantity, safeTolerance, Lot::getQuantity);
     }
 
     /**
      * ERP 수량(GalQuantity) 기반 캐리어 최적 조합 선택
      */
-    public List<LotCarrierMapping> selectBestCarriersByGalQuantity(
-            List<LotCarrierMapping> availablePool,
+    public List<Lot> selectBestCarriersByGalQuantity(
+            List<Lot> availablePool,
             BigDecimal targetQuantity
     ) {
-        return runKnapsack(availablePool, targetQuantity, BigDecimal.ZERO, LotCarrierMapping::getGalQuantity);
+        return runKnapsack(availablePool, targetQuantity, BigDecimal.ZERO, Lot::getGalQuantity);
     }
 
     /**
      * 공통 0-1 Knapsack core 알고리즘
      */
-    private List<LotCarrierMapping> runKnapsack(
-            List<LotCarrierMapping> availablePool,
+    private List<Lot> runKnapsack(
+            List<Lot> availablePool,
             BigDecimal targetQuantity,
             BigDecimal toleranceQuantity,
-            Function<LotCarrierMapping, BigDecimal> quantityExtractor
+            Function<Lot, BigDecimal> quantityExtractor
     ) {
-        List<LotCarrierMapping> selectedList = new ArrayList<>();
+        List<Lot> selectedList = new ArrayList<>();
 
         if (CollectionUtils.isEmpty(availablePool) || targetQuantity == null) {
             return selectedList;
@@ -77,7 +77,7 @@ public class CarrierSelectionService {
         dp[0] = true;
 
         for (int i = 0; i < n; i++) {
-            LotCarrierMapping mapping = availablePool.get(i);
+            Lot mapping = availablePool.get(i);
             BigDecimal rawQty = quantityExtractor.apply(mapping);
             if (rawQty == null) {
                 continue;
@@ -118,7 +118,7 @@ public class CarrierSelectionService {
         int curr = bestWeight;
         while (curr > 0 && parent[curr] != -1) {
             int carrierIdx = parent[curr];
-            LotCarrierMapping selectedMapping = availablePool.get(carrierIdx);
+            Lot selectedMapping = availablePool.get(carrierIdx);
             selectedList.add(selectedMapping);
 
             int usedWeight = scaleToInt(quantityExtractor.apply(selectedMapping), scaleFactor);

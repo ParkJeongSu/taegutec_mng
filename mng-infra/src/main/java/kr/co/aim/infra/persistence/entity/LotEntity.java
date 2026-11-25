@@ -25,17 +25,65 @@ public class LotEntity {
     @Column(name = "LOT_NAME")
     private String lotName;
 
-    @Column(name = "ORIGINAL_LOT_NAME")
-    private String originalLotName;
+    @Column(name = "CARRIER_NAME")
+    private String carrierName;
 
-    @Column(name = "LOT_STATUS")
-    private String lotStatus;
+    @Column(name = "ORDER_ID")
+    private String orderId;
 
-    @Column(name = "ITEM_ID")
-    private String itemId;
+    @Column(name = "ORDER_LINE_NUMBER")
+    private String orderLineNumber;
 
-    @Column(name = "TOTAL_QUANTITY")
-    private BigDecimal totalQuantity;
+    @Column(name = "PRODUCTION_ORDER_ID")
+    private Long productionOrderId;
+
+    @Column(name = "SEQ")
+    private Integer seq;
+
+    @Column(name = "PRODUCTION_STATUS")
+    private String productionStatus;
+
+    @Column(name = "PROCESS_STATUS")
+    private String processStatus;
+
+    @Column(name = "QUANTITY")
+    private BigDecimal quantity;
+
+    @Column(name = "GAL_QUANTITY")
+    private BigDecimal galQuantity;
+
+    @Column(name = "MNG_KEY")
+    private Long mngKey;
+
+    @Column(name = "VALIDATION_TIME")
+    private LocalDateTime validationTime;
+
+    @Column(name = "JOB_START_TIME")
+    private LocalDateTime jobStartTime;
+
+    @Column(name = "JOB_END_TIME")
+    private LocalDateTime jobEndTime;
+
+    @Column(name = "MANTI_REQUEST_STATE")
+    private String mantiRequestState;
+
+    @Column(name = "MANTI_REQUEST_TIME")
+    private LocalDateTime mantiRequestTime;
+
+    @Column(name = "MANTI_REPLY_TIME")
+    private LocalDateTime mantiReplyTime;
+
+    @Column(name = "RRN_REQUEST_STATE")
+    private String rrnRequestState;
+
+    @Column(name = "RRN_REQUEST_TIME")
+    private LocalDateTime rrnRequestTime;
+
+    @Column(name = "RRN_REPLY_TIME")
+    private LocalDateTime rrnReplyTime;
+
+    @Column(name = "NEXT_EQUIPMENT_NAME")
+    private String nextEquipmentName;
 
     @Column(name = "HOLD_STATE")
     private String holdState;

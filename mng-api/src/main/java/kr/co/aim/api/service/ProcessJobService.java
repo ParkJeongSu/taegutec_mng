@@ -20,7 +20,7 @@ import kr.co.aim.domain.repository.CarrierDefRepository;
 import kr.co.aim.domain.repository.CarrierRepository;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
 import kr.co.aim.infra.persistence.entity.ProductionOrderHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.mapper.LotMapper;
 import kr.co.aim.infra.persistence.mapper.ProductionOrderMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

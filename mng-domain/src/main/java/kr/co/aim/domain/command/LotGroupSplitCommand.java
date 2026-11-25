@@ -10,14 +10,14 @@ import java.math.BigDecimal;
 @Getter
 @RequiredArgsConstructor
 @Builder
-public class LotChangeCommand {
+public class LotGroupSplitCommand {
     private final TransactionInfo transactionInfo;
     private final Long id;
-    private final String lotName;
-    private final String originalLotName;
-    private final String lotStatus;
+    private final String lotGroupName;
+    private final String originalLotGroupName;
+    private final String lotGroupStatus;
     private final String itemId;
-    private final BigDecimal totalQuantity;
+    private final BigDecimal splitQuantity;
     private final String holdState;
     private final String reasonCode;
 }

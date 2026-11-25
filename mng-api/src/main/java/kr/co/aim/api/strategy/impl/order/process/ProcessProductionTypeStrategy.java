@@ -7,14 +7,14 @@ import kr.co.aim.api.context.ProductionOrderProcessContext;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
 import kr.co.aim.domain.command.AllocatedCommand;
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.ProductDef;
 import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
 import kr.co.aim.domain.repository.ProductDefRepository;
 import kr.co.aim.domain.repository.ProductionOrderRepository;
-import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
+import kr.co.aim.infra.persistence.mapper.LotMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -29,11 +29,11 @@ import java.util.Optional;
 @Slf4j
 public class ProcessProductionTypeStrategy implements ProductionOrderProcessStrategy {
 
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final LotRepository lotRepository;
     private final ProductDefRepository productDefRepository;
     private final List<SelectStrategy> selectStrategyList;
     private final CarrierSelectionService carrierSelectionService;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
+    private final LotMapper lotMapper;
     private final HistoryService historyService;
     private final ProductionOrderService productionOrderService;
     private final ProductionOrderRepository productionOrderRepository;
@@ -71,16 +71,16 @@ public class ProcessProductionTypeStrategy implements ProductionOrderProcessStra
             throw new IllegalArgumentException("No dispatch strategy found for context");
         }
 
-        // 3. 할당 가능한 LotCarrierMapping 목록 조회 (Inbound 시간순/생성순 정렬 데이터)
-        List<LotCarrierMapping> availableMappings = targetStrategy.selectAvailableCarrier(productionOrder);
+        // 3. 할당 가능한 Lot 목록 조회 (Inbound 시간순/생성순 정렬 데이터)
+        List<Lot> availableMappings = targetStrategy.selectAvailableCarrier(productionOrder);
 
         if (CollectionUtils.isEmpty(availableMappings)) {
-            log.warn("No available LotCarrierMappings found for OrderId: {}, LineNo: {}", productionOrder.getOrderId(), productionOrder.getOrderLineNumber());
+            log.warn("No available Lots found for OrderId: {}, LineNo: {}", productionOrder.getOrderId(), productionOrder.getOrderLineNumber());
             return;
         }
 
         // 4. DP 서비스를 통한 캐리어 최적 조합 선택
-        List<LotCarrierMapping> selectedMappings = carrierSelectionService.selectBestCarriers(
+        List<Lot> selectedMappings = carrierSelectionService.selectBestCarriers(
                 availableMappings,
                 productionOrder.getPlanQuantity(),
                 toleranceVal
@@ -90,7 +90,7 @@ public class ProcessProductionTypeStrategy implements ProductionOrderProcessStra
         if (CollectionUtils.isNotEmpty(selectedMappings)) {
             TransactionInfo transactionInfo = TransactionInfo.now(EventName.ALLOCATE.getValue(), SystemName.MNG.getValue(), "Carrier Allocated by DP Knapsack");
             int seq = 1;
-            for (LotCarrierMapping mapping : selectedMappings) {
+            for (Lot mapping : selectedMappings) {
                 AllocatedCommand command =
                         AllocatedCommand
                                 .builder()
@@ -101,8 +101,8 @@ public class ProcessProductionTypeStrategy implements ProductionOrderProcessStra
                                 .productionStatus(ProductionStatus.ALLOCATED.getValue())
                                 .build();
                 mapping.allocated(command);
-                mapping = lotCarrierMappingRepository.save(mapping);
-                LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(mapping);
+                mapping = lotRepository.save(mapping);
+                LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(mapping);
                 historyService.saveHistory(historyEntity);
             }
 

@@ -1,23 +1,23 @@
 package kr.co.aim.api.strategy.impl.process.ended;
 
 import kr.co.aim.api.service.HistoryService;
-import kr.co.aim.api.service.LotCarrierMappingService;
 import kr.co.aim.api.service.LotService;
+import kr.co.aim.api.service.LotGroupService;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.api.strategy.ProcessJobEndedStrategy;
 import kr.co.aim.api.context.ProcessJobEndedContext;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.MngKeyName;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.LotChangeCommand;
+import kr.co.aim.domain.command.LotGroupChangeCommand;
 import kr.co.aim.domain.command.ProcessJobEndedCommand;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import kr.co.aim.domain.repository.LotRepository;
-import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
+import kr.co.aim.domain.repository.LotGroupRepository;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.entity.LotGroupHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotMapper;
+import kr.co.aim.infra.persistence.mapper.LotGroupMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,10 +32,10 @@ import java.util.Optional;
 public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
 
     private final HistoryService historyService;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final LotRepository lotRepository;
     private final LotMapper lotMapper;
+    private final LotGroupRepository lotGroupRepository;
+    private final LotGroupMapper lotGroupMapper;
 
 
     @Override
@@ -76,9 +76,9 @@ public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
         // 일반 조업 설비
         String mngKeyName = mngKeyNameList.get(0).getMngKeyName();
         Long mngKey = Long.parseLong(mngKeyName);
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByMngKey(mngKey);
-        if( ObjectUtils.isNotEmpty(lotCarrierMappingList) ){
-            LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
+        List<Lot> lotList = lotRepository.findByMngKey(mngKey);
+        if( ObjectUtils.isNotEmpty(lotList) ){
+            Lot lot = lotList.get(0);
             ProcessJobEndedCommand command =
                     ProcessJobEndedCommand
                             .builder()
@@ -91,44 +91,44 @@ public class NormalTypeEndedStrategy implements ProcessJobEndedStrategy {
                             .orderId(productionOrder.getOrderId())
                             .orderLineNumber(productionOrder.getOrderLineNumber())
                             .productionTaskEnd(productionOrder.getId().toString())
-                            .productionOrderId(lotCarrierMapping.getProductionOrderId())
+                            .productionOrderId(lot.getProductionOrderId())
                             .productionStatus(ProductionStatus.WAIT.getValue())
                             .processStatus(ProcessStatus.COMPLETED.getValue())
                             .quantity(quantity)
                             .mngKey(mngKey)
                             .jobEndTime(tx.eventTime())
                             .build();
-            lotCarrierMapping.processJobEnded(command);
-            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+            lot.processJobEnded(command);
+            lot = lotRepository.save(lot);
+            LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
             historyService.saveHistory(historyEntity);
         }
 
         if(StringUtils.equals(YN.Y.getValue(),lastFlag)){
             // 해포 설비가 아닐 경우만
-            // find by LotName LotCarrierMapping
+            // find by LotName Lot
             // find by LotName Lot
             // Lot totalQuantity 변경
-            List<LotCarrierMapping> lotCarrierMappingListByLotName = lotCarrierMappingRepository.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
-            if(ObjectUtils.isNotEmpty(lotCarrierMappingListByLotName)){
+            List<Lot> lotListByLotName = lotRepository.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
+            if(ObjectUtils.isNotEmpty(lotListByLotName)){
                 BigDecimal totalQuantity = BigDecimal.ZERO;
-                for(LotCarrierMapping lcm : lotCarrierMappingListByLotName){
+                for(Lot lcm : lotListByLotName){
                     totalQuantity = totalQuantity.add(lcm.getQuantity());
                 }
 
-                Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
+                Optional<LotGroup> optionalLot = lotGroupRepository.findByLotGroupName(lotName);
                 if(optionalLot.isPresent()){
-                    Lot lot = optionalLot.get();
-                    LotChangeCommand command =
-                            LotChangeCommand
+                    LotGroup lotGroup = optionalLot.get();
+                    LotGroupChangeCommand command =
+                            LotGroupChangeCommand
                                     .builder()
                                     .transactionInfo(tx)
                                     .totalQuantity(totalQuantity)
                                     .build();
-                    lot.change(command);
-                    lot = lotRepository.save(lot);
-                    LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
-                    historyService.saveHistory(lotHistoryEntity);
+                    lotGroup.change(command);
+                    lotGroup = lotGroupRepository.save(lotGroup);
+                    LotGroupHistoryEntity lotGroupHistoryEntity = lotGroupMapper.toHistoryEntity(lotGroup);
+                    historyService.saveHistory(lotGroupHistoryEntity);
 
                 }
             }

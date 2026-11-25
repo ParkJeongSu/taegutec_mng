@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Collections;
 import java.util.List;
 
-@Tag(name = "MNG Lot Definition", description = "기준정보 Lot 관리 API")
+@Tag(name = "MNG Lot Carrier Mapping", description = "기준정보 Lot Carrier Mapping 관리 API")
 @RestController
 @RequestMapping("/api/v1/mng/lot")
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class LotController {
 
     private final LotService lotService;
 
-    @Operation(summary = "Lot 목록 조회")
+    @Operation(summary = "Lot Carrier Mapping 목록 조회")
     @GetMapping("")
     public ResponseEntity<Page<Lot>> getLots(
             LotSearchCondition condition,
@@ -41,14 +41,14 @@ public class LotController {
         return ResponseEntity.ok(result);
     }
 
-    @Operation(summary = "Lot 상세 조회")
+    @Operation(summary = "Lot Carrier Mapping 상세 조회")
     @GetMapping("/{id}")
     public ResponseEntity<Page<Lot>> getLot(@PathVariable("id") Long id) {
         Lot result = lotService.findById(id);
         return ResponseEntity.ok(new PageImpl<>(Collections.singletonList(result), PageRequest.of(0, 1), 1));
     }
 
-    @Operation(summary = "Lot 복수 삭제")
+    @Operation(summary = "Lot Carrier Mapping 복수 삭제")
     @DeleteMapping("/batch-delete")
     public ResponseEntity<String> deleteLots(@RequestBody List<Long> ids) {
         lotService.deleteAllByIdInBatch(ids);

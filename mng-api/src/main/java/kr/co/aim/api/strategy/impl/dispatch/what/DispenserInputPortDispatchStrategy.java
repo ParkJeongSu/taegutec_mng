@@ -8,11 +8,11 @@ import kr.co.aim.common.enums.EquipmentDetailType;
 import kr.co.aim.common.enums.PortType;
 import kr.co.aim.domain.model.Carrier;
 import kr.co.aim.domain.model.CarrierDef;
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.PortDef;
 import kr.co.aim.domain.repository.CarrierDefRepository;
 import kr.co.aim.domain.repository.CarrierRepository;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +28,7 @@ public class DispenserInputPortDispatchStrategy implements WhatDispatchStrategy 
 
     private final CarrierRepository carrierRepository;
     private final CarrierDefRepository carrierDefRepository;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final LotRepository lotRepository;
 
     @Override
     public boolean supports(WhatDispatchContext context) {
@@ -48,8 +48,8 @@ public class DispenserInputPortDispatchStrategy implements WhatDispatchStrategy 
             }
             Carrier targetCarrier = targetCarrierList.get(0);
 
-            Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(targetCarrier.getCarrierName());
-            if(optionalLotCarrierMapping.isPresent()){
+            Optional<Lot> optionalLot = lotRepository.findByCarrierName(targetCarrier.getCarrierName());
+            if(optionalLot.isPresent()){
                 // Lot이 존재하면 안됨 존재하면 Error
                 throw new RuntimeException("Lot found");
             }

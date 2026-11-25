@@ -23,7 +23,7 @@ public class ProcessJobStartedContextFactory {
     private final EquipmentRepository equipmentRepository;
     private final PortDefRepository portDefRepository;
     private final PortRepository portRepository;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final LotRepository lotRepository;
     private final ProductionOrderRepository productionOrderRepository;
 
     public ProcessJobStartedContext createContext(TransactionInfo tx, ProcessJobStartedBody body) {
@@ -70,12 +70,12 @@ public class ProcessJobStartedContextFactory {
         }
         Port port = optionalPort.get();
 
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByMngKey(mngkey);
-        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
-            log.error("LotCarrierMapping not found: {}", mngkey);
-            throw new IllegalArgumentException("LotCarrierMapping not found");
+        List<Lot> lotList = lotRepository.findByMngKey(mngkey);
+        if( ObjectUtils.isEmpty(lotList)){
+            log.error("Lot not found: {}", mngkey);
+            throw new IllegalArgumentException("Lot not found");
         }
-        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
+        Lot lot = lotList.get(0);
 
         Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(Long.parseLong(productionTaskId));
         if (optionalProductionOrder.isEmpty()) {
@@ -91,7 +91,7 @@ public class ProcessJobStartedContextFactory {
                 .equipment(equipment)
                 .portDef(portDef)
                 .port(port)
-                .lotCarrierMapping(lotCarrierMapping)
+                .lot(lot)
                 .productionOrder(productionOrder)
                 .carrierName(carrierName)
                 .recipeName(recipeName)

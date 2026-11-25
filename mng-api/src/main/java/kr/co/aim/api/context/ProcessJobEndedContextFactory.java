@@ -70,12 +70,12 @@ public class ProcessJobEndedContextFactory {
         Port port = optionalPort.get();
 
         // TODO: MNGKEY 이부분 해결하기
-//        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingService.findByMngKey(mngkey);
-//        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
-//            log.error("LotCarrierMapping not found: {}", mngkey);
-//            throw new IllegalArgumentException("LotCarrierMapping not found");
+//        List<Lot> lotList = lotService.findByMngKey(mngkey);
+//        if( ObjectUtils.isEmpty(lotList)){
+//            log.error("Lot not found: {}", mngkey);
+//            throw new IllegalArgumentException("Lot not found");
 //        }
-//        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
+//        Lot lot = lotList.get(0);
 
         Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(Long.parseLong(productionTaskId));
         if (optionalProductionOrder.isEmpty()) {
@@ -91,7 +91,7 @@ public class ProcessJobEndedContextFactory {
                 .equipment(equipment)
                 .portDef(portDef)
                 .port(port)
-                //.lotCarrierMapping(lotCarrierMapping)
+                //.lot(lot)
                 .productionOrder(productionOrder)
                 .carrierName(carrierName)
                 .recipeName(recipeName)

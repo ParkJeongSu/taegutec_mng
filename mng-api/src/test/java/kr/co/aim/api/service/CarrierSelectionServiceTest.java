@@ -1,7 +1,7 @@
 package kr.co.aim.api.service;
 
 import kr.co.aim.common.Utils.TsidUtils;
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,14 +28,14 @@ class CarrierSelectionServiceTest {
         BigDecimal targetQty = new BigDecimal("1000.000");
         BigDecimal toleranceQty = new BigDecimal("20.000");
 
-        List<LotCarrierMapping> pool = new ArrayList<>();
+        List<Lot> pool = new ArrayList<>();
         pool.add(createMapping("CARRIER_1", "350.000"));
         pool.add(createMapping("CARRIER_2", "350.000"));
         pool.add(createMapping("CARRIER_3", "300.000"));
         pool.add(createMapping("CARRIER_4", "500.000"));
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
+        List<Lot> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -44,7 +44,7 @@ class CarrierSelectionServiceTest {
         BigDecimal sum = BigDecimal.ZERO;
         System.out.println("=== [Test 1] 선택된 캐리어 목록 ===");
         for (int i = 0; i < selected.size(); i++) {
-            LotCarrierMapping mapping = selected.get(i);
+            Lot mapping = selected.get(i);
             System.out.println("캐리어: " + mapping.getCarrierName() + " | 수량: " + mapping.getQuantity());
             sum = sum.add(mapping.getQuantity());
         }
@@ -60,7 +60,7 @@ class CarrierSelectionServiceTest {
         BigDecimal targetQty = new BigDecimal("1000.000");
         BigDecimal toleranceQty = new BigDecimal("20.000"); // 범위: 980.000 ~ 1020.000
 
-        List<LotCarrierMapping> pool = new ArrayList<>();
+        List<Lot> pool = new ArrayList<>();
         pool.add(createMapping("CARRIER_1", "350.000"));
         pool.add(createMapping("CARRIER_2", "350.000"));
         pool.add(createMapping("CARRIER_3", "310.000")); // 350 + 350 + 310 = 1010
@@ -68,7 +68,7 @@ class CarrierSelectionServiceTest {
         pool.add(createMapping("CARRIER_5", "700.000"));
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
+        List<Lot> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -77,7 +77,7 @@ class CarrierSelectionServiceTest {
         BigDecimal sum = BigDecimal.ZERO;
         System.out.println("=== [Test 2] 선택된 캐리어 목록 ===");
         for (int i = 0; i < selected.size(); i++) {
-            LotCarrierMapping mapping = selected.get(i);
+            Lot mapping = selected.get(i);
             System.out.println("캐리어: " + mapping.getCarrierName() + " | 수량: " + mapping.getQuantity());
             sum = sum.add(mapping.getQuantity());
         }
@@ -95,12 +95,12 @@ class CarrierSelectionServiceTest {
         BigDecimal targetQty = new BigDecimal("1000.000");
         BigDecimal toleranceQty = new BigDecimal("20.000"); // 범위: 980 ~ 1020
 
-        List<LotCarrierMapping> pool = new ArrayList<>();
+        List<Lot> pool = new ArrayList<>();
         pool.add(createMapping("CARRIER_1", "500.000"));
         pool.add(createMapping("CARRIER_2", "600.000")); // 가능 조합: 500, 600, 1100 (모두 오차범위 밖)
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
+        List<Lot> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -115,13 +115,13 @@ class CarrierSelectionServiceTest {
         BigDecimal targetQty = new BigDecimal("1000.500");
         BigDecimal toleranceQty = new BigDecimal("10.000");
 
-        List<LotCarrierMapping> pool = new ArrayList<>();
+        List<Lot> pool = new ArrayList<>();
         pool.add(createMapping("CARRIER_1", "350.250"));
         pool.add(createMapping("CARRIER_2", "350.250"));
         pool.add(createMapping("CARRIER_3", "300.000")); // 합: 1000.500
 
         // When
-        List<LotCarrierMapping> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
+        List<Lot> selected = carrierSelectionService.selectBestCarriers(pool, targetQty, toleranceQty);
 
         // Then
         assertNotNull(selected);
@@ -140,12 +140,12 @@ class CarrierSelectionServiceTest {
     @DisplayName("5. 풀 데이터가 비어있거나 목표 수량이 null인 경우 예외 없이 빈 리스트 반환")
     void testEmptyPoolOrNullTarget() {
         // Given
-        List<LotCarrierMapping> emptyPool = new ArrayList<>();
+        List<Lot> emptyPool = new ArrayList<>();
 
         // When
-        List<LotCarrierMapping> result1 = carrierSelectionService.selectBestCarriers(emptyPool, new BigDecimal("1000"), new BigDecimal("10"));
-        List<LotCarrierMapping> result2 = carrierSelectionService.selectBestCarriers(null, new BigDecimal("1000"), new BigDecimal("10"));
-        List<LotCarrierMapping> result3 = carrierSelectionService.selectBestCarriers(emptyPool, null, new BigDecimal("10"));
+        List<Lot> result1 = carrierSelectionService.selectBestCarriers(emptyPool, new BigDecimal("1000"), new BigDecimal("10"));
+        List<Lot> result2 = carrierSelectionService.selectBestCarriers(null, new BigDecimal("1000"), new BigDecimal("10"));
+        List<Lot> result3 = carrierSelectionService.selectBestCarriers(emptyPool, null, new BigDecimal("10"));
 
         // Then
         assertTrue(result1.isEmpty());
@@ -154,9 +154,9 @@ class CarrierSelectionServiceTest {
         System.out.println("=== [Test 5] 방어 로직 정상 동작 확인 ===");
     }
 
-    // 테스트용 LotCarrierMapping 생성 헬퍼 메서드
-    private LotCarrierMapping createMapping(String carrierName, String quantityStr) {
-        return LotCarrierMapping.builder()
+    // 테스트용 Lot 생성 헬퍼 메서드
+    private Lot createMapping(String carrierName, String quantityStr) {
+        return Lot.builder()
                 .id(TsidUtils.nextId())
                 .lotName("LOT_TEST_001")
                 .carrierName(carrierName)

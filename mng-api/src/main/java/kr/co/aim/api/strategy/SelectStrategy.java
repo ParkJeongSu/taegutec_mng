@@ -1,6 +1,6 @@
 package kr.co.aim.api.strategy;
 
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.ProductionOrder;
 
 import java.util.List;
@@ -15,5 +15,5 @@ public interface SelectStrategy {
     /**
      * Order에 따른 available Carrier Select
      */
-    List<LotCarrierMapping> selectAvailableCarrier(ProductionOrder productionOrder);
+    List<Lot> selectAvailableCarrier(ProductionOrder productionOrder);
 }

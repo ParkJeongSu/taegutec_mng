@@ -10,16 +10,16 @@ import kr.co.aim.common.enums.*;
 import kr.co.aim.common.format.TransportJobRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
 import kr.co.aim.domain.command.LotCreateCommand;
+import kr.co.aim.domain.command.LotGroupCreateCommand;
 import kr.co.aim.domain.command.TransportJobCreateCommand;
 import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.config.RabbitConfig;
-import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.entity.LotGroupHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotMapper;
+import kr.co.aim.infra.persistence.mapper.LotGroupMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -42,14 +42,14 @@ import java.util.Optional;
 public class RawMaterialReceivingService {
     private final ObjectMapper objectMapper;
     private final ProductionOrderRepository productionOrderRepository;
+    private final LotGroupRepository lotGroupRepository;
     private final LotRepository lotRepository;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final CarrierRepository carrierRepository;
     private final CarrierDefRepository carrierDefRepository;
     private final ProductDefRepository productDefRepository;
     private final TransportJobService transportJobService;
+    private final LotGroupMapper lotGroupMapper;
     private final LotMapper lotMapper;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final HistoryService historyService;
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
 
@@ -90,20 +90,20 @@ public class RawMaterialReceivingService {
             if(!StringUtils.equals(ProductionOrderType.MATERIAL_INBOUND.getValue(),productionOrder.getProductionOrderType())){
                 throw new RuntimeException("production order type not match");
             }
-            LotCreateCommand command =
-                    LotCreateCommand
+            LotGroupCreateCommand command =
+                    LotGroupCreateCommand
                             .builder()
                             .transactionInfo(tx)
-                            .lotName(productionOrder.getLotName())
-                            .originalLotName(productionOrder.getLotName())
-                            .lotStatus(LotStatus.STOCK.getValue())
+                            .lotGroupName(productionOrder.getLotName())
+                            .originalLotGroupName(productionOrder.getLotName())
+                            .lotGroupStatus(LotStatus.STOCK.getValue())
                             .itemId(productionOrder.getItemName())
                             .totalQuantity(productionOrder.getPlanQuantity())
                             .holdState(HoldState.NOT_ON_HOLD.getValue())
                             .build();
-            Lot lot = Lot.create(command);
-            lot = lotRepository.save(lot);
-            LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
+            LotGroup lot = LotGroup.create(command);
+            lot = lotGroupRepository.save(lot);
+            LotGroupHistoryEntity historyEntity = lotGroupMapper.toHistoryEntity(lot);
             historyService.saveHistory(historyEntity);
             responseList.add(RawMaterialReceivingStartResponse.from(rawMaterialReceivingStart));
 
@@ -136,7 +136,7 @@ public class RawMaterialReceivingService {
         // 비즈니스 로직
         // 1. LotName 존재 Validation
         // 2. Carrier 존재 Validation
-        // 3. LotCarrierMapping 데이터 생성 이때, 기본 가방의 무게값 gal Quantity에 생성
+        // 3. Lot 데이터 생성 이때, 기본 가방의 무게값 gal Quantity에 생성
         // 4. 반환
         String messageName = MessageList.BAG_ON_PALLET.getMessageName();
         Long id = request.getId();
@@ -156,11 +156,11 @@ public class RawMaterialReceivingService {
 
         ProductionOrder productionOrder = optionalProductionOrder.get();
 
-        Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
-        if(optionalLot.isEmpty()) {
+        Optional<LotGroup> optionalLotGroup = lotGroupRepository.findByLotGroupName(lotName);
+        if(optionalLotGroup.isEmpty()) {
             throw new RuntimeException("lot not found");
         }
-        Lot lot = optionalLot.get();
+        LotGroup lotGroup = optionalLotGroup.get();
 
         Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
 
@@ -177,8 +177,8 @@ public class RawMaterialReceivingService {
         ProductDef productDef = optionalProductDef.get();
 
         TransactionInfo tx = TransactionInfo.now(EventName.BIND_PALLET_BAG.getValue(), eventUser, eventComment);
-        LotCarrierMappingCreateCommand command =
-                LotCarrierMappingCreateCommand
+        LotCreateCommand command =
+                LotCreateCommand
                         .builder()
                         .transactionInfo(tx)
                         .lotName(productionOrder.getLotName())
@@ -193,9 +193,9 @@ public class RawMaterialReceivingService {
                         .holdState(HoldState.NOT_ON_HOLD.getValue())
                         .build();
 
-        LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        Lot lot = Lot.create(command);
+        lot = lotRepository.save(lot);
+        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
 
         List<PalletBagBindingResponse> responseList = new ArrayList<>();
@@ -228,7 +228,7 @@ public class RawMaterialReceivingService {
         // 비즈니스 로직
         // 1. LotName 존재 Validation
         // 2. Carrier 존재 Validation
-        // 3. LotCarrierMapping 데이터 존재 Validation
+        // 3. Lot 데이터 존재 Validation
         // 4. WCS에 반송 요청
         // 5. 반환
 
@@ -258,11 +258,11 @@ public class RawMaterialReceivingService {
 
         ProductionOrder productionOrder = optionalProductionOrder.get();
 
-        Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
-        if(optionalLot.isEmpty()) {
+        Optional<LotGroup> optionalLotGroup = lotGroupRepository.findByLotGroupName(lotName);
+        if(optionalLotGroup.isEmpty()) {
             throw new RuntimeException("lot not found");
         }
-        Lot lot = optionalLot.get();
+        LotGroup lotGroup = optionalLotGroup.get();
 
         Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(carrierName);
 
@@ -271,12 +271,12 @@ public class RawMaterialReceivingService {
         }
         Carrier carrier = optionalCarrier.get();
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByLotNameAndCarrierName(lot.getLotName(), carrier.getCarrierName());
+        Optional<Lot> optionalLot = lotRepository.findByLotNameAndCarrierName(lotGroup.getLotGroupName(), carrier.getCarrierName());
 
-        if(optionalLotCarrierMapping.isEmpty()) {
+        if(optionalLot.isEmpty()) {
             throw new RuntimeException("lot carrier not found");
         }
-        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        Lot lot = optionalLot.get();
 
         Optional<CarrierDef> optionalCarrierDef = carrierDefRepository.findByCarrierDefName(carrier.getCarrierDefName());
         if(optionalCarrierDef.isEmpty()) {

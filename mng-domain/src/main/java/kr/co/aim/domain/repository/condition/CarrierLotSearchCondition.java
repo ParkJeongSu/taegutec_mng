@@ -51,12 +51,12 @@ public class CarrierLotSearchCondition {
     private String mappingHoldState;
     private String mappingReasonCode;
 
-    // === LOT Conditions ===
-    private String lotName;
-    private String originalLotName;
-    private String lotStatus;
+    // === LOT_GROUP Conditions ===
+    private String lotGroupName;
+    private String originalLotGroupName;
+    private String lotGroupStatus;
     private String itemId;
     private BigDecimal totalQuantity;
-    private String lotHoldState;
-    private String lotReasonCode;
+    private String lotGroupHoldState;
+    private String lotGroupReasonCode;
 }

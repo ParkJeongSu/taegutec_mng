@@ -59,16 +59,16 @@ public class MessageExecuteService {
     private final FactoryProcessStrategy factoryProcessStrategy;
     private final FactoryIfEventQueueStrategy factoryIfEventQueueStrategy;
 
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final LotMapper lotMapper;
+    private final LotGroupMapper lotGroupMapper;
     private final PortMapper portMapper;
     private final ProductionOrderMapper productionOrderMapper;
     private final EquipmentMapper equipmentMapper;
     private final PortDefMapper portDefMapper;
     private final CarrierMapper carrierMapper;
     private final TransportJobMapper transportJobMapper;
+    private final LotGroupRepository lotGroupRepository;
     private final LotRepository lotRepository;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
     private final NamingRuleService namingRuleService;
 
     /**
@@ -395,18 +395,18 @@ public class MessageExecuteService {
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(carrierName);
-        if(optionalLotCarrierMapping.isPresent()){
-            LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
-            Optional<LotCarrierMapping> optionalNewLotCarrierMapping = lotCarrierMapping.deAssignedAndSplit(command);
-            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
-            historyService.saveHistory(lotCarrierMappingHistoryEntity);
-            if(optionalNewLotCarrierMapping.isPresent()){
-                LotCarrierMapping newLotCarrierMapping = optionalNewLotCarrierMapping.get();
-                newLotCarrierMapping = lotCarrierMappingRepository.save(newLotCarrierMapping);
-                LotCarrierMappingHistoryEntity newLotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(newLotCarrierMapping);
-                historyService.saveHistory(newLotCarrierMappingHistoryEntity);
+        Optional<Lot> optionalLot = lotRepository.findByCarrierName(carrierName);
+        if(optionalLot.isPresent()){
+            Lot lot = optionalLot.get();
+            Optional<Lot> optionalNewLot = lot.deAssignedAndSplit(command);
+            lot = lotRepository.save(lot);
+            LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
+            historyService.saveHistory(lotHistoryEntity);
+            if(optionalNewLot.isPresent()){
+                Lot newLot = optionalNewLot.get();
+                newLot = lotRepository.save(newLot);
+                LotHistoryEntity newLotHistoryEntity = lotMapper.toHistoryEntity(newLot);
+                historyService.saveHistory(newLotHistoryEntity);
             }
         }
 
@@ -673,25 +673,25 @@ public class MessageExecuteService {
         String productionTaskId = "";
         String totalQuantity ="";
 
-        Long lotCarrierMappingId = message.getBody().getId();
+        Long lotId = message.getBody().getId();
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findById(lotCarrierMappingId);
-        if (optionalLotCarrierMapping.isEmpty()) {
-            throw new IllegalArgumentException("해당 Lot Carrier Mapping 정보가 존재하지 않습니다. ID: " + lotCarrierMappingId);
+        Optional<Lot> optionalLot = lotRepository.findById(lotId);
+        if (optionalLot.isEmpty()) {
+            throw new IllegalArgumentException("해당 Lot Carrier Mapping 정보가 존재하지 않습니다. ID: " + lotId);
         }
 
-        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        Lot lot = optionalLot.get();
 
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
 
         RecipeReplyCommand command = RecipeReplyCommand.builder()
                 .transactionInfo(tx)
-                .carrierName(lotCarrierMapping.getCarrierName())
+                .carrierName(lot.getCarrierName())
                 .build();
 
-        lotCarrierMapping.recipeTimeOut(command);
-        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        lot.recipeTimeOut(command);
+        lot = lotRepository.save(lot);
+        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
 
 
@@ -699,22 +699,22 @@ public class MessageExecuteService {
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
         productionStatus.add(ProductionStatus.ALLOCATED.getValue());
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
-                lotCarrierMapping.getOrderId(),
-                lotCarrierMapping.getOrderLineNumber(),
+        List<Lot> lotList = lotRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+                lot.getOrderId(),
+                lot.getOrderLineNumber(),
                 productionStatus
         );
 
-        if(lotCarrierMappingList.isEmpty() || lotCarrierMappingList.size() == 1){
+        if(lotList.isEmpty() || lotList.size() == 1){
             lastCarrierFlag = YN.Y.name();
         }
         else{
             lastCarrierFlag = YN.N.name();
         }
 
-        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(lotCarrierMapping.getCarrierName());
-        Optional<Lot> optionalLot = lotRepository.findByLotName(lotCarrierMapping.getLotName());
-        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(lotCarrierMapping.getProductionOrderId());
+        Optional<Carrier> optionalCarrier = carrierRepository.findByCarrierName(lot.getCarrierName());
+        Optional<LotGroup> optionalLotGroup = lotGroupRepository.findByLotGroupName(lot.getLotName());
+        Optional<ProductionOrder> optionalProductionOrder = productionOrderRepository.findById(lot.getProductionOrderId());
 
 
         if(optionalCarrier.isPresent()){
@@ -724,9 +724,9 @@ public class MessageExecuteService {
             carrierName = carrier.getCarrierName();
         }
 
-        if(optionalLot.isPresent()){
-            Lot lot = optionalLot.get();
-            lotName =  lot.getLotName();
+        if(optionalLotGroup.isPresent()){
+            LotGroup lotGroup = optionalLotGroup.get();
+            lotName =  lotGroup.getLotGroupName();
         }
 
         if(optionalProductionOrder.isPresent()){
@@ -757,11 +757,11 @@ public class MessageExecuteService {
                 .productionTaskId(productionTaskId)
                 .lotName(lotName)
                 .itemName(itemName)
-                .orderId(lotCarrierMapping.getOrderId())
-                .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
-                .quantity(lotCarrierMapping.getQuantity().toString())
+                .orderId(lot.getOrderId())
+                .orderLineNumber(lot.getOrderLineNumber())
+                .quantity(lot.getQuantity().toString())
                 .totalQuantity(totalQuantity)
-                .mngKey(lotCarrierMapping.getMngKey().toString())
+                .mngKey(lot.getMngKey().toString())
                 .lastCarrierFlag(lastCarrierFlag)
                 .recipe(recipeBody)
                 .build();
@@ -997,42 +997,42 @@ public class MessageExecuteService {
         String itemName = "";
         String totalQuantity = "";
 
-        List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByMngKey(mngKeyToLong);
-        if( ObjectUtils.isEmpty(lotCarrierMappingList)){
+        List<Lot> lotList = lotRepository.findByMngKey(mngKeyToLong);
+        if( ObjectUtils.isEmpty(lotList)){
             return null;
         }
-        LotCarrierMapping lotCarrierMapping = lotCarrierMappingList.get(0);
+        Lot lot = lotList.get(0);
         TransactionInfo tx = TransactionInfo.now(messageName,messageOwner,resultMessage);
         RecipeReplyCommand command =
                 RecipeReplyCommand
                         .builder()
                         .transactionInfo(tx)
-                        .carrierName(lotCarrierMapping.getCarrierName())
+                        .carrierName(lot.getCarrierName())
                         .build();
-        lotCarrierMapping.recipeRely(command);
-        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        lot.recipeRely(command);
+        lot = lotRepository.save(lot);
+        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
 
-        Optional<Lot> optionalLot = lotRepository.findByLotName(lotCarrierMapping.getLotName());
-        if(optionalLot.isPresent()){
-            Lot lot = optionalLot.get();
-            lotName = lot.getLotName();
-            itemName = lot.getItemId();
-            totalQuantity = lot.getTotalQuantity().toString();
+        Optional<LotGroup> optionalLotGroup = lotGroupRepository.findByLotGroupName(lot.getLotName());
+        if(optionalLotGroup.isPresent()){
+            LotGroup lotGroup = optionalLotGroup.get();
+            lotName = lotGroup.getLotGroupName();
+            itemName = lotGroup.getItemId();
+            totalQuantity = lotGroup.getTotalQuantity().toString();
         }
 
 
         List<String> productionStatus = new ArrayList<>();
         productionStatus.add(ProductionStatus.WAIT.getValue());
         productionStatus.add(ProductionStatus.ALLOCATED.getValue());
-        List<LotCarrierMapping> lotCarrierMappingListByOrderInfo = lotCarrierMappingRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
+        List<Lot> lotListByOrderInfo = lotRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(
                 orderId,
                 orderLineNumber,
                 productionStatus
         );
 
-        if(lotCarrierMappingListByOrderInfo.isEmpty() || lotCarrierMappingListByOrderInfo.size() == 1){
+        if(lotListByOrderInfo.isEmpty() || lotListByOrderInfo.size() == 1){
             lastCarrierFlag = YN.Y.name();
         }
         else{
@@ -1058,7 +1058,7 @@ public class MessageExecuteService {
                 .itemName(itemName)
                 .orderId(orderId)
                 .orderLineNumber(orderLineNumber)
-                .quantity(lotCarrierMapping.getQuantity().toString())
+                .quantity(lot.getQuantity().toString())
                 .totalQuantity(totalQuantity)
                 .mngKey(mngKey)
                 .lastCarrierFlag(lastCarrierFlag)
@@ -1668,22 +1668,22 @@ public class MessageExecuteService {
         // 만약 이 아래 로직을 수행하다가 NullPointerException이나 DB 락 등의
         // 예기치 못한 에러가 발생하면, 잡지 않고 던져지므로 트랜잭션은 자동으로 롤백됩니다.
         TransactionInfo tx = TransactionInfo.now(messageName,SystemName.MNG.getValue(),resultMessage);
-        LotCreateCommand command
+        LotGroupCreateCommand command
                 =
-                LotCreateCommand
+                LotGroupCreateCommand
                         .builder()
                         .transactionInfo(tx)
-                        .lotName(productionOrder.getLotName())
-                        .originalLotName(productionOrder.getLotName())
-                        .lotStatus(LotStatus.STOCK.getValue())
+                        .lotGroupName(productionOrder.getLotName())
+                        .originalLotGroupName(productionOrder.getLotName())
+                        .lotGroupStatus(LotStatus.STOCK.getValue())
                         .itemId(productionOrder.getItemName())
                         .totalQuantity(productionOrder.getPlanQuantity())
                         .holdState(HoldState.NOT_ON_HOLD.getValue())
                         .reasonCode("")
                         .build();
-        Lot lot = Lot.create(command);
-        lot = lotRepository.save(lot);
-        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
+        LotGroup lot = LotGroup.create(command);
+        lot = lotGroupRepository.save(lot);
+        LotGroupHistoryEntity historyEntity = lotGroupMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
 
         // 모든 검증과 로직이 성공하면 OK 반환
@@ -1758,8 +1758,8 @@ public class MessageExecuteService {
                 }
             }
 
-            LotCarrierMappingCreateCommand command
-                    = LotCarrierMappingCreateCommand
+            LotCreateCommand command
+                    = LotCreateCommand
                     .builder()
                     .transactionInfo(tx)
                     .lotName(lotName)
@@ -1783,10 +1783,10 @@ public class MessageExecuteService {
                     //.holdState()
                     //.reasonCode()
                     .build();
-            LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity lotCarrierMappingHistoryEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
-            historyService.saveHistory(lotCarrierMappingHistoryEntity);
+            Lot lot = Lot.create(command);
+            lot = lotRepository.save(lot);
+            LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
+            historyService.saveHistory(lotHistoryEntity);
 
             CarrierChangeCommand carrierChangeCommand
                     =

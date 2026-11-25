@@ -13,11 +13,11 @@ import kr.co.aim.domain.model.*;
 import kr.co.aim.domain.model.ProductionOrder;
 import kr.co.aim.domain.repository.*;
 import kr.co.aim.infra.persistence.entity.CarrierHistoryEntity;
-import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
+import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
 import kr.co.aim.infra.persistence.entity.PortHistoryEntity;
 import kr.co.aim.infra.persistence.entity.TransportJobHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.CarrierMapper;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.mapper.LotMapper;
 import kr.co.aim.infra.persistence.mapper.PortMapper;
 import kr.co.aim.infra.persistence.mapper.TransportJobMapper;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +59,8 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
     private final TransportJobRepository transportJobRepository;
     private final TransportJobMapper transportJobMapper;
     private final ProductionOrderRepository productionOrderRepository;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
+    private final LotRepository lotRepository;
+    private final LotMapper lotMapper;
 
 
     private final RabbitTemplate rabbitTemplate;
@@ -226,7 +226,7 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         String portType = message.getBody().getPortType();
         String portTransportMode = message.getBody().getPortTransportMode();
 
-        LotCarrierMapping lotCarrierMapping = null;
+        Lot lot = null;
 
         if(StringUtils.isEmpty(carrierName)){
             return null;
@@ -268,12 +268,12 @@ public class PowderFactoryProcessService implements FactoryProcessStrategy {
         CarrierHistoryEntity carrierHistoryEntity = carrierMapper.toHistoryEntity(carrier);
         historyService.saveHistory(carrierHistoryEntity);
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(carrierName);
-        if(optionalLotCarrierMapping.isPresent()){
-            lotCarrierMapping = optionalLotCarrierMapping.get();
-            lotCarrierMapping.loadCompleted(command);
-            lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-            LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        Optional<Lot> optionalLot = lotRepository.findByCarrierName(carrierName);
+        if(optionalLot.isPresent()){
+            lot = optionalLot.get();
+            lot.loadCompleted(command);
+            lot = lotRepository.save(lot);
+            LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
             historyService.saveHistory(historyEntity);
         }
 

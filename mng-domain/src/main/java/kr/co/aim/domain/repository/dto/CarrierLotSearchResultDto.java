@@ -63,13 +63,13 @@ public class CarrierLotSearchResultDto {
     private String mappingHoldState;
     private String mappingReasonCode;
 
-    // === LOT Fields ===
-    private Long lotId;
-    private String lotName;
-    private String originalLotName;
-    private String lotStatus;
+    // === LOT_GROUP Fields ===
+    private Long lotGroupId;
+    private String lotGroupName;
+    private String originalLotGroupName;
+    private String lotGroupStatus;
     private String itemId;
     private BigDecimal totalQuantity;
-    private String lotHoldState;
-    private String lotReasonCode;
+    private String lotGroupHoldState;
+    private String lotGroupReasonCode;
 }

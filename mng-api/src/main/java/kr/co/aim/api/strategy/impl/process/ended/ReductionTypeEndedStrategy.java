@@ -1,23 +1,23 @@
 package kr.co.aim.api.strategy.impl.process.ended;
 
 import kr.co.aim.api.service.HistoryService;
-import kr.co.aim.api.service.LotCarrierMappingService;
 import kr.co.aim.api.service.LotService;
+import kr.co.aim.api.service.LotGroupService;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.api.strategy.ProcessJobEndedStrategy;
 import kr.co.aim.api.context.ProcessJobEndedContext;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
-import kr.co.aim.domain.command.LotChangeCommand;
+import kr.co.aim.domain.command.LotCreateCommand;
+import kr.co.aim.domain.command.LotGroupChangeCommand;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
 import kr.co.aim.domain.repository.LotRepository;
-import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
+import kr.co.aim.domain.repository.LotGroupRepository;
 import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.entity.LotGroupHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotMapper;
+import kr.co.aim.infra.persistence.mapper.LotGroupMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -32,10 +32,10 @@ import java.util.Optional;
 public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
 
     private final HistoryService historyService;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
     private final LotRepository lotRepository;
     private final LotMapper lotMapper;
+    private final LotGroupRepository lotGroupRepository;
+    private final LotGroupMapper lotGroupMapper;
 
 
     @Override
@@ -62,8 +62,8 @@ public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
 
 
         Long mngKey = TsidUtils.nextId();
-        LotCarrierMappingCreateCommand command =
-                LotCarrierMappingCreateCommand
+        LotCreateCommand command =
+                LotCreateCommand
                         .builder()
                         .transactionInfo(tx)
                         .lotName(productionOrder.getLotName())
@@ -82,37 +82,37 @@ public class ReductionTypeEndedStrategy implements ProcessJobEndedStrategy {
                         .holdState(HoldState.NOT_ON_HOLD.getValue())
                         .build();
 
-        LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        Lot lot = Lot.create(command);
+        lot = lotRepository.save(lot);
+        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
 
         if(StringUtils.equals(YN.Y.getValue(),lastFlag)){
             // 해포 설비가 아닐 경우만
-            // find by LotName LotCarrierMapping
+            // find by LotName Lot
             // find by LotName Lot
             // Lot totalQuantity 변경
-            List<LotCarrierMapping> lotCarrierMappingList = lotCarrierMappingRepository.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
-            if(ObjectUtils.isNotEmpty(lotCarrierMappingList)){
+            List<Lot> lotList = lotRepository.findByLotNameAndProductionStatusNot(lotName,ProductionStatus.CONSUMED.getValue());
+            if(ObjectUtils.isNotEmpty(lotList)){
                 BigDecimal totalQuantity = BigDecimal.ZERO;
 
-                for(LotCarrierMapping lcm : lotCarrierMappingList){
+                for(Lot lcm : lotList){
                     totalQuantity = totalQuantity.add(lcm.getQuantity());
                 }
 
-                Optional<Lot> optionalLot = lotRepository.findByLotName(lotName);
+                Optional<LotGroup> optionalLot = lotGroupRepository.findByLotGroupName(lotName);
                 if(optionalLot.isPresent()){
-                    Lot lot = optionalLot.get();
-                    LotChangeCommand lotChangeCommand =
-                            LotChangeCommand
+                    LotGroup lotGroup = optionalLot.get();
+                    LotGroupChangeCommand lotChangeCommand =
+                            LotGroupChangeCommand
                                     .builder()
                                     .transactionInfo(tx)
                                     .totalQuantity(totalQuantity)
                                     .build();
-                    lot.change(lotChangeCommand);
-                    lot = lotRepository.save(lot);
-                    LotHistoryEntity lotHistoryEntity = lotMapper.toHistoryEntity(lot);
-                    historyService.saveHistory(lotHistoryEntity);
+                    lotGroup.change(lotChangeCommand);
+                    lotGroup = lotGroupRepository.save(lotGroup);
+                    LotGroupHistoryEntity lotGroupHistoryEntity = lotGroupMapper.toHistoryEntity(lotGroup);
+                    historyService.saveHistory(lotGroupHistoryEntity);
                 }
             }
         }

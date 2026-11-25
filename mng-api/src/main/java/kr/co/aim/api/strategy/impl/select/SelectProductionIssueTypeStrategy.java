@@ -1,11 +1,11 @@
 package kr.co.aim.api.strategy.impl.select;
 
-import kr.co.aim.api.service.LotCarrierMappingService;
+import kr.co.aim.api.service.LotService;
 import kr.co.aim.api.strategy.SelectStrategy;
 import kr.co.aim.common.enums.ProductionOrderType;
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SelectProductionIssueTypeStrategy implements SelectStrategy {
 
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final LotRepository lotRepository;
 
     @Override
     public boolean supports(ProductionOrder productionOrder) {
@@ -24,7 +24,7 @@ public class SelectProductionIssueTypeStrategy implements SelectStrategy {
     }
 
     @Override
-    public List<LotCarrierMapping> selectAvailableCarrier(ProductionOrder productionOrder) {
-        return lotCarrierMappingRepository.findByLotName(productionOrder.getMaterialLotName());
+    public List<Lot> selectAvailableCarrier(ProductionOrder productionOrder) {
+        return lotRepository.findByLotName(productionOrder.getMaterialLotName());
     }
 }

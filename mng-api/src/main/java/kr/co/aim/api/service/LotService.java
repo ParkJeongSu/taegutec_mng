@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,15 +22,15 @@ public class LotService {
     private final LotRepository lotRepository;
 
     @Transactional(value = "mssqlTransactionManager")
-    public Lot save(Lot lot) {
-        return lotRepository.save(lot);
+    public Lot save(Lot mapping) {
+        return lotRepository.save(mapping);
     }
 
-    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    @Transactional(value = "mssqlTransactionManager")
     public Lot findById(Long id) {
         Optional<Lot> optional = lotRepository.findById(id);
         if (optional.isEmpty()) {
-            throw new IllegalArgumentException("해당 Lot 기준정보가 존재하지 않습니다. ID: " + id);
+            throw new IllegalArgumentException("해당 Lot Carrier Mapping 정보가 존재하지 않습니다. ID: " + id);
         }
         return optional.get();
     }
@@ -45,4 +46,8 @@ public class LotService {
         lotRepository.deleteAllByIdInBatch(ids);
     }
 
+    @Transactional(value = "mssqlTransactionManager", readOnly = true)
+    public List<Lot> findMantiTimeoutTargets(String state, LocalDateTime thresholdTime) {
+        return lotRepository.findByMantiRequestStateAndMantiRequestTimeBeforeAndMantiReplyTimeIsNull(state, thresholdTime);
+    }
 }

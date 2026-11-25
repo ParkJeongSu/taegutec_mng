@@ -6,7 +6,7 @@ import kr.co.aim.api.strategy.SelectStrategy;
 import kr.co.aim.api.context.ProductionOrderProcessContext;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.domain.model.ProductionOrder;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.infra.persistence.mapper.LotMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

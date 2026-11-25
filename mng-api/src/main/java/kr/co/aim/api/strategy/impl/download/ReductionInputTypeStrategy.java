@@ -1,6 +1,6 @@
 package kr.co.aim.api.strategy.impl.download;
 
-import kr.co.aim.api.service.LotCarrierMappingService;
+import kr.co.aim.api.service.LotService;
 import kr.co.aim.api.strategy.DownloadStrategy;
 import kr.co.aim.api.context.DownloadContext;
 import kr.co.aim.common.Utils.FormatUtils;
@@ -11,9 +11,9 @@ import kr.co.aim.common.format.RecipeParameterListBody;
 import kr.co.aim.common.format.RecipeRequestBody;
 import kr.co.aim.common.format.request.BaseMessage;
 import kr.co.aim.domain.model.EquipmentDef;
-import kr.co.aim.domain.model.LotCarrierMapping;
+import kr.co.aim.domain.model.Lot;
 import kr.co.aim.domain.model.PortDef;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
+import kr.co.aim.domain.repository.LotRepository;
 import kr.co.aim.infra.config.RabbitConfig;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +28,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ReductionInputTypeStrategy implements DownloadStrategy {
 
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
+    private final LotRepository lotRepository;
     private final RabbitTemplate rabbitTemplate;
 
 
@@ -44,15 +44,15 @@ public class ReductionInputTypeStrategy implements DownloadStrategy {
     @Override
     public BaseMessage<CarrierInfoDownloadSendBody> determineCarrierInfo(DownloadContext context) {
 
-        Optional<LotCarrierMapping> optionalLotCarrierMapping = lotCarrierMappingRepository.findByCarrierName(context.getCarrier().getCarrierName());
+        Optional<Lot> optionalLot = lotRepository.findByCarrierName(context.getCarrier().getCarrierName());
 
-        if (optionalLotCarrierMapping.isEmpty()) {
+        if (optionalLot.isEmpty()) {
             throw new RuntimeException("Carrier not found");
         }
 
-        LotCarrierMapping lotCarrierMapping = optionalLotCarrierMapping.get();
+        Lot lot = optionalLot.get();
 
-        if(lotCarrierMapping.getSeq()==1){
+        if(lot.getSeq()==1){
             String transactionId = FormatUtils.getTransactionId(context.getTx().eventTime());
 
             BaseMessage<RecipeRequestBody> mantiRequestMessage = new BaseMessage<>();
@@ -70,9 +70,9 @@ public class ReductionInputTypeStrategy implements DownloadStrategy {
                             .equipmentName(context.getEquipment().getEquipmentName())
                             .portName(context.getPort().getPortName())
                             .carrierName(context.getCarrier().getCarrierName())
-                            .orderId(lotCarrierMapping.getOrderId())
-                            .orderLineNumber(lotCarrierMapping.getOrderLineNumber())
-                            .transactionId(lotCarrierMapping.getMngKey().toString())
+                            .orderId(lot.getOrderId())
+                            .orderLineNumber(lot.getOrderLineNumber())
+                            .transactionId(lot.getMngKey().toString())
                             .build();
 
             mantiRequestMessage.setBody(recipeRequestBody);

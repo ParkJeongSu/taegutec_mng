@@ -22,7 +22,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,43 +35,76 @@ import static kr.co.aim.infra.persistence.entity.QLotHistoryEntity.lotHistoryEnt
 @RequiredArgsConstructor
 public class LotRepositoryImpl implements LotRepository {
 
-    private final LotJpaRepository lotJpaRepository;
-    private final LotMapper lotMapper;
+    private final LotJpaRepository jpaRepository;
+    private final LotMapper mapper;
     private final JPAQueryFactory queryFactory;
 
     @Override
     public List<Lot> findAll() {
-        return lotJpaRepository.findAll().stream()
-                .map(lotMapper::toDomain)
+        return jpaRepository.findAll().stream()
+                .map(mapper::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<Lot> findById(Long id) {
-        return lotJpaRepository.findById(id)
-                .map(lotMapper::toDomain);
+        return jpaRepository.findById(id)
+                .map(mapper::toDomain);
     }
 
     @Override
-    public Optional<Lot> findByLotName(String lotName) {
-        return lotJpaRepository.findByLotName(lotName)
-                .map(lotMapper::toDomain);
+    public List<Lot> findByLotName(String lotName) {
+        return jpaRepository.findByLotName(lotName).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Lot save(Lot lot) {
-        LotEntity entity = lotMapper.toEntity(lot);
-        LotEntity savedEntity = lotJpaRepository.save(entity);
-        return lotMapper.toDomain(savedEntity);
+    public List<Lot> findByLotNameAndProductionStatusNot(String lotName, String productionStatus) {
+        return jpaRepository.findByLotNameAndProductionStatusNot(lotName,productionStatus).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<Lot> findByLotNameAndCarrierName(String lotName, String carrierName) {
+        return jpaRepository.findByLotNameAndCarrierName(lotName,carrierName).map(mapper::toDomain);
+    }
+
+    @Override
+    public Optional<Lot> findByCarrierName(String carrierName) {
+        return jpaRepository.findByCarrierName(carrierName).map(mapper::toDomain);
+
+    }
+
+    @Override
+    public List<Lot> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber) {
+        return jpaRepository.findByOrderIdAndOrderLineNumber(orderId, orderLineNumber).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Lot> findByMngKey(Long mngKey) {
+        return jpaRepository.findByMngKey(mngKey).stream()
+                .map(mapper::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public Lot save(Lot mapping) {
+        LotEntity entity = mapper.toEntity(mapping);
+        LotEntity savedEntity = jpaRepository.save(entity);
+        return mapper.toDomain(savedEntity);
     }
 
     @Override
     public void deleteAllByIdInBatch(List<Long> ids) {
-        lotJpaRepository.deleteAllByIdInBatch(ids);
+        jpaRepository.deleteAllByIdInBatch(ids);
     }
 
     @Override
-    public List<LotHistory> findLotHistoryByPeriod(LocalDateTime start, LocalDateTime end) {
+    public List<LotHistory> findHistoryByPeriod(LocalDateTime start, LocalDateTime end) {
         List<LotHistoryEntity> entities = queryFactory
                 .selectFrom(lotHistoryEntity)
                 .where(lotHistoryEntity.eventTime.between(start, end))
@@ -81,7 +113,19 @@ public class LotRepositoryImpl implements LotRepository {
 
         List<LotHistory> domains = new ArrayList<>();
         for (LotHistoryEntity entity : entities) {
-            domains.add(lotMapper.toDomain(entity));
+            domains.add(mapper.toDomain(entity));
+        }
+        return domains;
+    }
+
+    @Override
+    public List<Lot> findByMantiRequestStateAndMantiRequestTimeBeforeAndMantiReplyTimeIsNull(String mantiRequestState, LocalDateTime thresholdTime) {
+        List<LotEntity> entities = jpaRepository
+                .findByMantiRequestStateAndMantiRequestTimeBeforeAndMantiReplyTimeIsNull(mantiRequestState, thresholdTime);
+
+        List<Lot> domains = new ArrayList<>();
+        for (LotEntity entity : entities) {
+            domains.add(mapper.toDomain(entity));
         }
         return domains;
     }
@@ -92,12 +136,11 @@ public class LotRepositoryImpl implements LotRepository {
                 .selectFrom(lotEntity)
                 .where(
                         lotNameContains(condition.getLotName()),
-                        originalLotNameContains(condition.getOriginalLotName()),
-                        lotStatusContains(condition.getLotStatus()),
-                        itemIdContains(condition.getItemId()),
-                        totalQuantityEq(condition.getTotalQuantity()),
-                        holdStateContains(condition.getHoldState()),
-                        reasonCodeContains(condition.getReasonCode())
+                        carrierNameContains(condition.getCarrierName()),
+                        orderIdContains(condition.getOrderId()),
+                        orderLineNumberContains(condition.getOrderLineNumber()),
+                        mngKeyEq(condition.getMngKey()),
+                        mantiRequestStateContains(condition.getMantiRequestState())
                 );
 
         query.orderBy(getOrderSpecifiers(pageable.getSort()));
@@ -108,7 +151,7 @@ public class LotRepositoryImpl implements LotRepository {
         }
 
         List<LotEntity> content = query.fetch();
-        List<Lot> converted = content.stream().map(lotMapper::toDomain).collect(Collectors.toList());
+        List<Lot> converted = content.stream().map(mapper::toDomain).collect(Collectors.toList());
 
         long total;
         if (pageable.isPaged()) {
@@ -117,12 +160,11 @@ public class LotRepositoryImpl implements LotRepository {
                     .from(lotEntity)
                     .where(
                             lotNameContains(condition.getLotName()),
-                            originalLotNameContains(condition.getOriginalLotName()),
-                            lotStatusContains(condition.getLotStatus()),
-                            itemIdContains(condition.getItemId()),
-                            totalQuantityEq(condition.getTotalQuantity()),
-                            holdStateContains(condition.getHoldState()),
-                            reasonCodeContains(condition.getReasonCode())
+                            carrierNameContains(condition.getCarrierName()),
+                            orderIdContains(condition.getOrderId()),
+                            orderLineNumberContains(condition.getOrderLineNumber()),
+                            mngKeyEq(condition.getMngKey()),
+                            mantiRequestStateContains(condition.getMantiRequestState())
                     )
                     .fetchOne();
 
@@ -132,6 +174,16 @@ public class LotRepositoryImpl implements LotRepository {
         }
 
         return new PageImpl<>(converted, pageable, total);
+    }
+
+    @Override
+    public List<Lot> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber, List<String> productionStatus) {
+        return jpaRepository.findByOrderIdAndOrderLineNumberAndProductionStatusIn(orderId,orderLineNumber,productionStatus).stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Lot> findLotForUnpacking(String lotName, String carrierType) {
+        return jpaRepository.findLotForUnpacking(lotName,carrierType).stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 
     private OrderSpecifier<?>[] getOrderSpecifiers(Sort sort) {
@@ -155,27 +207,27 @@ public class LotRepositoryImpl implements LotRepository {
         return StringUtils.hasText(lotName) ? lotEntity.lotName.contains(lotName) : null;
     }
 
-    private BooleanExpression originalLotNameContains(String originalLotName) {
-        return StringUtils.hasText(originalLotName) ? lotEntity.originalLotName.contains(originalLotName) : null;
+    private BooleanExpression carrierNameContains(String carrierName) {
+        return StringUtils.hasText(carrierName) ? lotEntity.carrierName.contains(carrierName) : null;
     }
 
-    private BooleanExpression lotStatusContains(String lotStatus) {
-        return StringUtils.hasText(lotStatus) ? lotEntity.lotStatus.contains(lotStatus) : null;
+    private BooleanExpression orderIdContains(String orderId) {
+        return StringUtils.hasText(orderId) ? lotEntity.orderId.contains(orderId) : null;
     }
 
-    private BooleanExpression itemIdContains(String itemId) {
-        return StringUtils.hasText(itemId) ? lotEntity.itemId.contains(itemId) : null;
+    private BooleanExpression orderLineNumberContains(String orderLineNumber) {
+        return StringUtils.hasText(orderLineNumber) ? lotEntity.orderLineNumber.contains(orderLineNumber) : null;
     }
 
-    private BooleanExpression totalQuantityEq(BigDecimal totalQuantity) {
-        return totalQuantity != null ? lotEntity.totalQuantity.eq(totalQuantity) : null;
+    private BooleanExpression mngKeyEq(Long mngKey) {
+        return mngKey != null ? lotEntity.mngKey.eq(mngKey) : null;
     }
 
-    private BooleanExpression holdStateContains(String holdState) {
-        return StringUtils.hasText(holdState) ? lotEntity.holdState.contains(holdState) : null;
+    private BooleanExpression mantiRequestStateContains(String mantiRequestState) {
+        return StringUtils.hasText(mantiRequestState) ? lotEntity.mantiRequestState.contains(mantiRequestState) : null;
     }
 
-    private BooleanExpression reasonCodeContains(String reasonCode) {
-        return StringUtils.hasText(reasonCode) ? lotEntity.reasonCode.contains(reasonCode) : null;
-    }
+
+
+
 }

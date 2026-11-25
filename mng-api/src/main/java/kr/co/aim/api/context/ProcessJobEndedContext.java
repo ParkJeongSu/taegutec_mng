@@ -18,7 +18,7 @@ public class ProcessJobEndedContext {
     private final Equipment equipment;
     private final PortDef portDef;
     private final Port port;
-    private final LotCarrierMapping lotCarrierMapping;
+    private final Lot lot;
     private final ProductionOrder productionOrder;
     private final String carrierName;
     private final String recipeName;

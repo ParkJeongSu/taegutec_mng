@@ -1,20 +1,20 @@
 package kr.co.aim.api.strategy.impl.process.ended;
 
 import kr.co.aim.api.service.HistoryService;
-import kr.co.aim.api.service.LotCarrierMappingService;
 import kr.co.aim.api.service.LotService;
+import kr.co.aim.api.service.LotGroupService;
 import kr.co.aim.api.service.ProductionOrderService;
 import kr.co.aim.api.strategy.ProcessJobEndedStrategy;
 import kr.co.aim.api.context.ProcessJobEndedContext;
 import kr.co.aim.common.Utils.TsidUtils;
 import kr.co.aim.common.enums.*;
 import kr.co.aim.common.record.TransactionInfo;
-import kr.co.aim.domain.command.LotCarrierMappingCreateCommand;
+import kr.co.aim.domain.command.LotCreateCommand;
 import kr.co.aim.domain.model.*;
-import kr.co.aim.domain.repository.LotCarrierMappingRepository;
-import kr.co.aim.infra.persistence.entity.LotCarrierMappingHistoryEntity;
-import kr.co.aim.infra.persistence.mapper.LotCarrierMappingMapper;
+import kr.co.aim.domain.repository.LotRepository;
+import kr.co.aim.infra.persistence.entity.LotHistoryEntity;
 import kr.co.aim.infra.persistence.mapper.LotMapper;
+import kr.co.aim.infra.persistence.mapper.LotGroupMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -26,8 +26,8 @@ import java.math.BigDecimal;
 public class IncomeTypeEndedStrategy implements ProcessJobEndedStrategy {
 
     private final HistoryService historyService;
-    private final LotCarrierMappingRepository lotCarrierMappingRepository;
-    private final LotCarrierMappingMapper lotCarrierMappingMapper;
+    private final LotRepository lotRepository;
+    private final LotMapper lotMapper;
 
 
     @Override
@@ -54,8 +54,8 @@ public class IncomeTypeEndedStrategy implements ProcessJobEndedStrategy {
 
 
         Long mngKey = TsidUtils.nextId();
-        LotCarrierMappingCreateCommand command =
-                LotCarrierMappingCreateCommand
+        LotCreateCommand command =
+                LotCreateCommand
                         .builder()
                         .transactionInfo(tx)
                         .lotName(productionOrder.getLotName())
@@ -74,9 +74,9 @@ public class IncomeTypeEndedStrategy implements ProcessJobEndedStrategy {
                         .holdState(HoldState.NOT_ON_HOLD.getValue())
                         .build();
 
-        LotCarrierMapping lotCarrierMapping = LotCarrierMapping.create(command);
-        lotCarrierMapping = lotCarrierMappingRepository.save(lotCarrierMapping);
-        LotCarrierMappingHistoryEntity historyEntity = lotCarrierMappingMapper.toHistoryEntity(lotCarrierMapping);
+        Lot lot = Lot.create(command);
+        lot = lotRepository.save(lot);
+        LotHistoryEntity historyEntity = lotMapper.toHistoryEntity(lot);
         historyService.saveHistory(historyEntity);
     }
 }

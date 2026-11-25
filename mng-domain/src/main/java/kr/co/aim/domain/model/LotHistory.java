@@ -13,12 +13,29 @@ import java.time.LocalDateTime;
 @Builder
 @ToString
 public class LotHistory implements IBaseHistoryEntity {
+
     private Long id;
     private String lotName;
-    private String originalLotName;
-    private String lotStatus;
-    private String itemId;
-    private BigDecimal totalQuantity;
+    private String carrierName;
+    private String orderId;
+    private String orderLineNumber;
+    private Long productionOrderId;
+    private Integer seq;
+    private String productionStatus;
+    private String processStatus;
+    private BigDecimal quantity;
+    private BigDecimal galQuantity;
+    private Long mngKey;
+    private LocalDateTime validationTime;
+    private LocalDateTime jobStartTime;
+    private LocalDateTime jobEndTime;
+    private String mantiRequestState;
+    private LocalDateTime mantiRequestTime;
+    private LocalDateTime mantiReplyTime;
+    private String rrnRequestState;
+    private LocalDateTime rrnRequestTime;
+    private LocalDateTime rrnReplyTime;
+    private String nextEquipmentName;
     private String holdState;
     private String reasonCode;
     private String eventName;

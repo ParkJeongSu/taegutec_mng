@@ -32,8 +32,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static kr.co.aim.infra.persistence.entity.QCarrierEntity.carrierEntity;
+import static kr.co.aim.infra.persistence.entity.QLotGroupEntity.lotGroupEntity;
 import static kr.co.aim.infra.persistence.entity.QLotEntity.lotEntity;
-import static kr.co.aim.infra.persistence.entity.QLotCarrierMappingEntity.lotCarrierMappingEntity;
 
 
 @Repository
@@ -256,39 +256,39 @@ public class CarrierRepositoryImpl implements CarrierRepository {
                         carrierEntity.containerType,
 
                         // LOT_CARRIER_MAPPING
-                        lotCarrierMappingEntity.id.as("mappingId"),
-                        lotCarrierMappingEntity.orderId,
-                        lotCarrierMappingEntity.orderLineNumber,
-                        lotCarrierMappingEntity.productionOrderId,
-                        lotCarrierMappingEntity.productionStatus,
-                        lotCarrierMappingEntity.processStatus,
-                        lotCarrierMappingEntity.quantity.as("mappingQuantity"),
-                        lotCarrierMappingEntity.galQuantity.as("mappingGalQuantity"),
-                        lotCarrierMappingEntity.mngKey,
-                        lotCarrierMappingEntity.jobStartTime,
-                        lotCarrierMappingEntity.jobEndTime,
-                        lotCarrierMappingEntity.mantiRequestState,
-                        lotCarrierMappingEntity.mantiRequestTime,
-                        lotCarrierMappingEntity.mantiReplyTime,
-                        lotCarrierMappingEntity.rrnRequestState,
-                        lotCarrierMappingEntity.rrnRequestTime,
-                        lotCarrierMappingEntity.rrnReplyTime,
-                        lotCarrierMappingEntity.holdState.as("mappingHoldState"),
-                        lotCarrierMappingEntity.reasonCode.as("mappingReasonCode"),
+                        lotEntity.id.as("mappingId"),
+                        lotEntity.orderId,
+                        lotEntity.orderLineNumber,
+                        lotEntity.productionOrderId,
+                        lotEntity.productionStatus,
+                        lotEntity.processStatus,
+                        lotEntity.quantity.as("mappingQuantity"),
+                        lotEntity.galQuantity.as("mappingGalQuantity"),
+                        lotEntity.mngKey,
+                        lotEntity.jobStartTime,
+                        lotEntity.jobEndTime,
+                        lotEntity.mantiRequestState,
+                        lotEntity.mantiRequestTime,
+                        lotEntity.mantiReplyTime,
+                        lotEntity.rrnRequestState,
+                        lotEntity.rrnRequestTime,
+                        lotEntity.rrnReplyTime,
+                        lotEntity.holdState.as("mappingHoldState"),
+                        lotEntity.reasonCode.as("mappingReasonCode"),
 
                         // LOT
-                        lotEntity.id.as("lotId"),
-                        lotEntity.lotName,
-                        lotEntity.originalLotName,
-                        lotEntity.lotStatus,
-                        lotEntity.itemId,
-                        lotEntity.totalQuantity,
-                        lotEntity.holdState.as("lotHoldState"),
-                        lotEntity.reasonCode.as("lotReasonCode")
+                        lotGroupEntity.id.as("lotGroupId"),
+                        lotGroupEntity.lotGroupName,
+                        lotGroupEntity.originalLotGroupName,
+                        lotGroupEntity.lotGroupStatus,
+                        lotGroupEntity.itemId,
+                        lotGroupEntity.totalQuantity,
+                        lotGroupEntity.holdState.as("lotGroupHoldState"),
+                        lotGroupEntity.reasonCode.as("lotGroupReasonCode")
                 ))
                 .from(carrierEntity)
-                .leftJoin(lotCarrierMappingEntity).on(carrierEntity.carrierName.eq(lotCarrierMappingEntity.carrierName))
-                .innerJoin(lotEntity).on(lotCarrierMappingEntity.lotName.eq(lotEntity.lotName))
+                .leftJoin(lotEntity).on(carrierEntity.carrierName.eq(lotEntity.carrierName))
+                .innerJoin(lotGroupEntity).on(lotEntity.lotName.eq(lotGroupEntity.lotGroupName))
                 .where(
                         // CARRIER Conditions
                         carrierNameContains(condition.getCarrierName()),
@@ -330,13 +330,13 @@ public class CarrierRepositoryImpl implements CarrierRepository {
                         mappingReasonCodeContains(condition.getMappingReasonCode()),
 
                         // LOT Conditions
-                        lotNameContains(condition.getLotName()),
-                        originalLotNameContains(condition.getOriginalLotName()),
-                        lotStatusContains(condition.getLotStatus()),
+                        lotGroupNameContains(condition.getLotGroupName()),
+                        originalLotGroupNameContains(condition.getOriginalLotGroupName()),
+                        lotGroupStatusContains(condition.getLotGroupStatus()),
                         itemIdContains(condition.getItemId()),
                         totalQuantityEq(condition.getTotalQuantity()),
-                        lotHoldStateContains(condition.getLotHoldState()),
-                        lotReasonCodeContains(condition.getLotReasonCode())
+                        lotGroupHoldStateContains(condition.getLotGroupHoldState()),
+                        lotGroupReasonCodeContains(condition.getLotGroupReasonCode())
                 );
 
         query.orderBy(getOrderSpecifiers(pageable.getSort()));
@@ -353,8 +353,8 @@ public class CarrierRepositoryImpl implements CarrierRepository {
             Long count = queryFactory
                     .select(carrierEntity.count())
                     .from(carrierEntity)
-                    .leftJoin(lotCarrierMappingEntity).on(carrierEntity.carrierName.eq(lotCarrierMappingEntity.carrierName))
-                    .innerJoin(lotEntity).on(lotCarrierMappingEntity.lotName.eq(lotEntity.lotName))
+                    .leftJoin(lotEntity).on(carrierEntity.carrierName.eq(lotEntity.carrierName))
+                    .innerJoin(lotGroupEntity).on(lotEntity.lotName.eq(lotGroupEntity.lotGroupName))
                     .where(
                             // CARRIER Conditions
                             carrierNameContains(condition.getCarrierName()),
@@ -396,13 +396,13 @@ public class CarrierRepositoryImpl implements CarrierRepository {
                             mappingReasonCodeContains(condition.getMappingReasonCode()),
 
                             // LOT Conditions
-                            lotNameContains(condition.getLotName()),
-                            originalLotNameContains(condition.getOriginalLotName()),
-                            lotStatusContains(condition.getLotStatus()),
+                            lotGroupNameContains(condition.getLotGroupName()),
+                            originalLotGroupNameContains(condition.getOriginalLotGroupName()),
+                            lotGroupStatusContains(condition.getLotGroupStatus()),
                             itemIdContains(condition.getItemId()),
                             totalQuantityEq(condition.getTotalQuantity()),
-                            lotHoldStateContains(condition.getLotHoldState()),
-                            lotReasonCodeContains(condition.getLotReasonCode())
+                            lotGroupHoldStateContains(condition.getLotGroupHoldState()),
+                            lotGroupReasonCodeContains(condition.getLotGroupReasonCode())
                     )
                     .fetchOne();
 
@@ -530,72 +530,72 @@ public class CarrierRepositoryImpl implements CarrierRepository {
 
     // == LOT_CARRIER_MAPPING BooleanExpressions ==
     private BooleanExpression orderIdContains(String orderId) {
-        return StringUtils.hasText(orderId) ? lotCarrierMappingEntity.orderId.contains(orderId) : null;
+        return StringUtils.hasText(orderId) ? lotEntity.orderId.contains(orderId) : null;
     }
 
     private BooleanExpression orderLineNumberContains(String orderLineNumber) {
-        return StringUtils.hasText(orderLineNumber) ? lotCarrierMappingEntity.orderLineNumber.contains(orderLineNumber) : null;
+        return StringUtils.hasText(orderLineNumber) ? lotEntity.orderLineNumber.contains(orderLineNumber) : null;
     }
 
     private BooleanExpression productionOrderIdEq(Long productionOrderId) {
-        return productionOrderId != null ? lotCarrierMappingEntity.productionOrderId.eq(productionOrderId) : null;
+        return productionOrderId != null ? lotEntity.productionOrderId.eq(productionOrderId) : null;
     }
 
     private BooleanExpression productionStatusContains(String productionStatus) {
-        return StringUtils.hasText(productionStatus) ? lotCarrierMappingEntity.productionStatus.contains(productionStatus) : null;
+        return StringUtils.hasText(productionStatus) ? lotEntity.productionStatus.contains(productionStatus) : null;
     }
 
     private BooleanExpression processStatusContains(String processStatus) {
-        return StringUtils.hasText(processStatus) ? lotCarrierMappingEntity.processStatus.contains(processStatus) : null;
+        return StringUtils.hasText(processStatus) ? lotEntity.processStatus.contains(processStatus) : null;
     }
 
     private BooleanExpression mngKeyEq(Long mngKey) {
-        return mngKey != null ? lotCarrierMappingEntity.mngKey.eq(mngKey) : null;
+        return mngKey != null ? lotEntity.mngKey.eq(mngKey) : null;
     }
 
     private BooleanExpression mantiRequestStateContains(String mantiRequestState) {
-        return StringUtils.hasText(mantiRequestState) ? lotCarrierMappingEntity.mantiRequestState.contains(mantiRequestState) : null;
+        return StringUtils.hasText(mantiRequestState) ? lotEntity.mantiRequestState.contains(mantiRequestState) : null;
     }
 
     private BooleanExpression rrnRequestStateContains(String rrnRequestState) {
-        return StringUtils.hasText(rrnRequestState) ? lotCarrierMappingEntity.rrnRequestState.contains(rrnRequestState) : null;
+        return StringUtils.hasText(rrnRequestState) ? lotEntity.rrnRequestState.contains(rrnRequestState) : null;
     }
 
     private BooleanExpression mappingHoldStateContains(String mappingHoldState) {
-        return StringUtils.hasText(mappingHoldState) ? lotCarrierMappingEntity.holdState.contains(mappingHoldState) : null;
+        return StringUtils.hasText(mappingHoldState) ? lotEntity.holdState.contains(mappingHoldState) : null;
     }
 
     private BooleanExpression mappingReasonCodeContains(String mappingReasonCode) {
-        return StringUtils.hasText(mappingReasonCode) ? lotCarrierMappingEntity.reasonCode.contains(mappingReasonCode) : null;
+        return StringUtils.hasText(mappingReasonCode) ? lotEntity.reasonCode.contains(mappingReasonCode) : null;
     }
 
-    // == LOT BooleanExpressions ==
-    private BooleanExpression lotNameContains(String lotName) {
-        return StringUtils.hasText(lotName) ? lotEntity.lotName.contains(lotName) : null;
+    // == LOT_GROUP BooleanExpressions ==
+    private BooleanExpression lotGroupNameContains(String lotName) {
+        return StringUtils.hasText(lotName) ? lotGroupEntity.lotGroupName.contains(lotName) : null;
     }
 
-    private BooleanExpression originalLotNameContains(String originalLotName) {
-        return StringUtils.hasText(originalLotName) ? lotEntity.originalLotName.contains(originalLotName) : null;
+    private BooleanExpression originalLotGroupNameContains(String originalLotName) {
+        return StringUtils.hasText(originalLotName) ? lotGroupEntity.originalLotGroupName.contains(originalLotName) : null;
     }
 
-    private BooleanExpression lotStatusContains(String lotStatus) {
-        return StringUtils.hasText(lotStatus) ? lotEntity.lotStatus.contains(lotStatus) : null;
+    private BooleanExpression lotGroupStatusContains(String lotStatus) {
+        return StringUtils.hasText(lotStatus) ? lotGroupEntity.lotGroupStatus.contains(lotStatus) : null;
     }
 
     private BooleanExpression itemIdContains(String itemId) {
-        return StringUtils.hasText(itemId) ? lotEntity.itemId.contains(itemId) : null;
+        return StringUtils.hasText(itemId) ? lotGroupEntity.itemId.contains(itemId) : null;
     }
 
     private BooleanExpression totalQuantityEq(BigDecimal totalQuantity) {
-        return totalQuantity != null ? lotEntity.totalQuantity.eq(totalQuantity) : null;
+        return totalQuantity != null ? lotGroupEntity.totalQuantity.eq(totalQuantity) : null;
     }
 
-    private BooleanExpression lotHoldStateContains(String lotHoldState) {
-        return StringUtils.hasText(lotHoldState) ? lotEntity.holdState.contains(lotHoldState) : null;
+    private BooleanExpression lotGroupHoldStateContains(String lotHoldState) {
+        return StringUtils.hasText(lotHoldState) ? lotGroupEntity.holdState.contains(lotHoldState) : null;
     }
 
-    private BooleanExpression lotReasonCodeContains(String lotReasonCode) {
-        return StringUtils.hasText(lotReasonCode) ? lotEntity.reasonCode.contains(lotReasonCode) : null;
+    private BooleanExpression lotGroupReasonCodeContains(String lotReasonCode) {
+        return StringUtils.hasText(lotReasonCode) ? lotGroupEntity.reasonCode.contains(lotReasonCode) : null;
     }
 
 

@@ -13,9 +13,20 @@ import java.util.Optional;
 public interface LotRepository {
     List<Lot> findAll();
     Optional<Lot> findById(Long id);
-    Optional<Lot> findByLotName(String lotName);
-    Lot save(Lot lot);
+    List<Lot> findByLotName(String lotName);
+    List<Lot> findByLotNameAndProductionStatusNot(String lotName, String productionStatus);
+    Optional<Lot> findByLotNameAndCarrierName(String lotName,String carrierName);
+    Optional<Lot> findByCarrierName(String carrierName);
+    List<Lot> findByOrderIdAndOrderLineNumber(String orderId, String orderLineNumber);
+    List<Lot> findByMngKey(Long mngKey);
+    Lot save(Lot mapping);
     void deleteAllByIdInBatch(List<Long> ids);
-    List<LotHistory> findLotHistoryByPeriod(LocalDateTime start, LocalDateTime end);
+    List<LotHistory> findHistoryByPeriod(LocalDateTime start, LocalDateTime end);
+    List<Lot> findByMantiRequestStateAndMantiRequestTimeBeforeAndMantiReplyTimeIsNull(
+            String mantiRequestState,
+            LocalDateTime thresholdTime
+    );
     Page<Lot> findLotWithConditions(LotSearchCondition condition, Pageable pageable);
+    List<Lot> findByOrderIdAndOrderLineNumberAndProductionStatusIn(String orderId, String orderLineNumber,List<String> productionStatus);
+    List<Lot> findLotForUnpacking(String lotName, String carrierType);
 }
