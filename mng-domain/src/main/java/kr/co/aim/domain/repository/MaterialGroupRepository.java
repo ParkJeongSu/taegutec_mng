@@ -14,7 +14,7 @@ public interface MaterialGroupRepository {
 
     Optional<MaterialGroup> findById(Long id);
 
-    Optional<MaterialGroup> findByMaterialGroupDefName(String materialGroupDefName);
+    Optional<MaterialGroup> findByMaterialGroupName(String materialGroupName);
 
     MaterialGroup save(MaterialGroup materialGroup);
 

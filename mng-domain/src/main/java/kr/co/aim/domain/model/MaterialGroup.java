@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class MaterialGroup implements HasTransactionInfo {
     private Long id;
-    private String materialGroupDefName;
+    private String materialGroupName;
     private String description;
     private String eventName;
     private LocalDateTime eventTime;
@@ -25,7 +25,7 @@ public class MaterialGroup implements HasTransactionInfo {
     public static MaterialGroup create(MaterialGroupCreateCommand command) {
         MaterialGroup materialGroup = MaterialGroup.builder()
                 .id(TsidUtils.nextId())
-                .materialGroupDefName(command.getMaterialGroupDefName())
+                .materialGroupName(command.getMaterialGroupName())
                 .description(command.getDescription())
                 .build();
 
@@ -39,8 +39,8 @@ public class MaterialGroup implements HasTransactionInfo {
     }
 
     public MaterialGroup update(MaterialGroupUpdateCommand command) {
-        if (command.getMaterialGroupDefName() != null) {
-            setMaterialGroupDefName(command.getMaterialGroupDefName());
+        if (command.getMaterialGroupName() != null) {
+            setMaterialGroupName(command.getMaterialGroupName());
         }
         if (command.getDescription() != null) {
             setDescription(command.getDescription());

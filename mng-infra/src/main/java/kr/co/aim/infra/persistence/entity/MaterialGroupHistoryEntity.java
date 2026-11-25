@@ -23,8 +23,8 @@ public class MaterialGroupHistoryEntity implements IBaseHistoryEntity {
     @Column(name = "ID")
     private Long id;
 
-    @Column(name = "MATERIAL_GROUP_DEF_NAME")
-    private String materialGroupDefName;
+    @Column(name = "MATERIAL_GROUP_NAME")
+    private String materialGroupName;
 
     @Column(name = "DESCRIPTION")
     private String description;

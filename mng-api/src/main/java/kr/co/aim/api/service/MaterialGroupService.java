@@ -69,14 +69,14 @@ public class MaterialGroupService {
         if (dto == null) {
             throw new IllegalArgumentException("자재 그룹(MATERIAL_GROUP) 등록 정보가 유효하지 않습니다.");
         }
-        if (dto.getMaterialGroupDefName() == null || dto.getMaterialGroupDefName().trim().isEmpty()) {
+        if (dto.getMaterialGroupName() == null || dto.getMaterialGroupName().trim().isEmpty()) {
             throw new IllegalArgumentException("자재 그룹 정의명은(는) 필수 입력 항목입니다.");
         }
 
-        String materialGroupDefNameValue = dto.getMaterialGroupDefName().trim();
-        Optional<MaterialGroup> existing = materialGroupRepository.findByMaterialGroupDefName(materialGroupDefNameValue);
+        String materialGroupNameValue = dto.getMaterialGroupName().trim();
+        Optional<MaterialGroup> existing = materialGroupRepository.findByMaterialGroupName(materialGroupNameValue);
         if (existing.isPresent()) {
-            throw new IllegalArgumentException("이미 존재하는 자재 그룹(MATERIAL_GROUP)입니다: " + materialGroupDefNameValue);
+            throw new IllegalArgumentException("이미 존재하는 자재 그룹(MATERIAL_GROUP)입니다: " + materialGroupNameValue);
         }
 
         String eventName;
@@ -102,9 +102,9 @@ public class MaterialGroupService {
 
         TransactionInfo tx = TransactionInfo.now(eventName, eventUser, eventComment);
 
-        String materialGroupDefName = null;
-        if (dto.getMaterialGroupDefName() != null) {
-            materialGroupDefName = dto.getMaterialGroupDefName().trim();
+        String materialGroupName = null;
+        if (dto.getMaterialGroupName() != null) {
+            materialGroupName = dto.getMaterialGroupName().trim();
         }
 
         String description = null;
@@ -114,7 +114,7 @@ public class MaterialGroupService {
 
         MaterialGroupCreateCommand command = MaterialGroupCreateCommand.builder()
                 .transactionInfo(tx)
-                .materialGroupDefName(materialGroupDefName)
+                .materialGroupName(materialGroupName)
                 .description(description)
                 .build();
 
@@ -148,10 +148,10 @@ public class MaterialGroupService {
 
         MaterialGroup materialGroup = optional.get();
 
-        if (dto.getMaterialGroupDefName() != null && !dto.getMaterialGroupDefName().trim().isEmpty()) {
-            String targetName = dto.getMaterialGroupDefName().trim();
-            if (!targetName.equals(materialGroup.getMaterialGroupDefName())) {
-                Optional<MaterialGroup> duplicate = materialGroupRepository.findByMaterialGroupDefName(targetName);
+        if (dto.getMaterialGroupName() != null && !dto.getMaterialGroupName().trim().isEmpty()) {
+            String targetName = dto.getMaterialGroupName().trim();
+            if (!targetName.equals(materialGroup.getMaterialGroupName())) {
+                Optional<MaterialGroup> duplicate = materialGroupRepository.findByMaterialGroupName(targetName);
                 if (duplicate.isPresent() && !duplicate.get().getId().equals(id)) {
                     throw new IllegalArgumentException("이미 존재하는 자재 그룹(MATERIAL_GROUP)입니다: " + targetName);
                 }
@@ -181,9 +181,9 @@ public class MaterialGroupService {
 
         TransactionInfo tx = TransactionInfo.now(eventName, eventUser, eventComment);
 
-        String materialGroupDefName = null;
-        if (dto.getMaterialGroupDefName() != null) {
-            materialGroupDefName = dto.getMaterialGroupDefName().trim();
+        String materialGroupName = null;
+        if (dto.getMaterialGroupName() != null) {
+            materialGroupName = dto.getMaterialGroupName().trim();
         }
 
         String description = null;
@@ -193,7 +193,7 @@ public class MaterialGroupService {
 
         MaterialGroupUpdateCommand command = MaterialGroupUpdateCommand.builder()
                 .transactionInfo(tx)
-                .materialGroupDefName(materialGroupDefName)
+                .materialGroupName(materialGroupName)
                 .description(description)
                 .build();
 

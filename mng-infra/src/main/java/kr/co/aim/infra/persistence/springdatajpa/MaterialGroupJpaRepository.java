@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface MaterialGroupJpaRepository extends JpaRepository<MaterialGroupEntity, Long> {
-    Optional<MaterialGroupEntity> findByMaterialGroupDefName(String materialGroupDefName);
+    Optional<MaterialGroupEntity> findByMaterialGroupName(String materialGroupDefName);
 }

@@ -61,11 +61,11 @@ public class MaterialGroupRepositoryImpl implements MaterialGroupRepository {
     }
 
     @Override
-    public Optional<MaterialGroup> findByMaterialGroupDefName(String materialGroupDefName) {
+    public Optional<MaterialGroup> findByMaterialGroupName(String materialGroupDefName) {
         if (!StringUtils.hasText(materialGroupDefName)) {
             return Optional.empty();
         }
-        Optional<MaterialGroupEntity> entityOptional = materialGroupJpaRepository.findByMaterialGroupDefName(materialGroupDefName);
+        Optional<MaterialGroupEntity> entityOptional = materialGroupJpaRepository.findByMaterialGroupName(materialGroupDefName);
         if (entityOptional.isPresent()) {
             return Optional.ofNullable(materialGroupMapper.toDomain(entityOptional.get()));
         }
@@ -95,7 +95,7 @@ public class MaterialGroupRepositoryImpl implements MaterialGroupRepository {
                 .select(materialGroupEntity)
                 .from(materialGroupEntity)
                 .where(
-                        materialGroupDefNameContains(condition.getMaterialGroupDefName()),
+                        materialGroupNameContains(condition.getMaterialGroupDefName()),
                         descriptionContains(condition.getDescription()),
                         eventNameContains(condition.getEventName()),
                         eventUserContains(condition.getEventUser())
@@ -123,7 +123,7 @@ public class MaterialGroupRepositoryImpl implements MaterialGroupRepository {
                     .select(materialGroupEntity.count())
                     .from(materialGroupEntity)
                     .where(
-                            materialGroupDefNameContains(condition.getMaterialGroupDefName()),
+                            materialGroupNameContains(condition.getMaterialGroupDefName()),
                             descriptionContains(condition.getDescription()),
                             eventNameContains(condition.getEventName()),
                             eventUserContains(condition.getEventUser())
@@ -156,8 +156,8 @@ public class MaterialGroupRepositoryImpl implements MaterialGroupRepository {
         return orders.toArray(new OrderSpecifier[0]);
     }
 
-    private BooleanExpression materialGroupDefNameContains(String materialGroupDefName) {
-        return StringUtils.hasText(materialGroupDefName) ? materialGroupEntity.materialGroupDefName.contains(materialGroupDefName) : null;
+    private BooleanExpression materialGroupNameContains(String materialGroupDefName) {
+        return StringUtils.hasText(materialGroupDefName) ? materialGroupEntity.materialGroupName.contains(materialGroupDefName) : null;
     }
 
     private BooleanExpression descriptionContains(String description) {

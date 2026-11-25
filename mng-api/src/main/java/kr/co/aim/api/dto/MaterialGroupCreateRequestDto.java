@@ -15,8 +15,8 @@ import lombok.Setter;
 @Schema(description = "자재 그룹(MATERIAL_GROUP) 생성 요청 DTO")
 public class MaterialGroupCreateRequestDto {
 
-    @Schema(description = "자재 그룹 정의명", example = "GRP-001", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String materialGroupDefName;
+    @Schema(description = "자재 그룹 명", example = "GRP-001", requiredMode = Schema.RequiredMode.REQUIRED)
+    private String materialGroupName;
 
     @Schema(description = "설명", example = "Material group")
     private String description;

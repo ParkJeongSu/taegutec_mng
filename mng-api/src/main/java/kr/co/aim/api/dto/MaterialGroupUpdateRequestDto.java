@@ -19,7 +19,7 @@ public class MaterialGroupUpdateRequestDto {
     private Long id;
 
     @Schema(description = "자재 그룹 정의명", example = "GRP-001")
-    private String materialGroupDefName;
+    private String materialGroupName;
 
     @Schema(description = "설명", example = "Material group")
     private String description;

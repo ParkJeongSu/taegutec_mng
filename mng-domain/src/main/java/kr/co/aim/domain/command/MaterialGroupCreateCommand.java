@@ -10,6 +10,6 @@ import lombok.RequiredArgsConstructor;
 @Builder
 public class MaterialGroupCreateCommand {
     private final TransactionInfo transactionInfo;
-    private final String materialGroupDefName;
+    private final String materialGroupName;
     private final String description;
 }

@@ -24,8 +24,8 @@ public class MaterialGroupResponse {
     @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
-    @Schema(description = "자재 그룹 정의명", example = "GRP-001")
-    private String materialGroupDefName;
+    @Schema(description = "자재 그룹 명", example = "GRP-001")
+    private String materialGroupName;
 
     @Schema(description = "설명", example = "Material group")
     private String description;
@@ -48,7 +48,7 @@ public class MaterialGroupResponse {
         }
         return MaterialGroupResponse.builder()
                 .id(domain.getId())
-                .materialGroupDefName(domain.getMaterialGroupDefName())
+                .materialGroupName(domain.getMaterialGroupName())
                 .description(domain.getDescription())
                 .eventName(domain.getEventName())
                 .eventTime(domain.getEventTime())
